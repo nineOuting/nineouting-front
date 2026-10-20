@@ -1,0 +1,32 @@
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 16px 24px;
+  border: 1px solid;
+  border-radius: 8px;
+  transform: translateX(-50%);
+}
+
+.error {
+  background: var(--red-10);
+  border-color: var(--red-100);
+}
+
+.info {
+  background: var(--blue-10);
+  border-color: var(--blue-90);
+}
+
+.text {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--color-black);
+}

@@ -1,0 +1,25 @@
+.page {
+  padding-top: 186px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--color-black);
+}
+
+.message {
+  text-align: center;
+  color: var(--color-black);
+}
+
+.illustration {
+  margin-top: 31px;
+}
+
+.action {
+  width: 431px;
+  margin-top: 31px;
+}

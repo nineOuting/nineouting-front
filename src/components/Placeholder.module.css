@@ -1,0 +1,20 @@
+.placeholder {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.icon {
+  background: var(--grey-30);
+  border: 1px solid var(--grey-50);
+}
+
+.toast {
+  background: var(--grey-20);
+}
+
+.image {
+  background: var(--grey-20);
+  border: 1px solid var(--grey-50);
+  border-radius: 36px;
+}

@@ -1,0 +1,97 @@
+.page {
+  padding-top: 35px;
+}
+
+.card {
+  align-items: center;
+  gap: 24px;
+  padding: 40px 0;
+}
+
+.card > * {
+  width: 431px;
+}
+
+.emailGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.codeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.codeField {
+  gap: 4px;
+}
+
+.codeActions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agreements {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.agreeAll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agreeAllLabel {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.agreeAllDescription {
+  padding-left: 32px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.agreementList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0 12px;
+  list-style: none;
+}
+
+.agreementItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agreementLabel {
+  font-weight: 500;
+}
+
+.viewTerms {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--grey-50);
+}

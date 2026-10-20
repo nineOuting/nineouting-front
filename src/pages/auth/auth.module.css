@@ -1,0 +1,64 @@
+/* 인증 화면들이 함께 쓰는 카드·제목 스타일. 위쪽 여백은 Figma 프레임 위치에서 헤더 높이(64px)를 뺀 값이다 */
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 548px;
+  padding: 64px 48px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 28px;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  width: 431px;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.backButton {
+  display: flex;
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.displayTitle {
+  font-size: var(--font-size-display);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-black);
+}
+
+.subtitle {
+  white-space: pre-line;
+  color: var(--grey-70);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 23px;
+  width: 548px;
+  margin-top: 24px;
+}
+
+.footerLink {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-70);
+  text-decoration: none;
+}

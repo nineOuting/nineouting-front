@@ -1,0 +1,68 @@
+.dim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(34 34 34 / 60%);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 820px;
+  max-height: calc(100vh - 80px);
+  padding: 48px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.heading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.description {
+  color: var(--grey-60);
+}
+
+.close {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.closeIcon {
+  background: var(--grey-20);
+}
+
+/* 디자인은 본문 일부만 보여 주므로 높이를 제한하고 스크롤한다 */
+.body {
+  max-height: 400px;
+  padding: 24px;
+  overflow-y: auto;
+  background: var(--grey-10);
+  border-radius: 16px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-100);
+}

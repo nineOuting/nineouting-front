@@ -1,0 +1,50 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.primary {
+  width: 100%;
+  height: 56px;
+  padding: 16px;
+  background: var(--blue-100);
+  color: var(--milkblue-10);
+  font-size: var(--font-size-b1);
+}
+
+/* 비활성 상태는 디자인에 없어 회색으로 처리했다 */
+.primary:disabled {
+  background: var(--grey-30);
+}
+
+.secondary {
+  width: 100%;
+  padding: 10px;
+  background: var(--blue-10);
+  color: var(--blue-70);
+  font-size: var(--font-size-b2);
+}
+
+.muted {
+  width: 100%;
+  gap: 10px;
+  padding: 10px;
+  background: var(--grey-10);
+  color: var(--grey-60);
+  font-size: var(--font-size-b2);
+}
+
+.underline {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--blue-100);
+  color: var(--blue-100);
+  font-size: var(--font-size-b2);
+}
