@@ -1,0 +1,84 @@
+.card {
+  gap: 8px;
+  width: 480px;
+  padding: 32px 48px;
+}
+
+.closeRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.message {
+  white-space: pre-line;
+  color: var(--grey-60);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  margin: 0;
+  padding: 24px;
+  list-style: none;
+  background: var(--grey-10);
+  border-radius: 16px;
+  color: var(--grey-100);
+}
+
+.itemTitle {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.itemDescription {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.agree {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  color: var(--grey-90);
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+}

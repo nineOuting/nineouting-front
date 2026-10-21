@@ -1,0 +1,108 @@
+.card {
+  gap: 25px;
+  width: 592px;
+  padding: 40px 48px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.heading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.caption {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 23px;
+  border: none;
+  border-radius: 8px;
+  background: var(--blue-100);
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-white);
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 144px);
+  gap: 25px;
+  height: 423px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.previewWrap {
+  position: relative;
+}
+
+.preview {
+  display: block;
+  width: 144px;
+  height: 204px;
+  padding: 0;
+  background: var(--grey-10);
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+
+.previewSelected {
+  border-color: var(--blue-100);
+}
+
+.star {
+  position: absolute;
+  top: 9px;
+  left: 112px;
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+/* 즐겨찾기 안 한 모양은 디자인에 없어 흐리게 표시했다 */
+.starOff {
+  opacity: 0.3;
+}
+
+.name {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-100);
+}

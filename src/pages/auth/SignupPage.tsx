@@ -11,6 +11,7 @@ import TermsModal from '../../components/TermsModal';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import {
+  AUTH_ERROR_CODES,
   EMAIL_MAX_LENGTH,
   EMAIL_REGEX,
   EMAIL_RESEND_COOLDOWN_SECONDS,
@@ -19,9 +20,11 @@ import {
   PASSWORD_REGEX,
   VERIFICATION_CODE_LENGTH,
   VERIFICATION_CODE_REGEX,
+  VERIFICATION_LOCK_SECONDS,
 } from '../../constants/auth';
 import { TERMS, type TermsKey } from '../../constants/terms';
 import { formatSeconds, useCountdown } from '../../hooks/useCountdown';
+import { useTimedLock } from '../../hooks/useTimedLock';
 import auth from './auth.module.css';
 import styles from './SignupPage.module.css';
 
@@ -45,7 +48,6 @@ const AGREEMENT_ITEMS: AgreementItem[] = [
 
 const INITIAL_AGREEMENTS: Agreements = { service: false, privacy: false, age: false, marketing: false };
 const RESEND_ICON_SIZE = 20;
-const EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED';
 
 /** REQ-010~014 회원가입 */
 export default function SignupPage() {
@@ -57,6 +59,8 @@ export default function SignupPage() {
   const [verificationStep, setVerificationStep] = useState<VerificationStep>('idle');
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState<string>();
+  // MSG-006 인증 5회 실패 시 서버가 5분 막는다. 그동안 인증 코드 칸과 버튼을 끄고, 풀리면 안내를 지운다
+  const codeLock = useTimedLock(() => setCodeError(undefined));
 
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -100,6 +104,9 @@ export default function SignupPage() {
       setCodeError(undefined);
       resendCountdown.start(EMAIL_RESEND_COOLDOWN_SECONDS);
     } catch (error) {
+      if (isApiError(error, AUTH_ERROR_CODES.verificationLocked)) {
+        codeLock.lock(VERIFICATION_LOCK_SECONDS);
+      }
       setEmailError(errorMessage(error));
     } finally {
       setIsSubmitting(false);
@@ -117,6 +124,9 @@ export default function SignupPage() {
       setCodeError(undefined);
       setVerificationStep('verified');
     } catch (error) {
+      if (isApiError(error, AUTH_ERROR_CODES.verificationLocked)) {
+        codeLock.lock(VERIFICATION_LOCK_SECONDS);
+      }
       setCodeError(errorMessage(error));
     } finally {
       setIsSubmitting(false);
@@ -139,7 +149,7 @@ export default function SignupPage() {
       navigate('/signup/complete', { replace: true });
     } catch (error) {
       // 인증 후 30분이 지나면 서버가 인증 완료 표시를 지우므로 처음부터 다시 인증받게 한다
-      if (isApiError(error, EMAIL_NOT_VERIFIED)) {
+      if (isApiError(error, AUTH_ERROR_CODES.emailNotVerified)) {
         setVerificationStep('idle');
         setEmailError(error.message);
       } else {
@@ -191,6 +201,7 @@ export default function SignupPage() {
               placeholder="6자리 인증 코드를 입력해 주세요"
               maxLength={VERIFICATION_CODE_LENGTH}
               value={code}
+              disabled={codeLock.isLocked}
               error={codeError}
               onChange={(event) => {
                 setCode(event.target.value.replace(/\D/g, ''));
@@ -200,14 +211,14 @@ export default function SignupPage() {
             <div className={styles.codeActions}>
               <Button
                 variant="muted"
-                disabled={isSubmitting || resendCountdown.remaining > 0}
+                disabled={isSubmitting || codeLock.isLocked || resendCountdown.remaining > 0}
                 onClick={sendVerificationCode}
               >
                 <Placeholder size={RESEND_ICON_SIZE} />
                 <span>이메일 재전송</span>
                 {resendCountdown.remaining > 0 && <span>{formatSeconds(resendCountdown.remaining)}</span>}
               </Button>
-              <Button variant="secondary" disabled={isSubmitting} onClick={confirmVerificationCode}>
+              <Button variant="secondary" disabled={isSubmitting || codeLock.isLocked} onClick={confirmVerificationCode}>
                 인증 확인
               </Button>
             </div>

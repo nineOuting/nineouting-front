@@ -6,6 +6,7 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   description?: string;
   error?: string;
   helper?: string;
+  leading?: ReactNode;
   trailing?: ReactNode;
   className?: string;
 }
@@ -15,6 +16,7 @@ export default function TextField({
   description,
   error,
   helper,
+  leading,
   trailing,
   required,
   className,
@@ -37,6 +39,7 @@ export default function TextField({
       {description && <p className={styles.description}>{description}</p>}
       <div className={styles.inputGroup}>
         <div className={[styles.box, error ? styles.boxError : ''].filter(Boolean).join(' ')}>
+          {leading}
           <input
             id={inputId}
             className={styles.input}

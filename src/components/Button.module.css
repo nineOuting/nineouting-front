@@ -40,6 +40,18 @@
   font-size: var(--font-size-b2);
 }
 
+/* 확인 창의 보조 버튼 (계속 작성하기, 취소) */
+.neutral {
+  width: 100%;
+  height: 56px;
+  padding: 16px;
+  background: var(--grey-10);
+  border: 1px solid var(--grey-20);
+  color: var(--color-black);
+  font-size: var(--font-size-b1);
+  font-weight: 400;
+}
+
 .underline {
   padding: 0;
   background: none;
@@ -47,4 +59,9 @@
   border-bottom: 1px solid var(--blue-100);
   color: var(--blue-100);
   font-size: var(--font-size-b2);
+}
+
+.underline:disabled {
+  border-bottom-color: var(--grey-40);
+  color: var(--grey-40);
 }
