@@ -1,0 +1,157 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 43px;
+  width: 592px;
+  padding: 64px 48px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 28px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.loadPrevious {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  color: var(--grey-50);
+}
+
+.boxLead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+}
+
+.sectionTitle {
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 23px;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 26px;
+}
+
+.row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* TextField의 기본 라벨(18px)보다 작은 회의 생성 화면 라벨 */
+.field > label,
+.label {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-70);
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 57px;
+  padding: 0 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+}
+
+.box:focus-within {
+  border-color: var(--blue-70);
+}
+
+.boxError,
+.boxError:focus-within {
+  border-color: var(--red-90);
+}
+
+.boxButton {
+  text-align: left;
+}
+
+.placeholderText {
+  color: var(--grey-50);
+}
+
+.timeInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-weight: 500;
+  color: var(--grey-100);
+}
+
+.timeSeparator {
+  color: var(--grey-50);
+}
+
+.error {
+  padding: 0 8px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--red-80);
+}
+
+.menuAnchor {
+  position: relative;
+}

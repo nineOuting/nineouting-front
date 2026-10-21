@@ -1,0 +1,80 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.handle {
+  display: flex;
+  cursor: grab;
+}
+
+.texts {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.date,
+.sub {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.title {
+  font-weight: 500;
+  color: var(--grey-100);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.divider {
+  display: block;
+  max-width: none;
+}
+
+.decisionWrap {
+  padding-left: 16px;
+}
+
+.decision {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: var(--grey-10);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.decisionLabel {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.decisionValue {
+  color: var(--grey-100);
+}
