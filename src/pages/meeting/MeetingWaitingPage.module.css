@@ -110,34 +110,6 @@
   color: var(--grey-60);
 }
 
-.agendaList {
-  display: flex;
-  flex-direction: column;
-  gap: 17px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.agendaList:empty {
-  display: none;
-}
-
-.addAgenda {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  height: 56px;
-  padding: 16px;
-  background: var(--grey-10);
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  color: var(--grey-60);
-}
-
 .readiness {
   display: flex;
   align-items: center;

@@ -1,0 +1,97 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 347px;
+  padding: 24px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  min-height: 0;
+}
+
+.agendaList {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 292px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.separator {
+  display: flex;
+}
+
+.agenda {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+}
+
+.agendaSelected {
+  background: var(--blue-10);
+}
+
+.agendaTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.detail {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 16px;
+  overflow: hidden;
+  background: var(--grey-10);
+  border-radius: 8px;
+}
+
+.detailTitle {
+  font-weight: 500;
+  color: var(--color-black);
+}
+
+.detailCaption {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-40);
+}
+
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}

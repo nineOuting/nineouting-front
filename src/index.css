@@ -13,6 +13,7 @@
   --grey-90: #4e4e4e;
   --grey-100: #383838;
   --blue-10: #e9e8f2;
+  --blue-20: #d4d1e5;
   --blue-50: #938bbe;
   --blue-70: #685da4;
   --blue-90: #3d2f8a;
@@ -22,6 +23,7 @@
   --red-80: #e54d4d;
   --red-90: #e13637;
   --red-100: #de2021;
+  --green-10: #ebffeb;
   --green-success: #00b503;
   /* 왼쪽 메뉴·상단 바 디자인이 나오기 전까지 자리만 잡는 회색 */
   --layout-placeholder: #d9d9d9;

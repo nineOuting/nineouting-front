@@ -1,0 +1,126 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  background: var(--grey-10);
+}
+
+.meetingHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  height: 96px;
+  padding: 24px 56px;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--grey-20);
+}
+
+.headerInfo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+}
+
+.recording {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recordingState,
+.pausedState {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.recordingState {
+  color: var(--red-100);
+}
+
+/* 멈춤 표시는 디자인에 없어 회색 점으로 표시했다 (REQ-081) */
+.pausedState {
+  color: var(--grey-70);
+}
+
+.elapsed,
+.attendees {
+  color: var(--grey-50);
+}
+
+.headerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 381px;
+}
+
+.pauseButton,
+.endButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.pauseButton {
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  color: var(--color-black);
+}
+
+.endButton {
+  background: var(--blue-100);
+  border: none;
+  color: var(--color-white);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 790px;
+  margin: 30px 0 40px 25px;
+}
+
+/* 오른쪽 패널은 헤더 아래선과 겹쳐 붙고 화면 끝까지 이어진다 */
+.sidePanel {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  width: 499px;
+  min-height: calc(100vh - 159px);
+  margin: -1px 0 0 auto;
+  padding: 31px 32px 0 38px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 20px 0 0;
+}

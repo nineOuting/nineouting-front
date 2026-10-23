@@ -1,16 +1,18 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { getMeetingDetail, listFolderMeetings, toDisplayDate, toMember } from '../../api/meeting';
 import Button from '../../components/Button';
 import Checkbox from '../../components/Checkbox';
 import Placeholder from '../../components/Placeholder';
 import TextField from '../../components/TextField';
-import { PREVIOUS_MEETINGS } from '../../mocks/meeting';
-import type { MeetingBasicInfo } from '../../types/meeting';
+import type { MeetingBasicInfo, PreviousMeeting } from '../../types/meeting';
 import styles from './LoadPreviousSettings.module.css';
 
 const BACK_ICON_SIZE = 24;
 const ICON_SIZE = 20;
 const META_ICON_SIZE = 16;
 const NOTE_ICON_SIZE = 17;
+// 최근 회의 몇 개까지 보여 줄지 (기획 미정, 임시)
+const RECENT_MEETING_COUNT = 10;
 
 export type PreviousSettings = Partial<Pick<MeetingBasicInfo, 'title' | 'attendees' | 'location'>>;
 type SettingKey = keyof PreviousSettings;
@@ -22,20 +24,44 @@ const SETTING_OPTIONS: { key: SettingKey; label: string }[] = [
 ];
 
 interface LoadPreviousSettingsProps {
+  folderId: number;
   onBack: () => void;
   onApply: (settings: PreviousSettings) => void;
 }
 
 /** REQ-063 같은 프로젝트 폴더의 이전 회의에서 회의명·참석자·장소를 골라 불러온다 */
-export default function LoadPreviousSettings({ onBack, onApply }: LoadPreviousSettingsProps) {
+export default function LoadPreviousSettings({ folderId, onBack, onApply }: LoadPreviousSettingsProps) {
   const titleId = useId();
   const [keyword, setKeyword] = useState('');
-  const [selectedId, setSelectedId] = useState<string>();
+  const [selectedId, setSelectedId] = useState<number>();
   const [keys, setKeys] = useState<SettingKey[]>([]);
+  const [previousMeetings, setPreviousMeetings] = useState<PreviousMeeting[] | null>(null);
 
-  // TODO(API 연동): GET /api/folders/{folderId}/meetings 로 같은 폴더의 지난 회의를 받는다
-  const meetings = PREVIOUS_MEETINGS.filter(({ title }) => title.includes(keyword.trim()));
-  const selected = PREVIOUS_MEETINGS.find(({ meetingId }) => meetingId === selectedId);
+  useEffect(() => {
+    let isCurrent = true;
+    // 목록에는 참석자·장소가 없어 회의마다 상세를 받는다
+    listFolderMeetings(folderId, RECENT_MEETING_COUNT)
+      .then((items) => Promise.all(items.map(({ meetingId }) => getMeetingDetail(meetingId))))
+      .then((details) => details.map((detail) => ({
+        meetingId: detail.meetingId,
+        title: detail.title,
+        date: toDisplayDate(detail.startAt),
+        location: detail.location ?? '',
+        attendees: detail.attendees.map(toMember),
+      })))
+      .catch(() => [])
+      .then((loaded) => {
+        if (isCurrent) {
+          setPreviousMeetings(loaded);
+        }
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [folderId]);
+
+  const meetings = (previousMeetings ?? []).filter(({ title }) => title.includes(keyword.trim()));
+  const selected = meetings.find(({ meetingId }) => meetingId === selectedId);
 
   const toggleKey = (key: SettingKey, checked: boolean) => {
     setKeys((prev) => (checked ? [...prev, key] : prev.filter((value) => value !== key)));
@@ -85,7 +111,11 @@ export default function LoadPreviousSettings({ onBack, onApply }: LoadPreviousSe
         <div className={styles.recent}>
           <h3 className={styles.subTitle}>최근 회의</h3>
           <ul className={styles.meetingList}>
-            {meetings.length === 0 && <li className={styles.caption}>검색 결과가 없어요</li>}
+            {previousMeetings === null && <li className={styles.caption}>불러오는 중이에요</li>}
+            {previousMeetings?.length === 0 && <li className={styles.caption}>이 폴더에 지난 회의가 없어요</li>}
+            {Boolean(previousMeetings?.length) && meetings.length === 0 && (
+              <li className={styles.caption}>검색 결과가 없어요</li>
+            )}
             {meetings.map((meeting) => (
               <li key={meeting.meetingId}>
                 <button
@@ -105,10 +135,12 @@ export default function LoadPreviousSettings({ onBack, onApply }: LoadPreviousSe
                         <Placeholder size={META_ICON_SIZE} className={styles.metaIcon} />
                         {meeting.attendees.length}명
                       </span>
-                      <span className={styles.metaItem}>
-                        <Placeholder size={META_ICON_SIZE} className={styles.metaIcon} />
-                        {meeting.location}
-                      </span>
+                      {meeting.location && (
+                        <span className={styles.metaItem}>
+                          <Placeholder size={META_ICON_SIZE} className={styles.metaIcon} />
+                          {meeting.location}
+                        </span>
+                      )}
                     </span>
                   </span>
                 </button>

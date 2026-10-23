@@ -1,0 +1,53 @@
+.card {
+  width: 494px;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headTitle {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.field {
+  gap: 12px;
+}
+
+.field > label {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.field input::placeholder {
+  font-weight: 500;
+  color: var(--grey-40);
+}
+
+.decisionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hint {
+  padding-left: 8px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}

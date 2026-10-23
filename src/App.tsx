@@ -31,11 +31,39 @@ export default function App() {
         <Route path="/password/verify" element={<PasswordVerifyPage />} />
         <Route path="/password/reset" element={<PasswordResetPage />} />
         <Route path="/password/complete" element={<PasswordCompletePage />} />
-        {/* 회의 화면은 API 연동 전이라 로그인 없이 예시 데이터로 본다 (docs/backlog.md) */}
-        <Route path="/meetings/new" element={<MeetingCreatePage />} />
-        <Route path="/meetings/:meetingId" element={<MeetingWaitingPage />} />
-        <Route path="/meetings/:meetingId/edit" element={<MeetingCreatePage />} />
-        <Route path="/meetings/:meetingId/room" element={<MeetingRoomPage />} />
+        {/* 회의는 프로젝트 폴더 안에서 만든다. 폴더 화면이 생기면 거기서 이 주소로 들어온다 */}
+        <Route
+          path="/folders/:folderId/meetings/new"
+          element={
+            <RequireAuth>
+              <MeetingCreatePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/meetings/:meetingId"
+          element={
+            <RequireAuth>
+              <MeetingWaitingPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/meetings/:meetingId/edit"
+          element={
+            <RequireAuth>
+              <MeetingCreatePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/meetings/:meetingId/room"
+          element={
+            <RequireAuth>
+              <MeetingRoomPage />
+            </RequireAuth>
+          }
+        />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
