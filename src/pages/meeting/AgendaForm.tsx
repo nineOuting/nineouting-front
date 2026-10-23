@@ -2,8 +2,7 @@ import { useRef, useState } from 'react';
 import DropdownMenu from '../../components/DropdownMenu';
 import Placeholder from '../../components/Placeholder';
 import TextField from '../../components/TextField';
-import { PENDING_AGENDAS } from '../../mocks/meeting';
-import type { Agenda } from '../../types/meeting';
+import type { Agenda, PendingAgenda } from '../../types/meeting';
 import styles from './AgendaForm.module.css';
 
 const ICON_SIZE = 20;
@@ -15,15 +14,21 @@ type AgendaInput = Omit<Agenda, 'id'>;
 
 interface AgendaFormProps {
   initialAgenda?: Agenda;
+  /** 폴더의 남은 안건 중 불러올 수 있는 것 */
+  pendingAgendas: PendingAgenda[];
   onCancel: () => void;
   onSave: (agenda: AgendaInput, options: { continueWriting: boolean }) => void;
 }
 
 /** REQ-065~066, 068 안건 작성·수정. 안건 제목 칸 오른쪽 버튼으로 폴더의 남은 안건을 불러온다 */
-export default function AgendaForm({ initialAgenda, onCancel, onSave }: AgendaFormProps) {
+export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, onSave }: AgendaFormProps) {
   const [title, setTitle] = useState(initialAgenda?.title ?? '');
   const [decisionPoint, setDecisionPoint] = useState(initialAgenda?.decisionPoint ?? '');
-  const [carriedOverFrom, setCarriedOverFrom] = useState(initialAgenda?.carriedOverFrom);
+  const [pending, setPending] = useState(() =>
+    initialAgenda?.pendingAgendaId === undefined
+      ? undefined
+      : { id: initialAgenda.pendingAgendaId, carriedOverFrom: initialAgenda.carriedOverFrom },
+  );
   const [isPendingMenuOpen, setIsPendingMenuOpen] = useState(false);
   const pendingAnchorRef = useRef<HTMLButtonElement>(null);
   const isEdit = Boolean(initialAgenda);
@@ -33,11 +38,19 @@ export default function AgendaForm({ initialAgenda, onCancel, onSave }: AgendaFo
     if (!canSave) {
       return;
     }
-    onSave({ title: title.trim(), decisionPoint: decisionPoint.trim(), carriedOverFrom }, { continueWriting });
+    onSave(
+      {
+        title: title.trim(),
+        decisionPoint: decisionPoint.trim(),
+        pendingAgendaId: pending?.id,
+        carriedOverFrom: pending?.carriedOverFrom,
+      },
+      { continueWriting },
+    );
     if (continueWriting) {
       setTitle('');
       setDecisionPoint('');
-      setCarriedOverFrom(undefined);
+      setPending(undefined);
     }
   };
 
@@ -56,7 +69,7 @@ export default function AgendaForm({ initialAgenda, onCancel, onSave }: AgendaFo
           value={title}
           onChange={(event) => {
             setTitle(event.target.value);
-            setCarriedOverFrom(undefined);
+            setPending(undefined);
           }}
           trailing={
             <button
@@ -77,18 +90,17 @@ export default function AgendaForm({ initialAgenda, onCancel, onSave }: AgendaFo
             label="남은 안건"
             emptyText="폴더에 남은 안건이 없어요"
             anchorRef={pendingAnchorRef}
-            // TODO(API 연동): GET /api/folders/{folderId}/pending-agendas
-            items={PENDING_AGENDAS.map((pending) => ({
-              id: pending.id,
-              label: pending.title,
-              description: `${pending.carriedOverFrom} 회의에서 넘어온 안건`,
+            items={pendingAgendas.map((item) => ({
+              id: String(item.id),
+              label: item.title,
+              description: `${item.carriedOverFrom} 회의에서 넘어온 안건`,
             }))}
             onSelect={(id) => {
-              const pending = PENDING_AGENDAS.find((item) => item.id === id);
-              if (pending) {
-                setTitle(pending.title);
-                setDecisionPoint(pending.decisionPoint);
-                setCarriedOverFrom(pending.carriedOverFrom);
+              const selected = pendingAgendas.find((item) => String(item.id) === id);
+              if (selected) {
+                setTitle(selected.title);
+                setDecisionPoint(selected.decisionPoint);
+                setPending({ id: selected.id, carriedOverFrom: selected.carriedOverFrom });
               }
               setIsPendingMenuOpen(false);
             }}

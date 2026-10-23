@@ -28,3 +28,18 @@
 .main {
   min-width: 0;
 }
+
+/* 회의 중 화면: 접힌 메뉴(72px)와 옅은 회색 상단 바 */
+.compact {
+  grid-template-columns: 72px 1fr;
+  background: var(--grey-10);
+}
+
+.compact .header,
+.compact .sidebar {
+  background: var(--grey-10);
+}
+
+.menuIcon {
+  margin: 28px 0 0 24px;
+}

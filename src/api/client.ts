@@ -38,8 +38,31 @@ export function errorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : NETWORK_ERROR_MESSAGE;
 }
 
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+let refreshAccessToken: (() => Promise<void>) | null = null;
+
+/** access 토큰이 만료(401)되면 refresh 쿠키로 다시 받고 한 번 더 부른다. auth.ts가 등록한다 (서로 import하지 않도록) */
+export function setTokenRefresher(refresher: () => Promise<void>) {
+  refreshAccessToken = refresher;
+}
+
 /** user-service 등 백엔드 API 호출. 응답 형식은 { success, data, message, code } (docs/coding-conventions.md 4장) */
-export async function request<T = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: string, body?: unknown) {
+export async function request<T = void>(method: Method, path: string, body?: unknown): Promise<T> {
+  try {
+    return await send<T>(method, path, body);
+  } catch (error) {
+    // 회의는 access 토큰 유효 시간(30분)보다 길 수 있다. 인증 API 자체의 401은 다시 부르지 않는다
+    const canRetry = isApiError(error) && error.status === 401 && getAccessToken() && !path.startsWith('/api/auth/');
+    if (!canRetry || !refreshAccessToken) {
+      throw error;
+    }
+    await refreshAccessToken();
+    return send<T>(method, path, body);
+  }
+}
+
+async function send<T>(method: Method, path: string, body?: unknown) {
   const headers: Record<string, string> = {};
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json';

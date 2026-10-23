@@ -5,10 +5,13 @@ export interface Member {
 }
 
 export interface Agenda {
+  /** 저장된 안건은 meeting-service의 agendaId, 저장 전이면 화면에서 만든 임시 값 */
   id: string;
   title: string;
   decisionPoint: string;
-  /** 남은 안건에서 불러온 경우 처음 올라온 회의 날짜 (REQ-051, 068) */
+  /** 폴더의 남은 안건에서 불러온 경우 (REQ-068) */
+  pendingAgendaId?: number;
+  /** 남은 안건에서 불러온 경우 다음 회의로 넘긴 날짜 (REQ-051, 068) */
   carriedOverFrom?: string;
 }
 
@@ -22,10 +25,16 @@ export interface MeetingBasicInfo {
   attendees: Member[];
 }
 
+/** meeting-service MeetingStatus */
+export type MeetingStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
+
 export interface Meeting extends MeetingBasicInfo {
-  meetingId: string;
+  meetingId: number;
+  folderId: number;
+  status: MeetingStatus;
   agendas: Agenda[];
   writer?: Member;
+  /** 회의록 양식·사전 자료는 아직 백엔드에 없어 화면에만 둔다 (REQ-100, 067) */
   templateId?: string;
   materials: string[];
 }
@@ -37,7 +46,7 @@ export interface MinutesTemplate {
 }
 
 export interface PreviousMeeting {
-  meetingId: string;
+  meetingId: number;
   title: string;
   date: string;
   location: string;
@@ -45,8 +54,10 @@ export interface PreviousMeeting {
 }
 
 export interface PendingAgenda {
-  id: string;
+  id: number;
   title: string;
   decisionPoint: string;
   carriedOverFrom: string;
+  /** 다른 회의가 이미 불러갔으면 그 회의 */
+  takenMeetingId?: number;
 }

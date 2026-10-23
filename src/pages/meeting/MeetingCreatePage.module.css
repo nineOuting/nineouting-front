@@ -155,3 +155,10 @@
 .menuAnchor {
   position: relative;
 }
+
+.caption {
+  padding: 0 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}

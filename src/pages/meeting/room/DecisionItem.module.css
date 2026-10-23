@@ -1,0 +1,76 @@
+.item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.selected {
+  background: var(--blue-10);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.summary {
+  padding: 0 16px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+/* 연필 아이콘은 마우스를 올렸을 때만 보인다 (REQ-126) */
+.edit {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  opacity: 0;
+  transform: translateY(-50%);
+}
+
+.item:hover .edit,
+.edit:focus-visible {
+  opacity: 1;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 16px;
+}
+
+.input {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--color-white);
+  border: 1px solid var(--blue-70);
+  border-radius: 4px;
+  outline: none;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-100);
+}

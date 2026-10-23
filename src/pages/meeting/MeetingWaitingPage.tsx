@@ -1,5 +1,16 @@
-import { useCallback, useRef, useState, type ChangeEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { errorMessage, isApiError } from '../../api/client';
+import {
+  cancelMeeting,
+  getMeetingDetail,
+  listPendingAgendas,
+  MEETING_ERROR_CODES,
+  startMeeting,
+  toMeeting,
+  updateMeeting,
+} from '../../api/meeting';
+import { listFolderMembers } from '../../api/workspace';
 import dividerLine from '../../assets/divider-line.svg';
 import dividerSide from '../../assets/divider-side.svg';
 import AppLayout from '../../components/AppLayout';
@@ -8,11 +19,11 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import { FOLDER_MEMBERS, MINUTES_TEMPLATES, SAMPLE_MEETING } from '../../mocks/meeting';
-import type { Agenda, Meeting, Member } from '../../types/meeting';
+import { MINUTES_TEMPLATES } from '../../mocks/meeting';
+import type { Meeting, MeetingStatus, Member, PendingAgenda } from '../../types/meeting';
 import { formatMeetingSchedule } from '../../utils/meetingFormat';
-import AgendaCard from './AgendaCard';
-import AgendaForm from './AgendaForm';
+import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
+import AgendaEditor from './AgendaEditor';
 import ConsentModal from './ConsentModal';
 import StartingModal from './StartingModal';
 import TemplateDetailModal from './TemplateDetailModal';
@@ -23,11 +34,18 @@ const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
 const MATERIAL_ICON_SIZE = 24;
 const START_FAILED_MESSAGE = '회의를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.';
+const MIC_DENIED_MESSAGE = '마이크를 쓸 수 없어 회의를 시작하지 못했어요. 브라우저의 마이크 권한을 확인해 주세요.';
 const NEW_TEMPLATE_PENDING_MESSAGE = '새 양식 만들기는 설정의 회의록 양식 관리 화면이 나오면 연결돼요.';
 
-type AgendaFormState = { mode: 'new' } | { mode: 'edit'; agendaId: string };
 type TemplateModalState = { view: 'gallery' } | { view: 'detail'; index: number };
 type OpenMenu = 'attendee' | 'template' | 'writer';
+
+const STATUS_LABELS: Record<MeetingStatus, string> = {
+  SCHEDULED: '회의 예정',
+  IN_PROGRESS: '회의 중',
+  FINISHED: '회의 종료',
+  CANCELLED: '취소된 회의',
+};
 
 function readinessMessage(hasAgenda: boolean, hasWriter: boolean) {
   if (hasAgenda && hasWriter) {
@@ -50,17 +68,14 @@ function Avatar({ member }: { member: Member }) {
   );
 }
 
-/** REQ-074~077, 100, 122 회의 대기 화면 */
+/** REQ-064, 073~077, 100, 122 회의 대기 화면 */
 export default function MeetingWaitingPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  // TODO(API 연동): GET /api/meetings/{meetingId}. 지금은 생성·수정 화면에서 넘겨준 값이나 예시 데이터를 쓴다
-  const [meeting, setMeeting] = useState<Meeting>(
-    () => (location.state as { meeting?: Meeting } | null)?.meeting ?? SAMPLE_MEETING,
-  );
+  const { meetingId } = useParams();
+  const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [folderMembers, setFolderMembers] = useState<Member[]>([]);
+  const [pendingAgendas, setPendingAgendas] = useState<PendingAgenda[]>([]);
   const [templates, setTemplates] = useState(MINUTES_TEMPLATES);
-  const [expandedAgendaId, setExpandedAgendaId] = useState<string | undefined>(meeting.agendas[0]?.id);
-  const [agendaForm, setAgendaForm] = useState<AgendaFormState | null>(null);
   const [openMenu, setOpenMenu] = useState<OpenMenu | null>(null);
   const [templateModal, setTemplateModal] = useState<TemplateModalState | null>(null);
   const [isConsentOpen, setIsConsentOpen] = useState(false);
@@ -69,48 +84,83 @@ export default function MeetingWaitingPage() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
   const closeMenu = useCallback(() => setOpenMenu(null), []);
-  const dragIndexRef = useRef<number | null>(null);
   const attendeeAnchorRef = useRef<HTMLButtonElement>(null);
   const templateAnchorRef = useRef<HTMLButtonElement>(null);
   const writerAnchorRef = useRef<HTMLButtonElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isReady = meeting.agendas.length > 0 && Boolean(meeting.writer);
+  useEffect(() => {
+    let isCurrent = true;
+    const load = async () => {
+      const loaded = toMeeting(await getMeetingDetail(meetingId ?? ''));
+      const [members, pending] = await Promise.all([
+        listFolderMembers(loaded.folderId),
+        listPendingAgendas(loaded.folderId),
+      ]);
+      if (!isCurrent) {
+        return;
+      }
+      const usable = pendingAgendasFor(pending, loaded.meetingId);
+      setFolderMembers(members);
+      setPendingAgendas(usable);
+      setMeeting({
+        ...loaded,
+        agendas: withCarriedOverDates(loaded.agendas, usable),
+        // TODO(API 연동): 회의록 양식은 백엔드에 아직 없어 즐겨찾기 첫 양식을 고른다 (REQ-100)
+        templateId: MINUTES_TEMPLATES.find(({ isFavorite }) => isFavorite)?.templateId,
+      });
+    };
+    load().catch((error: unknown) => {
+      if (isCurrent) {
+        setToast({ text: errorMessage(error), variant: 'error' });
+      }
+    });
+    return () => {
+      isCurrent = false;
+    };
+  }, [meetingId]);
+
+  if (!meeting) {
+    return <AppLayout className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</AppLayout>;
+  }
+  if (meeting.status === 'IN_PROGRESS') {
+    return <Navigate to={`/meetings/${meeting.meetingId}/room`} replace />;
+  }
+
+  const isScheduled = meeting.status === 'SCHEDULED';
+  const isReady = isScheduled && meeting.agendas.length > 0 && Boolean(meeting.writer);
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
-  const updateMeeting = (patch: Partial<Meeting>) => setMeeting((prev) => ({ ...prev, ...patch }));
+  /** 화면에만 있는 값(양식·사전 자료)은 바로 바꾼다 */
+  const updateLocal = (patch: Partial<Meeting>) => setMeeting((prev) => prev && { ...prev, ...patch });
+
+  /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
+  const saveMeeting = async (patch: Partial<Meeting>) => {
+    const before = meeting;
+    const next = { ...meeting, ...patch };
+    setMeeting(next);
+    try {
+      const saved = await updateMeeting(next);
+      setMeeting(
+        (prev) =>
+          prev && {
+            ...saved,
+            agendas: withCarriedOverDates(saved.agendas, pendingAgendas),
+            templateId: prev.templateId,
+            materials: prev.materials,
+          },
+      );
+    } catch (error) {
+      setMeeting(before);
+      setToast({ text: errorMessage(error), variant: 'error' });
+    }
+  };
 
   const toggleMenu = (menu: OpenMenu) => setOpenMenu((current) => (current === menu ? null : menu));
 
-  const saveAgenda = (input: Omit<Agenda, 'id'>, { continueWriting }: { continueWriting: boolean }) => {
-    // TODO(API 연동): 대기 화면 안건 저장 API (docs/backlog.md)
-    if (agendaForm?.mode === 'edit') {
-      updateMeeting({
-        agendas: meeting.agendas.map((agenda) => (agenda.id === agendaForm.agendaId ? { ...agenda, ...input } : agenda)),
-      });
-    } else {
-      updateMeeting({ agendas: [...meeting.agendas, { ...input, id: crypto.randomUUID() }] });
-    }
-    if (!continueWriting) {
-      setAgendaForm(null);
-    }
-  };
-
-  const moveAgenda = (toIndex: number) => {
-    const fromIndex = dragIndexRef.current;
-    dragIndexRef.current = null;
-    if (fromIndex === null || fromIndex === toIndex) {
-      return;
-    }
-    const agendas = [...meeting.agendas];
-    const [moved] = agendas.splice(fromIndex, 1);
-    agendas.splice(toIndex, 0, moved);
-    updateMeeting({ agendas });
-  };
-
   const addAttendee = (member: Member) => {
     if (!meeting.attendees.some(({ userId }) => userId === member.userId)) {
-      updateMeeting({ attendees: [...meeting.attendees, member] });
+      void saveMeeting({ attendees: [...meeting.attendees, member] });
     }
   };
 
@@ -126,28 +176,43 @@ export default function MeetingWaitingPage() {
   const addMaterials = (event: ChangeEvent<HTMLInputElement>) => {
     // TODO(API 연동): 사전 자료 업로드 (REQ-067, S3)
     const names = Array.from(event.target.files ?? [], (file) => file.name);
-    updateMeeting({ materials: [...meeting.materials, ...names] });
+    updateLocal({ materials: [...meeting.materials, ...names] });
     event.target.value = '';
   };
 
-  const startMeeting = async () => {
+  const start = async () => {
     setIsConsentOpen(false);
     setIsStarting(true);
     try {
       // REQ-077 동의하면 브라우저 마이크 권한을 요청한다. 녹음은 회의 진행 화면에서 시작한다
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
-      // TODO(API 연동): POST /api/meetings/{meetingId}/start
-      navigate(`/meetings/${meeting.meetingId}/room`, { state: { meeting } });
     } catch {
       setIsStarting(false);
-      setToast({ text: START_FAILED_MESSAGE, variant: 'error' });
+      setToast({ text: MIC_DENIED_MESSAGE, variant: 'error' });
+      return;
     }
+    try {
+      await startMeeting(meeting.meetingId);
+    } catch (error) {
+      // 다른 탭에서 이미 시작했으면 그대로 회의방으로 들어간다
+      if (!isApiError(error, MEETING_ERROR_CODES.alreadyStarted)) {
+        setIsStarting(false);
+        setToast({ text: isApiError(error) ? errorMessage(error) : START_FAILED_MESSAGE, variant: 'error' });
+        return;
+      }
+    }
+    navigate(`/meetings/${meeting.meetingId}/room`);
   };
 
-  const cancelMeeting = () => {
-    // TODO(API 연동): POST /api/meetings/{meetingId}/cancel (REQ-073)
-    navigate('/home', { replace: true });
+  const cancel = async () => {
+    setIsCancelDialogOpen(false);
+    try {
+      await cancelMeeting(meeting.meetingId);
+      navigate('/home', { replace: true });
+    } catch (error) {
+      setToast({ text: errorMessage(error), variant: 'error' });
+    }
   };
 
   return (
@@ -158,7 +223,7 @@ export default function MeetingWaitingPage() {
         <div className={styles.titleBlock}>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>{meeting.title}</h1>
-            <span className={styles.badge}>회의 예정</span>
+            <span className={styles.badge}>{STATUS_LABELS[meeting.status]}</span>
           </div>
           <div className={styles.metaRow}>
             <span>{formatMeetingSchedule(meeting.date, meeting.startTime, meeting.endTime)}</span>
@@ -170,14 +235,16 @@ export default function MeetingWaitingPage() {
             )}
           </div>
         </div>
-        <button
-          type="button"
-          className={styles.editInfo}
-          onClick={() => navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting } })}
-        >
-          <Placeholder size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
-          정보 수정
-        </button>
+        {isScheduled && (
+          <button
+            type="button"
+            className={styles.editInfo}
+            onClick={() => navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting } })}
+          >
+            <Placeholder size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+            정보 수정
+          </button>
+        )}
       </div>
 
       <div className={styles.columns}>
@@ -187,36 +254,11 @@ export default function MeetingWaitingPage() {
               <h2 className={styles.agendaTitle}>회의 안건</h2>
               <span className={styles.agendaCount}>{meeting.agendas.length}개</span>
             </div>
-            <ul className={styles.agendaList}>
-              {meeting.agendas.map((agenda, index) =>
-                agendaForm?.mode === 'edit' && agendaForm.agendaId === agenda.id ? (
-                  <li key={agenda.id}>
-                    <AgendaForm initialAgenda={agenda} onCancel={() => setAgendaForm(null)} onSave={saveAgenda} />
-                  </li>
-                ) : (
-                  <AgendaCard
-                    key={agenda.id}
-                    agenda={agenda}
-                    isExpanded={expandedAgendaId === agenda.id}
-                    onToggle={() => setExpandedAgendaId((current) => (current === agenda.id ? undefined : agenda.id))}
-                    onEdit={() => setAgendaForm({ mode: 'edit', agendaId: agenda.id })}
-                    onDragStart={() => {
-                      dragIndexRef.current = index;
-                    }}
-                    onDrop={() => moveAgenda(index)}
-                  />
-                ),
-              )}
-              {agendaForm?.mode === 'new' && (
-                <li>
-                  <AgendaForm onCancel={() => setAgendaForm(null)} onSave={saveAgenda} />
-                </li>
-              )}
-            </ul>
-            <button type="button" className={styles.addAgenda} onClick={() => setAgendaForm({ mode: 'new' })}>
-              <Placeholder size={ICON_SIZE} />
-              안건 추가하기
-            </button>
+            <AgendaEditor
+              agendas={meeting.agendas}
+              pendingAgendas={pendingAgendas}
+              onChange={(agendas) => void saveMeeting({ agendas })}
+            />
           </section>
 
           <p className={styles.readiness}>
@@ -264,11 +306,11 @@ export default function MeetingWaitingPage() {
                   label="참여자 추가"
                   emptyText="추가할 폴더 멤버가 없어요"
                   anchorRef={attendeeAnchorRef}
-                  items={FOLDER_MEMBERS.filter(({ userId }) => !meeting.attendees.some((m) => m.userId === userId)).map(
-                    (member) => ({ id: String(member.userId), label: member.name }),
-                  )}
+                  items={folderMembers
+                    .filter(({ userId }) => !meeting.attendees.some((member) => member.userId === userId))
+                    .map((member) => ({ id: String(member.userId), label: member.name }))}
                   onSelect={(id) => {
-                    const member = FOLDER_MEMBERS.find(({ userId }) => String(userId) === id);
+                    const member = folderMembers.find(({ userId }) => String(userId) === id);
                     if (member) {
                       addAttendee(member);
                     }
@@ -322,7 +364,7 @@ export default function MeetingWaitingPage() {
                           isSelected: template.templateId === meeting.templateId,
                         }))}
                       onSelect={(id) => {
-                        updateMeeting({ templateId: id });
+                        updateLocal({ templateId: id });
                         closeMenu();
                       }}
                       onClose={closeMenu}
@@ -356,7 +398,7 @@ export default function MeetingWaitingPage() {
                         isSelected: member.userId === meeting.writer?.userId,
                       }))}
                       onSelect={(id) => {
-                        updateMeeting({ writer: meeting.attendees.find(({ userId }) => String(userId) === id) });
+                        void saveMeeting({ writer: meeting.attendees.find(({ userId }) => String(userId) === id) });
                         closeMenu();
                       }}
                       onClose={closeMenu}
@@ -389,9 +431,11 @@ export default function MeetingWaitingPage() {
             <input ref={fileInputRef} type="file" multiple hidden onChange={addMaterials} />
           </section>
 
-          <button type="button" className={styles.cancelMeeting} onClick={() => setIsCancelDialogOpen(true)}>
-            회의 취소하기
-          </button>
+          {isScheduled && (
+            <button type="button" className={styles.cancelMeeting} onClick={() => setIsCancelDialogOpen(true)}>
+              회의 취소하기
+            </button>
+          )}
         </aside>
       </div>
 
@@ -411,13 +455,13 @@ export default function MeetingWaitingPage() {
           index={templateModal.index}
           onChangeIndex={(index) => setTemplateModal({ view: 'detail', index })}
           onUse={(templateId) => {
-            updateMeeting({ templateId });
+            updateLocal({ templateId });
             setTemplateModal(null);
           }}
           onClose={() => setTemplateModal({ view: 'gallery' })}
         />
       )}
-      {isConsentOpen && <ConsentModal onCancel={() => setIsConsentOpen(false)} onAgree={startMeeting} />}
+      {isConsentOpen && <ConsentModal onCancel={() => setIsConsentOpen(false)} onAgree={start} />}
       {isStarting && <StartingModal />}
       {isCancelDialogOpen && (
         <ConfirmDialog
@@ -426,7 +470,7 @@ export default function MeetingWaitingPage() {
           cancelLabel="돌아가기"
           confirmLabel="회의 취소"
           onCancel={() => setIsCancelDialogOpen(false)}
-          onConfirm={cancelMeeting}
+          onConfirm={cancel}
         />
       )}
     </AppLayout>

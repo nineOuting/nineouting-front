@@ -1,5 +1,5 @@
 import { setAccessToken } from '../auth/tokenStore';
-import { request } from './client';
+import { request, setTokenRefresher } from './client';
 
 interface TokenResponse {
   accessToken: string;
@@ -45,6 +45,8 @@ export function refresh() {
     });
   return refreshing;
 }
+
+setTokenRefresher(refresh);
 
 /** REQ-009 비밀번호 찾기 인증 번호 발송 */
 export function requestPasswordReset(email: string) {
