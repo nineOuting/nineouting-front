@@ -2,13 +2,14 @@ import { useRef, useState } from 'react';
 import DropdownMenu from '../../components/DropdownMenu';
 import Placeholder from '../../components/Placeholder';
 import TextField from '../../components/TextField';
+import { cleanDecisionPoints } from '../../constants/meeting';
 import type { Agenda, PendingAgenda } from '../../types/meeting';
+import DecisionPointFields from './DecisionPointFields';
 import styles from './AgendaForm.module.css';
 
 const ICON_SIZE = 20;
 // meeting-service AgendaRequest 길이 제한과 같다
 const TITLE_MAX_LENGTH = 100;
-const DECISION_MAX_LENGTH = 500;
 
 type AgendaInput = Omit<Agenda, 'id'>;
 
@@ -23,7 +24,7 @@ interface AgendaFormProps {
 /** REQ-065~066, 068 안건 작성·수정. 안건 제목 칸 오른쪽 버튼으로 폴더의 남은 안건을 불러온다 */
 export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, onSave }: AgendaFormProps) {
   const [title, setTitle] = useState(initialAgenda?.title ?? '');
-  const [decisionPoint, setDecisionPoint] = useState(initialAgenda?.decisionPoint ?? '');
+  const [decisionPoints, setDecisionPoints] = useState(initialAgenda?.decisionPoints ?? ['']);
   const [pending, setPending] = useState(() =>
     initialAgenda?.pendingAgendaId === undefined
       ? undefined
@@ -32,7 +33,7 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
   const [isPendingMenuOpen, setIsPendingMenuOpen] = useState(false);
   const pendingAnchorRef = useRef<HTMLButtonElement>(null);
   const isEdit = Boolean(initialAgenda);
-  const canSave = Boolean(title.trim() && decisionPoint.trim());
+  const canSave = Boolean(title.trim()) && cleanDecisionPoints(decisionPoints).length > 0;
 
   const save = (continueWriting: boolean) => {
     if (!canSave) {
@@ -41,7 +42,7 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
     onSave(
       {
         title: title.trim(),
-        decisionPoint: decisionPoint.trim(),
+        decisionPoints: cleanDecisionPoints(decisionPoints),
         pendingAgendaId: pending?.id,
         carriedOverFrom: pending?.carriedOverFrom,
       },
@@ -49,7 +50,7 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
     );
     if (continueWriting) {
       setTitle('');
-      setDecisionPoint('');
+      setDecisionPoints(['']);
       setPending(undefined);
     }
   };
@@ -99,7 +100,7 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
               const selected = pendingAgendas.find((item) => String(item.id) === id);
               if (selected) {
                 setTitle(selected.title);
-                setDecisionPoint(selected.decisionPoint);
+                setDecisionPoints(selected.decisionPoints);
                 setPending({ id: selected.id, carriedOverFrom: selected.carriedOverFrom });
               }
               setIsPendingMenuOpen(false);
@@ -109,15 +110,7 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
         )}
       </div>
       <div className={styles.decisionGroup}>
-        <TextField
-          label="결정할 내용"
-          className={styles.field}
-          placeholder="이 안건에서 무엇을 결정해야 하나요?"
-          maxLength={DECISION_MAX_LENGTH}
-          value={decisionPoint}
-          onChange={(event) => setDecisionPoint(event.target.value)}
-          trailing={<Placeholder size={ICON_SIZE} />}
-        />
+        <DecisionPointFields values={decisionPoints} onChange={setDecisionPoints} fieldClassName={styles.field} />
         <p className={styles.hint}>예 : 1차 개발에 포함할 기능 3개를 확정한다.</p>
       </div>
       <div className={styles.actions}>

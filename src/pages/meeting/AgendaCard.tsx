@@ -55,7 +55,13 @@ export default function AgendaCard({ agenda, isExpanded, onToggle, onEdit, onDra
           <div className={styles.decisionWrap}>
             <div className={styles.decision}>
               <p className={styles.decisionLabel}>결정할 사항</p>
-              <p className={styles.decisionValue}>{agenda.decisionPoint}</p>
+              <ul className={styles.decisionList}>
+                {agenda.decisionPoints.map((decisionPoint, index) => (
+                  <li key={index} className={styles.decisionValue}>
+                    {decisionPoint}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </>

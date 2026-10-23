@@ -75,6 +75,14 @@
   color: var(--grey-50);
 }
 
+.decisionList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding-left: 20px;
+}
+
 .decisionValue {
   color: var(--grey-100);
 }

@@ -2,35 +2,43 @@ import { useId, useState, type FormEvent } from 'react';
 import Modal from '../../../components/Modal';
 import Placeholder from '../../../components/Placeholder';
 import TextField from '../../../components/TextField';
+import { cleanDecisionPoints } from '../../../constants/meeting';
+import DecisionPointFields from '../DecisionPointFields';
 import room from './room.module.css';
 import styles from './AddAgendaModal.module.css';
 
 const ICON_SIZE = 20;
 // meeting-service AddAgendaRequest 길이 제한과 같다
 const TITLE_MAX_LENGTH = 100;
-const DECISION_MAX_LENGTH = 500;
 // MSG-029
 const EMPTY_TITLE_MESSAGE = '안건 제목을 입력해 주세요.';
+// meeting-service AddAgendaRequest 검증 문구와 같다
+const EMPTY_DECISION_MESSAGE = '결정할 사항을 1개 이상 입력해 주세요';
 
 interface AddAgendaModalProps {
+  /** 새 안건 제안(REQ-091)에서 열면 제안된 제목을 채워 둔다 */
+  initialTitle?: string;
   onCancel: () => void;
-  onAdd: (title: string, decisionPoint: string) => void;
+  onAdd: (title: string, decisionPoints: string[]) => void;
 }
 
-/** REQ-090 회의 중 안건 추가. 안건 제목만 필수 */
-export default function AddAgendaModal({ onCancel, onAdd }: AddAgendaModalProps) {
+/** REQ-090 회의 중 안건 추가. 안건 제목과 결정할 사항 1개 이상이 필수 (2026-10-23 결정) */
+export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: AddAgendaModalProps) {
   const titleId = useId();
-  const [title, setTitle] = useState('');
-  const [decisionPoint, setDecisionPoint] = useState('');
+  const [title, setTitle] = useState(initialTitle);
+  const [decisionPoints, setDecisionPoints] = useState(['']);
   const [titleError, setTitleError] = useState<string>();
+  const [decisionError, setDecisionError] = useState<string>();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!title.trim()) {
-      setTitleError(EMPTY_TITLE_MESSAGE);
+    const cleaned = cleanDecisionPoints(decisionPoints);
+    setTitleError(title.trim() ? undefined : EMPTY_TITLE_MESSAGE);
+    setDecisionError(cleaned.length > 0 ? undefined : EMPTY_DECISION_MESSAGE);
+    if (!title.trim() || cleaned.length === 0) {
       return;
     }
-    onAdd(title.trim(), decisionPoint.trim());
+    onAdd(title.trim(), cleaned);
   };
 
   return (
@@ -57,15 +65,16 @@ export default function AddAgendaModal({ onCancel, onAdd }: AddAgendaModalProps)
           trailing={<Placeholder size={ICON_SIZE} />}
         />
         <div className={styles.decisionGroup}>
-          <TextField
-            label="결정할 내용"
-            className={styles.field}
-            placeholder="이 안건에서 무엇을 결정해야 하나요?"
-            maxLength={DECISION_MAX_LENGTH}
-            value={decisionPoint}
-            onChange={(event) => setDecisionPoint(event.target.value)}
-            trailing={<Placeholder size={ICON_SIZE} />}
+          <DecisionPointFields
+            values={decisionPoints}
+            isRequired
+            fieldClassName={styles.field}
+            onChange={(values) => {
+              setDecisionPoints(values);
+              setDecisionError(undefined);
+            }}
           />
+          {decisionError && <p className={room.fieldError}>{decisionError}</p>}
           <p className={styles.hint}>예 : 1차 개발에 포함할 기능 3개를 확정한다.</p>
         </div>
         <div className={room.pillRow}>
