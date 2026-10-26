@@ -1,0 +1,37 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 디자인이 없어 로그인 화면 카드 모양을 따랐다 */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 480px;
+  padding: 48px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 28px;
+}
+
+.title {
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.caption {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-60);
+}
+
+.error {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--red-80);
+}

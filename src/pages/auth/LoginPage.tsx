@@ -1,5 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth';
 import { isApiError } from '../../api/client';
 import dividerLine from '../../assets/divider-line.svg';
@@ -16,6 +16,8 @@ import styles from './LoginPage.module.css';
 
 /** REQ-005~009 로그인 */
 export default function LoginPage() {
+  // RequireAuth가 보낸 원래 화면. 없으면 홈
+  const redirectTo = (useLocation().state as { from?: string } | null)?.from ?? '/home';
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
@@ -46,7 +48,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      navigate('/home', { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       if (isApiError(error, AUTH_ERROR_CODES.loginLocked)) {
         setLockedLogin({ email, message: error.message });

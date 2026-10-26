@@ -22,7 +22,14 @@
 }
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   background: var(--layout-placeholder);
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding: 0 0 21px 41px;
 }
 
 .main {

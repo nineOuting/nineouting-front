@@ -1,4 +1,5 @@
 import type { Agenda, Meeting, MeetingStatus, Member, PendingAgenda } from '../types/meeting';
+import type { FolderMeeting, FolderMeetingStatus, FolderPendingAgenda } from '../types/workspace';
 import { request } from './client';
 
 // meeting-service API (docs/services/meeting-service.md). 시각은 한국 시간 LocalDateTime 문자열(2026-10-20T14:00:00)
@@ -50,23 +51,34 @@ export interface MeetingDetailResponse {
   pausedSeconds: number;
 }
 
+type MinutesProgress = 'REVIEWING' | 'CONFIRMED';
+
 interface MeetingSummaryResponse {
   meetingId: number;
   title: string;
   startAt: string;
   endAt: string;
   status: MeetingStatus;
+  /** 검토 요청 전이면 null */
+  minutesStatus: MinutesProgress | null;
+  writer: PersonResponse;
+  attendees: PersonResponse[];
 }
 
 interface MeetingPageResponse {
   items: MeetingSummaryResponse[];
+  totalCount: number;
   hasNext: boolean;
 }
+
+// meeting-service 목록 한 번에 받을 수 있는 최대 개수
+const FOLDER_MEETING_PAGE_SIZE = 100;
 
 interface PendingAgendaResponse {
   pendingAgendaId: number;
   title: string;
   decisionPoints: string[];
+  fromMeetingTitle: string;
   carriedAt: string;
   takenMeetingId: number | null;
 }
@@ -173,6 +185,52 @@ export function cancelMeeting(meetingId: number) {
 export async function listFolderMeetings(folderId: number, size: number) {
   const page = await request<MeetingPageResponse>('GET', `/api/folders/${folderId}/meetings?page=0&size=${size}`);
   return page.items;
+}
+
+/** REQ-048 목록의 상태: 회의 상태 + 회의록 상태 (끝났는데 검토 요청 전이면 작성 중) */
+function toFolderMeetingStatus(status: MeetingStatus, minutesStatus: MinutesProgress | null): FolderMeetingStatus {
+  if (status === 'SCHEDULED') {
+    return 'scheduled';
+  }
+  if (status === 'IN_PROGRESS') {
+    return 'inProgress';
+  }
+  if (minutesStatus === 'CONFIRMED') {
+    return 'confirmed';
+  }
+  return minutesStatus === 'REVIEWING' ? 'reviewing' : 'writing';
+}
+
+/** REQ-048 폴더 안의 회의 (날짜 최신순, 취소된 회의 제외) */
+export async function listFolderMeetingRows(folderId: number): Promise<FolderMeeting[]> {
+  const page = await request<MeetingPageResponse>(
+    'GET',
+    `/api/folders/${folderId}/meetings?page=0&size=${FOLDER_MEETING_PAGE_SIZE}`,
+  );
+  return page.items.map((item) => ({
+    meetingId: item.meetingId,
+    title: item.title,
+    date: item.startAt.slice(0, 10),
+    status: toFolderMeetingStatus(item.status, item.minutesStatus),
+    writer: toMember(item.writer),
+    attendees: item.attendees.map(toMember),
+  }));
+}
+
+/** REQ-037 폴더 카드의 "회의 N개" (목록의 전체 개수만 받는다) */
+export async function countFolderMeetings(folderId: number) {
+  return (await request<MeetingPageResponse>('GET', `/api/folders/${folderId}/meetings?page=0&size=1`)).totalCount;
+}
+
+/** REQ-051 폴더 화면의 남은 안건 (다른 회의가 불러간 안건은 빠진다) */
+export async function listFolderPendingAgendas(folderId: number): Promise<FolderPendingAgenda[]> {
+  const items = await request<PendingAgendaResponse[]>('GET', `/api/folders/${folderId}/pending-agendas`);
+  return items.map(({ pendingAgendaId, title, fromMeetingTitle, carriedAt }) => ({
+    pendingAgendaId,
+    title,
+    fromMeetingTitle,
+    carriedAt: carriedAt.slice(0, 10),
+  }));
 }
 
 /** REQ-051~052, 068 폴더의 남은 안건 */
