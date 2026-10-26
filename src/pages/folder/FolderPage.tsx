@@ -5,6 +5,7 @@ import { listFolderMeetingRows, listFolderPendingAgendas } from '../../api/meeti
 import {
   addFolderMember,
   getFolder,
+  getWorkspace,
   leaveFolder,
   listFolderMemberDetails,
   listWorkspaceMembers,
@@ -55,6 +56,8 @@ export default function FolderPage() {
   const [pendingAgendas, setPendingAgendas] = useState<FolderPendingAgenda[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[] | null>(null);
   const [workspaceMembersError, setWorkspaceMembersError] = useState<string>();
+  // 폴더 멤버 초대·제외는 워크스페이스 소유자만, 다른 멤버는 목록 조회만 (2026-10-26 결정)
+  const [isWorkspaceOwner, setIsWorkspaceOwner] = useState(false);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -71,9 +74,11 @@ export default function FolderPage() {
         listFolderMemberDetails(id),
         listFolderPendingAgendas(id),
       ]);
+      const workspace = await getWorkspace(info.workspaceId);
       if (!isCurrent) {
         return;
       }
+      setIsWorkspaceOwner(workspace.isOwner);
       setFolder(info);
       setMeetings(rows);
       setMembers(folderMembers);
@@ -91,10 +96,10 @@ export default function FolderPage() {
 
   const openMembers = async () => {
     setDialog({ type: 'members' });
-    if (!folder?.isOwner || workspaceMembers) {
+    if (!folder || !isWorkspaceOwner || workspaceMembers) {
       return;
     }
-    // REQ-041 폴더에는 워크스페이스 멤버만 초대한다. 이 목록은 워크스페이스 소유자만 받을 수 있다 (backlog)
+    // REQ-041 폴더에는 워크스페이스 멤버만 초대한다
     try {
       setWorkspaceMembers(await listWorkspaceMembers(folder.workspaceId));
     } catch (error) {
@@ -260,7 +265,7 @@ export default function FolderPage() {
           members={members}
           workspaceMembers={workspaceMembers}
           workspaceMembersError={workspaceMembersError}
-          canManage={folder.isOwner}
+          canManage={isWorkspaceOwner}
           onAdd={addMembers}
           onRemove={removeMembers}
           onNotice={notice}

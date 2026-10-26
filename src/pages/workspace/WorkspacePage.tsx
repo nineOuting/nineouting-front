@@ -63,7 +63,7 @@ export default function WorkspacePage() {
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [folders, setFolders] = useState<FolderSummary[]>([]);
-  // 멤버 목록은 소유자만 받을 수 있다 (REQ-033). 멤버는 인원수만 본다
+  // 멤버는 목록을 보기만 하고, 초대·제외·권한 변경은 워크스페이스 소유자만 한다 (2026-10-26 결정)
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
@@ -84,7 +84,8 @@ export default function WorkspacePage() {
       const [detail, mine, folderList] = await Promise.all([getWorkspace(id), listMyWorkspaces(), listFolders(id)]);
       // REQ-037 폴더 카드의 회의 수는 meeting-service 회의 목록의 전체 개수로 센다
       const counts = await Promise.all(folderList.map(({ folderId }) => countFolderMeetings(folderId).catch(() => 0)));
-      const memberList = detail.isOwner ? await listWorkspaceMembers(id) : [];
+      // TODO(백엔드): 멤버도 목록을 볼 수 있게 바뀌기 전까지는 소유자가 아니면 403이라 빈 목록으로 둔다
+      const memberList = await listWorkspaceMembers(id).catch(() => []);
       if (!isCurrent) {
         return;
       }
@@ -286,16 +287,12 @@ export default function WorkspacePage() {
                   />
                 )}
               </div>
-              {/* REQ-033 멤버 권한 관리는 소유자만 */}
-              {isOwner && (
-                <>
-                  <img src={dividerWsMember} alt="" width={MEMBER_DIVIDER_WIDTH} height={1} className={styles.divider} />
-                  <button type="button" className={styles.rowButton} onClick={() => setDialog({ type: 'members' })}>
-                    멤버 권한 및 관리
-                    <Placeholder size={SMALL_ICON_SIZE} />
-                  </button>
-                </>
-              )}
+              <img src={dividerWsMember} alt="" width={MEMBER_DIVIDER_WIDTH} height={1} className={styles.divider} />
+              {/* 멤버는 목록만 보고, 관리는 소유자만 (REQ-033) */}
+              <button type="button" className={styles.rowButton} onClick={() => setDialog({ type: 'members' })}>
+                {isOwner ? '멤버 권한 및 관리' : '멤버 목록'}
+                <Placeholder size={SMALL_ICON_SIZE} />
+              </button>
             </div>
           </section>
           <button
