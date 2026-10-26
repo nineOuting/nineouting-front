@@ -8,7 +8,8 @@ export interface Agenda {
   /** 저장된 안건은 meeting-service의 agendaId, 저장 전이면 화면에서 만든 임시 값 */
   id: string;
   title: string;
-  decisionPoint: string;
+  /** 결정할 사항 (1~5개, REQ-066) */
+  decisionPoints: string[];
   /** 폴더의 남은 안건에서 불러온 경우 (REQ-068) */
   pendingAgendaId?: number;
   /** 남은 안건에서 불러온 경우 다음 회의로 넘긴 날짜 (REQ-051, 068) */
@@ -56,7 +57,7 @@ export interface PreviousMeeting {
 export interface PendingAgenda {
   id: number;
   title: string;
-  decisionPoint: string;
+  decisionPoints: string[];
   carriedOverFrom: string;
   /** 다른 회의가 이미 불러갔으면 그 회의 */
   takenMeetingId?: number;

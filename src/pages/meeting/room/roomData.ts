@@ -20,14 +20,16 @@ const AGENDA_STATUSES: Record<AgendaStatusCode, AgendaStatus> = {
 
 /** 결정할 사항별 상태·근거는 안건 보드(2차)가 생기면 받는다. 지금은 논의 전으로 둔다 */
 export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
-  const id = String(agenda.agendaId);
   return {
-    id,
+    id: String(agenda.agendaId),
     title: agenda.title,
     status: AGENDA_STATUSES[agenda.status],
-    decisionPoints: agenda.decisionPoint
-      ? [{ id: `${id}-decision`, title: agenda.decisionPoint, status: 'notDiscussed', evidenceSeqs: [] }]
-      : [],
+    decisionPoints: agenda.decisionPoints.map(({ decisionPointId, text }) => ({
+      id: String(decisionPointId),
+      title: text,
+      status: 'notDiscussed',
+      evidenceSeqs: [],
+    })),
   };
 }
 

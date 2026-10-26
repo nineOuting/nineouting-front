@@ -78,7 +78,8 @@ export default function MeetingRoomPage() {
   const [isAiAvailable, setIsAiAvailable] = useState(true);
   const [selectedAgendaId, setSelectedAgendaId] = useState('');
   const [selectedDecisionId, setSelectedDecisionId] = useState<string>();
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  // 안건 추가 창. 새 안건 제안에서 열면 제안된 제목을 채운다
+  const [addAgendaTitle, setAddAgendaTitle] = useState<string | null>(null);
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(demo === 'suggestion');
   const [isOffTopicOpen, setIsOffTopicOpen] = useState(demo === 'offtopic');
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -215,9 +216,9 @@ export default function MeetingRoomPage() {
     .find(({ id }) => id === selectedAgendaId)
     ?.decisionPoints.find(({ id }) => id === selectedDecisionId);
 
-  const addAgenda = async (title: string, decisionPoint: string) => {
+  const addAgenda = async (title: string, decisionPoints: string[]) => {
     try {
-      const added = await addMeetingAgenda(meetingIdNumber, title, decisionPoint);
+      const added = await addMeetingAgenda(meetingIdNumber, title, decisionPoints);
       setAgendas((prev) => [...prev, toRoomAgenda(added)]);
       return true;
     } catch (error) {
@@ -318,7 +319,7 @@ export default function MeetingRoomPage() {
             }}
             onSelectDecision={setSelectedDecisionId}
             onSaveDecision={saveDecision}
-            onAddAgenda={() => setIsAddOpen(true)}
+            onAddAgenda={() => setAddAgendaTitle('')}
           />
         </div>
 
@@ -335,12 +336,13 @@ export default function MeetingRoomPage() {
         </aside>
       </div>
 
-      {isAddOpen && (
+      {addAgendaTitle !== null && (
         <AddAgendaModal
-          onCancel={() => setIsAddOpen(false)}
-          onAdd={async (title, decisionPoint) => {
-            if (await addAgenda(title, decisionPoint)) {
-              setIsAddOpen(false);
+          initialTitle={addAgendaTitle}
+          onCancel={() => setAddAgendaTitle(null)}
+          onAdd={async (title, decisionPoints) => {
+            if (await addAgenda(title, decisionPoints)) {
+              setAddAgendaTitle(null);
             }
           }}
         />
@@ -350,8 +352,8 @@ export default function MeetingRoomPage() {
           suggestion={ROOM_SUGGESTION}
           onIgnore={closeSuggestion}
           onRegister={() => {
-            // TODO(API 연동): 제안 안건 등록 (REQ-091). 제안에는 결정할 사항이 없다
-            void addAgenda(ROOM_SUGGESTION.title, '');
+            // 제안에는 결정할 사항이 없어 안건 추가 창을 제목만 채워 연다 (결정할 사항 1개 이상 필수)
+            setAddAgendaTitle(ROOM_SUGGESTION.title);
             closeSuggestion();
           }}
         />

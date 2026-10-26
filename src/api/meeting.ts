@@ -22,7 +22,8 @@ export interface AgendaResponse {
   agendaId: number;
   position: number;
   title: string;
-  decisionPoint: string;
+  /** decisionPointId는 안건 보드(ai-service)가 가리키는 번호 */
+  decisionPoints: { decisionPointId: number; position: number; text: string }[];
   status: AgendaStatusCode;
   pendingAgendaId: number | null;
   addedDuringMeeting: boolean;
@@ -65,7 +66,7 @@ interface MeetingPageResponse {
 interface PendingAgendaResponse {
   pendingAgendaId: number;
   title: string;
-  decisionPoint: string;
+  decisionPoints: string[];
   carriedAt: string;
   takenMeetingId: number | null;
 }
@@ -77,7 +78,7 @@ interface MeetingRequest {
   location: string;
   attendeeUserIds: number[];
   writerUserId?: number;
-  agendas: { title: string; decisionPoint: string; pendingAgendaId?: number }[];
+  agendas: { title: string; decisionPoints: string[]; pendingAgendaId?: number }[];
 }
 
 export interface TranscriptLineResponse {
@@ -114,7 +115,7 @@ function toAgenda(agenda: AgendaResponse): Agenda {
   return {
     id: String(agenda.agendaId),
     title: agenda.title,
-    decisionPoint: agenda.decisionPoint,
+    decisionPoints: agenda.decisionPoints.map(({ text }) => text),
     pendingAgendaId: agenda.pendingAgendaId ?? undefined,
   };
 }
@@ -144,7 +145,7 @@ function toRequest(meeting: Omit<Meeting, 'meetingId' | 'folderId' | 'status'>):
     location: meeting.location,
     attendeeUserIds: meeting.attendees.map(({ userId }) => userId),
     writerUserId: meeting.writer?.userId,
-    agendas: meeting.agendas.map(({ title, decisionPoint, pendingAgendaId }) => ({ title, decisionPoint, pendingAgendaId })),
+    agendas: meeting.agendas.map(({ title, decisionPoints, pendingAgendaId }) => ({ title, decisionPoints, pendingAgendaId })),
   };
 }
 
@@ -180,7 +181,7 @@ export async function listPendingAgendas(folderId: number): Promise<PendingAgend
   return items.map((item) => ({
     id: item.pendingAgendaId,
     title: item.title,
-    decisionPoint: item.decisionPoint,
+    decisionPoints: item.decisionPoints,
     carriedOverFrom: toDisplayDate(item.carriedAt),
     takenMeetingId: item.takenMeetingId ?? undefined,
   }));
@@ -200,9 +201,9 @@ export function resumeMeeting(meetingId: number) {
   return request('POST', `/api/meetings/${meetingId}/resume`);
 }
 
-/** REQ-090 회의 도중 안건 추가 (회의록 작성자) */
-export function addMeetingAgenda(meetingId: number, title: string, decisionPoint: string) {
-  return request<AgendaResponse>('POST', `/api/meetings/${meetingId}/agendas`, { title, decisionPoint });
+/** REQ-090 회의 도중 안건 추가 (회의록 작성자). 결정할 사항은 1개 이상 */
+export function addMeetingAgenda(meetingId: number, title: string, decisionPoints: string[]) {
+  return request<AgendaResponse>('POST', `/api/meetings/${meetingId}/agendas`, { title, decisionPoints });
 }
 
 /** REQ-079 지금까지의 전사 텍스트 */
