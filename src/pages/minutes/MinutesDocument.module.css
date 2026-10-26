@@ -1,0 +1,165 @@
+/* 디자인 23:612: 776×818, 쪽 이동 · 편집 도구(파란 띠) · A4 종이 */
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 776px;
+  height: 818px;
+  padding: 20px 0;
+  overflow: hidden;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  height: 29px;
+}
+
+.pageLabel {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+}
+
+.toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 35px;
+  background: var(--blue-10);
+}
+
+.tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 29px;
+  padding: 3px 10px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-60);
+}
+
+.tool:disabled {
+  opacity: 0.5;
+}
+
+.zoom {
+  width: 54px;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.anchor {
+  position: relative;
+}
+
+.templateMenu {
+  min-width: 260px;
+}
+
+.viewport {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
+.paper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 456px;
+  min-height: 675px;
+  margin: 0 auto;
+  padding: 40px 36px;
+  background: var(--grey-10);
+}
+
+.docTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--grey-70);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.content {
+  min-height: 48px;
+  padding: 6px 8px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.6;
+  resize: none;
+  field-sizing: content;
+}
+
+.content:focus {
+  outline: 1px solid var(--blue-70);
+}
+
+.contentText {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--grey-90);
+  white-space: pre-wrap;
+}

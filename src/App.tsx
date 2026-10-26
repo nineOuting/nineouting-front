@@ -13,6 +13,7 @@ import SignupPage from './pages/auth/SignupPage';
 import MeetingCreatePage from './pages/meeting/MeetingCreatePage';
 import MeetingRoomPage from './pages/meeting/MeetingRoomPage';
 import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
+import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
 import InvitationPage from './pages/workspace/InvitationPage';
 import WorkspacePage from './pages/workspace/WorkspacePage';
 
@@ -65,6 +66,15 @@ export default function App() {
           element={
             <RequireAuth>
               <MeetingRoomPage />
+            </RequireAuth>
+          }
+        />
+        {/* REQ-131~137 회의록 작성·보기 (다운로드 버튼에서 오면 ?download=1) */}
+        <Route
+          path="/meetings/:meetingId/minutes"
+          element={
+            <RequireAuth>
+              <MinutesEditorPage />
             </RequireAuth>
           }
         />

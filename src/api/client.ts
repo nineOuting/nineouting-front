@@ -92,3 +92,33 @@ async function send<T>(method: Method, path: string, body?: unknown) {
   }
   return payload.data;
 }
+
+/** 파일 받기 (회의록 다운로드 등). 실패하면 서버의 JSON 오류를 ApiError로 바꾼다 */
+export async function downloadFile(path: string): Promise<{ blob: Blob; fileName: string }> {
+  const fetchFile = () => {
+    const accessToken = getAccessToken();
+    return fetch(path, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      credentials: 'same-origin',
+    });
+  };
+  let response: Response;
+  try {
+    response = await fetchFile();
+    if (response.status === 401 && getAccessToken() && refreshAccessToken) {
+      await refreshAccessToken();
+      response = await fetchFile();
+    }
+  } catch {
+    throw new ApiError(NETWORK_ERROR, NETWORK_ERROR_MESSAGE, 0);
+  }
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ApiResponse<unknown> | null;
+    throw new ApiError(payload?.code ?? NETWORK_ERROR, payload?.message || NETWORK_ERROR_MESSAGE, response.status);
+  }
+  // Content-Disposition: attachment; filename*=UTF-8''%EB%B0%B0%ED%8F%AC.pdf
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
+  const plain = /filename="?([^";]+)"?/i.exec(disposition)?.[1];
+  return { blob: await response.blob(), fileName: encoded ? decodeURIComponent(encoded) : (plain ?? 'download') };
+}
