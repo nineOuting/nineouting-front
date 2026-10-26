@@ -1,0 +1,182 @@
+.card {
+  min-height: 347px;
+  padding: 24px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* 열 너비는 디자인의 머리글 위치(8, 215, 336, 459, 608px)에 맞췄다 */
+.title {
+  width: 215px;
+}
+
+.date {
+  width: 121px;
+}
+
+.status {
+  width: 123px;
+}
+
+.writer {
+  width: 149px;
+}
+
+.attendees {
+  width: auto;
+}
+
+.headRow {
+  height: 37px;
+  background: var(--grey-20);
+}
+
+.headRow th {
+  padding: 0;
+  text-align: left;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.headRow th:first-child {
+  padding-left: 8px;
+}
+
+/* 머리글과 첫 줄 사이 24px */
+.headRow + tr td,
+tbody tr:first-child td {
+  padding-top: 24px;
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+.row {
+  height: 34px;
+  cursor: pointer;
+}
+
+.row td {
+  padding: 0;
+  vertical-align: middle;
+}
+
+.row:hover {
+  background: var(--grey-10);
+}
+
+.titleButton {
+  display: block;
+  width: 200px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--color-black);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date {
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-90);
+}
+
+.dividerCell {
+  padding: 16px 0 !important;
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 12px;
+  border-radius: 1000px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.scheduled {
+  background: var(--grey-10);
+  color: var(--grey-70);
+}
+
+.inProgress {
+  background: var(--blue-20);
+  color: var(--blue-100);
+}
+
+.writing,
+.reviewing {
+  background: var(--red-10);
+  color: var(--red-100);
+}
+
+.confirmed {
+  background: var(--green-10);
+  color: var(--green-success);
+}
+
+.writerCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 140px;
+}
+
+.face {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--layout-placeholder);
+}
+
+.writerName {
+  overflow: hidden;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--color-black);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  padding: 80px 0 !important;
+  text-align: center;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-60);
+}

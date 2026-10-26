@@ -12,12 +12,22 @@ interface ConfirmDialogProps {
   message: string;
   cancelLabel: string;
   confirmLabel: string;
+  /** 삭제처럼 되돌릴 수 없는 일이면 확인 버튼을 빨간색으로 */
+  isDanger?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
 /** 아이콘·제목·설명과 버튼 두 개로 된 확인 창 (회의 생성 중 이탈 등) */
-export default function ConfirmDialog({ title, message, cancelLabel, confirmLabel, onCancel, onConfirm }: ConfirmDialogProps) {
+export default function ConfirmDialog({
+  title,
+  message,
+  cancelLabel,
+  confirmLabel,
+  isDanger,
+  onCancel,
+  onConfirm,
+}: ConfirmDialogProps) {
   const titleId = useId();
 
   return (
@@ -41,7 +51,9 @@ export default function ConfirmDialog({ title, message, cancelLabel, confirmLabe
           <Button variant="neutral" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button onClick={onConfirm}>{confirmLabel}</Button>
+          <Button variant={isDanger ? 'danger' : 'primary'} onClick={onConfirm}>
+            {confirmLabel}
+          </Button>
         </div>
       </div>
     </Modal>

@@ -16,13 +16,23 @@ interface DropdownMenuProps {
   anchorRef: RefObject<HTMLElement | null>;
   onSelect: (id: string) => void;
   onClose: () => void;
+  /** 여는 버튼이 좁을 때 목록 너비 등을 덧붙인다 */
+  className?: string;
 }
 
 /**
  * 입력 칸 아래에 뜨는 선택 목록. 디자인에 목록 모양이 없어 칸 모양에 맞춰 간단히 만들었다.
  * 부모는 position: relative 여야 한다.
  */
-export default function DropdownMenu({ items, emptyText, label, anchorRef, onSelect, onClose }: DropdownMenuProps) {
+export default function DropdownMenu({
+  items,
+  emptyText,
+  label,
+  anchorRef,
+  onSelect,
+  onClose,
+  className,
+}: DropdownMenuProps) {
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
@@ -46,7 +56,7 @@ export default function DropdownMenu({ items, emptyText, label, anchorRef, onSel
   }, [anchorRef, onClose]);
 
   return (
-    <ul ref={listRef} role="listbox" aria-label={label} className={styles.menu}>
+    <ul ref={listRef} role="listbox" aria-label={label} className={[styles.menu, className].filter(Boolean).join(' ')}>
       {items.length === 0 && <li className={styles.empty}>{emptyText}</li>}
       {items.map((item) => (
         <li key={item.id} role="option" aria-selected={Boolean(item.isSelected)}>

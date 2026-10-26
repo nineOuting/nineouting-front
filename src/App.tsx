@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import RequireAuth from './auth/RequireAuth';
+import FolderPage from './pages/folder/FolderPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import PasswordCompletePage from './pages/auth/PasswordCompletePage';
@@ -11,6 +12,7 @@ import SignupPage from './pages/auth/SignupPage';
 import MeetingCreatePage from './pages/meeting/MeetingCreatePage';
 import MeetingRoomPage from './pages/meeting/MeetingRoomPage';
 import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
+import WorkspacePage from './pages/workspace/WorkspacePage';
 
 export default function App() {
   return (
@@ -64,6 +66,9 @@ export default function App() {
             </RequireAuth>
           }
         />
+        {/* 워크스페이스·폴더 화면은 API 연동 전이라 로그인 없이 예시 데이터로 본다 (docs/backlog.md) */}
+        <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
+        <Route path="/folders/:folderId" element={<FolderPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

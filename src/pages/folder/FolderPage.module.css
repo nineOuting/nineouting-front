@@ -1,0 +1,299 @@
+.page {
+  padding: 28px 59px 40px 33px;
+  background: var(--color-white);
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-60);
+}
+
+.crumb {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.secondaryButton,
+.primaryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.secondaryButton {
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  color: var(--color-black);
+}
+
+.primaryButton {
+  background: var(--blue-100);
+  border: none;
+  color: var(--color-white);
+}
+
+.columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 33px;
+  margin-top: 30px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 817px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.folderRow {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.folderCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 180px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.folderTexts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-weight: 500;
+}
+
+.folderName {
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.folderMeta {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-50);
+}
+
+.archive {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 258px;
+}
+
+.memberCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.memberManage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.pendingHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.pendingCaption {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.pendingCount {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--blue-100);
+}
+
+.pendingCard {
+  height: 347px;
+  padding: 24px;
+  overflow-y: auto;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pendingItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pendingTitle {
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.pendingMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+/* 가로 선 이미지를 세워 회의명과 날짜를 나눈다 */
+.metaDivider {
+  display: flex;
+  width: 1px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+}
+
+.metaDivider img {
+  display: block;
+  max-width: none;
+  transform: rotate(90deg);
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+.pendingEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--grey-60);
+}
+
+.leave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: -16px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--red-20);
+  border-radius: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
