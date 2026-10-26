@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
+  finishMeeting,
   addMeetingAgenda,
   editTranscript,
   getLiveSummary,
@@ -15,6 +16,7 @@ import { getMe } from '../../api/user';
 import dotNotDiscussed from '../../assets/dot-not-discussed.svg';
 import dotRecording from '../../assets/dot-recording.svg';
 import AppLayout from '../../components/AppLayout';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
@@ -43,7 +45,6 @@ const TICK_MS = 1000;
 const MS_PER_SECOND = 1000;
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 3600;
-const END_PENDING_MESSAGE = '회의 종료 화면은 디자인이 나오면 연결돼요.';
 const MIC_FAILED_MESSAGE = '마이크를 쓸 수 없어 녹음하지 못하고 있어요. 브라우저의 마이크 권한을 확인해 주세요.';
 
 /**
@@ -75,6 +76,8 @@ export default function MeetingRoomPage() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [isEndConfirmOpen, setIsEndConfirmOpen] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
   const [isAiAvailable, setIsAiAvailable] = useState(true);
   const [selectedAgendaId, setSelectedAgendaId] = useState('');
   const [selectedDecisionId, setSelectedDecisionId] = useState<string>();
@@ -114,6 +117,11 @@ export default function MeetingRoomPage() {
       }
       if (loaded.status === 'SCHEDULED') {
         navigate(`/meetings/${loaded.meetingId}`, { replace: true });
+        return;
+      }
+      // 이미 끝난 회의는 회의록 작성 화면으로 (REQ-098)
+      if (loaded.status === 'FINISHED') {
+        navigate(`/meetings/${loaded.meetingId}/minutes`, { replace: true });
         return;
       }
       const roomAgendas = loaded.agendas.map(toRoomAgenda);
@@ -188,7 +196,11 @@ export default function MeetingRoomPage() {
         setIsAiAvailable(message.available);
         break;
       case 'finished':
+        // REQ-098 작성자가 회의를 마무리하면 참석자 모두 회의록 작성 화면으로 간다
         setIsFinished(true);
+        if (numericMeetingId !== undefined) {
+          navigate(`/meetings/${numericMeetingId}/minutes`, { replace: true });
+        }
         break;
     }
   };
@@ -248,6 +260,20 @@ export default function MeetingRoomPage() {
     }
   };
 
+  /** REQ-098 마무리하면 회의록이 만들어지고 회의록 작성 화면으로 간다 (만들어지기 전에는 그 화면이 "준비 중"을 보여 준다) */
+  const endMeeting = async () => {
+    setIsEndConfirmOpen(false);
+    setIsEnding(true);
+    try {
+      await finishMeeting(meetingIdNumber);
+      setIsFinished(true);
+      navigate(`/meetings/${meetingIdNumber}/minutes`, { replace: true });
+    } catch (error) {
+      showError(error);
+      setIsEnding(false);
+    }
+  };
+
   const togglePause = async () => {
     try {
       if (isPaused) {
@@ -294,14 +320,13 @@ export default function MeetingRoomPage() {
               {isPaused ? '다시 시작' : '일시정지'}
             </button>
           )}
-          <button
-            type="button"
-            className={styles.endButton}
-            onClick={() => setToast({ text: END_PENDING_MESSAGE, variant: 'info' })}
-          >
-            <Placeholder size={BUTTON_ICON_SIZE} />
-            회의 끝내기
-          </button>
+          {/* REQ-098 회의록 작성자만 마무리한다. 회의 끝내기 단계(REQ-093~097)는 디자인이 없어 건너뛰고 바로 회의록으로 간다 */}
+          {isWriter && isLive && (
+            <button type="button" className={styles.endButton} disabled={isEnding} onClick={() => setIsEndConfirmOpen(true)}>
+              <Placeholder size={BUTTON_ICON_SIZE} />
+              회의 끝내기
+            </button>
+          )}
         </div>
       </header>
 
@@ -359,6 +384,16 @@ export default function MeetingRoomPage() {
         />
       )}
       {isOffTopicOpen && <OffTopicNotice onConfirm={() => setIsOffTopicOpen(false)} />}
+      {isEndConfirmOpen && (
+        <ConfirmDialog
+          title="회의를 끝낼까요?"
+          message="녹음과 받아쓰기를 끝내고 회의록 작성 화면으로 이동해요. 끝낸 회의는 다시 시작할 수 없어요."
+          cancelLabel="계속 진행"
+          confirmLabel="회의 끝내기"
+          onCancel={() => setIsEndConfirmOpen(false)}
+          onConfirm={endMeeting}
+        />
+      )}
     </AppLayout>
   );
 }

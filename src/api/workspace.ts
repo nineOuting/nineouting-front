@@ -1,5 +1,6 @@
 import type { Member } from '../types/meeting';
 import type {
+  Favorite,
   FolderAccess,
   FolderMember,
   FolderSummary,
@@ -224,4 +225,32 @@ export function removeFolderMember(folderId: number, userId: number) {
 /** REQ-139 폴더 나가기 (폴더 소유자는 FOLDER_OWNER_CANNOT_LEAVE) */
 export function leaveFolder(folderId: number) {
   return request('DELETE', `/api/folders/${folderId}/members/me`);
+}
+
+interface FavoriteResponse {
+  type: 'WORKSPACE' | 'FOLDER';
+  workspaceId: number;
+  workspaceName: string;
+  /** 워크스페이스 즐겨찾기면 null */
+  folderId: number | null;
+  folderName: string | null;
+}
+
+/** REQ-143 홈의 즐겨찾기 (등록한 순) */
+export async function listFavorites(): Promise<Favorite[]> {
+  const items = await request<FavoriteResponse[]>('GET', '/api/users/me/favorites');
+  return items.map(({ workspaceId, workspaceName, folderId, folderName }) =>
+    folderId === null
+      ? { type: 'workspace', workspaceId, workspaceName }
+      : { type: 'folder', workspaceId, workspaceName, folderId, folderName: folderName ?? '' },
+  );
+}
+
+/** REQ-144 즐겨찾기 등록·해제 (여러 번 해도 결과가 같다) */
+export function setFavorite(favorite: Pick<Favorite, 'type' | 'workspaceId'> & { folderId?: number }, on: boolean) {
+  const path =
+    favorite.type === 'folder'
+      ? `/api/folders/${favorite.folderId}/favorite`
+      : `/api/workspaces/${favorite.workspaceId}/favorite`;
+  return request(on ? 'PUT' : 'DELETE', path);
 }

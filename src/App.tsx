@@ -1,7 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import RequireAuth from './auth/RequireAuth';
+import ArchivePage from './pages/archive/ArchivePage';
 import FolderPage from './pages/folder/FolderPage';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import PasswordCompletePage from './pages/auth/PasswordCompletePage';
 import PasswordFindPage from './pages/auth/PasswordFindPage';
@@ -12,6 +13,9 @@ import SignupPage from './pages/auth/SignupPage';
 import MeetingCreatePage from './pages/meeting/MeetingCreatePage';
 import MeetingRoomPage from './pages/meeting/MeetingRoomPage';
 import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
+import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
+import TemplateEditorPage from './pages/template/TemplateEditorPage';
+import TemplateListPage from './pages/template/TemplateListPage';
 import InvitationPage from './pages/workspace/InvitationPage';
 import WorkspacePage from './pages/workspace/WorkspacePage';
 
@@ -67,11 +71,53 @@ export default function App() {
             </RequireAuth>
           }
         />
+        {/* REQ-131~137 회의록 작성·보기 (다운로드 버튼에서 오면 ?download=1) */}
+        <Route
+          path="/meetings/:meetingId/minutes"
+          element={
+            <RequireAuth>
+              <MinutesEditorPage />
+            </RequireAuth>
+          }
+        />
+        {/* REQ-119~121 회의록 양식. 새 양식은 ?from=양식ID 로 복사해서 시작할 수 있다 */}
+        <Route
+          path="/templates"
+          element={
+            <RequireAuth>
+              <TemplateListPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/templates/new"
+          element={
+            <RequireAuth>
+              <TemplateEditorPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/templates/:templateId/edit"
+          element={
+            <RequireAuth>
+              <TemplateEditorPage />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/workspaces/:workspaceId"
           element={
             <RequireAuth>
               <WorkspacePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/workspaces/:workspaceId/archive"
+          element={
+            <RequireAuth>
+              <ArchivePage />
             </RequireAuth>
           }
         />

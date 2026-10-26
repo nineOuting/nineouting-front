@@ -17,6 +17,7 @@ import dividerPendingMeta from '../../assets/divider-pending-meta.svg';
 import AppLayout from '../../components/AppLayout';
 import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import FavoriteButton from '../../components/FavoriteButton';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderMeeting, FolderMember, FolderPendingAgenda, WorkspaceMember } from '../../types/workspace';
@@ -28,17 +29,15 @@ const SMALL_ICON_SIZE = 16;
 const TITLE_ICON_SIZE = 20;
 const PENDING_DIVIDER_WIDTH = 208;
 const PENDING_META_DIVIDER_LENGTH = 17;
-const ARCHIVE_PENDING_MESSAGE = '회의록 아카이브 화면은 디자인이 나오면 연결돼요.';
 
 type Dialog = { type: 'members' } | { type: 'leave' };
 
-/** 회의 상태에 따라 대기 화면·회의방으로 간다 */
+/** 회의 상태에 따라 대기 화면·회의방·회의록으로 간다 */
 function meetingPath({ meetingId, status }: FolderMeeting) {
   if (status === 'inProgress') {
     return `/meetings/${meetingId}/room`;
   }
-  // TODO(API 연동): 끝난 회의는 회의록 화면으로 (회의록 화면이 생기면)
-  return `/meetings/${meetingId}`;
+  return status === 'scheduled' ? `/meetings/${meetingId}` : `/meetings/${meetingId}/minutes`;
 }
 
 /**
@@ -144,7 +143,7 @@ export default function FolderPage() {
   }
 
   return (
-    <AppLayout className={styles.page}>
+    <AppLayout className={styles.page} workspaceId={folder.workspaceId}>
       {toast && <Toast message={toast} onClose={closeToast} />}
 
       <div className={styles.head}>
@@ -158,7 +157,11 @@ export default function FolderPage() {
           </nav>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>{folder.name}</h1>
-            <Placeholder size={TITLE_ICON_SIZE} />
+            <FavoriteButton
+              target={{ type: 'folder', workspaceId: folder.workspaceId, folderId: folder.folderId }}
+              name={folder.name}
+              onError={(text) => setToast({ text, variant: 'error' })}
+            />
           </div>
         </div>
         <div className={styles.actions}>
@@ -181,7 +184,11 @@ export default function FolderPage() {
                 회의 목록
               </h2>
               {/* REQ-053 회의 목록 오른쪽 위 [회의록 아카이브] */}
-              <button type="button" className={styles.archive} onClick={() => notice(ARCHIVE_PENDING_MESSAGE)}>
+              <button
+                type="button"
+                className={styles.archive}
+                onClick={() => navigate(`/workspaces/${folder.workspaceId}/archive`)}
+              >
                 회의록 아카이브
                 <Placeholder size={SMALL_ICON_SIZE} />
               </button>

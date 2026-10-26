@@ -1,0 +1,267 @@
+/* 디자인 23:185: 532×792, 좌우 37px. 위 도구 · A4(456×675) · 쪽 이동 */
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  height: 792px;
+  padding: 20px 37px;
+  overflow: hidden;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 451px;
+  height: 17px;
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.zoomLabel {
+  width: 32px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+  text-align: center;
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+}
+
+.viewport {
+  flex: 1;
+  width: 458px;
+  min-height: 0;
+  overflow: auto;
+  background: var(--grey-10);
+}
+
+/* 디자인 23:373: 흰 A4, 위아래 24 · 좌우 27 */
+.paper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 456px;
+  min-height: 675px;
+  background: var(--color-white);
+}
+
+.edge {
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.footer {
+  margin-top: auto;
+}
+
+.pageNumber {
+  font-size: 9px;
+  color: var(--grey-60);
+  text-align: center;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.brand {
+  font-size: var(--font-size-h3);
+}
+
+.name {
+  font-size: var(--font-size-h2);
+}
+
+.metaBlock {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.metaDivider {
+  flex-shrink: 0;
+  height: auto;
+}
+
+.meta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.attendees {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 디자인 23:407: 왼쪽 손잡이 + 흰 카드. 고른 섹션은 파란 테두리로 감싼다 (23:389) */
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.selectedRow {
+  gap: 4px;
+  padding: 8px 8px 5px;
+  border-color: var(--blue-100);
+}
+
+.dragging {
+  opacity: 0.4;
+}
+
+.handle {
+  display: flex;
+  flex-shrink: 0;
+  padding: 10px 0;
+  cursor: grab;
+}
+
+.selectedRow .handle {
+  padding: 3px 0;
+}
+
+.card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 15px;
+  overflow: hidden;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cardSelected {
+  gap: 0;
+  padding: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardSelected .cardHead {
+  height: 27px;
+  padding: 0 4px;
+  background: var(--blue-10);
+}
+
+.cardTitle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  background: none;
+  border: none;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardSelected .cardTitle {
+  gap: 4px;
+  font-weight: 400;
+}
+
+.cardTools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 디자인 23:400 */
+.ai {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  background: var(--blue-90);
+  border: none;
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--color-white);
+}
+
+.ai:disabled {
+  opacity: 0.7;
+}
+
+.cardSelected .cardBody {
+  padding: 6px 8px;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+
+.pageLabel {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}

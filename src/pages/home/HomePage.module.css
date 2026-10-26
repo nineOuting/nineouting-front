@@ -1,0 +1,28 @@
+/* 디자인 23:697: 메뉴 오른쪽 18px, 상단 바 아래 29px부터. 캘린더 863px + 18px + 오른쪽 열 283px */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 29px 18px 21px;
+}
+
+.greeting {
+  margin: 0;
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: #000;
+}
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 283px;
+  gap: 18px;
+  margin-bottom: 2px;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

@@ -250,6 +250,11 @@ export function startMeeting(meetingId: number) {
   return request('POST', `/api/meetings/${meetingId}/start`);
 }
 
+/** REQ-098 회의 마무리 (회의록 작성자, 진행 중에만). 녹음을 끝내고 회의록을 만든다 */
+export function finishMeeting(meetingId: number) {
+  return request('POST', `/api/meetings/${meetingId}/finish`);
+}
+
 /** REQ-084 회의 멈춤·재개 (회의록 작성자) */
 export function pauseMeeting(meetingId: number) {
   return request('POST', `/api/meetings/${meetingId}/pause`);
@@ -287,4 +292,22 @@ export async function issueRoomTicket(meetingId: number) {
 /** 음성(STT) WebSocket 30초 1회용 입장권 (회의록 작성자, 진행 중) */
 export async function issueSttTicket(meetingId: number) {
   return (await request<TicketResponse>('POST', `/api/meetings/${meetingId}/stt-ticket`)).ticket;
+}
+
+/** REQ-018~020 홈 캘린더 항목 (취소된 회의 제외) */
+export interface CalendarMeeting {
+  meetingId: number;
+  title: string;
+  startAt: string;
+  endAt: string;
+  status: MeetingStatus;
+  workspaceId: number;
+  workspaceName: string;
+  folderId: number;
+  folderName: string;
+}
+
+/** REQ-018 from~to(2026-10-01, 하루 단위, 최대 42일) 사이에 내가 들어갈 수 있는 모든 폴더의 회의 */
+export function listCalendarMeetings(from: string, to: string) {
+  return request<CalendarMeeting[]>('GET', `/api/meetings/calendar?from=${from}&to=${to}`);
 }
