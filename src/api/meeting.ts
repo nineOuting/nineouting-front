@@ -250,6 +250,11 @@ export function startMeeting(meetingId: number) {
   return request('POST', `/api/meetings/${meetingId}/start`);
 }
 
+/** REQ-098 회의 마무리 (회의록 작성자, 진행 중에만). 녹음을 끝내고 회의록을 만든다 */
+export function finishMeeting(meetingId: number) {
+  return request('POST', `/api/meetings/${meetingId}/finish`);
+}
+
 /** REQ-084 회의 멈춤·재개 (회의록 작성자) */
 export function pauseMeeting(meetingId: number) {
   return request('POST', `/api/meetings/${meetingId}/pause`);

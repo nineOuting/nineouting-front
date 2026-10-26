@@ -37,6 +37,9 @@ const SHARE_FAILED_MESSAGE = '회의록을 저장하지 못했습니다. 잠시 
 const SAVE_FAILED_MESSAGE = '임시저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 const DOWNLOAD_FAILED_MESSAGE = '파일을 다운로드하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 const SAVED_MESSAGE = '임시저장했어요.';
+// 회의를 마무리하면 회의록이 Kafka로 비동기 생성된다. 그동안 1.5초마다 다시 불러온다 (최대 약 30초)
+const NOT_READY_RETRY_MS = 1500;
+const NOT_READY_MAX_RETRIES = 20;
 const STATUS_LABELS = { WRITING: '작성 중', REVIEWING: '검토 중', CONFIRMED: '확정' } as const;
 
 type LoadState = { type: 'loading' } | { type: 'notReady' } | { type: 'error'; message: string } | { type: 'ready' };
@@ -101,27 +104,38 @@ export default function MinutesEditorPage() {
 
   const load = useCallback(() => {
     let isCurrent = true;
-    fetchMinutes(id)
-      .then(({ detail, myUserId, templateList }) => {
-        if (isCurrent) {
-          setMyId(myUserId);
-          setTemplates(templateList);
-          apply(detail);
-          setState({ type: 'ready' });
-          markMinutesViewed(detail.minutesId).catch(() => undefined);
-        }
-      })
-      .catch((error: unknown) => {
-        if (isCurrent) {
+    let retries = 0;
+    let retryTimer: number | undefined;
+    const attempt = () =>
+      fetchMinutes(id)
+        .then(({ detail, myUserId, templateList }) => {
+          if (isCurrent) {
+            setMyId(myUserId);
+            setTemplates(templateList);
+            apply(detail);
+            setState({ type: 'ready' });
+            markMinutesViewed(detail.minutesId).catch(() => undefined);
+          }
+        })
+        .catch((error: unknown) => {
+          if (!isCurrent) {
+            return;
+          }
+          if (isApiError(error, MINUTES_ERROR_CODES.notReady) && retries < NOT_READY_MAX_RETRIES) {
+            retries += 1;
+            retryTimer = window.setTimeout(attempt, NOT_READY_RETRY_MS);
+            return;
+          }
           setState(
             isApiError(error, MINUTES_ERROR_CODES.notReady)
               ? { type: 'notReady' }
               : { type: 'error', message: errorMessage(error) },
           );
-        }
-      });
+        });
+    attempt();
     return () => {
       isCurrent = false;
+      window.clearTimeout(retryTimer);
     };
   }, [id, apply]);
 
@@ -155,7 +169,7 @@ export default function MinutesEditorPage() {
           </Link>
         </header>
         <div className={styles.message}>
-          {state.type === 'loading' && <p>회의록을 불러오는 중이에요.</p>}
+          {state.type === 'loading' && <p>회의록을 준비하고 있어요. 잠시만 기다려 주세요.</p>}
           {state.type === 'notReady' && (
             <>
               <p>회의록을 준비하고 있습니다. 잠시 후 다시 시도해 주세요.</p>
