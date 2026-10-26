@@ -288,3 +288,21 @@ export async function issueRoomTicket(meetingId: number) {
 export async function issueSttTicket(meetingId: number) {
   return (await request<TicketResponse>('POST', `/api/meetings/${meetingId}/stt-ticket`)).ticket;
 }
+
+/** REQ-018~020 홈 캘린더 항목 (취소된 회의 제외) */
+export interface CalendarMeeting {
+  meetingId: number;
+  title: string;
+  startAt: string;
+  endAt: string;
+  status: MeetingStatus;
+  workspaceId: number;
+  workspaceName: string;
+  folderId: number;
+  folderName: string;
+}
+
+/** REQ-018 from~to(2026-10-01, 하루 단위, 최대 42일) 사이에 내가 들어갈 수 있는 모든 폴더의 회의 */
+export function listCalendarMeetings(from: string, to: string) {
+  return request<CalendarMeeting[]>('GET', `/api/meetings/calendar?from=${from}&to=${to}`);
+}

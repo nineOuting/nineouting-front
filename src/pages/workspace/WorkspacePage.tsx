@@ -23,6 +23,7 @@ import dividerWsMember from '../../assets/divider-ws-member.svg';
 import AppLayout from '../../components/AppLayout';
 import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import FavoriteButton from '../../components/FavoriteButton';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderAccess, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
@@ -179,6 +180,7 @@ export default function WorkspacePage() {
   return (
     <AppLayout
       className={styles.page}
+      workspaceId={id}
       sidebarFooter={
         // REQ-138 워크스페이스 소유자만 삭제할 수 있다
         isOwner && (
@@ -224,6 +226,11 @@ export default function WorkspacePage() {
                 />
               )}
             </span>
+            <FavoriteButton
+              target={{ type: 'workspace', workspaceId: workspace.workspaceId }}
+              name={workspace.name}
+              onError={(text) => setToast({ text, variant: 'error' })}
+            />
           </div>
         </div>
         <button type="button" className={styles.newFolder} onClick={() => setDialog({ type: 'newFolder' })}>

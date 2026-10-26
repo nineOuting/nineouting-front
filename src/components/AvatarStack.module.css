@@ -27,6 +27,16 @@
   object-fit: cover;
 }
 
+/* 42px 동그라미를 20px 간격으로 겹친다 (디자인 23:814) */
+.large > .face {
+  width: 42px;
+  height: 42px;
+}
+
+.large.overlap > * + * {
+  margin-left: -22px;
+}
+
 .rest {
   font-size: var(--font-size-b2);
   font-weight: 500;

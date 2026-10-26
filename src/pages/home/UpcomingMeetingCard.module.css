@@ -1,0 +1,41 @@
+/* 디자인 23:793: 높이 385px, 안건이 많으면 안에서 스크롤 */
+.card {
+  height: 385px;
+  overflow: hidden;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.people {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agendas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.agendaTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

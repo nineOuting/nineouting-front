@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import RequireAuth from './auth/RequireAuth';
 import FolderPage from './pages/folder/FolderPage';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import PasswordCompletePage from './pages/auth/PasswordCompletePage';
 import PasswordFindPage from './pages/auth/PasswordFindPage';
