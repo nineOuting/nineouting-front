@@ -12,6 +12,7 @@ import SignupPage from './pages/auth/SignupPage';
 import MeetingCreatePage from './pages/meeting/MeetingCreatePage';
 import MeetingRoomPage from './pages/meeting/MeetingRoomPage';
 import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
+import InvitationPage from './pages/workspace/InvitationPage';
 import WorkspacePage from './pages/workspace/WorkspacePage';
 
 export default function App() {
@@ -79,6 +80,15 @@ export default function App() {
           element={
             <RequireAuth>
               <FolderPage />
+            </RequireAuth>
+          }
+        />
+        {/* REQ-127 초대 메일의 링크. 로그인하지 않았으면 로그인한 뒤 돌아온다 */}
+        <Route
+          path="/invitations/:token"
+          element={
+            <RequireAuth>
+              <InvitationPage />
             </RequireAuth>
           }
         />

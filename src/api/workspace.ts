@@ -142,6 +142,27 @@ export function inviteByEmail(workspaceId: number, email: string) {
   return request('POST', `/api/workspaces/${workspaceId}/invitations`, { email });
 }
 
+export interface InvitationInfo {
+  workspaceId: number;
+  workspaceName: string;
+  /** 초대받은 이메일 */
+  email: string;
+  /** 로그인한 계정이 초대받은 이메일인지 (다르면 수락할 수 없다) */
+  emailMatches: boolean;
+  /** 이미 워크스페이스 멤버인지 */
+  member: boolean;
+}
+
+/** REQ-127 초대 메일의 링크를 연 사람에게 보여 줄 정보 */
+export function getInvitation(token: string) {
+  return request<InvitationInfo>('GET', `/api/workspaces/invitations/${encodeURIComponent(token)}`);
+}
+
+/** REQ-127 초대 수락. 승인 없이 바로 멤버가 된다 */
+export function acceptInvitation(token: string) {
+  return request<WorkspaceResponse>('POST', `/api/workspaces/invitations/${encodeURIComponent(token)}/accept`);
+}
+
 /** REQ-128 멤버별 폴더 접근 권한 (소유자) */
 export function changeFolderAccess(workspaceId: number, userId: number, access: FolderAccess) {
   return request('PUT', `/api/workspaces/${workspaceId}/members/${userId}/folder-access`, {
