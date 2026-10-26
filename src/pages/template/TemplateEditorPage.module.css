@@ -1,0 +1,237 @@
+/* 디자인 23:9: 상단 바 64px, 흰 머리줄 96px(좌우 62px), 아래 왼쪽 429 · 미리보기 532 · 설정 354 */
+.page {
+  min-width: 1440px;
+  min-height: 100vh;
+  padding-bottom: 40px;
+  background: var(--color-white);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  padding-left: 32px;
+  background: var(--layout-placeholder);
+}
+
+.logo {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+  text-decoration: none;
+}
+
+.headBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 96px;
+  padding: 24px 62px;
+  border-bottom: 1px solid var(--grey-20);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.description {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.primary,
+.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.primary {
+  width: 138.5px;
+  background: var(--blue-100);
+  border: none;
+  color: var(--color-white);
+}
+
+.secondary {
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  color: var(--color-black);
+}
+
+.loading {
+  padding-top: 160px;
+  font-size: var(--font-size-b1);
+  color: var(--grey-70);
+  text-align: center;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 429px 532px 354px;
+  justify-content: center;
+  align-items: start;
+  gap: 31px;
+  margin-top: 18px;
+}
+
+/* 디자인 23:14 */
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  height: 791px;
+  padding: 20px;
+  overflow-y: auto;
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.blockTitle {
+  margin: 0;
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.optional {
+  color: var(--grey-30);
+}
+
+.input,
+.textareaBox {
+  padding: 8px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.textareaBox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.textarea {
+  padding: 0;
+  border: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+  resize: none;
+  field-sizing: content;
+}
+
+.counter {
+  align-self: flex-end;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-30);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 디자인 23:34: 체크박스 20 · 아이콘 40 · 제목·설명 */
+.item {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+}
+
+.itemBody {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.itemText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.itemDescription {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.addCustom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  margin-top: 6px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--blue-100);
+  border-radius: 8px;
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--blue-100);
+}

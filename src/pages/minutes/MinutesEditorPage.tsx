@@ -14,12 +14,12 @@ import {
   type ExportFormat,
   type MinutesDetail,
   type MinutesSection,
-  type MinutesTemplateInfo,
 } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { TranscriptLine } from '../../types/meetingRoom';
+import type { MinutesTemplate } from '../../types/template';
 import { toTime } from '../../utils/calendar';
 import { formatMeetingDate } from '../../utils/meetingFormat';
 import { toTranscriptLine } from '../meeting/room/roomData';
@@ -81,7 +81,7 @@ export default function MinutesEditorPage() {
   const [sections, setSections] = useState<MinutesSection[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [meeting, setMeeting] = useState<MeetingDetailResponse | null>(null);
-  const [templates, setTemplates] = useState<MinutesTemplateInfo[]>([]);
+  const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   const [myId, setMyId] = useState<number>();
   const [summary, setSummary] = useState<{ topic: string | null; texts: string[] }>({ topic: null, texts: [] });
   const [lines, setLines] = useState<TranscriptLine[]>([]);

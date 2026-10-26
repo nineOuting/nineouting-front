@@ -1,0 +1,44 @@
+.switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  width: 34px;
+  height: 16px;
+  background: var(--grey-50);
+  border-radius: 8px;
+}
+
+.track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-white);
+  border-radius: 50%;
+}
+
+.input:checked + .track {
+  background: var(--blue-100);
+}
+
+.input:checked + .track::after {
+  left: 19px;
+}
+
+.input:focus-visible + .track {
+  outline: 2px solid var(--blue-70);
+  outline-offset: 2px;
+}

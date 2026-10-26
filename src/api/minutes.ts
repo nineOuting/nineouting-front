@@ -1,4 +1,6 @@
 import type { Member } from '../types/meeting';
+import type { ItemSettings, MinutesTemplate, TemplateLayout } from '../types/template';
+import { withItemDefaults, withLayoutDefaults } from '../utils/templateSettings';
 import { downloadFile, request } from './client';
 import { toMember } from './meeting';
 
@@ -188,14 +190,37 @@ export async function downloadMinutes(minutesId: number, format: ExportFormat) {
   URL.revokeObjectURL(url);
 }
 
-/** REQ-119 회의록 양식 (기본 양식 + 내 양식) */
-export interface MinutesTemplateInfo {
-  templateId: number;
-  name: string;
-  isDefault: boolean;
-  items: string[];
+type TemplateResponse = Omit<MinutesTemplate, 'items' | 'layout'> & {
+  items: { title: string; description: string; settings: Partial<ItemSettings> }[];
+  layout: Partial<TemplateLayout>;
+};
+
+function toTemplate(response: TemplateResponse): MinutesTemplate {
+  return {
+    ...response,
+    items: response.items.map((item) => ({ ...item, settings: withItemDefaults(item.settings) })),
+    layout: withLayoutDefaults(response.layout),
+  };
 }
 
-export function listMinutesTemplates() {
-  return request<MinutesTemplateInfo[]>('GET', '/api/minutes-templates');
+/** REQ-119 회의록 양식 (기본 양식이 먼저, 그다음 내 양식) */
+export async function listMinutesTemplates() {
+  return (await request<TemplateResponse[]>('GET', '/api/minutes-templates')).map(toTemplate);
+}
+
+type TemplateRequest = Pick<MinutesTemplate, 'name' | 'description' | 'items' | 'layout'>;
+
+/** REQ-120 새 양식 */
+export async function createMinutesTemplate(template: TemplateRequest) {
+  return toTemplate(await request<TemplateResponse>('POST', '/api/minutes-templates', template));
+}
+
+/** REQ-121 양식 편집 (내 양식만, 기본 양식은 고칠 수 없다) */
+export async function updateMinutesTemplate(templateId: number, template: TemplateRequest) {
+  return toTemplate(await request<TemplateResponse>('PUT', `/api/minutes-templates/${templateId}`, template));
+}
+
+/** REQ-121 양식 삭제 (이미 만든 회의록의 칸은 그대로) */
+export function deleteMinutesTemplate(templateId: number) {
+  return request('DELETE', `/api/minutes-templates/${templateId}`);
 }

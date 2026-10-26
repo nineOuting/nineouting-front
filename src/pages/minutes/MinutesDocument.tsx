@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { MinutesDetail, MinutesSection, MinutesTemplateInfo } from '../../api/minutes';
+import type { MinutesDetail, MinutesSection } from '../../api/minutes';
 import DropdownMenu from '../../components/DropdownMenu';
 import Placeholder from '../../components/Placeholder';
+import SectionContent from '../../components/SectionContent';
+import type { MinutesTemplate } from '../../types/template';
+import { DEFAULT_LAYOUT, PAPER_FONT_SCALE, PX_PER_MM, withItemDefaults } from '../../utils/templateSettings';
 import styles from './MinutesDocument.module.css';
 
 const NAV_ICON_SIZE = 18;
@@ -16,7 +19,7 @@ interface MinutesDocumentProps {
   meta: string[];
   canEdit: boolean;
   canChangeTemplate: boolean;
-  templates: MinutesTemplateInfo[];
+  templates: MinutesTemplate[];
   onChangeSection: (index: number, content: string) => void;
   onChangeTemplate: (templateId: number) => void;
 }
@@ -40,6 +43,10 @@ export default function MinutesDocument({
   const paperRef = useRef<HTMLDivElement>(null);
   const templateRef = useRef<HTMLButtonElement>(null);
   const pageHeight = (PAGE_HEIGHT * zoom) / 100;
+  // 양식의 레이아웃·항목 설정을 문서에 그대로 쓴다 (양식이 지워졌으면 기본값)
+  const template = templates.find(({ templateId }) => templateId === minutes.templateId);
+  const layout = template?.layout ?? DEFAULT_LAYOUT;
+  const settingsOf = (title: string) => withItemDefaults(template?.items.find((item) => item.title === title)?.settings);
 
   // 내용이 늘거나 확대하면 쪽 수가 바뀐다
   useEffect(() => {
@@ -117,7 +124,7 @@ export default function MinutesDocument({
               items={templates.map((template) => ({
                 id: String(template.templateId),
                 label: template.name,
-                description: template.items.join(' · '),
+                description: template.items.map(({ title }) => title).join(' · '),
                 isSelected: template.templateId === minutes.templateId,
               }))}
               onSelect={(id) => {
@@ -134,30 +141,54 @@ export default function MinutesDocument({
         className={styles.viewport}
         onScroll={(event) => setPage(Math.min(pageCount, Math.floor(event.currentTarget.scrollTop / pageHeight + 0.5) + 1))}
       >
-        <div ref={paperRef} className={styles.paper} style={{ zoom: zoom / 100 }}>
-          <h2 className={styles.docTitle}>{minutes.title}</h2>
-          <ul className={styles.meta}>
-            {meta.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-          {sections.map((section, index) => (
-            <div key={section.sectionId ?? `new-${index}`} className={styles.section}>
-              <h3 className={styles.sectionTitle}>{section.title}</h3>
-              {canEdit ? (
-                <textarea
-                  className={styles.content}
-                  aria-label={`${section.title} 내용`}
-                  placeholder="내용을 입력해 주세요"
-                  maxLength={20000}
-                  value={section.content}
-                  onChange={(event) => onChangeSection(index, event.target.value)}
+        <div
+          ref={paperRef}
+          className={styles.paper}
+          style={{
+            zoom: zoom / 100,
+            gap: layout.sectionGap,
+            padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
+          }}
+        >
+          {layout.header.enabled && layout.header.text && <p className={styles.edge}>{layout.header.text}</p>}
+          <h2 className={styles.docTitle} style={{ textAlign: layout.align.toLowerCase() as 'left' | 'center' | 'right' }}>
+            {minutes.title}
+          </h2>
+          {layout.showMeetingInfo && (
+            <ul className={styles.meta}>
+              {meta.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          )}
+          {sections.map((section, index) => {
+            const settings = settingsOf(section.title);
+            return (
+              <div
+                key={section.sectionId ?? `new-${index}`}
+                className={styles.section}
+                style={{ marginTop: settings.margin / 2 }}
+              >
+                <h3
+                  className={styles.sectionTitle}
+                  style={{ fontSize: settings.titleSize * PAPER_FONT_SCALE, color: settings.color }}
+                >
+                  {section.title}
+                </h3>
+                <SectionContent
+                  settings={settings}
+                  content={section.content}
+                  label={section.title}
+                  editable={canEdit}
+                  placeholder={canEdit ? '내용을 입력해 주세요' : '내용이 없어요.'}
+                  onChange={(content) => onChangeSection(index, content)}
                 />
-              ) : (
-                <p className={styles.contentText}>{section.content || '내용이 없어요.'}</p>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
+          {layout.footer.enabled && layout.footer.text && (
+            <p className={`${styles.edge} ${styles.footer}`}>{layout.footer.text}</p>
+          )}
         </div>
       </div>
     </section>

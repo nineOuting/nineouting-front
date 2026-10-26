@@ -14,6 +14,8 @@ import MeetingCreatePage from './pages/meeting/MeetingCreatePage';
 import MeetingRoomPage from './pages/meeting/MeetingRoomPage';
 import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
 import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
+import TemplateEditorPage from './pages/template/TemplateEditorPage';
+import TemplateListPage from './pages/template/TemplateListPage';
 import InvitationPage from './pages/workspace/InvitationPage';
 import WorkspacePage from './pages/workspace/WorkspacePage';
 
@@ -75,6 +77,31 @@ export default function App() {
           element={
             <RequireAuth>
               <MinutesEditorPage />
+            </RequireAuth>
+          }
+        />
+        {/* REQ-119~121 회의록 양식. 새 양식은 ?from=양식ID 로 복사해서 시작할 수 있다 */}
+        <Route
+          path="/templates"
+          element={
+            <RequireAuth>
+              <TemplateListPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/templates/new"
+          element={
+            <RequireAuth>
+              <TemplateEditorPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/templates/:templateId/edit"
+          element={
+            <RequireAuth>
+              <TemplateEditorPage />
             </RequireAuth>
           }
         />
