@@ -57,3 +57,9 @@ export function minutesOfDay(dateTime: string) {
   const [hour, minute] = toTime(dateTime).split(':').map(Number);
   return hour * 60 + minute;
 }
+
+/** 2026-10-26 → 2026. 10. 26. */
+export function formatPeriodDate(isoDate: string) {
+  const [year, month, day] = isoDate.split('-');
+  return `${year}. ${month}. ${day}.`;
+}

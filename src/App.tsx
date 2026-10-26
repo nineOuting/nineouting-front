@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import RequireAuth from './auth/RequireAuth';
+import ArchivePage from './pages/archive/ArchivePage';
 import FolderPage from './pages/folder/FolderPage';
 import HomePage from './pages/home/HomePage';
 import LoginPage from './pages/auth/LoginPage';
@@ -72,6 +73,14 @@ export default function App() {
           element={
             <RequireAuth>
               <WorkspacePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/workspaces/:workspaceId/archive"
+          element={
+            <RequireAuth>
+              <ArchivePage />
             </RequireAuth>
           }
         />

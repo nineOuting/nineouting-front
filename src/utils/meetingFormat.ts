@@ -21,3 +21,12 @@ export function meetingPath({ meetingId, status }: { meetingId: number; status: 
   }
   return status === 'FINISHED' ? `/meetings/${meetingId}/minutes` : `/meetings/${meetingId}`;
 }
+
+/** 2026-10-24T10:00:00 → 2026.10.24 오전 10:00 */
+export function formatDateTime(dateTime: string) {
+  const hour = Number(dateTime.slice(11, 13));
+  const minute = dateTime.slice(14, 16);
+  const period = hour < 12 ? '오전' : '오후';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${dateTime.slice(0, 10).replaceAll('-', '.')} ${period} ${String(displayHour).padStart(2, '0')}:${minute}`;
+}

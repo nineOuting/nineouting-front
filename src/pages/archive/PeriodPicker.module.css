@@ -1,0 +1,150 @@
+/* 디자인 23:2157: 261px 창 안의 달력 */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: 227px;
+}
+
+.selected {
+  padding: 4px 8px;
+  background: var(--grey-10);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.monthRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.month {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.today {
+  margin-right: 4px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-50);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 7px 3px;
+  text-align: center;
+}
+
+.weekday,
+.day {
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.weekday {
+  color: var(--grey-50);
+}
+
+.day {
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--grey-100);
+}
+
+.otherMonth {
+  color: var(--grey-50);
+}
+
+.inside {
+  background: var(--blue-10);
+}
+
+.edge {
+  background: var(--blue-100);
+  color: var(--color-white);
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--color-black);
+  cursor: pointer;
+}
+
+.switchInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 디자인 23:2223: 31×16 회색 바탕에 흰 동그라미. 켜면 파란 바탕, 동그라미가 오른쪽 */
+.switch {
+  position: relative;
+  width: 31px;
+  height: 16px;
+  background: var(--grey-50);
+  border-radius: 8px;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-white);
+  border-radius: 50%;
+}
+
+.switchInput:checked + .switch {
+  background: var(--blue-100);
+}
+
+.switchInput:checked + .switch::after {
+  left: 16px;
+}
+
+.switchInput:focus-visible + .switch {
+  outline: 2px solid var(--blue-70);
+  outline-offset: 2px;
+}
