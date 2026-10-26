@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { errorMessage } from '../../api/client';
 import dividerModal from '../../assets/divider-modal.svg';
 import TopConfirm from '../../components/TopConfirm';
 import type { FolderMember, WorkspaceMember } from '../../types/workspace';
@@ -13,10 +14,14 @@ const DIVIDER_WIDTH = 542;
 
 interface FolderMembersModalProps {
   members: FolderMember[];
-  /** 폴더에는 워크스페이스 멤버만 초대할 수 있다 (REQ-041) */
-  workspaceMembers: WorkspaceMember[];
+  /** 폴더에는 워크스페이스 멤버만 초대할 수 있다 (REQ-041). 못 받았으면 null */
+  workspaceMembers: WorkspaceMember[] | null;
+  /** 워크스페이스 멤버 목록을 못 받은 이유 (검색할 때 보여 준다) */
+  workspaceMembersError?: string;
   canManage: boolean;
-  onChange: (members: FolderMember[]) => void;
+  /** 실패하면 던진다 */
+  onAdd: (userIds: number[]) => Promise<void>;
+  onRemove: (userIds: number[]) => Promise<void>;
   onNotice: (text: string) => void;
   onClose: () => void;
 }
@@ -31,8 +36,10 @@ interface SelectableRow {
 export default function FolderMembersModal({
   members,
   workspaceMembers,
+  workspaceMembersError,
   canManage,
-  onChange,
+  onAdd,
+  onRemove,
   onNotice,
   onClose,
 }: FolderMembersModalProps) {
@@ -43,28 +50,36 @@ export default function FolderMembersModal({
   const keyword = query.trim().toLowerCase();
   const isSearching = keyword.length > 0;
 
-  const candidates = workspaceMembers.filter(
+  const candidates = (workspaceMembers ?? []).filter(
     ({ userId, name, email }) =>
       !members.some((member) => member.userId === userId) &&
       (name.toLowerCase().includes(keyword) || email.toLowerCase().includes(keyword)),
   );
-  const removable = members.filter(({ isOwner }) => !isOwner);
+  // 소유자와 "모든 폴더" 권한으로 들어오는 멤버는 내보낼 수 없다 (REQ-042)
+  const removable = members.filter(({ isOwner, isInherited }) => !isOwner && !isInherited);
+  const fixed = members.filter(({ isOwner, isInherited }) => isOwner || isInherited);
 
-  const addSelected = () => {
+  const addSelected = async () => {
     if (toAdd.length === 0) {
       return;
     }
-    // TODO(API 연동): POST /api/folders/{folderId}/members (REQ-041)
-    onChange([...members, ...toAdd.map((member) => ({ ...member, isOwner: false }))]);
-    setToAdd([]);
-    setQuery('');
+    try {
+      await onAdd(toAdd.map(({ userId }) => userId));
+      setToAdd([]);
+      setQuery('');
+    } catch (error) {
+      onNotice(errorMessage(error));
+    }
   };
 
-  const removeSelected = () => {
-    // TODO(API 연동): DELETE /api/folders/{folderId}/members/{userId} (REQ-042)
-    onChange(members.filter(({ userId }) => !toRemove.includes(userId)));
-    setToRemove([]);
+  const removeSelected = async () => {
     setIsRemoveConfirmOpen(false);
+    try {
+      await onRemove(toRemove);
+      setToRemove([]);
+    } catch (error) {
+      onNotice(errorMessage(error));
+    }
   };
 
   return (
@@ -87,7 +102,7 @@ export default function FolderMembersModal({
                 rows={candidates}
                 selectedIds={toAdd.map(({ userId }) => userId)}
                 actionLabel="선택 삭제"
-                emptyText={NO_MATCH_MESSAGE}
+                emptyText={workspaceMembersError ?? NO_MATCH_MESSAGE}
                 onChange={(ids) => setToAdd(candidates.filter(({ userId }) => ids.includes(userId)))}
                 onAction={() => setToAdd([])}
               />
@@ -116,7 +131,7 @@ export default function FolderMembersModal({
                 selectedIds={toRemove}
                 actionLabel="선택 멤버 제외"
                 isDanger
-                owners={members.filter(({ isOwner }) => isOwner)}
+                fixedRows={fixed}
                 emptyText=""
                 onChange={setToRemove}
                 onAction={() => setIsRemoveConfirmOpen(true)}
@@ -153,8 +168,8 @@ interface SelectionListProps {
   selectedIds: number[];
   actionLabel: string;
   isDanger?: boolean;
-  /** 맨 위에 체크 칸 없이 보여 줄 소유자 (제외할 수 없다, REQ-042) */
-  owners?: SelectableRow[];
+  /** 맨 위에 체크 칸 없이 보여 줄 멤버: 소유자, "모든 폴더" 권한 멤버 (제외할 수 없다, REQ-042) */
+  fixedRows?: (SelectableRow & { isOwner?: boolean })[];
   emptyText: string;
   onChange: (ids: number[]) => void;
   onAction: () => void;
@@ -166,7 +181,7 @@ function SelectionList({
   selectedIds,
   actionLabel,
   isDanger,
-  owners = [],
+  fixedRows = [],
   emptyText,
   onChange,
   onAction,
@@ -186,7 +201,7 @@ function SelectionList({
             disabled={rows.length === 0}
             onChange={(event) => onChange(event.target.checked ? rows.map(({ userId }) => userId) : [])}
           />
-          전체선택 ({selectedIds.length}/{rows.length + owners.length})
+          전체선택 ({selectedIds.length}/{rows.length + fixedRows.length})
         </label>
         <button
           type="button"
@@ -199,10 +214,10 @@ function SelectionList({
       </div>
       <img src={dividerModal} alt="" width={DIVIDER_WIDTH} height={1} className={styles.divider} />
       <ul className={styles.list}>
-        {owners.map((owner) => (
-          <li key={owner.userId} className={styles.row}>
-            <MemberIdentity member={owner} email={owner.email} />
-            <span className={styles.ownerBadge}>소유자</span>
+        {fixedRows.map((row) => (
+          <li key={row.userId} className={styles.row}>
+            <MemberIdentity member={row} email={row.email} />
+            {row.isOwner && <span className={styles.ownerBadge}>소유자</span>}
           </li>
         ))}
         {rows.length === 0 && emptyText && <li className={styles.empty}>{emptyText}</li>}

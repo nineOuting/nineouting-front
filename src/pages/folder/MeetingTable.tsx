@@ -12,7 +12,7 @@ const ATTENDEE_FACES = 4;
 const STATUS_LABELS: Record<FolderMeetingStatus, string> = {
   scheduled: '예정',
   inProgress: '진행 중',
-  writing: '회의록 작성 중',
+  writing: '작성 중',
   reviewing: '검토 중',
   confirmed: '확정',
 };

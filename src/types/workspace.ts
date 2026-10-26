@@ -25,9 +25,11 @@ export interface FolderSummary {
 export interface FolderMember extends Member {
   email: string;
   isOwner: boolean;
+  /** 초대가 아니라 "모든 폴더" 권한으로 들어오는 멤버 (폴더에서 내보낼 수 없다) */
+  isInherited?: boolean;
 }
 
-/** REQ-048 회의 목록의 상태: 예정 / 진행 중 / 회의록 작성 중 / 검토 중 / 확정 */
+/** REQ-048 회의 목록의 상태: 예정 / 진행 중 / (회의록) 작성 중 / 검토 중 / 확정 */
 export type FolderMeetingStatus = 'scheduled' | 'inProgress' | 'writing' | 'reviewing' | 'confirmed';
 
 export interface FolderMeeting {
@@ -47,16 +49,4 @@ export interface FolderPendingAgenda {
   fromMeetingTitle: string;
   /** 2026-10-20 */
   carriedAt: string;
-}
-
-export interface FolderDetail {
-  folderId: number;
-  workspaceId: number;
-  workspaceName: string;
-  name: string;
-  isOwner: boolean;
-  subFolders: FolderSummary[];
-  meetings: FolderMeeting[];
-  members: FolderMember[];
-  pendingAgendas: FolderPendingAgenda[];
 }

@@ -1,16 +1,14 @@
 import { useRef, useState } from 'react';
+import { errorMessage } from '../../api/client';
 import DropdownMenu from '../../components/DropdownMenu';
 import Placeholder from '../../components/Placeholder';
 import { EMAIL_REGEX, MESSAGES } from '../../constants/auth';
-import { REGISTERED_USERS } from '../../mocks/workspace';
 import type { FolderAccess, WorkspaceMember } from '../../types/workspace';
 import ActionMenu from './ActionMenu';
 import MembersModal, { MemberIdentity } from './MembersModal';
 import styles from './MembersModal.module.css';
 
 const ICON_SIZE = 16;
-// MSG-032
-const NO_MATCH_MESSAGE = '일치하는 멤버가 없습니다. 이름이나 이메일을 다시 확인해 주세요.';
 const TRANSFER_PENDING_MESSAGE = '소유권 양도 화면은 디자인이 나오면 연결돼요.';
 
 const ACCESS_LABELS: Record<FolderAccess, string> = {
@@ -21,7 +19,10 @@ const ACCESS_LABELS: Record<FolderAccess, string> = {
 interface WorkspaceMembersModalProps {
   members: WorkspaceMember[];
   canManage: boolean;
-  onChange: (members: WorkspaceMember[]) => void;
+  /** 실패하면 던진다. 메시지를 입력 칸 아래에 보여 준다 */
+  onInvite: (email: string) => Promise<void>;
+  onAccessChange: (userId: number, access: FolderAccess) => void;
+  onRemove: (userId: number) => void;
   onNotice: (text: string) => void;
   onClose: () => void;
 }
@@ -30,33 +31,35 @@ interface WorkspaceMembersModalProps {
 export default function WorkspaceMembersModal({
   members,
   canManage,
-  onChange,
+  onInvite,
+  onAccessChange,
+  onRemove,
   onNotice,
   onClose,
 }: WorkspaceMembersModalProps) {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>();
+  const [isInviting, setIsInviting] = useState(false);
 
-  const invite = () => {
+  const invite = async () => {
     const value = email.trim();
     if (!EMAIL_REGEX.test(value)) {
       setEmailError(MESSAGES.invalidEmail);
       return;
     }
-    // TODO(API 연동): 이메일 초대 API (REQ-127, 백엔드 미구현). 지금은 가입한 사용자 예시에서 찾는다
-    const user = REGISTERED_USERS.find((item) => item.email === value);
-    if (!user) {
-      setEmailError(NO_MATCH_MESSAGE);
+    if (isInviting) {
       return;
     }
-    if (!members.some(({ userId }) => userId === user.userId)) {
-      onChange([...members, { ...user, isOwner: false, folderAccess: 'all' }]);
+    setIsInviting(true);
+    try {
+      await onInvite(value);
+      setEmail('');
+    } catch (error) {
+      setEmailError(errorMessage(error));
+    } finally {
+      setIsInviting(false);
     }
-    setEmail('');
   };
-
-  const update = (userId: number, patch: Partial<WorkspaceMember>) =>
-    onChange(members.map((member) => (member.userId === userId ? { ...member, ...patch } : member)));
 
   return (
     <MembersModal
@@ -88,8 +91,8 @@ export default function WorkspaceMembersModal({
               key={member.userId}
               member={member}
               canManage={canManage}
-              onAccessChange={(folderAccess) => update(member.userId, { folderAccess })}
-              onRemove={() => onChange(members.filter(({ userId }) => userId !== member.userId))}
+              onAccessChange={(folderAccess) => onAccessChange(member.userId, folderAccess)}
+              onRemove={() => onRemove(member.userId)}
             />
           ))}
         </ul>
@@ -142,7 +145,6 @@ function MemberRow({ member, canManage, onAccessChange, onRemove }: MemberRowPro
                 label={`${member.name} 메뉴`}
                 anchorRef={moreRef}
                 // REQ-036 워크스페이스에서 제외
-                // TODO(API 연동): DELETE /api/workspaces/{workspaceId}/members/{userId}
                 items={[{ label: '워크스페이스에서 제외', onSelect: onRemove }]}
                 onClose={closeMenu}
               />
@@ -171,7 +173,6 @@ function MemberRow({ member, canManage, onAccessChange, onRemove }: MemberRowPro
             emptyText=""
             anchorRef={accessRef}
             className={styles.accessMenu}
-            // TODO(API 연동): 멤버별 폴더 접근 권한 API (REQ-128, 백엔드 미구현)
             items={(Object.keys(ACCESS_LABELS) as FolderAccess[]).map((access) => ({
               id: access,
               label: ACCESS_LABELS[access],

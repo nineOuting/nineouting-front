@@ -1,13 +1,31 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { errorMessage, isApiError } from '../../api/client';
+import { countFolderMeetings } from '../../api/meeting';
+import {
+  changeFolderAccess,
+  createFolder,
+  deleteFolder,
+  deleteWorkspace,
+  getWorkspace,
+  inviteByEmail,
+  leaveWorkspace,
+  listFolders,
+  listMyWorkspaces,
+  listWorkspaceMembers,
+  markLastVisited,
+  removeWorkspaceMember,
+  renameFolder,
+  WORKSPACE_ERROR_CODES,
+  type WorkspaceDetail,
+} from '../../api/workspace';
 import dividerWsMember from '../../assets/divider-ws-member.svg';
 import AppLayout from '../../components/AppLayout';
 import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import { ME_USER_ID, MY_WORKSPACES, WORKSPACE_FOLDERS, WORKSPACE_MEMBERS } from '../../mocks/workspace';
-import type { FolderSummary } from '../../types/workspace';
+import type { FolderAccess, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
 import ActionMenu from './ActionMenu';
 import FolderNameModal from './FolderNameModal';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
@@ -20,6 +38,9 @@ const FOLDER_ICON_SIZE = 24;
 const DELETE_ICON_SIZE = 27;
 const MEMBER_DIVIDER_WIDTH = 224;
 const CREATE_WORKSPACE_PENDING_MESSAGE = '새 워크스페이스 만들기 화면은 디자인이 나오면 연결돼요.';
+const INVITED_MESSAGE = '초대 메일을 보냈어요. 받은 사람이 메일의 링크로 수락하면 멤버가 돼요.';
+// MSG-031 (서버 FOLDER_NAME_DUPLICATED)
+const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있습니다. 다른 이름을 입력해 주세요.';
 
 type Dialog =
   | { type: 'newFolder' }
@@ -29,14 +50,21 @@ type Dialog =
   | { type: 'leave' }
   | { type: 'deleteWorkspace' };
 
+/** 폴더 이름 중복은 창 안에서 안내한다 (MSG-031) */
+function folderNameError(error: unknown) {
+  return isApiError(error, WORKSPACE_ERROR_CODES.folderNameDuplicated) ? DUPLICATE_FOLDER_MESSAGE : errorMessage(error);
+}
+
 /** REQ-028~040, 127~129, 138 워크스페이스 화면 (프로젝트 폴더 목록·멤버) */
 export default function WorkspacePage() {
   const navigate = useNavigate();
   const { workspaceId } = useParams();
-  // TODO(API 연동): GET /api/workspaces/{id}, /folders, /members. 지금은 예시 데이터를 쓴다
-  const workspace = MY_WORKSPACES.find((item) => String(item.workspaceId) === workspaceId) ?? MY_WORKSPACES[0];
-  const [folders, setFolders] = useState(WORKSPACE_FOLDERS);
-  const [members, setMembers] = useState(WORKSPACE_MEMBERS);
+  const id = Number(workspaceId);
+  const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
+  const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
+  const [folders, setFolders] = useState<FolderSummary[]>([]);
+  // 멤버 목록은 소유자만 받을 수 있다 (REQ-033). 멤버는 인원수만 본다
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [menuFolderId, setMenuFolderId] = useState<number | null>(null);
@@ -46,31 +74,112 @@ export default function WorkspacePage() {
   const closeSwitcher = useCallback(() => setIsSwitcherOpen(false), []);
   const closeFolderMenu = useCallback(() => setMenuFolderId(null), []);
   const switcherAnchorRef = useRef<HTMLButtonElement>(null);
-  const isOwner = members.some(({ userId, isOwner: owner }) => userId === ME_USER_ID && owner);
+  const isOwner = Boolean(workspace?.isOwner);
   const notice = (text: string) => setToast({ text, variant: 'info' });
+  const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
 
-  const addFolder = (name: string) => {
-    // TODO(API 연동): POST /api/workspaces/{workspaceId}/folders (REQ-039~040)
-    setFolders((prev) => [...prev, { folderId: Date.now(), name, isDefault: false, meetingCount: 0 }]);
+  useEffect(() => {
+    let isCurrent = true;
+    const load = async () => {
+      const [detail, mine, folderList] = await Promise.all([getWorkspace(id), listMyWorkspaces(), listFolders(id)]);
+      // REQ-037 폴더 카드의 회의 수는 meeting-service 회의 목록의 전체 개수로 센다
+      const counts = await Promise.all(folderList.map(({ folderId }) => countFolderMeetings(folderId).catch(() => 0)));
+      const memberList = detail.isOwner ? await listWorkspaceMembers(id) : [];
+      if (!isCurrent) {
+        return;
+      }
+      setWorkspace(detail);
+      setWorkspaces(mine);
+      setFolders(folderList.map((folder, index) => ({ ...folder, meetingCount: counts[index] })));
+      setMembers(memberList);
+      // REQ-030 마지막으로 들어온 워크스페이스로 기억한다
+      markLastVisited(id).catch(() => undefined);
+    };
+    load().catch((error: unknown) => {
+      if (isCurrent) {
+        showError(error);
+      }
+    });
+    return () => {
+      isCurrent = false;
+    };
+  }, [id, showError]);
+
+  if (!workspace) {
+    return <AppLayout className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</AppLayout>;
+  }
+
+  const addFolder = async (name: string) => {
+    const created = await createFolder(id, name);
+    setFolders((prev) => [...prev, { folderId: created.folderId, name: created.name, isDefault: false, meetingCount: 0 }]);
     closeDialog();
   };
 
-  const renameFolder = (folderId: number, name: string) => {
-    // TODO(API 연동): PATCH /api/folders/{folderId}
+  const rename = async (folderId: number, name: string) => {
+    await renameFolder(folderId, name);
     setFolders((prev) => prev.map((folder) => (folder.folderId === folderId ? { ...folder, name } : folder)));
     closeDialog();
   };
 
-  const deleteFolder = (folderId: number) => {
-    // TODO(API 연동): DELETE /api/folders/{folderId} (REQ-058)
-    setFolders((prev) => prev.filter((folder) => folder.folderId !== folderId));
+  const removeFolder = async (folderId: number) => {
     closeDialog();
+    try {
+      await deleteFolder(folderId);
+      setFolders((prev) => prev.filter((folder) => folder.folderId !== folderId));
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const invite = async (email: string) => {
+    await inviteByEmail(id, email);
+    notice(INVITED_MESSAGE);
+  };
+
+  const updateAccess = async (userId: number, folderAccess: FolderAccess) => {
+    try {
+      await changeFolderAccess(id, userId, folderAccess);
+      setMembers((prev) => prev.map((member) => (member.userId === userId ? { ...member, folderAccess } : member)));
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const removeMember = async (userId: number) => {
+    try {
+      await removeWorkspaceMember(id, userId);
+      setMembers((prev) => prev.filter((member) => member.userId !== userId));
+      setWorkspace((prev) => prev && { ...prev, memberCount: prev.memberCount - 1 });
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const leave = async () => {
+    closeDialog();
+    try {
+      await leaveWorkspace(id);
+      navigate('/home', { replace: true });
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const removeWorkspace = async () => {
+    closeDialog();
+    try {
+      await deleteWorkspace(id);
+      navigate('/home', { replace: true });
+    } catch (error) {
+      showError(error);
+    }
   };
 
   return (
     <AppLayout
       className={styles.page}
       sidebarFooter={
+        // REQ-138 워크스페이스 소유자만 삭제할 수 있다
         isOwner && (
           <button type="button" className={styles.deleteWorkspace} onClick={() => setDialog({ type: 'deleteWorkspace' })}>
             이 워크스페이스 삭제
@@ -99,13 +208,12 @@ export default function WorkspacePage() {
               </button>
               {isSwitcherOpen && (
                 <WorkspaceSwitcher
-                  workspaces={MY_WORKSPACES}
+                  workspaces={workspaces}
                   currentId={workspace.workspaceId}
                   anchorRef={switcherAnchorRef}
-                  onSelect={(id) => {
-                    // TODO(API 연동): PUT /api/workspaces/{id}/last-visited (REQ-030)
+                  onSelect={(selectedId) => {
                     closeSwitcher();
-                    navigate(`/workspaces/${id}`);
+                    navigate(`/workspaces/${selectedId}`);
                   }}
                   onCreate={() => {
                     closeSwitcher();
@@ -148,7 +256,7 @@ export default function WorkspacePage() {
                 <FolderMenu
                   folder={folder}
                   isOpen={menuFolderId === folder.folderId}
-                  onToggle={() => setMenuFolderId((id) => (id === folder.folderId ? null : folder.folderId))}
+                  onToggle={() => setMenuFolderId((current) => (current === folder.folderId ? null : folder.folderId))}
                   onClose={closeFolderMenu}
                   onRename={() => setDialog({ type: 'rename', folder })}
                   onDelete={() => setDialog({ type: 'deleteFolder', folder })}
@@ -168,15 +276,26 @@ export default function WorkspacePage() {
               <div className={styles.memberSummary}>
                 <div className={styles.memberHead}>
                   <span className={styles.memberLabel}>워크스페이스 멤버</span>
-                  <span className={styles.memberCount}>총 {members.length}명</span>
+                  <span className={styles.memberCount}>총 {workspace.memberCount}명</span>
                 </div>
-                <AvatarStack members={members} layout="spaced" label={`워크스페이스 멤버 ${members.length}명`} />
+                {members.length > 0 && (
+                  <AvatarStack
+                    members={members}
+                    layout="spaced"
+                    label={`워크스페이스 멤버 ${workspace.memberCount}명`}
+                  />
+                )}
               </div>
-              <img src={dividerWsMember} alt="" width={MEMBER_DIVIDER_WIDTH} height={1} className={styles.divider} />
-              <button type="button" className={styles.rowButton} onClick={() => setDialog({ type: 'members' })}>
-                멤버 권한 및 관리
-                <Placeholder size={SMALL_ICON_SIZE} />
-              </button>
+              {/* REQ-033 멤버 권한 관리는 소유자만 */}
+              {isOwner && (
+                <>
+                  <img src={dividerWsMember} alt="" width={MEMBER_DIVIDER_WIDTH} height={1} className={styles.divider} />
+                  <button type="button" className={styles.rowButton} onClick={() => setDialog({ type: 'members' })}>
+                    멤버 권한 및 관리
+                    <Placeholder size={SMALL_ICON_SIZE} />
+                  </button>
+                </>
+              )}
             </div>
           </section>
           <button
@@ -196,6 +315,7 @@ export default function WorkspacePage() {
           description="관리할 프로젝트 폴더를 만들어 주세요."
           submitLabel="폴더 만들기"
           siblingNames={folders.map(({ name }) => name)}
+          toErrorMessage={folderNameError}
           onSubmit={addFolder}
           onClose={closeDialog}
         />
@@ -207,7 +327,8 @@ export default function WorkspacePage() {
           submitLabel="이름 바꾸기"
           initialName={dialog.folder.name}
           siblingNames={folders.filter(({ folderId }) => folderId !== dialog.folder.folderId).map(({ name }) => name)}
-          onSubmit={(name) => renameFolder(dialog.folder.folderId, name)}
+          toErrorMessage={folderNameError}
+          onSubmit={(name) => rename(dialog.folder.folderId, name)}
           onClose={closeDialog}
         />
       )}
@@ -220,14 +341,16 @@ export default function WorkspacePage() {
           confirmLabel="삭제하기"
           isDanger
           onCancel={closeDialog}
-          onConfirm={() => deleteFolder(dialog.folder.folderId)}
+          onConfirm={() => removeFolder(dialog.folder.folderId)}
         />
       )}
       {dialog?.type === 'members' && (
         <WorkspaceMembersModal
           members={members}
           canManage={isOwner}
-          onChange={setMembers}
+          onInvite={invite}
+          onAccessChange={updateAccess}
+          onRemove={removeMember}
           onNotice={notice}
           onClose={closeDialog}
         />
@@ -250,9 +373,8 @@ export default function WorkspacePage() {
             message={'나가면 이 워크스페이스의 폴더와 회의록을 더 이상 볼 수 없습니다.\n다시 참여하려면 초대를 받아야 합니다.'}
             cancelLabel="취소"
             confirmLabel="나가기"
-            // TODO(API 연동): DELETE /api/workspaces/{workspaceId}/members/me (REQ-032)
             onCancel={closeDialog}
-            onConfirm={() => navigate('/home', { replace: true })}
+            onConfirm={leave}
           />
         ))}
       {dialog?.type === 'deleteWorkspace' && (
@@ -263,9 +385,8 @@ export default function WorkspacePage() {
           cancelLabel="취소"
           confirmLabel="삭제하기"
           isDanger
-          // TODO(API 연동): 워크스페이스 삭제 API (REQ-138, 백엔드 미구현)
           onCancel={closeDialog}
-          onConfirm={() => navigate('/home', { replace: true })}
+          onConfirm={removeWorkspace}
         />
       )}
     </AppLayout>

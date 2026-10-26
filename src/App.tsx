@@ -66,9 +66,22 @@ export default function App() {
             </RequireAuth>
           }
         />
-        {/* 워크스페이스·폴더 화면은 API 연동 전이라 로그인 없이 예시 데이터로 본다 (docs/backlog.md) */}
-        <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
-        <Route path="/folders/:folderId" element={<FolderPage />} />
+        <Route
+          path="/workspaces/:workspaceId"
+          element={
+            <RequireAuth>
+              <WorkspacePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/folders/:folderId"
+          element={
+            <RequireAuth>
+              <FolderPage />
+            </RequireAuth>
+          }
+        />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

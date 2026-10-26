@@ -16,7 +16,9 @@ interface FolderNameModalProps {
   initialName?: string;
   /** 같은 위치의 다른 폴더 이름 (이름 중복 확인, REQ-039) */
   siblingNames: string[];
-  onSubmit: (name: string) => void;
+  /** 실패하면 던진다. 서버 오류를 칸 아래 문구로 바꾼다 */
+  onSubmit: (name: string) => Promise<void>;
+  toErrorMessage: (error: unknown) => string;
   onClose: () => void;
 }
 
@@ -28,24 +30,33 @@ export default function FolderNameModal({
   initialName = '',
   siblingNames,
   onSubmit,
+  toErrorMessage,
   onClose,
 }: FolderNameModalProps) {
   const titleId = useId();
   const inputId = useId();
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) {
+    if (!trimmed || isSubmitting) {
       return;
     }
-    if (siblingNames.includes(trimmed)) {
+    // 대소문자는 구분하지 않는다 (workspace-service 결정 사항)
+    if (siblingNames.some((sibling) => sibling.toLowerCase() === trimmed.toLowerCase())) {
       setError(DUPLICATE_MESSAGE);
       return;
     }
-    onSubmit(trimmed);
+    setIsSubmitting(true);
+    try {
+      await onSubmit(trimmed);
+    } catch (submitError) {
+      setError(toErrorMessage(submitError));
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -83,7 +94,7 @@ export default function FolderNameModal({
         </div>
         <div className={styles.actions}>
           {/* REQ-040 폴더명을 입력하기 전에는 누를 수 없다 */}
-          <button type="submit" className={styles.submit} disabled={!name.trim()}>
+          <button type="submit" className={styles.submit} disabled={!name.trim() || isSubmitting}>
             {submitLabel}
           </button>
         </div>
