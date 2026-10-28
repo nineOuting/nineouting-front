@@ -164,6 +164,58 @@ export function acceptInvitation(token: string) {
   return request<WorkspaceResponse>('POST', `/api/workspaces/invitations/${encodeURIComponent(token)}/accept`);
 }
 
+/** REQ-034 초대 링크 발급 (소유자). 1일 동안 쓸 수 있고, 새로 발급하면 이전 링크는 무효 */
+export async function issueInviteLink(workspaceId: number) {
+  const { inviteUrl } = await request<{ inviteUrl: string }>('POST', `/api/workspaces/${workspaceId}/invite-link`);
+  return inviteUrl;
+}
+
+export interface InviteLinkInfo {
+  workspaceId: number;
+  workspaceName: string;
+  /** 이미 멤버인지 (PENDING·REJECTED는 승인 단계가 있던 때의 값이다) */
+  isMember: boolean;
+}
+
+/** REQ-015 초대 링크(/invites/{token})를 연 사람에게 보여 줄 정보 */
+export async function getInviteLink(token: string): Promise<InviteLinkInfo> {
+  const info = await request<{ workspaceId: number; workspaceName: string; myStatus: string }>(
+    'GET',
+    `/api/invites/${encodeURIComponent(token)}`,
+  );
+  return { workspaceId: info.workspaceId, workspaceName: info.workspaceName, isMember: info.myStatus === 'MEMBER' };
+}
+
+/** REQ-015 초대 링크로 참여. 승인 없이 바로 멤버가 된다 (2026-10-28) */
+export function joinByInviteLink(token: string) {
+  return request<WorkspaceResponse>('POST', `/api/invites/${encodeURIComponent(token)}/join`);
+}
+
+export interface TrashFolder {
+  folderId: number;
+  name: string;
+  deletedAt: string;
+  /** 탈퇴 등으로 찾을 수 없으면 null */
+  deletedByName: string | null;
+  /** 이 시각이 지나면 자동으로 영구 삭제된다 */
+  purgeAt: string;
+}
+
+/** REQ-143 쓰레기통 (지금은 폴더만). 지운 사람은 자기가 지운 것, 소유자는 전부 본다 */
+export function listTrash(workspaceId: number) {
+  return request<TrashFolder[]>('GET', `/api/workspaces/${workspaceId}/trash`);
+}
+
+/** REQ-143 복구. 그사이 같은 이름 폴더가 생겼으면 FOLDER_NAME_DUPLICATED */
+export function restoreTrashFolder(workspaceId: number, folderId: number) {
+  return request('POST', `/api/workspaces/${workspaceId}/trash/folders/${folderId}/restore`);
+}
+
+/** REQ-143 영구 삭제. 안의 회의·회의록도 지워진다 */
+export function purgeTrashFolder(workspaceId: number, folderId: number) {
+  return request('DELETE', `/api/workspaces/${workspaceId}/trash/folders/${folderId}`);
+}
+
 /** REQ-128 멤버별 폴더 접근 권한 (소유자) */
 export function changeFolderAccess(workspaceId: number, userId: number, access: FolderAccess) {
   return request('PUT', `/api/workspaces/${workspaceId}/members/${userId}/folder-access`, {

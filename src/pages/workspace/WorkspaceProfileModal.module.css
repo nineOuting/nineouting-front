@@ -1,0 +1,134 @@
+/* 디자인이 없어 새 폴더 창(FolderNameModal)과 같은 모양으로 만들었다 */
+.card {
+  width: 494px;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.texts {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--grey-100);
+}
+
+.description {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.photoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--grey-20);
+  object-fit: cover;
+}
+
+.fileInput {
+  display: none;
+}
+
+.secondary {
+  height: 36px;
+  padding: 0 14px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  color: var(--color-black);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-weight: 500;
+  color: var(--grey-100);
+}
+
+.hint {
+  font-size: var(--font-size-caption);
+  font-weight: 400;
+  color: var(--grey-50);
+}
+
+.input {
+  width: 100%;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  outline: none;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.input:focus {
+  border-color: var(--blue-70);
+}
+
+.error {
+  padding: 0 8px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--red-80);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submit {
+  width: 124px;
+  height: 41px;
+  background: var(--blue-100);
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  color: var(--color-white);
+}
+
+.submit:disabled {
+  background: var(--grey-30);
+}

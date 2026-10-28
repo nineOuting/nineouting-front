@@ -172,9 +172,9 @@ export async function changeMinutesTemplate(minutesId: number, templateId: numbe
   );
 }
 
-/** REQ-136 작성 완료: 참석 멤버에게 공유(검토 요청) */
+/** REQ-136 작성 완료: 바로 확정하고 참석 멤버에게 공유 (2026-10-28부터 검토 단계 없음) */
 export function shareMinutes(minutesId: number) {
-  return request('POST', `/api/minutes/${minutesId}/review-request`);
+  return request('POST', `/api/minutes/${minutesId}/complete`);
 }
 
 export type ExportFormat = 'PDF' | 'DOCX';

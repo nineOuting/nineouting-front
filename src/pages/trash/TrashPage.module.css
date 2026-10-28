@@ -1,0 +1,81 @@
+/* 디자인이 없어 양식 목록 화면의 여백과 버튼 모양을 따랐다 */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 34px 40px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.description {
+  margin-top: 4px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.empty {
+  font-size: var(--font-size-b2);
+  color: var(--grey-50);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-b2);
+  color: var(--grey-100);
+}
+
+.table th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--grey-20);
+  font-weight: 500;
+  text-align: left;
+  color: var(--grey-60);
+}
+
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--grey-20);
+}
+
+.name {
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.secondary {
+  height: 36px;
+  padding: 0 14px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  color: var(--color-black);
+  white-space: nowrap;
+}
+
+.danger {
+  color: var(--red-90);
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}

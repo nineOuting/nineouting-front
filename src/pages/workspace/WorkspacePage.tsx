@@ -9,6 +9,7 @@ import {
   deleteWorkspace,
   getWorkspace,
   inviteByEmail,
+  issueInviteLink,
   leaveWorkspace,
   listFolders,
   listMyWorkspaces,
@@ -30,6 +31,7 @@ import type { FolderAccess, FolderSummary, WorkspaceMember, WorkspaceSummary } f
 import ActionMenu from './ActionMenu';
 import FolderNameModal from './FolderNameModal';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
+import WorkspaceProfileModal from './WorkspaceProfileModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import styles from './WorkspacePage.module.css';
 
@@ -48,6 +50,7 @@ type Dialog =
   | { type: 'rename'; folder: FolderSummary }
   | { type: 'deleteFolder'; folder: FolderSummary }
   | { type: 'members' }
+  | { type: 'profile' }
   | { type: 'leave' }
   | { type: 'deleteWorkspace' };
 
@@ -136,6 +139,21 @@ export default function WorkspacePage() {
   const invite = async (email: string) => {
     await inviteByEmail(id, email);
     notice(INVITED_MESSAGE);
+  };
+
+  // REQ-034 발급할 때마다 이전 링크는 무효가 된다
+  const copyInviteLink = async () => {
+    try {
+      const url = await issueInviteLink(id);
+      try {
+        await navigator.clipboard.writeText(url);
+        notice('초대 링크를 복사했어요. 1일 동안 쓸 수 있고, 이전 링크는 더 이상 쓸 수 없어요.');
+      } catch {
+        notice(`초대 링크: ${url}`);
+      }
+    } catch (error) {
+      showError(error);
+    }
   };
 
   const updateAccess = async (userId: number, folderAccess: FolderAccess) => {
@@ -302,6 +320,11 @@ export default function WorkspacePage() {
               </button>
             </div>
           </section>
+          {/* REQ-114·115·118 디자인이 없어 나가기 버튼과 같은 모양으로 넣었다 */}
+          <button type="button" className={styles.rowButton} onClick={() => setDialog({ type: 'profile' })}>
+            이 워크스페이스에서 내 프로필
+            <Placeholder size={SMALL_ICON_SIZE} />
+          </button>
           <button
             type="button"
             className={`${styles.rowButton} ${styles.leave}`}
@@ -353,9 +376,20 @@ export default function WorkspacePage() {
           members={members}
           canManage={isOwner}
           onInvite={invite}
+          onCopyInviteLink={copyInviteLink}
           onAccessChange={updateAccess}
           onRemove={removeMember}
           onNotice={notice}
+          onClose={closeDialog}
+        />
+      )}
+      {dialog?.type === 'profile' && (
+        <WorkspaceProfileModal
+          workspaceId={id}
+          onSaved={(text) => {
+            closeDialog();
+            notice(text);
+          }}
           onClose={closeDialog}
         />
       )}

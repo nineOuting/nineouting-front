@@ -21,17 +21,20 @@ interface WorkspaceMembersModalProps {
   canManage: boolean;
   /** 실패하면 던진다. 메시지를 입력 칸 아래에 보여 준다 */
   onInvite: (email: string) => Promise<void>;
+  /** REQ-034 초대 링크를 새로 받아 복사한다 */
+  onCopyInviteLink: () => void;
   onAccessChange: (userId: number, access: FolderAccess) => void;
   onRemove: (userId: number) => void;
   onNotice: (text: string) => void;
   onClose: () => void;
 }
 
-/** REQ-033, 036, 127~129 워크스페이스 멤버 권한 관리. 워크스페이스는 이메일로만 초대한다 */
+/** REQ-033, 034, 036, 127~129 워크스페이스 멤버 권한 관리. 이메일 초대와 초대 링크 복사 */
 export default function WorkspaceMembersModal({
   members,
   canManage,
   onInvite,
+  onCopyInviteLink,
   onAccessChange,
   onRemove,
   onNotice,
@@ -78,6 +81,16 @@ export default function WorkspaceMembersModal({
       onTransferOwnership={() => onNotice(TRANSFER_PENDING_MESSAGE)}
       onClose={onClose}
     >
+      {canManage && (
+        // 디자인이 없어 소유권 양도 줄과 같은 모양으로 넣었다
+        <div className={styles.footer}>
+          <span>초대 링크 (1일 동안 쓸 수 있어요)</span>
+          <button type="button" className={styles.transfer} onClick={onCopyInviteLink}>
+            링크 복사
+            <Placeholder size={ICON_SIZE} />
+          </button>
+        </div>
+      )}
       <section className={styles.section} aria-labelledby="workspace-members-title">
         <div className={styles.sectionHead}>
           <h3 id="workspace-members-title" className={styles.sectionTitle}>

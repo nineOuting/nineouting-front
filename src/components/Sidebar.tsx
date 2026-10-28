@@ -13,7 +13,7 @@ const HOME_ICON_SIZE = 22;
 const MENU_ICON_SIZE = 24;
 const SMALL_ICON_SIZE = 18;
 // 디자인에만 있고 아직 기능이 없는 메뉴 (docs/backlog.md)
-const PENDING_MENUS = ['쓰레기통', '도움말', '설정'];
+const PENDING_MENUS = ['도움말', '설정'];
 
 interface SidebarProps {
   /** 지금 보고 있는 워크스페이스. 메뉴에서 이 워크스페이스의 폴더를 펼쳐 두고, 아카이브도 이 워크스페이스로 연다 */
@@ -154,6 +154,18 @@ export default function Sidebar({ workspaceId }: SidebarProps) {
         <Divider />
       </div>
       <div className={styles.bottom}>
+        {/* REQ-143 쓰레기통도 아카이브처럼 지금 보고 있는 워크스페이스로 연다 */}
+        {archiveWorkspaceId !== undefined ? (
+          <NavLink to={`/workspaces/${archiveWorkspaceId}/trash`} className={styles.row}>
+            <span className={styles.text}>쓰레기통</span>
+            <Placeholder size={SMALL_ICON_SIZE} />
+          </NavLink>
+        ) : (
+          <span className={styles.row}>
+            <span className={styles.text}>쓰레기통</span>
+            <Placeholder size={SMALL_ICON_SIZE} />
+          </span>
+        )}
         {PENDING_MENUS.map((menu) => (
           <button key={menu} type="button" className={styles.row} disabled title="준비 중인 메뉴예요">
             <span className={styles.text}>{menu}</span>
