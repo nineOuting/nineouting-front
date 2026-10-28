@@ -16,7 +16,9 @@ import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
 import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
 import TemplateEditorPage from './pages/template/TemplateEditorPage';
 import TemplateListPage from './pages/template/TemplateListPage';
+import TrashPage from './pages/trash/TrashPage';
 import InvitationPage from './pages/workspace/InvitationPage';
+import InviteLinkPage from './pages/workspace/InviteLinkPage';
 import WorkspacePage from './pages/workspace/WorkspacePage';
 
 export default function App() {
@@ -121,6 +123,15 @@ export default function App() {
             </RequireAuth>
           }
         />
+        {/* REQ-143 쓰레기통 */}
+        <Route
+          path="/workspaces/:workspaceId/trash"
+          element={
+            <RequireAuth>
+              <TrashPage />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/folders/:folderId"
           element={
@@ -135,6 +146,15 @@ export default function App() {
           element={
             <RequireAuth>
               <InvitationPage />
+            </RequireAuth>
+          }
+        />
+        {/* REQ-015 초대 링크. 로그인하지 않았으면 로그인한 뒤 돌아온다 */}
+        <Route
+          path="/invites/:token"
+          element={
+            <RequireAuth>
+              <InviteLinkPage />
             </RequireAuth>
           }
         />

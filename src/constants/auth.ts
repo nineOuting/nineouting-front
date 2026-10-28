@@ -1,7 +1,8 @@
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// user-service PasswordPolicy와 같은 규칙: 8~64자, 영문과 숫자만, 영문·숫자 각각 1자 이상
-export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,64}$/;
+// user-service PasswordPolicy와 같은 규칙: 8~64자, 영문·숫자 각각 1자 이상.
+// 키보드 특수문자(ASCII)도 쓸 수 있고 공백·한글은 안 된다 (REQ-012, 2026-10-28)
+export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[\x21-\x7E]{8,64}$/;
 export const PASSWORD_MIN_LENGTH = 8;
 export const HAS_LETTER_REGEX = /[A-Za-z]/;
 export const HAS_DIGIT_REGEX = /\d/;
