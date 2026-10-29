@@ -1,11 +1,12 @@
 import type {
+  AgendaBoard,
   AgendaResponse,
   AgendaStatusCode,
   LiveSummaryResponse,
   MeetingDetailResponse,
   TranscriptLineResponse,
 } from '../../../api/meeting';
-import type { AgendaStatus, LiveSummary, RoomAgenda, TranscriptLine } from '../../../types/meetingRoom';
+import type { AgendaStatus, DecisionStatus, LiveSummary, RoomAgenda, TranscriptLine } from '../../../types/meetingRoom';
 
 // meeting-service 응답을 회의 진행 화면 모양으로 바꾼다
 
@@ -18,9 +19,22 @@ const AGENDA_STATUSES: Record<AgendaStatusCode, AgendaStatus> = {
   DISCUSSING: 'discussing',
   DECIDED: 'decided',
   UNDECIDED: 'undecided',
+  DECISION_CHECK: 'decisionCheck',
 };
 
-/** 결정할 사항별 상태·근거는 안건 보드(2차)가 생기면 받는다. 지금은 논의 전으로 둔다 */
+// 결정할 사항은 논의 중이 없다 (ai-service agenda-status-contract.md). 혹시 오면 논의 전으로 본다
+const DECISION_STATUSES: Record<AgendaStatusCode, DecisionStatus> = {
+  NOT_STARTED: 'notDiscussed',
+  DISCUSSING: 'notDiscussed',
+  DECIDED: 'decided',
+  UNDECIDED: 'undecided',
+  DECISION_CHECK: 'decisionCheck',
+};
+
+// REQ-087 주요 의견은 의견·근거, 아직 합의되지 않은 부분은 우려·질문
+const OPEN_ISSUE_KINDS = new Set(['CONCERN', 'QUESTION']);
+
+/** 결정할 사항별 상태·근거는 안건 보드가 오면 applyBoard로 채운다. 그 전에는 논의 전으로 둔다 */
 export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
   return {
     id: String(agenda.agendaId),
@@ -32,7 +46,45 @@ export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
       status: 'notDiscussed',
       evidenceSeqs: [],
     })),
+    opinions: [],
+    openIssues: [],
   };
+}
+
+/**
+ * REQ-086~088, 124~125 안건 보드를 안건 목록에 입힌다. 제목·결정할 사항 문구는 회의 정보 그대로 두고,
+ * 상태·결정 내용·근거 발언·의견만 보드에서 가져온다. 보드에 없는 안건(방금 추가한 안건 등)은 그대로 둔다
+ */
+export function applyBoard(agendas: RoomAgenda[], board: AgendaBoard): RoomAgenda[] {
+  const byId = new Map(board.agendas.map((agenda) => [String(agenda.agendaId), agenda]));
+  return agendas.map((agenda) => {
+    const boardAgenda = byId.get(agenda.id);
+    if (!boardAgenda) {
+      return agenda;
+    }
+    const points = new Map((boardAgenda.decisionPoints ?? []).map((point) => [String(point.decisionPointId), point]));
+    const opinions = boardAgenda.opinions ?? [];
+    return {
+      ...agenda,
+      status: AGENDA_STATUSES[boardAgenda.status] ?? agenda.status,
+      decisionPoints: agenda.decisionPoints.map((decision) => {
+        const point = points.get(decision.id);
+        if (!point) {
+          return decision;
+        }
+        const status = DECISION_STATUSES[point.status] ?? 'notDiscussed';
+        return {
+          ...decision,
+          status,
+          // 논의 전의 문구("아직 논의되지 않았어요")는 보여 주지 않는다
+          summary: status === 'notDiscussed' ? undefined : point.decisionText,
+          evidenceSeqs: point.evidenceSeqs,
+        };
+      }),
+      opinions: opinions.filter(({ kind }) => !OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
+      openIssues: opinions.filter(({ kind }) => OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
+    };
+  });
 }
 
 /** 2026-10-23T14:00:00 (한국 시간, 시간대 없음) → 브라우저 시각 */

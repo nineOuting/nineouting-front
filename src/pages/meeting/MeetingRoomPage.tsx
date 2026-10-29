@@ -4,12 +4,16 @@ import { errorMessage } from '../../api/client';
 import {
   finishMeeting,
   addMeetingAgenda,
+  dismissOffTopic,
+  editDecision,
   editTranscript,
+  getAgendaBoard,
   getLiveSummary,
   getMeetingDetail,
   listTranscripts,
   pauseMeeting,
   resumeMeeting,
+  type AgendaBoard,
   type MeetingDetailResponse,
 } from '../../api/meeting';
 import { getMe } from '../../api/user';
@@ -22,13 +26,14 @@ import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
 import { SttStream } from '../../meeting/SttStream';
 import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
-import type { LiveSummary, RoomAgenda, TranscriptLine } from '../../types/meetingRoom';
+import type { LiveSummary, RoomAgenda, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
 import AddAgendaModal from './room/AddAgendaModal';
 import AgendaStatusCard from './room/AgendaStatusCard';
 import EvidencePanel from './room/EvidencePanel';
 import LiveSummaryCard from './room/LiveSummaryCard';
 import { AgendaSuggestion, OffTopicNotice } from './room/RoomNotices';
 import {
+  applyBoard,
   elapsedSecondsOf,
   formatElapsed,
   mergeTranscript,
@@ -47,7 +52,7 @@ const MS_PER_SECOND = 1000;
 const MIC_FAILED_MESSAGE = '마이크를 쓸 수 없어 녹음하지 못하고 있어요. 브라우저의 마이크 권한을 확인해 주세요.';
 
 /**
- * 새 안건 제안·주제 이탈 알림은 ai-service 안건 보드(2차) 이벤트가 아직 없어 주소로 띄워 본다.
+ * 새 안건 제안·주제 이탈 알림은 안건 보드의 offTopic으로 띄운다. 화면 확인용으로 주소로도 띄울 수 있다.
  * ?demo=suggestion(새 안건 제안), ?demo=offtopic(주제 이탈 알림)
  */
 type DemoScenario = 'suggestion' | 'offtopic' | null;
@@ -74,11 +79,21 @@ export default function MeetingRoomPage() {
   const [selectedDecisionId, setSelectedDecisionId] = useState<string>();
   // 안건 추가 창. 새 안건 제안에서 열면 제안된 제목을 채운다
   const [addAgendaTitle, setAddAgendaTitle] = useState<string | null>(null);
-  const [isSuggestionOpen, setIsSuggestionOpen] = useState(demo === 'suggestion');
+  const [suggestion, setSuggestion] = useState<SuggestedAgenda | null>(demo === 'suggestion' ? ROOM_SUGGESTION : null);
   const [isOffTopicOpen, setIsOffTopicOpen] = useState(demo === 'offtopic');
+  // 안건 보드가 정한 지금 논의 중인 안건
+  const [currentAgendaId, setCurrentAgendaId] = useState<string>();
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
-  const closeSuggestion = useCallback(() => setIsSuggestionOpen(false), []);
+  // 안건 보드는 회의방 메시지와 API 두 길로 온다. 늦게 온 옛 버전은 버린다
+  const boardVersionRef = useRef(0);
+  // 지금 보드의 새 안건 제안·주제 이탈 알림과 사용자가 닫은 알림 (같은 알림이 다음 보드로 또 와도 다시 띄우지 않는다)
+  const offTopicKeyRef = useRef<string | null>(null);
+  const closedOffTopicRef = useRef<string | null>(null);
+  const closeSuggestion = useCallback(() => {
+    closedOffTopicRef.current = offTopicKeyRef.current;
+    setSuggestion(null);
+  }, []);
   const sttRef = useRef<SttStream | null>(null);
   // STT 연결을 새로 열 때 이어 보낼 음성 위치·멈춤 상태 (바뀔 때마다 다시 열지 않도록 ref로 읽는다)
   const elapsedRef = useRef(0);
@@ -90,14 +105,33 @@ export default function MeetingRoomPage() {
 
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
 
+  /** REQ-085~092, 124~125 안건 보드를 화면에 입힌다 */
+  const showBoard = useCallback((board: AgendaBoard) => {
+    if (board.version <= boardVersionRef.current) {
+      return;
+    }
+    boardVersionRef.current = board.version;
+    setAgendas((prev) => applyBoard(prev, board));
+    setCurrentAgendaId(board.currentAgendaId === null ? undefined : String(board.currentAgendaId));
+    const offTopic = board.offTopic;
+    const key = offTopic && `${offTopic.stage}:${offTopic.detectedAt}`;
+    offTopicKeyRef.current = key;
+    const isClosed = key !== null && key === closedOffTopicRef.current;
+    setSuggestion(offTopic?.stage === 'SUGGEST' && !isClosed ? { title: offTopic.suggestedTitle ?? '' } : null);
+    setIsOffTopicOpen(offTopic?.stage === 'LONG' && !isClosed);
+  }, []);
+
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
   const reloadLive = useCallback(
     async (id: number) => {
-      const [lines, live] = await Promise.all([listTranscripts(id), getLiveSummary(id)]);
+      const [lines, live, board] = await Promise.all([listTranscripts(id), getLiveSummary(id), getAgendaBoard(id)]);
       setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
       setSummary(toLiveSummary(live));
+      if (board) {
+        showBoard(board);
+      }
     },
-    [],
+    [showBoard],
   );
 
   useEffect(() => {
@@ -192,6 +226,9 @@ export default function MeetingRoomPage() {
       case 'aiStatus':
         setIsAiAvailable(message.available);
         break;
+      case 'agendaBoard':
+        showBoard(message.data);
+        break;
       case 'finished':
         // REQ-098 작성자가 회의를 마무리하면 참석자 모두 회의록 작성 화면으로 간다
         setIsFinished(true);
@@ -220,7 +257,13 @@ export default function MeetingRoomPage() {
   }
 
   const meetingIdNumber = detail.meetingId;
-  const currentAgenda = agendas.find(({ status }) => status === 'discussing');
+  const currentAgenda =
+    agendas.find(({ id }) => id === currentAgendaId) ?? agendas.find(({ status }) => status === 'discussing');
+  // REQ-087 주요 의견·아직 합의되지 않은 부분은 지금 논의 중인 안건의 안건 보드에서 가져온다
+  const shownSummary =
+    summary && currentAgenda
+      ? { ...summary, opinions: currentAgenda.opinions, openIssues: currentAgenda.openIssues }
+      : summary;
   const selectedDecision = agendas
     .find(({ id }) => id === selectedAgendaId)
     ?.decisionPoints.find(({ id }) => id === selectedDecisionId);
@@ -236,16 +279,37 @@ export default function MeetingRoomPage() {
     }
   };
 
-  const saveDecision = (decisionId: string, decisionSummary: string) => {
-    // TODO(API 연동): 결정 내용 수정 API (REQ-126). ai-service 안건 보드(2차)가 생기면 붙인다
-    setAgendas((prev) =>
-      prev.map((agenda) => ({
-        ...agenda,
-        decisionPoints: agenda.decisionPoints.map((decision) =>
-          decision.id === decisionId ? { ...decision, summary: decisionSummary } : decision,
-        ),
-      })),
-    );
+  /** REQ-126 고친 결정 내용은 ai-service로 가고, 고친 표시가 붙은 보드가 회의방으로 다시 온다. 근거 발언은 그대로 둔다 */
+  const saveDecision = async (decisionId: string, decisionSummary: string) => {
+    const agenda = agendas.find(({ decisionPoints }) => decisionPoints.some(({ id }) => id === decisionId));
+    const decision = agenda?.decisionPoints.find(({ id }) => id === decisionId);
+    if (!agenda || !decision) {
+      return;
+    }
+    const replaceDecision = (next: typeof decision) =>
+      setAgendas((prev) =>
+        prev.map((item) => ({
+          ...item,
+          decisionPoints: item.decisionPoints.map((point) => (point.id === decisionId ? next : point)),
+        })),
+      );
+    replaceDecision({ ...decision, summary: decisionSummary });
+    try {
+      await editDecision(meetingIdNumber, Number(agenda.id), Number(decisionId), decisionSummary, decision.evidenceSeqs);
+    } catch (error) {
+      showError(error);
+      replaceDecision(decision);
+    }
+  };
+
+  /** REQ-091 [무시]·REQ-092 [확인]. 같은 알림은 다시 띄우지 않고 ai-service에 알린다 (회의록 작성자만 연다) */
+  const dismissNotice = () => {
+    closedOffTopicRef.current = offTopicKeyRef.current;
+    setSuggestion(null);
+    setIsOffTopicOpen(false);
+    if (demo === null) {
+      dismissOffTopic(meetingIdNumber).catch(showError);
+    }
   };
 
   const saveTranscript = async (seq: number, text: string) => {
@@ -335,7 +399,7 @@ export default function MeetingRoomPage() {
 
       <div className={styles.body}>
         <div className={styles.board}>
-          <LiveSummaryCard summary={summary} agenda={currentAgenda} />
+          <LiveSummaryCard summary={shownSummary} agenda={currentAgenda} />
           <AgendaStatusCard
             agendas={agendas}
             selectedAgendaId={selectedAgendaId}
@@ -346,7 +410,7 @@ export default function MeetingRoomPage() {
               setSelectedDecisionId(undefined);
             }}
             onSelectDecision={setSelectedDecisionId}
-            onSaveDecision={saveDecision}
+            onSaveDecision={(decisionId, decisionSummary) => void saveDecision(decisionId, decisionSummary)}
             onAddAgenda={() => setAddAgendaTitle('')}
           />
         </div>
@@ -375,18 +439,21 @@ export default function MeetingRoomPage() {
           }}
         />
       )}
-      {isSuggestionOpen && (
+      {/* 등록·무시는 회의록 작성자만 한다 */}
+      {suggestion && isWriter && isLive && (
         <AgendaSuggestion
-          suggestion={ROOM_SUGGESTION}
-          onIgnore={closeSuggestion}
+          suggestion={suggestion}
+          onIgnore={dismissNotice}
+          // 30초가 지나면 백엔드가 무시로 보낸다
+          onExpire={closeSuggestion}
           onRegister={() => {
             // 제안에는 결정할 사항이 없어 안건 추가 창을 제목만 채워 연다 (결정할 사항 1개 이상 필수)
-            setAddAgendaTitle(ROOM_SUGGESTION.title);
+            setAddAgendaTitle(suggestion.title);
             closeSuggestion();
           }}
         />
       )}
-      {isOffTopicOpen && <OffTopicNotice onConfirm={() => setIsOffTopicOpen(false)} />}
+      {isOffTopicOpen && isWriter && isLive && <OffTopicNotice onConfirm={dismissNotice} />}
       {isEndConfirmOpen && (
         <ConfirmDialog
           title="회의를 끝낼까요?"

@@ -17,7 +17,7 @@ interface PersonResponse {
   profileImageUrl: string | null;
 }
 
-export type AgendaStatusCode = 'NOT_STARTED' | 'DISCUSSING' | 'DECIDED' | 'UNDECIDED';
+export type AgendaStatusCode = 'NOT_STARTED' | 'DISCUSSING' | 'DECIDED' | 'UNDECIDED' | 'DECISION_CHECK';
 
 export interface AgendaResponse {
   agendaId: number;
@@ -108,6 +108,54 @@ export interface LiveSummaryResponse {
 
 interface TicketResponse {
   ticket: string;
+}
+
+/** 안건 보드 (ai-service docs/api/agenda-*.md). meeting-service가 ai-service가 보낸 JSON을 그대로 준다 */
+export interface BoardDecisionPoint {
+  decisionPointId: number;
+  status: AgendaStatusCode;
+  /** 결정 내용 (결정), 결정 후보 (결정 확인 필요), 아직 정해지지 않은 내용 (미결) */
+  decisionText: string;
+  evidenceSeqs: number[];
+  edited: boolean;
+  needsCheck: boolean;
+}
+
+export interface BoardOpinion {
+  id: string;
+  text: string;
+  kind: 'OPINION' | 'EVIDENCE' | 'CONCERN' | 'QUESTION';
+  evidenceSeqs: number[];
+}
+
+export interface BoardAgenda {
+  agendaId: number;
+  status: AgendaStatusCode;
+  decisionPoints?: BoardDecisionPoint[];
+  opinions?: BoardOpinion[];
+}
+
+/** REQ-091 SUGGEST: 새 안건 등록 제안, REQ-092 LONG: 등록되지 않은 주제가 이어짐 */
+export interface BoardOffTopic {
+  stage: 'SUGGEST' | 'LONG';
+  detectedAt: string;
+  suggestedTitle: string | null;
+  evidenceSeqs: number[];
+}
+
+export interface AgendaBoard {
+  version: number;
+  currentAgendaId: number | null;
+  agendas: BoardAgenda[];
+  offTopic: BoardOffTopic | null;
+}
+
+interface AgendaBoardResponse {
+  meetingId: number;
+  version: number;
+  currentAgendaId: number | null;
+  /** 아직 보드가 오지 않았으면 null */
+  board: AgendaBoard | null;
 }
 
 export function toMember(person: PersonResponse): Member {
@@ -282,6 +330,23 @@ export function editTranscript(meetingId: number, seq: number, text: string) {
 /** REQ-085 지금 회의 중 요약. 아직 없으면 null */
 export function getLiveSummary(meetingId: number) {
   return request<LiveSummaryResponse | null>('GET', `/api/meetings/${meetingId}/live-summary`);
+}
+
+/** REQ-085~088, 124~125 지금 안건 보드. 아직 없으면 null */
+export async function getAgendaBoard(meetingId: number) {
+  return (await request<AgendaBoardResponse>('GET', `/api/meetings/${meetingId}/agenda-board`)).board;
+}
+
+/** REQ-126 결정 내용 수정 (회의록 작성자, 진행 중). ai-service로 보내고 고친 보드가 회의방으로 다시 온다 */
+export function editDecision(meetingId: number, agendaId: number, decisionPointId: number, decisionText: string,
+  evidenceSeqs: number[]) {
+  return request('PUT', `/api/meetings/${meetingId}/agendas/${agendaId}/decision-points/${decisionPointId}/decision`,
+    { decisionText, evidenceSeqs });
+}
+
+/** REQ-091~092 새 안건 제안 [무시]·주제 이탈 [확인] (회의록 작성자). 등록은 안건 추가로 한다 */
+export function dismissOffTopic(meetingId: number) {
+  return request('POST', `/api/meetings/${meetingId}/off-topic/dismiss`);
 }
 
 /** 회의방 WebSocket 30초 1회용 입장권 (참석자) */
