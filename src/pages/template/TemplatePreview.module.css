@@ -254,6 +254,22 @@
   padding: 6px 8px;
 }
 
+/* 고른 섹션의 제목·설명은 미리보기에서 바로 고친다 (디자인 없음) */
+.titleInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+}
+
+.cardSelected .cardBody textarea {
+  width: 100%;
+}
+
 .pager {
   display: flex;
   align-items: center;

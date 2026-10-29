@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listCalendarMeetings, type CalendarMeeting } from '../../api/meeting';
+import { listFolders } from '../../api/workspace';
 import dotCalendarEvent from '../../assets/dot-calendar-event.svg';
 import DropdownMenu from '../../components/DropdownMenu';
 import Placeholder from '../../components/Placeholder';
@@ -23,10 +24,15 @@ const FILTER_ICON_SIZE = 20;
 const FOLDER_ICON_SIZE = 16;
 const DOT_SIZE = 5;
 const MONTH_EVENT_LIMIT = 2;
-const ALL_WORKSPACES = 'all';
+const ALL_FOLDERS = 'all';
 
 interface HomeCalendarProps {
   workspaces: WorkspaceSummary[];
+}
+
+interface FolderOption {
+  folderId: number;
+  label: string;
 }
 
 function EventDot() {
@@ -39,7 +45,9 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
   const [view, setView] = useState<View>('week');
   const [cursor, setCursor] = useState(() => new Date());
   const [today] = useState(() => toIsoDate(new Date()));
-  const [workspaceFilter, setWorkspaceFilter] = useState(ALL_WORKSPACES);
+  // 프로젝트 = 프로젝트 폴더. 워크스페이스가 아니라 폴더 단위로 거른다
+  const [folderFilter, setFolderFilter] = useState(ALL_FOLDERS);
+  const [folders, setFolders] = useState<FolderOption[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [meetings, setMeetings] = useState<CalendarMeeting[]>([]);
   const [error, setError] = useState(false);
@@ -68,6 +76,27 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
     };
   }, [from, to]);
 
+  useEffect(() => {
+    let isCurrent = true;
+    // 워크스페이스가 여럿이면 같은 이름의 폴더를 구분하도록 워크스페이스 이름을 앞에 붙인다
+    const withWorkspaceName = workspaces.length > 1;
+    Promise.all(
+      workspaces.map(({ workspaceId, name }) =>
+        listFolders(workspaceId)
+          .then((items) =>
+            items.map((folder) => ({
+              folderId: folder.folderId,
+              label: withWorkspaceName ? `${name} · ${folder.name}` : folder.name,
+            })),
+          )
+          .catch(() => []),
+      ),
+    ).then((lists) => isCurrent && setFolders(lists.flat()));
+    return () => {
+      isCurrent = false;
+    };
+  }, [workspaces]);
+
   useLayoutEffect(() => {
     if (view === 'week' && scrollRef.current) {
       scrollRef.current.scrollTop = FIRST_VISIBLE_HOUR * HOUR_HEIGHT;
@@ -75,11 +104,10 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
   }, [view]);
 
   const shown = meetings.filter(
-    (meeting) => workspaceFilter === ALL_WORKSPACES || String(meeting.workspaceId) === workspaceFilter,
+    (meeting) => folderFilter === ALL_FOLDERS || String(meeting.folderId) === folderFilter,
   );
   const byDay = (day: Date) => shown.filter((meeting) => meeting.startAt.startsWith(toIsoDate(day)));
-  const filterLabel =
-    workspaces.find(({ workspaceId }) => String(workspaceId) === workspaceFilter)?.name ?? '전체 프로젝트';
+  const filterLabel = folders.find(({ folderId }) => String(folderId) === folderFilter)?.label ?? '전체 프로젝트';
 
   const move = (direction: 1 | -1) =>
     setCursor((date) =>
@@ -137,19 +165,19 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
           {isFilterOpen && (
             <DropdownMenu
               label="프로젝트로 거르기"
-              emptyText="워크스페이스가 없어요"
+              emptyText="프로젝트 폴더가 없어요"
               anchorRef={filterRef}
               className={styles.filterMenu}
               items={[
-                { id: ALL_WORKSPACES, label: '전체 프로젝트', isSelected: workspaceFilter === ALL_WORKSPACES },
-                ...workspaces.map(({ workspaceId, name }) => ({
-                  id: String(workspaceId),
-                  label: name,
-                  isSelected: workspaceFilter === String(workspaceId),
+                { id: ALL_FOLDERS, label: '전체 프로젝트', isSelected: folderFilter === ALL_FOLDERS },
+                ...folders.map(({ folderId, label }) => ({
+                  id: String(folderId),
+                  label,
+                  isSelected: folderFilter === String(folderId),
                 })),
               ]}
               onSelect={(id) => {
-                setWorkspaceFilter(id);
+                setFolderFilter(id);
                 setIsFilterOpen(false);
               }}
               onClose={() => setIsFilterOpen(false)}
