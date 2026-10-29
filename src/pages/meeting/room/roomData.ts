@@ -10,6 +10,8 @@ import type { AgendaStatus, LiveSummary, RoomAgenda, TranscriptLine } from '../.
 // meeting-service 응답을 회의 진행 화면 모양으로 바꾼다
 
 const MS_PER_SECOND = 1000;
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = 3600;
 
 const AGENDA_STATUSES: Record<AgendaStatusCode, AgendaStatus> = {
   NOT_STARTED: 'notStarted',
@@ -38,18 +40,21 @@ function parseServerTime(value: string) {
   return new Date(value).getTime();
 }
 
-function formatClock(time: number) {
-  const date = new Date(time);
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+/** 00:24:18 */
+export function formatElapsed(totalSeconds: number) {
+  const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
+  const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+  const seconds = totalSeconds % SECONDS_PER_MINUTE;
+  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
 }
 
 /**
- * 발언 시각 = 회의 시작 시각 + 음성 시각. 음성 시각에는 멈춘 시간이 빠져 있어
- * 멈췄다 다시 시작한 뒤의 줄은 실제 시각보다 이르게 보인다 (실제 시각은 백엔드가 아직 주지 않는다)
+ * 발언 시각 = 회의 경과 시간 (음성 시각). 음성 시각에는 멈춘 시간이 빠져 있어
+ * 회의 시작 시각에 더하면 멈췄다 다시 시작한 뒤의 줄이 이르게 보이므로, 경과 시간 타이머와 같은 기준으로 보여 준다
  */
-export function toTranscriptLine(line: TranscriptLineResponse, startedAt: string | null): TranscriptLine {
-  const base = startedAt ? parseServerTime(startedAt) : Date.now();
-  return { seq: line.seq, rev: line.rev, startMs: line.startMs, time: formatClock(base + line.startMs), text: line.text };
+export function toTranscriptLine(line: TranscriptLineResponse): TranscriptLine {
+  const time = formatElapsed(Math.floor(line.startMs / MS_PER_SECOND));
+  return { seq: line.seq, rev: line.rev, startMs: line.startMs, time, text: line.text };
 }
 
 /** 같은 seq는 통째로 바꾸되, 늦게 온 옛 내용(rev가 더 작은 것)은 버린다 */

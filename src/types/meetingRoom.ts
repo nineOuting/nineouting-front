@@ -10,7 +10,7 @@ export interface TranscriptLine {
   rev: number;
   /** 회의 시작 기준 음성 시각 (ms) */
   startMs: number;
-  /** 발언 시각 (HH:mm) */
+  /** 발언 시각 (HH:mm:ss, 회의 경과 시간) */
   time: string;
   text: string;
 }
