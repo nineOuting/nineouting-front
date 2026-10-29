@@ -11,10 +11,12 @@ interface AgendaSuggestionProps {
   suggestion: SuggestedAgenda;
   onIgnore: () => void;
   onRegister: () => void;
+  /** 30초가 지나 닫힐 때. 없으면 무시와 같다 (안건 보드에서 띄운 제안은 백엔드가 30초 뒤 무시로 보낸다) */
+  onExpire?: () => void;
 }
 
 /** REQ-091, MSG-026 등록된 안건과 무관한 주제가 이어지면 새 안건 등록을 제안한다 */
-export function AgendaSuggestion({ suggestion, onIgnore, onRegister }: AgendaSuggestionProps) {
+export function AgendaSuggestion({ suggestion, onIgnore, onRegister, onExpire = onIgnore }: AgendaSuggestionProps) {
   const { start, remaining } = useCountdown();
   const wasCountingRef = useRef(false);
 
@@ -30,9 +32,9 @@ export function AgendaSuggestion({ suggestion, onIgnore, onRegister }: AgendaSug
     }
     if (wasCountingRef.current) {
       wasCountingRef.current = false;
-      onIgnore();
+      onExpire();
     }
-  }, [remaining, onIgnore]);
+  }, [remaining, onExpire]);
 
   return (
     <div role="alertdialog" aria-labelledby="agenda-suggestion-title" className={styles.notice}>
@@ -48,7 +50,7 @@ export function AgendaSuggestion({ suggestion, onIgnore, onRegister }: AgendaSug
       <div className={styles.suggestion}>
         <p className={styles.suggestionLabel}>새 안건</p>
         <p className={styles.suggestionTitle}>{suggestion.title}</p>
-        <p className={styles.suggestionDescription}>{suggestion.description}</p>
+        {suggestion.description && <p className={styles.suggestionDescription}>{suggestion.description}</p>}
       </div>
       <div className={room.pillRow}>
         <button type="button" className={`${room.pill} ${room.pillOutline}`} onClick={onIgnore}>

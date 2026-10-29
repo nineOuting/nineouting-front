@@ -16,6 +16,8 @@ const DOTS: Record<DecisionStatus, string> = {
   decided: dotDecided,
   undecided: dotUndecided,
   notDiscussed: dotNotDiscussed,
+  // 디자인 없음: 결정 확인 필요는 미결과 같은 점
+  decisionCheck: dotUndecided,
 };
 
 interface DecisionItemProps {

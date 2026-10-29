@@ -35,3 +35,9 @@
   background: var(--red-10);
   color: var(--red-100);
 }
+
+.decisionCheck {
+  /* 디자인 없음: 논의 중과 구분되게 회색 바탕에 파란 글자 */
+  background: var(--grey-10);
+  color: var(--blue-100);
+}

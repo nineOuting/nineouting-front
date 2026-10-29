@@ -1,8 +1,8 @@
-/** REQ-086 안건 상태: 논의 중 / 논의 전 / 결정 / 미결 */
-export type AgendaStatus = 'discussing' | 'notStarted' | 'decided' | 'undecided';
+/** REQ-086 안건 상태: 논의 중 / 논의 전 / 결정 / 미결 / 결정 확인 필요(AI가 결정인지 확신하지 못함) */
+export type AgendaStatus = 'discussing' | 'notStarted' | 'decided' | 'undecided' | 'decisionCheck';
 
-/** REQ-124 결정할 사항 상태: 결정 / 미결 / 논의 전 */
-export type DecisionStatus = 'decided' | 'undecided' | 'notDiscussed';
+/** REQ-124 결정할 사항 상태: 결정 / 미결 / 논의 전 / 결정 확인 필요 */
+export type DecisionStatus = 'decided' | 'undecided' | 'notDiscussed' | 'decisionCheck';
 
 export interface TranscriptLine {
   seq: number;
@@ -30,9 +30,12 @@ export interface RoomAgenda {
   title: string;
   status: AgendaStatus;
   decisionPoints: DecisionPoint[];
+  /** REQ-087 안건 보드의 의견 (주요 의견: 의견·근거, 아직 합의되지 않은 부분: 우려·질문) */
+  opinions: string[];
+  openIssues: string[];
 }
 
-/** REQ-085 실시간 요약. 주요 의견·합의 안 된 부분(REQ-087)은 안건 보드(2차)가 생기면 채운다 */
+/** REQ-085 실시간 요약. 주요 의견·합의 안 된 부분(REQ-087)은 지금 논의 중인 안건의 안건 보드에서 채운다 */
 export interface LiveSummary {
   summary: string[];
   opinions: string[];
@@ -42,5 +45,5 @@ export interface LiveSummary {
 /** REQ-091 AI가 제안한 새 안건 */
 export interface SuggestedAgenda {
   title: string;
-  description: string;
+  description?: string;
 }

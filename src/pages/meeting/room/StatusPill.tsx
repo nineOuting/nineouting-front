@@ -4,19 +4,21 @@ import styles from './StatusPill.module.css';
 
 const ICON_SIZE = 16;
 
-type PillTone = 'discussing' | 'decided' | 'notStarted' | 'undecided';
+type PillTone = 'discussing' | 'decided' | 'notStarted' | 'undecided' | 'decisionCheck';
 
 const LABELS: Record<PillTone, string> = {
   discussing: '논의 중',
   decided: '결정',
   notStarted: '논의 전',
   undecided: '미결',
+  decisionCheck: '결정 확인 필요',
 };
 
 const DECISION_TONES: Record<DecisionStatus, PillTone> = {
   decided: 'decided',
   undecided: 'undecided',
   notDiscussed: 'notStarted',
+  decisionCheck: 'decisionCheck',
 };
 
 interface StatusPillProps {
