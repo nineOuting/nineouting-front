@@ -264,11 +264,15 @@ export default function MeetingRoomPage() {
   const endMeeting = async () => {
     setIsEndConfirmOpen(false);
     setIsEnding(true);
+    // 먼저 STT에 끝을 알려 말하던 줄을 확정하고 회의 종료(end)가 백엔드에 가게 한다
+    await sttRef.current?.end();
     try {
       await finishMeeting(meetingIdNumber);
       setIsFinished(true);
       navigate(`/meetings/${meetingIdNumber}/minutes`, { replace: true });
     } catch (error) {
+      // 회의가 이어지므로 STT에 다시 붙는다
+      sttRef.current?.reopen();
       showError(error);
       setIsEnding(false);
     }

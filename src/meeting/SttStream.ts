@@ -11,6 +11,8 @@ const INT16_MAX = 0x7fff;
 const CLOSE_REPLACED = 4001;
 // 끊긴 동안 모아 둘 음성 (10분). 넘으면 오래된 것부터 버린다
 const MAX_BACKLOG_CHUNKS = 6000;
+// 회의를 마무리할 때 STT의 ended 답을 기다리는 최대 시간
+const END_WAIT_MS = 2000;
 
 const WORKLET_NAME = 'nineouting-pcm';
 const WORKLET_CODE = `class PcmProcessor extends AudioWorkletProcessor {
@@ -36,6 +38,15 @@ function toPcm16(samples: Float32Array) {
   return buffer;
 }
 
+/** STT 답 중 {"type":"ended"} (end를 받았다는 답)인지 */
+function isEnded(text: string) {
+  try {
+    return (JSON.parse(text) as { type?: unknown }).type === 'ended';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * REQ-079~080 회의록 작성자 브라우저의 마이크 소리를 stt-service로 보낸다.
  * 16kHz 모노 16비트 PCM을 100ms(3,200바이트)씩 보내고, 시작·멈춤·재개는 JSON으로 알린다.
@@ -46,6 +57,7 @@ export class SttStream {
   private offsetMs: number;
   private isPaused = false;
   private isStopped = false;
+  private isEnded = false;
   private attempt = 0;
   private socket: WebSocket | null = null;
   private retryTimer: number | undefined;
@@ -89,6 +101,48 @@ export class SttStream {
     this.sendControl({ type: 'resume' });
   }
 
+  /**
+   * 회의를 마무리할 때. STT가 말하던 줄을 확정하고 남은 줄을 보낸 뒤 회의 종료(end)를 백엔드에 알린다.
+   * ended 답을 받거나 END_WAIT_MS가 지나면 닫는다. 끊겨 있으면 end를 보내지 못하고 그냥 닫는다
+   */
+  async end() {
+    this.isEnded = true;
+    window.clearTimeout(this.retryTimer);
+    this.pending = new Float32Array(0);
+    this.backlog = [];
+    const socket = this.socket;
+    this.socket = null;
+    if (socket?.readyState === WebSocket.OPEN) {
+      await new Promise<void>((resolve) => {
+        const finish = () => {
+          window.clearTimeout(timer);
+          socket.removeEventListener('message', onMessage);
+          socket.removeEventListener('close', finish);
+          resolve();
+        };
+        const onMessage = (event: MessageEvent) => {
+          if (typeof event.data === 'string' && isEnded(event.data)) {
+            finish();
+          }
+        };
+        const timer = window.setTimeout(finish, END_WAIT_MS);
+        socket.addEventListener('message', onMessage);
+        socket.addEventListener('close', finish);
+        socket.send(JSON.stringify({ type: 'end' }));
+      });
+    }
+    socket?.close();
+  }
+
+  /** 마무리(end)가 실패해 회의가 이어질 때 다시 붙는다. STT는 offsetMs부터 새 구간으로 받는다 */
+  reopen() {
+    if (this.isStopped || !this.isEnded) {
+      return;
+    }
+    this.isEnded = false;
+    void this.connect();
+  }
+
   /** 화면을 떠날 때. 회의를 끝내는 것(end)과 달리 다시 들어오면 이어서 보낸다 */
   stop() {
     this.isStopped = true;
@@ -105,7 +159,7 @@ export class SttStream {
   }
 
   private collect(samples: Float32Array) {
-    if (this.isPaused || this.isStopped) {
+    if (this.isPaused || this.isStopped || this.isEnded) {
       return;
     }
     const merged = new Float32Array(this.pending.length + samples.length);
@@ -145,7 +199,7 @@ export class SttStream {
       this.scheduleRetry();
       return;
     }
-    if (this.isStopped) {
+    if (this.isStopped || this.isEnded) {
       return;
     }
     const socket = new WebSocket(socketUrl(`/ws/stt/meetings/${this.meetingId}`, ticket));
@@ -154,6 +208,11 @@ export class SttStream {
       this.attempt = 0;
       const offsetMs = this.backlog[0]?.offsetMs ?? this.offsetMs;
       socket.send(JSON.stringify({ type: 'start', meetingId: String(this.meetingId), offsetMs }));
+      // 끊긴 동안 누른 멈춤·재개는 보내지 못했으므로 지금 상태를 다시 알린다 (STT는 같은 상태면 무시한다).
+      // 재개는 모아 둔 소리보다 먼저(멈춘 STT는 소리를 버린다), 멈춤은 나중에(멈추기 전 소리를 살린다)
+      if (!this.isPaused) {
+        socket.send(JSON.stringify({ type: 'resume' }));
+      }
       this.backlog.forEach(({ data }) => socket.send(data));
       this.backlog = [];
       if (this.isPaused) {
@@ -161,7 +220,8 @@ export class SttStream {
       }
     };
     socket.onclose = (event) => {
-      if (event.code !== CLOSE_REPLACED) {
+      // 마무리(end)로 닫은 연결이나 이미 바뀐 연결은 다시 붙지 않는다
+      if (socket === this.socket && event.code !== CLOSE_REPLACED) {
         this.scheduleRetry();
       }
     };
@@ -169,7 +229,7 @@ export class SttStream {
   }
 
   private scheduleRetry() {
-    if (!this.isStopped) {
+    if (!this.isStopped && !this.isEnded) {
       this.retryTimer = window.setTimeout(() => void this.connect(), retryDelay(this.attempt));
       this.attempt += 1;
     }
