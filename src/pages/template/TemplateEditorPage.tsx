@@ -306,6 +306,7 @@ export default function TemplateEditorPage() {
             layout={draft.layout}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
+            onChangeItem={(index, item) => setItems(draft.items.map((current, position) => (position === index ? item : current)))}
             onMove={moveItem}
             onAdd={addCustom}
             onDuplicate={duplicateItem}

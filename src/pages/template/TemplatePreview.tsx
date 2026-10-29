@@ -14,6 +14,10 @@ const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;
 // 디자인 23:419 표 미리보기의 머리 행
 const SAMPLE_TABLE_HEADERS = ['No.', '안건', '논의 내용', '비고'];
+// 오른쪽 섹션 설정의 섹션 이름 칸과 같다
+const MAX_TITLE_LENGTH = 100;
+
+type EditField = 'title' | 'body';
 
 interface TemplatePreviewProps {
   name: string;
@@ -21,6 +25,8 @@ interface TemplatePreviewProps {
   layout: TemplateLayout;
   selectedIndex: number | null;
   onSelect: (index: number) => void;
+  /** 미리보기에서 섹션 제목·설명을 바로 고칠 때 */
+  onChangeItem: (index: number, item: TemplateItem) => void;
   onMove: (from: number, to: number) => void;
   onAdd: () => void;
   onDuplicate: () => void;
@@ -37,13 +43,20 @@ function sampleContent(item: TemplateItem) {
   return item.description;
 }
 
-/** 양식 미리보기 (디자인 23:185·23:373). 섹션을 눌러 고르고, 왼쪽 손잡이를 끌어 순서를 바꾼다 */
+/** 표는 머리 행만 보여 주므로 미리보기에서 고치지 않는다 (오른쪽 설정에서 행·열을 바꾼다) */
+const canEditBody = (item: TemplateItem) => item.settings.recordType !== 'TABLE';
+
+/**
+ * 양식 미리보기 (디자인 23:185·23:373). 섹션을 눌러 고르고, 왼쪽 손잡이를 끌어 순서를 바꾼다.
+ * 고른 섹션은 제목과 설명을 이 자리에서 바로 고친다 (오른쪽 섹션 설정에서도 고칠 수 있다)
+ */
 export default function TemplatePreview({
   name,
   items,
   layout,
   selectedIndex,
   onSelect,
+  onChangeItem,
   onMove,
   onAdd,
   onDuplicate,
@@ -53,6 +66,9 @@ export default function TemplatePreview({
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  // 고르지 않은 섹션의 제목·내용을 누르면 고른 뒤 그 칸에 바로 커서를 둔다
+  const focusFieldRef = useRef<EditField | null>(null);
+  const selectedCardRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
   const pageHeight = (PAGE_HEIGHT * zoom) / 100;
@@ -68,6 +84,16 @@ export default function TemplatePreview({
     observer.observe(paper);
     return () => observer.disconnect();
   }, [pageHeight]);
+
+  useEffect(() => {
+    const field = focusFieldRef.current;
+    focusFieldRef.current = null;
+    if (field) {
+      selectedCardRef.current
+        ?.querySelector<HTMLElement>(field === 'title' ? '[data-edit="title"]' : 'textarea')
+        ?.focus();
+    }
+  }, [selectedIndex]);
 
   const goTo = (target: number) => {
     const next = Math.min(pageCount, Math.max(1, target));
@@ -191,15 +217,38 @@ export default function TemplatePreview({
                     <Placeholder size={ICON_SIZE} />
                   </span>
                   <div
+                    ref={isSelected ? selectedCardRef : undefined}
                     className={[styles.card, isSelected ? styles.cardSelected : ''].filter(Boolean).join(' ')}
                     style={{ marginTop: item.settings.margin / 2 }}
                     onClick={() => onSelect(index)}
                   >
                     <div className={styles.cardHead}>
-                      <button type="button" className={styles.cardTitle} style={titleStyle} aria-pressed={isSelected}>
-                        <Placeholder size={ICON_SIZE} />
-                        {item.title}
-                      </button>
+                      {isSelected ? (
+                        <span className={styles.cardTitle} style={titleStyle}>
+                          <Placeholder size={ICON_SIZE} />
+                          <input
+                            data-edit="title"
+                            className={styles.titleInput}
+                            aria-label="섹션 이름"
+                            maxLength={MAX_TITLE_LENGTH}
+                            value={item.title}
+                            onChange={(event) => onChangeItem(index, { ...item, title: event.target.value })}
+                          />
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.cardTitle}
+                          style={titleStyle}
+                          aria-pressed={false}
+                          onClick={() => {
+                            focusFieldRef.current = 'title';
+                          }}
+                        >
+                          <Placeholder size={ICON_SIZE} />
+                          {item.title}
+                        </button>
+                      )}
                       {isSelected ? (
                         <span className={styles.cardTools}>
                           <button
@@ -247,12 +296,19 @@ export default function TemplatePreview({
                         </button>
                       )}
                     </div>
-                    <div className={styles.cardBody}>
+                    <div className={styles.cardBody} onClick={() => {
+                        if (!isSelected && canEditBody(item)) {
+                          focusFieldRef.current = 'body';
+                        }
+                      }}
+                    >
                       <SectionContent
                         settings={item.settings}
                         content={sampleContent(item)}
                         label={item.title}
+                        editable={isSelected && canEditBody(item)}
                         placeholder="설명을 적으면 이곳에 보여요"
+                        onChange={(description) => onChangeItem(index, { ...item, description })}
                       />
                     </div>
                   </div>
