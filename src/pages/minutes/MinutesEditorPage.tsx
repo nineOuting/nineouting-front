@@ -150,7 +150,7 @@ export default function MinutesEditorPage() {
           return;
         }
         setMeeting(detail);
-        setLines(transcripts.map((line) => toTranscriptLine(line, detail.startedAt)).sort((a, b) => a.startMs - b.startMs));
+        setLines(transcripts.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
         const items = live?.summary ?? [];
         setSummary({ topic: items.at(-1)?.topic ?? null, texts: items.map(({ text }) => text) });
       })

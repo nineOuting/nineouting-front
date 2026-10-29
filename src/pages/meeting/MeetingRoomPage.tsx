@@ -30,6 +30,7 @@ import LiveSummaryCard from './room/LiveSummaryCard';
 import { AgendaSuggestion, OffTopicNotice } from './room/RoomNotices';
 import {
   elapsedSecondsOf,
+  formatElapsed,
   mergeTranscript,
   removeTranscript,
   toLiveSummary,
@@ -43,8 +44,6 @@ const BUTTON_ICON_SIZE = 16;
 const DOT_SIZE = 8;
 const TICK_MS = 1000;
 const MS_PER_SECOND = 1000;
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = 3600;
 const MIC_FAILED_MESSAGE = '마이크를 쓸 수 없어 녹음하지 못하고 있어요. 브라우저의 마이크 권한을 확인해 주세요.';
 
 /**
@@ -52,14 +51,6 @@ const MIC_FAILED_MESSAGE = '마이크를 쓸 수 없어 녹음하지 못하고 �
  * ?demo=suggestion(새 안건 제안), ?demo=offtopic(주제 이탈 알림)
  */
 type DemoScenario = 'suggestion' | 'offtopic' | null;
-
-/** 00:24:18 */
-function formatElapsed(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
-  const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
-  const seconds = totalSeconds % SECONDS_PER_MINUTE;
-  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
-}
 
 /** REQ-079~093, 124~126 회의 진행 화면 */
 export default function MeetingRoomPage() {
@@ -92,7 +83,6 @@ export default function MeetingRoomPage() {
   // STT 연결을 새로 열 때 이어 보낼 음성 위치·멈춤 상태 (바뀔 때마다 다시 열지 않도록 ref로 읽는다)
   const elapsedRef = useRef(0);
   const isPausedRef = useRef(false);
-  const startedAt = detail?.startedAt ?? null;
   const numericMeetingId = detail?.meetingId;
   const isLive = detail?.status === 'IN_PROGRESS' && !isFinished;
 
@@ -100,9 +90,9 @@ export default function MeetingRoomPage() {
 
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
   const reloadLive = useCallback(
-    async (id: number, started: string | null) => {
+    async (id: number) => {
       const [lines, live] = await Promise.all([listTranscripts(id), getLiveSummary(id)]);
-      setTranscript(lines.map((line) => toTranscriptLine(line, started)).sort((a, b) => a.startMs - b.startMs));
+      setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
       setSummary(toLiveSummary(live));
     },
     [],
@@ -134,7 +124,7 @@ export default function MeetingRoomPage() {
       setIsPaused(loaded.paused);
       setIsFinished(loaded.status !== 'IN_PROGRESS');
       setElapsedSeconds(elapsedSecondsOf(loaded, Date.now()));
-      await reloadLive(loaded.meetingId, loaded.startedAt);
+      await reloadLive(loaded.meetingId);
     };
     load().catch((error: unknown) => {
       if (isCurrent) {
@@ -178,7 +168,7 @@ export default function MeetingRoomPage() {
     switch (message.type) {
       case 'transcript':
       case 'transcriptEdited':
-        setTranscript((prev) => mergeTranscript(prev, toTranscriptLine(message.line, startedAt)));
+        setTranscript((prev) => mergeTranscript(prev, toTranscriptLine(message.line)));
         break;
       case 'transcriptDeleted':
         setTranscript((prev) => removeTranscript(prev, message.seq, message.rev));
@@ -209,7 +199,7 @@ export default function MeetingRoomPage() {
     onMessage: handleRoomMessage,
     onReconnect: () => {
       if (numericMeetingId !== undefined) {
-        reloadLive(numericMeetingId, startedAt).catch(showError);
+        reloadLive(numericMeetingId).catch(showError);
       }
     },
   });
@@ -254,7 +244,7 @@ export default function MeetingRoomPage() {
   const saveTranscript = async (seq: number, text: string) => {
     try {
       const edited = await editTranscript(meetingIdNumber, seq, text);
-      setTranscript((prev) => mergeTranscript(prev, toTranscriptLine(edited, startedAt)));
+      setTranscript((prev) => mergeTranscript(prev, toTranscriptLine(edited)));
     } catch (error) {
       showError(error);
     }
