@@ -58,6 +58,7 @@ export class SttStream {
   private isPaused = false;
   private isStopped = false;
   private isEnded = false;
+  private ending: Promise<void> | null = null;
   private attempt = 0;
   private socket: WebSocket | null = null;
   private retryTimer: number | undefined;
@@ -102,10 +103,16 @@ export class SttStream {
   }
 
   /**
-   * 회의를 마무리할 때. STT가 말하던 줄을 확정하고 남은 줄을 보낸 뒤 회의 종료(end)를 백엔드에 알린다.
-   * ended 답을 받거나 END_WAIT_MS가 지나면 닫는다. 끊겨 있으면 end를 보내지 못하고 그냥 닫는다
+   * 회의를 마무리한 뒤(finishMeeting 성공 후). STT가 말하던 줄을 확정하고 남은 줄을 보낸 뒤 회의 종료(end)를 백엔드에 알린다.
+   * ended 답을 받거나 END_WAIT_MS가 지나면 닫고 마이크를 끈다. 끊겨 있으면 end를 보내지 못하고 그냥 닫는다.
+   * 여러 번 불러도 한 번만 보낸다 (마무리 직후 회의방의 finished로 화면을 떠나면서 또 부를 수 있다)
    */
-  async end() {
+  end() {
+    this.ending ??= this.sendEnd();
+    return this.ending;
+  }
+
+  private async sendEnd() {
     this.isEnded = true;
     window.clearTimeout(this.retryTimer);
     this.pending = new Float32Array(0);
@@ -132,15 +139,7 @@ export class SttStream {
       });
     }
     socket?.close();
-  }
-
-  /** 마무리(end)가 실패해 회의가 이어질 때 다시 붙는다. STT는 offsetMs부터 새 구간으로 받는다 */
-  reopen() {
-    if (this.isStopped || !this.isEnded) {
-      return;
-    }
-    this.isEnded = false;
-    void this.connect();
+    this.release();
   }
 
   /** 화면을 떠날 때. 회의를 끝내는 것(end)과 달리 다시 들어오면 이어서 보낸다 */

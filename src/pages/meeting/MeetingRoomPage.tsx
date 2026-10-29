@@ -83,6 +83,8 @@ export default function MeetingRoomPage() {
   // STT 연결을 새로 열 때 이어 보낼 음성 위치·멈춤 상태 (바뀔 때마다 다시 열지 않도록 ref로 읽는다)
   const elapsedRef = useRef(0);
   const isPausedRef = useRef(false);
+  // 마무리하는 중이면 화면을 떠날 때 STT를 끊지 않고 end를 보낸다
+  const isFinishingRef = useRef(false);
   const numericMeetingId = detail?.meetingId;
   const isLive = detail?.status === 'IN_PROGRESS' && !isFinished;
 
@@ -159,7 +161,12 @@ export default function MeetingRoomPage() {
     sttRef.current = stream;
     stream.start().catch(() => setToast({ text: MIC_FAILED_MESSAGE, variant: 'error' }));
     return () => {
-      stream.stop();
+      // 회의방의 finished가 마무리 응답보다 먼저 와서 화면을 떠날 수 있다. 그때도 end를 보낸다
+      if (isFinishingRef.current) {
+        void stream.end();
+      } else {
+        stream.stop();
+      }
       sttRef.current = null;
     };
   }, [isWriter, isLive, numericMeetingId]);
@@ -254,15 +261,17 @@ export default function MeetingRoomPage() {
   const endMeeting = async () => {
     setIsEndConfirmOpen(false);
     setIsEnding(true);
-    // 먼저 STT에 끝을 알려 말하던 줄을 확정하고 회의 종료(end)가 백엔드에 가게 한다
-    await sttRef.current?.end();
+    isFinishingRef.current = true;
     try {
       await finishMeeting(meetingIdNumber);
+      // 마무리한 뒤 STT에 끝을 알린다. 말하던 줄을 확정해 보내고 회의 종료(end)가 백엔드에 간다 (화면을 떠나도 이어서 보낸다).
+      // 먼저 보내면 마무리가 실패했을 때 ai-service는 이미 회의를 끝낸 상태가 된다
+      void sttRef.current?.end();
       setIsFinished(true);
       navigate(`/meetings/${meetingIdNumber}/minutes`, { replace: true });
     } catch (error) {
-      // 회의가 이어지므로 STT에 다시 붙는다
-      sttRef.current?.reopen();
+      // 마무리하지 못했으므로 STT는 그대로 이어서 보낸다
+      isFinishingRef.current = false;
       showError(error);
       setIsEnding(false);
     }
