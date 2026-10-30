@@ -1,0 +1,52 @@
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 64px 1fr;
+  min-height: 100vh;
+  min-width: 1440px;
+}
+
+.header {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+  background: var(--layout-placeholder);
+}
+
+.logo {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--layout-placeholder);
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding: 0 0 21px 41px;
+}
+
+.main {
+  min-width: 0;
+}
+
+/* 회의 중 화면: 접힌 메뉴(72px)와 옅은 회색 상단 바 */
+.compact {
+  grid-template-columns: 72px 1fr;
+  background: var(--grey-10);
+}
+
+.compact .header,
+.compact .sidebar {
+  background: var(--grey-10);
+}
+
+.menuIcon {
+  margin: 28px 0 0 24px;
+}

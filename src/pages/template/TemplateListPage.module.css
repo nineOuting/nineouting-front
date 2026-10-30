@@ -1,0 +1,117 @@
+/* 디자인이 없어 아카이브 화면의 여백과 카드 모양을 따랐다 */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px 34px 40px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.description {
+  margin-top: 4px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--blue-100);
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  color: var(--color-white);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.cardHead {
+  display: flex;
+  gap: 12px;
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.badge {
+  padding: 2px 8px;
+  background: var(--blue-10);
+  border-radius: 1000px;
+  font-size: var(--font-size-caption);
+  color: var(--blue-100);
+}
+
+.cardDescription,
+.items {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.secondary {
+  height: 36px;
+  padding: 0 14px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  color: var(--color-black);
+}
+
+.danger {
+  color: var(--red-90);
+}

@@ -1,0 +1,333 @@
+.card {
+  gap: 20px;
+  width: 640px;
+  padding: 32px 48px;
+  overflow-y: auto;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.title {
+  flex: 1;
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.description {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inputBox {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+}
+
+.inputBox:focus-within {
+  border-color: var(--blue-70);
+}
+
+.inputBoxError,
+.inputBoxError:focus-within {
+  border-color: var(--red-90);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.input::placeholder {
+  color: var(--grey-50);
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 16px;
+  background: var(--blue-100);
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-white);
+  white-space: nowrap;
+}
+
+.error {
+  margin-top: -16px;
+  padding: 0 8px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--red-80);
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 참여중인 멤버 목록 */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.count {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rowLead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--layout-placeholder);
+  object-fit: cover;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  color: var(--grey-60);
+}
+
+.memberName {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+}
+
+.memberEmail {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.ownerBadge {
+  padding: 2px 12px;
+  background: var(--grey-10);
+  border-radius: 1000px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-70);
+  white-space: nowrap;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.transfer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-50);
+}
+
+/* 전체선택 줄 (폴더 멤버) */
+.selectRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.selectAll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.textButton {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.textButton:disabled {
+  color: var(--grey-40);
+}
+
+.danger {
+  color: var(--red-100);
+}
+
+.check {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--blue-100);
+}
+
+.checkLarge {
+  width: 20px;
+  height: 20px;
+}
+
+.selected {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.empty {
+  padding: 16px 0;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--grey-60);
+}
+
+/* 더보기·접근 권한 버튼 아래 메뉴 자리 */
+.anchor {
+  position: relative;
+  display: flex;
+}
+
+.accessButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-30);
+  border-radius: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+  white-space: nowrap;
+}
+
+.accessButton:disabled {
+  cursor: default;
+}
+
+.accessMenu {
+  left: auto;
+  min-width: 180px;
+}

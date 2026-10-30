@@ -1,5 +1,5 @@
 import { setAccessToken } from '../auth/tokenStore';
-import { request } from './client';
+import { request, setTokenRefresher } from './client';
 
 interface TokenResponse {
   accessToken: string;
@@ -44,6 +44,17 @@ export function refresh() {
       refreshing = null;
     });
   return refreshing;
+}
+
+setTokenRefresher(refresh);
+
+/** 로그아웃. refresh 쿠키를 지우고 메모리의 access 토큰도 버린다 */
+export async function logout() {
+  try {
+    await request('POST', '/api/auth/logout');
+  } finally {
+    setAccessToken(null);
+  }
 }
 
 /** REQ-009 비밀번호 찾기 인증 번호 발송 */

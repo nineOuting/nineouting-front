@@ -1,0 +1,89 @@
+/* 회의 중 화면의 카드들이 함께 쓰는 제목·안내·빈 화면 스타일 */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.caption {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.divider {
+  display: block;
+  max-width: none;
+}
+
+.empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  text-align: center;
+}
+
+.emptyTitle {
+  color: var(--color-black);
+}
+
+.emptyCaption {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.fieldError {
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--red-80);
+}
+
+/* 알림 창·안건 추가 창의 둥근 버튼. 이 화면 디자인은 주 버튼에 blue-50을 쓴다 */
+.pill {
+  width: 124px;
+  height: 41px;
+  padding: 10px 23px;
+  border-radius: 100px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.pillOutline {
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  color: var(--grey-70);
+}
+
+.pillPrimary {
+  background: var(--blue-50);
+  border: none;
+  color: var(--color-white);
+}
+
+.pillRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}

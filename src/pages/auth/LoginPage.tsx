@@ -1,5 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth';
 import { isApiError } from '../../api/client';
 import dividerLine from '../../assets/divider-line.svg';
@@ -9,14 +9,15 @@ import Checkbox from '../../components/Checkbox';
 import PasswordField from '../../components/PasswordField';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import { EMAIL_MAX_LENGTH, EMAIL_REGEX, MESSAGES } from '../../constants/auth';
+import { AUTH_ERROR_CODES, EMAIL_MAX_LENGTH, EMAIL_REGEX, LOGIN_LOCK_SECONDS, MESSAGES } from '../../constants/auth';
+import { useTimedLock } from '../../hooks/useTimedLock';
 import auth from './auth.module.css';
 import styles from './LoginPage.module.css';
 
-const LOGIN_FAILED = 'LOGIN_FAILED';
-
 /** REQ-005~009 로그인 */
 export default function LoginPage() {
+  // RequireAuth가 보낸 원래 화면. 없으면 홈
+  const redirectTo = (useLocation().state as { from?: string } | null)?.from ?? '/home';
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
@@ -24,11 +25,19 @@ export default function LoginPage() {
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
+  // MSG-010 같은 이메일로 5번 실패하면 서버가 10분 막는다. 그동안 그 이메일로는 로그인 버튼을 끈다
+  const [lockedLogin, setLockedLogin] = useState<{ email: string; message: string } | null>(null);
+  const loginLock = useTimedLock(() => setLockedLogin(null));
+  const isLoginLocked = loginLock.isLocked && lockedLogin?.email === email;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email || !password) {
-      setToast({ text: MESSAGES.emptyLogin, variant: 'error' });
+    if (!email) {
+      setToast({ text: MESSAGES.emptyEmail, variant: 'error' });
+      return;
+    }
+    if (!password) {
+      setToast({ text: MESSAGES.emptyPassword, variant: 'error' });
       return;
     }
     if (!EMAIL_REGEX.test(email)) {
@@ -39,10 +48,15 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      navigate('/home', { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (error) {
-      const text = isApiError(error, LOGIN_FAILED) ? error.message : MESSAGES.loginUnavailable;
-      setToast({ text, variant: 'error' });
+      if (isApiError(error, AUTH_ERROR_CODES.loginLocked)) {
+        setLockedLogin({ email, message: error.message });
+        loginLock.lock(LOGIN_LOCK_SECONDS);
+      } else {
+        const text = isApiError(error, AUTH_ERROR_CODES.loginFailed) ? error.message : MESSAGES.loginUnavailable;
+        setToast({ text, variant: 'error' });
+      }
       setIsSubmitting(false);
     }
   };
@@ -80,7 +94,12 @@ export default function LoginPage() {
             >
               로그인 상태 유지
             </Checkbox>
-            <Button type="submit" disabled={isSubmitting}>
+            {isLoginLocked && (
+              <p role="alert" className={styles.lockMessage}>
+                {lockedLogin?.message}
+              </p>
+            )}
+            <Button type="submit" disabled={isSubmitting || isLoginLocked}>
               로그인
             </Button>
           </div>

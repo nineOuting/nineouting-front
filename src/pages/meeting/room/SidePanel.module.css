@@ -1,0 +1,108 @@
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 80px;
+}
+
+.headWithClose {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 421px;
+}
+
+.headWithClose > .head {
+  flex: 1;
+}
+
+.divider {
+  margin: 6px 0 24px;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0 0 32px;
+  list-style: none;
+}
+
+.line {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 14px;
+  border-radius: 4px;
+}
+
+/* 회의록 작성자가 고치는 줄과 마우스를 올린 줄은 옅은 보라로 표시한다 */
+.editable:hover,
+.lineActive {
+  background: var(--blue-10);
+}
+
+.time {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.text {
+  white-space: pre-line;
+  color: var(--grey-80);
+}
+
+.edit {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  opacity: 0;
+}
+
+.editable:hover .edit,
+.edit:focus-visible {
+  opacity: 1;
+}
+
+.textarea {
+  width: 100%;
+  padding: 4px 8px;
+  resize: vertical;
+  background: var(--color-white);
+  border: 1px solid var(--blue-70);
+  border-radius: 4px;
+  outline: none;
+  line-height: 1.5;
+  color: var(--grey-80);
+}
+
+.evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.evidenceSummary {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--grey-90);
+}
+
+.evidenceLines {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidenceLines li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

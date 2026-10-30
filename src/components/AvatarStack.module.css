@@ -1,0 +1,45 @@
+.stack {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.faces {
+  display: flex;
+}
+
+/* 24px 동그라미를 17px 간격으로 겹친다 (디자인 75px에 4명) */
+.overlap > * + * {
+  margin-left: -7px;
+}
+
+/* 24px 동그라미를 4px씩 띄운다 (디자인 108px에 4명) */
+.spaced {
+  gap: 4px;
+}
+
+.face {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--layout-placeholder);
+  object-fit: cover;
+}
+
+/* 42px 동그라미를 20px 간격으로 겹친다 (디자인 23:814) */
+.large > .face {
+  width: 42px;
+  height: 42px;
+}
+
+.large.overlap > * + * {
+  margin-left: -22px;
+}
+
+.rest {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-50);
+}

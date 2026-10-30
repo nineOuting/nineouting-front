@@ -1,0 +1,312 @@
+/* 디자인 23:1264: 메뉴 오른쪽 34px, 상단 바 아래 28px. 왼쪽 817px + 32px + 최근 본 회의록 258px */
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 1141px;
+  padding: 28px 0 40px 34px;
+}
+
+.breadcrumb {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-60);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 817px 258px;
+  gap: 32px;
+  margin-top: 20px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.anchor {
+  position: relative;
+}
+
+.workspaceButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-60);
+}
+
+.description {
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-50);
+}
+
+/* 디자인 23:1299 */
+.searchCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--grey-20);
+  border-radius: 16px;
+}
+
+.searchRow {
+  display: flex;
+  gap: 16px;
+}
+
+.searchField {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--grey-10);
+  border: 1px solid var(--grey-30);
+  border-radius: 8px;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+}
+
+.searchInput::placeholder {
+  color: var(--grey-50);
+}
+
+.searchButton {
+  padding: 12px 36px;
+  background: var(--blue-100);
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-white);
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.chipAnchor {
+  position: relative;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--grey-10);
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.chipLabel {
+  max-width: 220px;
+  overflow: hidden;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-70);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 디자인 23:1533: 적용된 필터 */
+.chipApplied {
+  background: var(--blue-10);
+  border-color: var(--blue-100);
+}
+
+.chipApplied .chipLabel {
+  color: var(--blue-100);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.reset {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+/* 디자인 23:1268·23:1270 */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 34px;
+}
+
+.sideTitle {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.viewed {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.viewedItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.viewedText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.viewedTitle {
+  overflow: hidden;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewedDate {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.viewedEmpty {
+  padding: 12px 0;
+  font-size: var(--font-size-b2);
+  color: var(--grey-60);
+}
+
+/* 디자인 23:1329 */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.listHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.count {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-90);
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--grey-10);
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-70);
+}
+
+.sortMenu {
+  right: 0;
+  left: auto;
+  min-width: 120px;
+}
+
+.more {
+  align-self: center;
+  padding: 8px 16px;
+  background: var(--grey-10);
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  color: var(--grey-70);
+}

@@ -1,0 +1,12 @@
+.button {
+  display: flex;
+  padding: 0;
+  background: none;
+  border: none;
+  opacity: 0.35;
+}
+
+/* 즐겨찾기한 상태는 별을 진하게 */
+.on {
+  opacity: 1;
+}

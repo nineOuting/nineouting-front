@@ -1,0 +1,130 @@
+/* 디자인 23:627: 504px, 위 요약본(410) · 아래 전사(392) */
+.panels {
+  display: flex;
+  flex-direction: column;
+  width: 504px;
+  height: 818px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  padding: 24px;
+  overflow: hidden;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+}
+
+/* 디자인의 두 카드 사이 16px을 끌 수 있는 손잡이로 쓴다 */
+.handle {
+  flex: 0 0 16px;
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.handle:focus-visible {
+  outline: 2px solid var(--blue-70);
+  outline-offset: -6px;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.caption {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.divider {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: none;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.label {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.topic {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--grey-100);
+}
+
+.summary {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.empty {
+  font-size: var(--font-size-b2);
+  color: var(--grey-60);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 14px;
+}
+
+.time {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.text {
+  font-size: var(--font-size-b1);
+  line-height: 1.5;
+  color: var(--grey-80);
+  white-space: pre-wrap;
+}

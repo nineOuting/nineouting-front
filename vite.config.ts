@@ -10,6 +10,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': { target: API_PROXY_TARGET, changeOrigin: true },
+      // 회의방·음성 WebSocket (/ws/meetings/**, /ws/stt/**)
+      '/ws': { target: API_PROXY_TARGET, changeOrigin: true, ws: true },
     },
   },
 });

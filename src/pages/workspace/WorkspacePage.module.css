@@ -1,0 +1,251 @@
+.page {
+  padding: 28px 59px 40px 34px;
+  background: var(--color-white);
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.breadcrumb {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-60);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.anchor {
+  position: relative;
+  display: flex;
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.newFolder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 16px;
+  background: var(--blue-100);
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-white);
+}
+
+.columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  margin-top: 30px;
+}
+
+.folders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 817px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.count {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.folderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.folderCard {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.folderLink {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+/* 카드 어디를 눌러도 폴더로 이동한다 */
+.folderLink::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  content: '';
+}
+
+.folderCard .anchor {
+  z-index: 1;
+}
+
+.folderTexts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.folderName {
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.folderMeta {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--grey-50);
+}
+
+.hint {
+  padding: 4px 12px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 258px;
+}
+
+.memberSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.memberCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 12px;
+}
+
+.memberSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memberHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.memberLabel {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.memberCount {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+.rowButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.leave {
+  border-color: var(--red-20);
+}
+
+.deleteWorkspace {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}

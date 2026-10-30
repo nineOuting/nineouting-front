@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { refresh } from '../api/auth';
 import { getAccessToken } from './tokenStore';
 
@@ -7,6 +7,7 @@ type AuthStatus = 'checking' | 'authenticated' | 'anonymous';
 
 /** 로그인한 사용자만 볼 수 있는 화면. access 토큰이 없으면(새로고침 등) refresh 쿠키로 다시 받아 본다 */
 export default function RequireAuth({ children }: { children: ReactNode }) {
+  const location = useLocation();
   const [status, setStatus] = useState<AuthStatus>(getAccessToken() ? 'authenticated' : 'checking');
 
   useEffect(() => {
@@ -22,7 +23,8 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
     return null;
   }
   if (status === 'anonymous') {
-    return <Navigate to="/login" replace />;
+    // 로그인하면 보려던 화면(초대 링크 등)으로 돌아온다
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
   return children;
 }

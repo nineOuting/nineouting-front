@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { confirmPasswordReset } from '../../api/auth';
-import { errorMessage } from '../../api/client';
+import { errorMessage, isApiError } from '../../api/client';
 import dot from '../../assets/dot.svg';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
@@ -9,6 +9,7 @@ import PasswordField from '../../components/PasswordField';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import {
+  AUTH_ERROR_CODES,
   HAS_DIGIT_REGEX,
   HAS_LETTER_REGEX,
   MESSAGES,
@@ -34,6 +35,8 @@ export default function PasswordResetPage() {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [isPasswordTouched, setIsPasswordTouched] = useState(false);
+  // MSG-014 이전 비밀번호와 같으면 새 비밀번호 칸 아래에 안내하고, 비밀번호를 고치면 지운다
+  const [sameAsOldError, setSameAsOldError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -56,7 +59,11 @@ export default function PasswordResetPage() {
       await confirmPasswordReset(resetToken, password);
       navigate('/password/complete', { replace: true });
     } catch (error) {
-      setToast({ text: errorMessage(error), variant: 'error' });
+      if (isApiError(error, AUTH_ERROR_CODES.sameAsOldPassword)) {
+        setSameAsOldError(error.message);
+      } else {
+        setToast({ text: errorMessage(error), variant: 'error' });
+      }
       setIsSubmitting(false);
     }
   };
@@ -83,8 +90,14 @@ export default function PasswordResetPage() {
                   placeholder="비밀번호를 입력해 주세요."
                   autoComplete="new-password"
                   value={password}
-                  error={isPasswordTouched && password && !isPasswordValid ? MESSAGES.invalidPassword : undefined}
-                  onChange={(event) => setPassword(event.target.value)}
+                  error={
+                    sameAsOldError ??
+                    (isPasswordTouched && password && !isPasswordValid ? MESSAGES.invalidPassword : undefined)
+                  }
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setSameAsOldError(undefined);
+                  }}
                   onBlur={() => setIsPasswordTouched(true)}
                 />
                 <ul className={styles.rules}>
@@ -108,7 +121,7 @@ export default function PasswordResetPage() {
                 placeholder="비밀번호를 다시 입력해 주세요."
                 autoComplete="new-password"
                 value={passwordConfirm}
-                error={passwordConfirm && !isPasswordMatched ? `${MESSAGES.passwordMismatch}.` : undefined}
+                error={passwordConfirm && !isPasswordMatched ? MESSAGES.passwordMismatch : undefined}
                 onChange={(event) => setPasswordConfirm(event.target.value)}
               />
             </div>

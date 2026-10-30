@@ -1,0 +1,170 @@
+/* 디자인에서 메뉴 없이 따로 뜨는 화면이라 전체를 덮는다 */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--color-white);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  width: 592px;
+  margin: auto;
+  padding: 40px 48px;
+  border: 1px solid var(--grey-20);
+  border-radius: 28px;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.caption {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.search {
+  gap: 8px;
+}
+
+.search > label {
+  font-size: var(--font-size-b1);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.recent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.subTitle {
+  margin: 0;
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.meetingList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meeting {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  text-align: left;
+}
+
+/* 선택한 모양은 디자인에 없어 양식 선택 카드처럼 테두리로 표시했다 */
+.meetingSelected {
+  border-color: var(--blue-100);
+}
+
+.meetingInfo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meetingTitle {
+  font-weight: 500;
+  color: var(--grey-100);
+}
+
+.meetingDate {
+  font-size: var(--font-size-b2);
+  color: var(--grey-50);
+}
+
+.meetingMeta {
+  display: flex;
+  gap: 16px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.metaIcon {
+  background: var(--grey-40);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.optionsHead {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.option {
+  color: var(--grey-50);
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}

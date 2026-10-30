@@ -27,6 +27,15 @@
   gap: 15px;
 }
 
+/* MSG-010 로그인 버튼 위 빨간 글씨 */
+.lockMessage {
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--red-80);
+}
+
 .keepLoggedIn {
   color: var(--grey-50);
 }

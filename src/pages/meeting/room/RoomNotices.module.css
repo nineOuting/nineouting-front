@@ -1,0 +1,73 @@
+/* 화면 상단 가운데에 뜨는 알림 창 (MSG-026, 027) */
+.notice {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 427px;
+  padding: 20px;
+  background: var(--milkblue-10);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  filter: drop-shadow(0 4px 2px rgb(0 0 0 / 16%));
+  transform: translateX(-50%);
+}
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-weight: 500;
+  color: var(--grey-100);
+}
+
+.remaining {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--red-100);
+  white-space: nowrap;
+}
+
+.caption {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--color-white);
+  border-radius: 8px;
+}
+
+.suggestionLabel {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.suggestionTitle {
+  color: var(--grey-100);
+}
+
+.suggestionDescription {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-80);
+}

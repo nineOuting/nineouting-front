@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { requestPasswordReset, verifyPasswordReset } from '../../api/auth';
-import { errorMessage } from '../../api/client';
+import { errorMessage, isApiError } from '../../api/client';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import { MESSAGES, PASSWORD_RESET_CODE_TTL_SECONDS, VERIFICATION_CODE_LENGTH } from '../../constants/auth';
+import {
+  AUTH_ERROR_CODES,
+  MESSAGES,
+  PASSWORD_RESET_CODE_TTL_SECONDS,
+  VERIFICATION_CODE_LENGTH,
+  VERIFICATION_LOCK_SECONDS,
+} from '../../constants/auth';
 import { formatSeconds, useCountdown } from '../../hooks/useCountdown';
+import { useTimedLock } from '../../hooks/useTimedLock';
 import auth from './auth.module.css';
 import styles from './PasswordVerifyPage.module.css';
 
@@ -26,17 +33,33 @@ export default function PasswordVerifyPage() {
   const [toast, setToast] = useState<ToastMessage | null>(CODE_SENT_TOAST);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const closeToast = useCallback(() => setToast(null), []);
+  // MSG-006 인증 5회 실패 시 서버가 5분 막는다. 그동안 입력 칸과 버튼을 끄고 칸 아래에 안내한다
+  const [lockMessage, setLockMessage] = useState<string>();
+  const codeLock = useTimedLock(() => setLockMessage(undefined));
 
-  const { start } = countdown;
+  const { start, remaining } = countdown;
   useEffect(() => {
     start(PASSWORD_RESET_CODE_TTL_SECONDS);
   }, [start]);
+
+  // MSG-013 발송 후 5분이 지나면 알린다. 타이머가 돌다가 0이 된 순간에만 띄운다
+  const wasCountingRef = useRef(false);
+  useEffect(() => {
+    if (remaining > 0) {
+      wasCountingRef.current = true;
+      return;
+    }
+    if (wasCountingRef.current) {
+      wasCountingRef.current = false;
+      setToast({ text: MESSAGES.codeExpired, variant: 'error' });
+    }
+  }, [remaining]);
 
   if (!email) {
     return <Navigate to="/password/find" replace />;
   }
 
-  const isComplete = digits.every(Boolean) && countdown.remaining > 0 && !isSubmitting;
+  const isComplete = digits.every(Boolean) && countdown.remaining > 0 && !isSubmitting && !codeLock.isLocked;
 
   const focusInput = (index: number) => inputRefs.current[index]?.focus();
 
@@ -93,8 +116,14 @@ export default function PasswordVerifyPage() {
       const resetToken = await verifyPasswordReset(email, digits.join(''));
       navigate('/password/reset', { state: { resetToken }, replace: true });
     } catch (error) {
-      setToast({ text: errorMessage(error), variant: 'error' });
-      resetDigits();
+      if (isApiError(error, AUTH_ERROR_CODES.verificationLocked)) {
+        setLockMessage(error.message);
+        codeLock.lock(VERIFICATION_LOCK_SECONDS);
+        setDigits(EMPTY_CODE);
+      } else {
+        setToast({ text: errorMessage(error), variant: 'error' });
+        resetDigits();
+      }
       setIsSubmitting(false);
     }
   };
@@ -128,12 +157,18 @@ export default function PasswordVerifyPage() {
                   maxLength={1}
                   aria-label={`인증 번호 ${index + 1}번째 자리`}
                   value={digit}
+                  disabled={codeLock.isLocked}
                   onChange={(event) => handleChange(index, event.target.value)}
                   onKeyDown={(event) => handleKeyDown(index, event)}
                   onPaste={handlePaste}
                 />
               ))}
             </div>
+            {lockMessage && (
+              <p role="alert" className={styles.error}>
+                {lockMessage}
+              </p>
+            )}
             <div className={styles.timer} aria-live="polite">
               <Placeholder size={TIMER_ICON_SIZE} />
               <span>{formatSeconds(countdown.remaining, true)}</span>
@@ -143,7 +178,8 @@ export default function PasswordVerifyPage() {
             <Button type="submit" disabled={!isComplete}>
               확인
             </Button>
-            <Button variant="underline" disabled={isSubmitting} onClick={resendCode}>
+            {/* 막힌 동안에는 서버가 인증 번호를 보내지 않으므로 다시 받기도 끈다 */}
+            <Button variant="underline" disabled={isSubmitting || codeLock.isLocked} onClick={resendCode}>
               인증 번호 다시 받기
             </Button>
           </div>

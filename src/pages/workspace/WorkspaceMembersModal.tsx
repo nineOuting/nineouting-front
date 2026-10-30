@@ -1,0 +1,205 @@
+import { useRef, useState } from 'react';
+import { errorMessage } from '../../api/client';
+import DropdownMenu from '../../components/DropdownMenu';
+import Placeholder from '../../components/Placeholder';
+import { EMAIL_REGEX, MESSAGES } from '../../constants/auth';
+import type { FolderAccess, WorkspaceMember } from '../../types/workspace';
+import ActionMenu from './ActionMenu';
+import MembersModal, { MemberIdentity } from './MembersModal';
+import styles from './MembersModal.module.css';
+
+const ICON_SIZE = 16;
+const TRANSFER_PENDING_MESSAGE = '소유권 양도 화면은 디자인이 나오면 연결돼요.';
+
+const ACCESS_LABELS: Record<FolderAccess, string> = {
+  all: '모든 폴더 접근 가능',
+  invited: '초대된 폴더만 접근 가능',
+};
+
+interface WorkspaceMembersModalProps {
+  members: WorkspaceMember[];
+  canManage: boolean;
+  /** 실패하면 던진다. 메시지를 입력 칸 아래에 보여 준다 */
+  onInvite: (email: string) => Promise<void>;
+  /** REQ-034 초대 링크를 새로 받아 복사한다 */
+  onCopyInviteLink: () => void;
+  onAccessChange: (userId: number, access: FolderAccess) => void;
+  onRemove: (userId: number) => void;
+  onNotice: (text: string) => void;
+  onClose: () => void;
+}
+
+/** REQ-033, 034, 036, 127~129 워크스페이스 멤버 권한 관리. 이메일 초대와 초대 링크 복사 */
+export default function WorkspaceMembersModal({
+  members,
+  canManage,
+  onInvite,
+  onCopyInviteLink,
+  onAccessChange,
+  onRemove,
+  onNotice,
+  onClose,
+}: WorkspaceMembersModalProps) {
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string>();
+  const [isInviting, setIsInviting] = useState(false);
+
+  const invite = async () => {
+    const value = email.trim();
+    if (!EMAIL_REGEX.test(value)) {
+      setEmailError(MESSAGES.invalidEmail);
+      return;
+    }
+    if (isInviting) {
+      return;
+    }
+    setIsInviting(true);
+    try {
+      await onInvite(value);
+      setEmail('');
+    } catch (error) {
+      setEmailError(errorMessage(error));
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  return (
+    <MembersModal
+      description="워크스페이스에 참여할 멤버와 접근 권한을 관리할 수 있어요."
+      inputPlaceholder="이메일로 멤버 초대"
+      inputType="email"
+      inputValue={email}
+      inputError={emailError}
+      onInputChange={(value) => {
+        setEmail(value);
+        setEmailError(undefined);
+      }}
+      onAdd={invite}
+      canManage={canManage}
+      ownershipLabel="워크스페이스 소유권 관리"
+      onTransferOwnership={() => onNotice(TRANSFER_PENDING_MESSAGE)}
+      onClose={onClose}
+    >
+      {canManage && (
+        // 디자인이 없어 소유권 양도 줄과 같은 모양으로 넣었다
+        <div className={styles.footer}>
+          <span>초대 링크 (1일 동안 쓸 수 있어요)</span>
+          <button type="button" className={styles.transfer} onClick={onCopyInviteLink}>
+            링크 복사
+            <Placeholder size={ICON_SIZE} />
+          </button>
+        </div>
+      )}
+      <section className={styles.section} aria-labelledby="workspace-members-title">
+        <div className={styles.sectionHead}>
+          <h3 id="workspace-members-title" className={styles.sectionTitle}>
+            참여중인 멤버
+          </h3>
+          <span className={styles.count}>총 {members.length}명</span>
+        </div>
+        <ul className={styles.list}>
+          {members.map((member) => (
+            <MemberRow
+              key={member.userId}
+              member={member}
+              canManage={canManage}
+              onAccessChange={(folderAccess) => onAccessChange(member.userId, folderAccess)}
+              onRemove={() => onRemove(member.userId)}
+            />
+          ))}
+        </ul>
+      </section>
+    </MembersModal>
+  );
+}
+
+interface MemberRowProps {
+  member: WorkspaceMember;
+  canManage: boolean;
+  onAccessChange: (access: FolderAccess) => void;
+  onRemove: () => void;
+}
+
+function MemberRow({ member, canManage, onAccessChange, onRemove }: MemberRowProps) {
+  const [openMenu, setOpenMenu] = useState<'more' | 'access' | null>(null);
+  const moreRef = useRef<HTMLButtonElement>(null);
+  const accessRef = useRef<HTMLButtonElement>(null);
+  const closeMenu = () => setOpenMenu(null);
+  const toggle = (menu: 'more' | 'access') => setOpenMenu((current) => (current === menu ? null : menu));
+
+  if (member.isOwner) {
+    return (
+      <li className={styles.row}>
+        <MemberIdentity member={member} email={member.email} />
+        <span className={styles.ownerBadge}>소유자</span>
+      </li>
+    );
+  }
+
+  return (
+    <li className={styles.row}>
+      <span className={styles.rowLead}>
+        {canManage && (
+          <span className={styles.anchor}>
+            <button
+              ref={moreRef}
+              type="button"
+              className={styles.iconButton}
+              aria-label={`${member.name} 더보기`}
+              aria-haspopup="menu"
+              aria-expanded={openMenu === 'more'}
+              onClick={() => toggle('more')}
+            >
+              <Placeholder size={ICON_SIZE} />
+            </button>
+            {openMenu === 'more' && (
+              <ActionMenu
+                label={`${member.name} 메뉴`}
+                anchorRef={moreRef}
+                // REQ-036 워크스페이스에서 제외
+                items={[{ label: '워크스페이스에서 제외', onSelect: onRemove }]}
+                onClose={closeMenu}
+              />
+            )}
+          </span>
+        )}
+        <MemberIdentity member={member} email={member.email} />
+      </span>
+      <span className={styles.anchor}>
+        <button
+          ref={accessRef}
+          type="button"
+          className={styles.accessButton}
+          aria-label={`${member.name} 폴더 접근 권한: ${ACCESS_LABELS[member.folderAccess]}`}
+          aria-haspopup="listbox"
+          aria-expanded={openMenu === 'access'}
+          disabled={!canManage}
+          onClick={() => toggle('access')}
+        >
+          {ACCESS_LABELS[member.folderAccess]}
+          <Placeholder size={ICON_SIZE} />
+        </button>
+        {openMenu === 'access' && (
+          <DropdownMenu
+            label="폴더 접근 권한"
+            emptyText=""
+            anchorRef={accessRef}
+            className={styles.accessMenu}
+            items={(Object.keys(ACCESS_LABELS) as FolderAccess[]).map((access) => ({
+              id: access,
+              label: ACCESS_LABELS[access],
+              isSelected: access === member.folderAccess,
+            }))}
+            onSelect={(id) => {
+              onAccessChange(id as FolderAccess);
+              closeMenu();
+            }}
+            onClose={closeMenu}
+          />
+        )}
+      </span>
+    </li>
+  );
+}
+

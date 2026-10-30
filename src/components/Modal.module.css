@@ -1,0 +1,25 @@
+.dim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.strong {
+  background: rgb(34 34 34 / 60%);
+}
+
+.light {
+  background: rgb(34 34 34 / 20%);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 28px;
+}

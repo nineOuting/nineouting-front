@@ -1,0 +1,105 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headTitle {
+  font-weight: 500;
+  color: var(--grey-100);
+}
+
+.menuAnchor {
+  position: relative;
+}
+
+.field {
+  gap: 12px;
+}
+
+.field > label {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.field input::placeholder {
+  font-weight: 500;
+  color: var(--grey-40);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.decisionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hint {
+  padding-left: 8px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 391px;
+  margin-left: auto;
+}
+
+.pill {
+  flex: 1;
+  height: 41px;
+  padding: 10px 23px;
+  border: none;
+  border-radius: 100px;
+  background: none;
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.cancel {
+  color: var(--grey-60);
+}
+
+.next {
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  color: var(--grey-70);
+}
+
+.next:disabled {
+  color: var(--grey-40);
+}
+
+/* 디자인의 연한 보라(blue-50)를 입력 전(비활성) 상태로 보고, 입력하면 진한 색으로 바꾼다 */
+.save {
+  background: var(--blue-100);
+  color: var(--color-white);
+}
+
+.save:disabled {
+  background: var(--blue-50);
+}

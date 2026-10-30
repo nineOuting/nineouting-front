@@ -1,0 +1,349 @@
+.page {
+  padding: 100px 0 64px 84px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 612px;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-black);
+}
+
+.badge {
+  padding: 2px 4px;
+  background: var(--blue-10);
+  border-radius: 4px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--blue-90);
+  white-space: nowrap;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.mutedIcon {
+  background: var(--grey-40);
+}
+
+.editInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-30);
+  border-radius: 16px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-60);
+  white-space: nowrap;
+}
+
+.columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 51px;
+  margin-top: 46px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 612px;
+}
+
+.agendaSection {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.agendaHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.agendaTitle {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-black);
+}
+
+.agendaCount {
+  font-weight: 500;
+  color: var(--grey-60);
+}
+
+.readiness {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 70px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 21px;
+}
+
+.divider img {
+  display: block;
+  max-width: none;
+  transform: rotate(90deg);
+}
+
+.readinessState {
+  color: var(--grey-70);
+}
+
+.startBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 58px;
+}
+
+/* 회의 준비 중일 때는 디자인대로 grey-40으로 표시한다 */
+.startBlock .startButtonBusy:disabled {
+  background: var(--grey-40);
+}
+
+.startNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 333px;
+}
+
+.attendees {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attendeeHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menuAnchor {
+  position: relative;
+}
+
+.sideTitle {
+  font-size: var(--font-size-b1);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.iconButton {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.avatars {
+  display: flex;
+  min-height: 64px;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  background: var(--grey-20);
+  border: 2px solid var(--color-white);
+  border-radius: 50%;
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  color: var(--grey-70);
+}
+
+.avatar + .avatar {
+  margin-left: -26px;
+}
+
+.attendeeCount {
+  font-size: var(--font-size-b2);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.sideDivider {
+  display: block;
+}
+
+.minutesSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settingField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settingLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.textButton {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.selectBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--grey-100);
+}
+
+.settingCaption {
+  margin-top: -4px;
+  padding: 0 8px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-50);
+}
+
+.materials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.materialsHead {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.materialsTitle {
+  font-size: var(--font-size-b1);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-black);
+}
+
+.materialsCaption {
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.materialList {
+  margin: 0;
+  padding-left: 20px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-100);
+}
+
+.addMaterial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  background: var(--color-white);
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  font-size: var(--font-size-b2);
+  line-height: 1.5;
+  color: var(--grey-50);
+}
+
+.cancelMeeting {
+  width: 100%;
+  padding: 16px;
+  background: var(--grey-30);
+  border: 1px solid var(--grey-30);
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--grey-100);
+}
