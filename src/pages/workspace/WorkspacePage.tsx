@@ -363,7 +363,7 @@ export default function WorkspacePage() {
         // MSG-046
         <ConfirmDialog
           title="폴더를 삭제하시겠습니까?"
-          message={'폴더 안의 하위 폴더, 회의, 회의록이 모두 함께 삭제되며\n되돌릴 수 없습니다.'}
+          message={'폴더 안의 회의와 회의록도 함께 쓰레기통으로 이동하며\n3개월 안에 복구할 수 있습니다.'}
           cancelLabel="취소"
           confirmLabel="삭제하기"
           isDanger
