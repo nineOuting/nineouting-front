@@ -37,6 +37,10 @@ const SHARE_FAILED_MESSAGE = '회의록을 저장하지 못했습니다. 잠시 
 const SAVE_FAILED_MESSAGE = '임시저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 const DOWNLOAD_FAILED_MESSAGE = '파일을 다운로드하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 const SAVED_MESSAGE = '임시저장했어요.';
+const DRAFT_FILLED_MESSAGE = 'AI 초안으로 비어 있던 칸을 채웠어요.';
+// REQ-101 AI 초안이 오는지 보는 간격과 횟수 (보통 수십 초 안에 온다)
+const DRAFT_POLL_MS = 3000;
+const DRAFT_POLL_MAX = 60;
 // 회의를 마무리하면 회의록이 Kafka로 비동기 생성된다. 그동안 1.5초마다 다시 불러온다 (최대 약 30초)
 const NOT_READY_RETRY_MS = 1500;
 const NOT_READY_MAX_RETRIES = 20;
@@ -57,7 +61,7 @@ function failMessage(error: unknown, fallback: string) {
   return isApiError(error) && error.status !== 0 && error.status < 500 ? errorMessage(error) : fallback;
 }
 
-/** 회의록·나·양식을 받는다. 처음 여는 작성자에게는 기본 양식으로 칸을 만들어 준다 (AI 초안 REQ-101은 아직) */
+/** 회의록·나·양식을 받는다. 처음 여는 작성자에게는 기본 양식으로 칸을 만들어 준다 (그러면 서버가 AI 초안을 요청한다, REQ-101) */
 async function fetchMinutes(meetingId: number) {
   const [detail, me, templateList] = await Promise.all([getMinutesByMeeting(meetingId), getMe(), listMinutesTemplates()]);
   const defaultTemplate = templateList.find((template) => template.isDefault);
@@ -140,6 +144,43 @@ export default function MinutesEditorPage() {
   }, [id, apply]);
 
   useEffect(() => load(), [load]);
+
+  // REQ-101 AI 초안이 만들어지는 동안 다시 받아, 서버가 채운 칸을 화면에 넣는다.
+  // 서버는 비어 있던 칸만 채우므로 화면에서도 비어 있는 칸만 바꾸고, 그사이 쓴 글은 그대로 둔다
+  const isDrafting = minutes?.draftStatus === 'REQUESTED';
+  useEffect(() => {
+    if (!isDrafting) {
+      return undefined;
+    }
+    let polls = 0;
+    const timerId = window.setInterval(() => {
+      polls += 1;
+      if (polls > DRAFT_POLL_MAX) {
+        window.clearInterval(timerId);
+        return;
+      }
+      getMinutesByMeeting(id)
+        .then((latest) => {
+          if (latest.draftStatus === 'REQUESTED') {
+            return;
+          }
+          window.clearInterval(timerId);
+          // 다음 저장이 거절되지 않게 version은 서버 값으로 맞춘다
+          setMinutes(latest);
+          const filled = new Map(latest.sections.map((section) => [section.sectionId, section.content]));
+          setSections((prev) =>
+            prev.map((section) =>
+              section.content.trim() ? section : { ...section, content: filled.get(section.sectionId) ?? section.content },
+            ),
+          );
+          if (latest.draftStatus === 'SUCCEEDED' && latest.sections.some(({ content }) => content.trim())) {
+            setToast({ text: DRAFT_FILLED_MESSAGE, variant: 'info' });
+          }
+        })
+        .catch(() => undefined);
+    }, DRAFT_POLL_MS);
+    return () => window.clearInterval(timerId);
+  }, [id, isDrafting]);
 
   useEffect(() => {
     let isCurrent = true;

@@ -137,6 +137,9 @@ export interface MinutesDetail {
   /** 저장할 때 그대로 돌려보낸다 (다른 곳에서 먼저 저장했으면 거절) */
   version: number;
   sections: MinutesSection[];
+  /** REQ-101 AI 초안. 양식을 처음 고르면 요청한다. 요청 전이면 null */
+  draftStatus: 'REQUESTED' | 'SUCCEEDED' | 'FAILED' | null;
+  draftError: string | null;
 }
 
 type MinutesDetailResponse = Omit<MinutesDetail, 'writer' | 'attendees'> & {
