@@ -52,7 +52,6 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::443845329525:role/nineouting-dev-frontend-deploy
           aws-region: ap-northeast-2
-          allowed-account-ids: '443845329525'
       - name: DEV S3 배포
         run: |
           test "$(aws sts get-caller-identity --query Account --output text)" = '443845329525'
