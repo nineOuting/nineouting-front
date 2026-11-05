@@ -1,0 +1,76 @@
+name: DEV 프론트 배포
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: frontend-dev-deploy
+  cancel-in-progress: false
+jobs:
+  build-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+  deploy:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AWS_REGION: ap-northeast-2
+      DEPLOY_BUCKET: nineouting-dev-frontend-443845329525
+      DISTRIBUTION_ID: E3RZL25K92AORQ
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: 최신 DEV 실행인지 확인
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -s dist/index.html
+          test "$(gh api repos/${{ github.repository }}/branches/dev --jq .commit.sha)" = "$GITHUB_SHA"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::443845329525:role/nineouting-dev-frontend-deploy
+          aws-region: ap-northeast-2
+          allowed-account-ids: '443845329525'
+      - name: DEV S3 배포
+        run: |
+          test "$(aws sts get-caller-identity --query Account --output text)" = '443845329525'
+          aws s3 sync dist/ "s3://$DEPLOY_BUCKET/" --exclude index.html --cache-control 'public,max-age=300' --no-progress
+          aws s3 cp dist/index.html "s3://$DEPLOY_BUCKET/index.html" --content-type text/html --cache-control no-cache --no-progress
+      - name: DEV 캐시 갱신
+        run: |
+          invalidation=$(aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths '/*' --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$DISTRIBUTION_ID" --id "$invalidation"
+      - name: DEV 정적 파일 확인
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib, urllib.request
+          from pathlib import Path
+          for file in Path('dist').rglob('*'):
+              if file.is_file():
+                  with urllib.request.urlopen('https://dev.nepnep.app/' + file.relative_to('dist').as_posix(), timeout=30) as response:
+                      assert response.status == 200
+                      assert hashlib.sha256(response.read()).digest() == hashlib.sha256(file.read_bytes()).digest()
+          print('PASS: DEV 정적 파일 응답 및 배포 내용 일치')
+          PYTHON
