@@ -11,15 +11,21 @@ const DEFAULT_RATIO = 410 / 802;
 const MIN_RATIO = 0.2;
 const MAX_RATIO = 0.8;
 
-interface MinutesSidePanelsProps {
-  /** 마지막으로 논의한 주제 (실시간 요약의 topic) */
-  topic: string | null;
+/** REQ-133 안건별 요약 (안건 보드). 요약이 없는 안건은 보여 주지 않는다 */
+export interface AgendaSummary {
+  id: string;
+  title: string;
   summary: string[];
+}
+
+interface MinutesSidePanelsProps {
+  agendas: AgendaSummary[];
   lines: TranscriptLine[];
 }
 
-/** REQ-133~134 회의 요약본과 전사. 둘 사이 경계를 끌어 높이 비율을 바꾼다 */
-export default function MinutesSidePanels({ topic, summary, lines }: MinutesSidePanelsProps) {
+/** REQ-133~134 회의 요약본(안건별)과 전사. 둘 사이 경계를 끌어 높이 비율을 바꾼다 */
+export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsProps) {
+  const summarized = agendas.filter(({ summary }) => summary.length > 0);
   const [ratio, setRatio] = useState(DEFAULT_RATIO);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -46,21 +52,15 @@ export default function MinutesSidePanels({ topic, summary, lines }: MinutesSide
         </div>
         <img src={dividerMinutesSide} alt="" width={DIVIDER_WIDTH} height={1} className={styles.divider} />
         <div className={styles.body}>
-          {summary.length === 0 ? (
+          {summarized.length === 0 ? (
             <p className={styles.empty}>정리된 요약이 없어요.</p>
           ) : (
-            <>
-              {topic && (
-                <div className={styles.block}>
-                  <p className={styles.label}>마지막 논의</p>
-                  <p className={styles.topic}>{topic}</p>
-                </div>
-              )}
-              <div className={styles.block}>
-                <p className={styles.label}>지금까지 요약</p>
-                <p className={styles.summary}>{summary.join(' ')}</p>
+            summarized.map((agenda) => (
+              <div key={agenda.id} className={styles.block}>
+                <p className={styles.label}>{agenda.title}</p>
+                <p className={styles.summary}>{agenda.summary.join(' ')}</p>
               </div>
-            </>
+            ))
           )}
         </div>
       </section>

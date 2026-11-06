@@ -9,14 +9,30 @@ const TITLE_ICON_SIZE = 24;
 const EDIT_ICON_SIZE = 24;
 const EMPTY_ICON_SIZE = 48;
 
+const NO_AGENDA = '';
+
 interface TranscriptPanelProps {
   lines: TranscriptLine[];
   canEdit: boolean;
   onEdit: (seq: number, text: string) => void;
+  /** REQ-089 줄마다 안건 (seq → 안건 id). 분류 전이면 없다 */
+  lineAgendas?: Record<number, string | null>;
+  agendaOptions?: { id: string; title: string }[];
+  /** REQ-089 줄의 안건 고치기 (회의록 작성자). null = 해당 없음 */
+  onChangeAgenda?: (seq: number, agendaId: string | null) => void;
 }
 
-/** REQ-079, 083 실시간 전사. 회의록 작성자는 줄에 마우스를 올려 바로 고친다 */
-export default function TranscriptPanel({ lines, canEdit, onEdit }: TranscriptPanelProps) {
+/** REQ-079, 083 실시간 전사. 회의록 작성자는 줄에 마우스를 올려 바로 고친다. REQ-089 줄마다 안건을 보여 주고 작성자는 바꿀 수 있다 */
+export default function TranscriptPanel({
+  lines,
+  canEdit,
+  onEdit,
+  lineAgendas = {},
+  agendaOptions = [],
+  onChangeAgenda,
+}: TranscriptPanelProps) {
+  const titleOf = (agendaId: string | null | undefined) =>
+    agendaOptions.find(({ id }) => id === agendaId)?.title;
   const [editing, setEditing] = useState<{ seq: number; text: string } | null>(null);
 
   const finishEditing = () => {
@@ -63,7 +79,28 @@ export default function TranscriptPanel({ lines, canEdit, onEdit }: TranscriptPa
               .join(' ');
             return (
               <li key={line.seq} className={className}>
-                <span className={styles.time}>{line.time}</span>
+                <div className={styles.lineMeta}>
+                  <span className={styles.time}>{line.time}</span>
+                  {canEdit && onChangeAgenda ? (
+                    <select
+                      className={styles.agendaSelect}
+                      aria-label={`${line.time} 발언의 안건`}
+                      value={lineAgendas[line.seq] ?? NO_AGENDA}
+                      onChange={(event) => onChangeAgenda(line.seq, event.target.value || null)}
+                    >
+                      <option value={NO_AGENDA}>안건 없음</option>
+                      {agendaOptions.map(({ id, title }) => (
+                        <option key={id} value={id}>
+                          {title}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    titleOf(lineAgendas[line.seq]) && (
+                      <span className={styles.agendaTag}>{titleOf(lineAgendas[line.seq])}</span>
+                    )
+                  )}
+                </div>
                 {isEditing ? (
                   <textarea
                     className={styles.textarea}

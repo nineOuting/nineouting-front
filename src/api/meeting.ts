@@ -135,12 +135,33 @@ export interface BoardSummarySentence {
   evidenceSeqs: number[];
 }
 
+/** REQ-097 할 일·담당자 (ai-service 안건 보드). 담당자를 참석자와 맞추지 못하면 assigneeUserId가 null */
+export interface BoardTodo {
+  id: string;
+  task: string;
+  assigneeName: string | null;
+  assigneeStatus: 'MATCHED' | 'UNASSIGNED' | string;
+  assigneeUserId: number | null;
+  dueText: string | null;
+  evidenceSeqs: number[];
+}
+
 export interface BoardAgenda {
   agendaId: number;
   status: AgendaStatusCode;
   summary?: BoardSummarySentence[];
   decisionPoints?: BoardDecisionPoint[];
   opinions?: BoardOpinion[];
+  todos?: BoardTodo[];
+}
+
+/**
+ * REQ-093~097 [회의 끝내기]를 누른 뒤 보드에 오는 값. 끝내기 요청이 없거나 [이어서 논의하기]로 취소되면 null.
+ * leftover: 결론이 나지 않은 안건 목록 (비면 바로 오늘 회의 요약, REQ-096), todaySummary: 오늘 회의 요약 (안건별)
+ */
+export interface BoardEndSnapshot {
+  final: boolean;
+  agendas: BoardAgenda[];
 }
 
 /** REQ-091 SUGGEST: 새 안건 등록 제안, REQ-092 LONG: 등록되지 않은 주제가 이어짐 */
@@ -156,6 +177,23 @@ export interface AgendaBoard {
   currentAgendaId: number | null;
   agendas: BoardAgenda[];
   offTopic: BoardOffTopic | null;
+  leftover?: BoardEndSnapshot | null;
+  todaySummary?: BoardEndSnapshot | null;
+}
+
+/** REQ-089 전사 줄의 안건. agendaId가 null이면 해당 없음, corrected는 작성자가 고친 줄 */
+export interface LineAgendaResponse {
+  seq: number;
+  agendaId: number | null;
+  corrected: boolean;
+}
+
+/** 회의방 WebSocket agendaClassification: 자동 분류가 바뀐 줄 */
+export interface AgendaClassificationMessage {
+  version: number;
+  currentAgendaId: number | null;
+  final: boolean;
+  lines: { seq: number; agendaId: number | null }[];
 }
 
 interface AgendaBoardResponse {
@@ -335,11 +373,6 @@ export function editTranscript(meetingId: number, seq: number, text: string) {
   return request<TranscriptLineResponse>('PATCH', `/api/meetings/${meetingId}/transcripts/${seq}`, { text });
 }
 
-/** REQ-085 지금 회의 중 요약. 아직 없으면 null */
-export function getLiveSummary(meetingId: number) {
-  return request<LiveSummaryResponse | null>('GET', `/api/meetings/${meetingId}/live-summary`);
-}
-
 /** REQ-085~088, 124~125 지금 안건 보드. 아직 없으면 null */
 export async function getAgendaBoard(meetingId: number) {
   return (await request<AgendaBoardResponse>('GET', `/api/meetings/${meetingId}/agenda-board`)).board;
@@ -350,6 +383,31 @@ export function editDecision(meetingId: number, agendaId: number, decisionPointI
   evidenceSeqs: number[]) {
   return request('PUT', `/api/meetings/${meetingId}/agendas/${agendaId}/decision-points/${decisionPointId}/decision`,
     { decisionText, evidenceSeqs });
+}
+
+/** REQ-093 [회의 끝내기] (회의록 작성자). 결론 나지 않은 안건 목록·오늘 회의 요약이 보드로 온다. 녹음은 마무리까지 이어진다 */
+export function requestMeetingEnd(meetingId: number) {
+  return request('POST', `/api/meetings/${meetingId}/end-request`);
+}
+
+/** REQ-095 [이어서 논의하기]: 끝내기 요청을 거두고 회의를 이어 간다 */
+export function cancelMeetingEnd(meetingId: number) {
+  return request('DELETE', `/api/meetings/${meetingId}/end-request`);
+}
+
+/** REQ-094 고른 안건을 폴더의 남은 안건으로 넘긴다 (다음 회의에서 불러온다) */
+export function carryOverAgendas(meetingId: number, agendaIds: number[]) {
+  return request('POST', `/api/meetings/${meetingId}/carry-over`, { agendaIds });
+}
+
+/** REQ-089 줄마다 안건 */
+export function listLineAgendas(meetingId: number) {
+  return request<LineAgendaResponse[]>('GET', `/api/meetings/${meetingId}/line-agendas`);
+}
+
+/** REQ-089 줄의 안건 고치기 (회의록 작성자, 진행 중). agendaId null = 해당 없음 */
+export function correctLineAgenda(meetingId: number, seq: number, agendaId: number | null) {
+  return request<LineAgendaResponse>('PUT', `/api/meetings/${meetingId}/transcripts/${seq}/agenda`, { agendaId });
 }
 
 /** REQ-091~092 새 안건 제안 [무시]·주제 이탈 [확인] (회의록 작성자). 등록은 안건 추가로 한다 */

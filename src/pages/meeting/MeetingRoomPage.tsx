@@ -4,22 +4,27 @@ import { errorMessage } from '../../api/client';
 import {
   finishMeeting,
   addMeetingAgenda,
+  cancelMeetingEnd,
+  carryOverAgendas,
+  correctLineAgenda,
   dismissOffTopic,
   editDecision,
   editTranscript,
   getAgendaBoard,
   getMeetingDetail,
+  listLineAgendas,
   listTranscripts,
   pauseMeeting,
+  requestMeetingEnd,
   resumeMeeting,
   type AgendaBoard,
+  type BoardEndSnapshot,
   type MeetingDetailResponse,
 } from '../../api/meeting';
 import { getMe } from '../../api/user';
 import dotNotDiscussed from '../../assets/dot-not-discussed.svg';
 import dotRecording from '../../assets/dot-recording.svg';
 import AppLayout from '../../components/AppLayout';
-import ConfirmDialog from '../../components/ConfirmDialog';
 import Placeholder from '../../components/Placeholder';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
@@ -28,6 +33,7 @@ import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
 import type { RoomAgenda, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
 import AddAgendaModal from './room/AddAgendaModal';
 import AgendaStatusCard from './room/AgendaStatusCard';
+import EndMeetingModal, { type EndStep } from './room/EndMeetingModal';
 import EvidencePanel from './room/EvidencePanel';
 import LiveSummaryCard from './room/LiveSummaryCard';
 import { AgendaSuggestion, OffTopicNotice } from './room/RoomNotices';
@@ -37,6 +43,7 @@ import {
   formatElapsed,
   mergeTranscript,
   removeTranscript,
+  snapshotAgendas,
   toRoomAgenda,
   toTranscriptLine,
 } from './room/roomData';
@@ -55,6 +62,11 @@ const MIC_FAILED_MESSAGE = '마이크를 쓸 수 없어 녹음하지 못하고 �
  */
 type DemoScenario = 'suggestion' | 'offtopic' | null;
 
+/** REQ-089 서버의 안건 id(숫자, 해당 없음은 null)를 화면의 안건 id(문자열)로 */
+function toLineAgendaId(agendaId: number | null) {
+  return agendaId === null ? null : String(agendaId);
+}
+
 /** REQ-079~093, 124~126 회의 진행 화면 */
 export default function MeetingRoomPage() {
   const navigate = useNavigate();
@@ -69,7 +81,15 @@ export default function MeetingRoomPage() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [isEndConfirmOpen, setIsEndConfirmOpen] = useState(false);
+  // REQ-093~098 회의 끝내기 단계와, 끝내기 요청 뒤 보드로 오는 남은 안건 목록·오늘 회의 요약
+  const [endStep, setEndStep] = useState<EndStep | null>(null);
+  const [leftover, setLeftover] = useState<BoardEndSnapshot | null>(null);
+  const [todaySummary, setTodaySummary] = useState<BoardEndSnapshot | null>(null);
+  const [carriedIds, setCarriedIds] = useState<string[]>([]);
+  const [isEndBusy, setIsEndBusy] = useState(false);
+  // REQ-089 줄마다 안건 (seq → 안건 id). 작성자가 고친 줄은 자동 분류로 덮지 않는다
+  const [lineAgendas, setLineAgendas] = useState<Record<number, string | null>>({});
+  const correctedSeqsRef = useRef(new Set<number>());
   const [isEnding, setIsEnding] = useState(false);
   const [isAiAvailable, setIsAiAvailable] = useState(true);
   const [selectedAgendaId, setSelectedAgendaId] = useState('');
@@ -116,16 +136,24 @@ export default function MeetingRoomPage() {
     const isClosed = key !== null && key === closedOffTopicRef.current;
     setSuggestion(offTopic?.stage === 'SUGGEST' && !isClosed ? { title: offTopic.suggestedTitle ?? '' } : null);
     setIsOffTopicOpen(offTopic?.stage === 'LONG' && !isClosed);
+    setLeftover(board.leftover ?? null);
+    setTodaySummary(board.todaySummary ?? null);
   }, []);
 
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
   const reloadLive = useCallback(
     async (id: number) => {
-      const [lines, board] = await Promise.all([listTranscripts(id), getAgendaBoard(id)]);
+      const [lines, board, classified] = await Promise.all([
+        listTranscripts(id),
+        getAgendaBoard(id),
+        listLineAgendas(id).catch(() => []),
+      ]);
       setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
       if (board) {
         showBoard(board);
       }
+      correctedSeqsRef.current = new Set(classified.filter(({ corrected }) => corrected).map(({ seq }) => seq));
+      setLineAgendas(Object.fromEntries(classified.map(({ seq, agendaId }) => [seq, toLineAgendaId(agendaId)])));
     },
     [showBoard],
   );
@@ -222,6 +250,18 @@ export default function MeetingRoomPage() {
       case 'agendaBoard':
         showBoard(message.data);
         break;
+      case 'agendaClassification': {
+        const changed = message.data.lines.filter(({ seq }) => !correctedSeqsRef.current.has(seq));
+        setLineAgendas((prev) => ({
+          ...prev,
+          ...Object.fromEntries(changed.map(({ seq, agendaId }) => [seq, toLineAgendaId(agendaId)])),
+        }));
+        break;
+      }
+      case 'lineAgenda':
+        correctedSeqsRef.current.add(message.data.seq);
+        setLineAgendas((prev) => ({ ...prev, [message.data.seq]: toLineAgendaId(message.data.agendaId) }));
+        break;
       case 'finished':
         // REQ-098 작성자가 회의를 마무리하면 참석자 모두 회의록 작성 화면으로 간다
         setIsFinished(true);
@@ -250,6 +290,9 @@ export default function MeetingRoomPage() {
   }
 
   const meetingIdNumber = detail.meetingId;
+  // REQ-093·096 끝내기 요청 뒤 남은 안건 목록이 오면: 비었으면 바로 오늘 회의 요약, 아니면 목록
+  const shownEndStep: EndStep | null =
+    endStep === 'waiting' && leftover ? (leftover.agendas.length === 0 ? 'summary' : 'leftover') : endStep;
   const currentAgenda =
     agendas.find(({ id }) => id === currentAgendaId) ?? agendas.find(({ status }) => status === 'discussing');
   const selectedDecision = agendas
@@ -309,9 +352,64 @@ export default function MeetingRoomPage() {
     }
   };
 
+  /** REQ-089 줄의 안건 고치기. 결과는 회의방(lineAgenda)으로도 온다 */
+  const changeLineAgenda = async (seq: number, agendaId: string | null) => {
+    try {
+      const corrected = await correctLineAgenda(meetingIdNumber, seq, agendaId === null ? null : Number(agendaId));
+      correctedSeqsRef.current.add(seq);
+      setLineAgendas((prev) => ({ ...prev, [seq]: toLineAgendaId(corrected.agendaId) }));
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  /** REQ-093 [회의 끝내기]: AI가 결론 나지 않은 안건과 오늘 회의 요약을 정리하는 동안 기다린다 (녹음은 이어진다) */
+  const startEnd = async () => {
+    // 이어서 논의하기 전의 목록·요약이 남아 있으면 새로 정리한 값이 오기 전에 보이므로 비운다
+    setLeftover(null);
+    setTodaySummary(null);
+    setCarriedIds([]);
+    setEndStep('waiting');
+    try {
+      await requestMeetingEnd(meetingIdNumber);
+    } catch (error) {
+      showError(error);
+      setEndStep(null);
+    }
+  };
+
+  /** REQ-095 [이어서 논의하기]: 끝내기 요청을 거두고 회의로 돌아간다 */
+  const continueMeeting = async () => {
+    setIsEndBusy(true);
+    try {
+      await cancelMeetingEnd(meetingIdNumber);
+      setEndStep(null);
+    } catch (error) {
+      showError(error);
+    } finally {
+      setIsEndBusy(false);
+    }
+  };
+
+  /** REQ-094 고른 안건을 다음 회의로 넘기고 오늘 회의 요약으로 */
+  const carryOver = async (agendaIds: string[]) => {
+    setIsEndBusy(true);
+    try {
+      if (agendaIds.length > 0) {
+        await carryOverAgendas(meetingIdNumber, agendaIds.map(Number));
+      }
+      setCarriedIds(agendaIds);
+      setEndStep('summary');
+    } catch (error) {
+      showError(error);
+    } finally {
+      setIsEndBusy(false);
+    }
+  };
+
   /** REQ-098 마무리하면 회의록이 만들어지고 회의록 작성 화면으로 간다 (만들어지기 전에는 그 화면이 "준비 중"을 보여 준다) */
   const endMeeting = async () => {
-    setIsEndConfirmOpen(false);
+    setEndStep(null);
     setIsEnding(true);
     isFinishingRef.current = true;
     try {
@@ -377,7 +475,7 @@ export default function MeetingRoomPage() {
           )}
           {/* REQ-098 회의록 작성자만 마무리한다. 회의 끝내기 단계(REQ-093~097)는 디자인이 없어 건너뛰고 바로 회의록으로 간다 */}
           {isWriter && isLive && (
-            <button type="button" className={styles.endButton} disabled={isEnding} onClick={() => setIsEndConfirmOpen(true)}>
+            <button type="button" className={styles.endButton} disabled={isEnding || endStep !== null} onClick={() => void startEnd()}>
               <Placeholder size={BUTTON_ICON_SIZE} />
               회의 끝내기
             </button>
@@ -411,7 +509,14 @@ export default function MeetingRoomPage() {
               onClose={() => setSelectedDecisionId(undefined)}
             />
           ) : (
-            <TranscriptPanel lines={transcript} canEdit={isWriter && isLive} onEdit={saveTranscript} />
+            <TranscriptPanel
+              lines={transcript}
+              canEdit={isWriter && isLive}
+              onEdit={saveTranscript}
+              lineAgendas={lineAgendas}
+              agendaOptions={agendas.map(({ id, title }) => ({ id, title }))}
+              onChangeAgenda={(seq, agendaId) => void changeLineAgenda(seq, agendaId)}
+            />
           )}
         </aside>
       </div>
@@ -442,14 +547,18 @@ export default function MeetingRoomPage() {
         />
       )}
       {isOffTopicOpen && isWriter && isLive && <OffTopicNotice onConfirm={dismissNotice} />}
-      {isEndConfirmOpen && (
-        <ConfirmDialog
-          title="회의를 끝낼까요?"
-          message="녹음과 받아쓰기를 끝내고 회의록 작성 화면으로 이동해요. 끝낸 회의는 다시 시작할 수 없어요."
-          cancelLabel="계속 진행"
-          confirmLabel="회의 끝내기"
-          onCancel={() => setIsEndConfirmOpen(false)}
-          onConfirm={endMeeting}
+      {shownEndStep && (
+        <EndMeetingModal
+          // 단계마다 새로 그려 남은 안건 선택을 그 단계의 목록으로 시작한다
+          key={shownEndStep}
+          step={shownEndStep}
+          leftover={leftover ? snapshotAgendas(agendas, leftover) : []}
+          summary={todaySummary ? snapshotAgendas(agendas, todaySummary) : null}
+          carriedIds={carriedIds}
+          isBusy={isEndBusy || isEnding}
+          onContinue={() => void continueMeeting()}
+          onCarryOver={(agendaIds) => void carryOver(agendaIds)}
+          onFinish={() => void endMeeting()}
         />
       )}
     </AppLayout>

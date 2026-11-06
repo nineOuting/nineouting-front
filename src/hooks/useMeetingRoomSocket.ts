@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { issueRoomTicket, type AgendaBoard, type LiveSummaryResponse, type TranscriptLineResponse } from '../api/meeting';
+import {
+  issueRoomTicket,
+  type AgendaBoard,
+  type AgendaClassificationMessage,
+  type LineAgendaResponse,
+  type LiveSummaryResponse,
+  type TranscriptLineResponse,
+} from '../api/meeting';
 import { retryDelay, socketUrl } from '../meeting/socketUrl';
 
 /** 회의방 WebSocket 메시지 (docs/services/meeting-service.md 4.3.2, meeting-service RoomMessage) */
@@ -7,11 +14,13 @@ export type RoomMessage =
   | { type: 'transcript' | 'transcriptEdited'; line: TranscriptLineResponse }
   | { type: 'transcriptDeleted'; seq: number; rev: number }
   | { type: 'paused' | 'resumed' | 'finished' }
+  // 회의 중 전체 흐름 요약. 화면은 안건 보드의 안건 요약을 쓰므로 받아도 쓰지 않는다
   | { type: 'liveSummary'; liveSummary: LiveSummaryResponse }
   | { type: 'aiStatus'; available: boolean }
-  // 안건 보드가 바뀜. 줄별 분류(agendaClassification)·고친 분류(lineAgenda)는 화면에 아직 쓰지 않는다
   | { type: 'agendaBoard'; data: AgendaBoard }
-  | { type: 'agendaClassification' | 'lineAgenda' };
+  // REQ-089 줄별 자동 분류가 바뀜 / 작성자가 줄의 안건을 고침
+  | { type: 'agendaClassification'; data: AgendaClassificationMessage }
+  | { type: 'lineAgenda'; data: LineAgendaResponse };
 
 interface RoomSocketHandlers {
   onMessage: (message: RoomMessage) => void;

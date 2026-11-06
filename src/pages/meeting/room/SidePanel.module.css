@@ -106,3 +106,29 @@
   flex-direction: column;
   gap: 2px;
 }
+
+/* REQ-089 줄의 안건 (임시 디자인) */
+.lineMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agendaTag,
+.agendaSelect {
+  max-width: 180px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  color: var(--grey-70);
+  background: var(--grey-10);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agendaSelect {
+  border: 1px solid var(--grey-20);
+  cursor: pointer;
+}
