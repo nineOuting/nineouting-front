@@ -128,9 +128,17 @@ export interface BoardOpinion {
   evidenceSeqs: number[];
 }
 
+/** REQ-085 안건 요약 문장 (ai-service 안건 보드) */
+export interface BoardSummarySentence {
+  id: string;
+  text: string;
+  evidenceSeqs: number[];
+}
+
 export interface BoardAgenda {
   agendaId: number;
   status: AgendaStatusCode;
+  summary?: BoardSummarySentence[];
   decisionPoints?: BoardDecisionPoint[];
   opinions?: BoardOpinion[];
 }

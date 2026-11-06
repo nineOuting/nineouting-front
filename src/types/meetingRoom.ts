@@ -30,14 +30,9 @@ export interface RoomAgenda {
   title: string;
   status: AgendaStatus;
   decisionPoints: DecisionPoint[];
-  /** REQ-087 안건 보드의 의견 (주요 의견: 의견·근거, 아직 합의되지 않은 부분: 우려·질문) */
-  opinions: string[];
-  openIssues: string[];
-}
-
-/** REQ-085 실시간 요약. 주요 의견·합의 안 된 부분(REQ-087)은 지금 논의 중인 안건의 안건 보드에서 채운다 */
-export interface LiveSummary {
+  /** REQ-085 이 안건의 지금까지 요약 (안건 보드) */
   summary: string[];
+  /** REQ-087 안건 보드의 의견 (주요 의견: 의견·근거, 아직 합의되지 않은 부분: 우려·질문) */
   opinions: string[];
   openIssues: string[];
 }
