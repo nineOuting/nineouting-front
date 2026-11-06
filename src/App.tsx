@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import RequireAuth from './auth/RequireAuth';
 import ArchivePage from './pages/archive/ArchivePage';
@@ -20,6 +21,9 @@ import TrashPage from './pages/trash/TrashPage';
 import InvitationPage from './pages/workspace/InvitationPage';
 import InviteLinkPage from './pages/workspace/InviteLinkPage';
 import WorkspacePage from './pages/workspace/WorkspacePage';
+
+// 개발 서버에서만 쓰는 화면. 운영 빌드에서는 조건이 false로 바뀌어 번들에서 빠진다
+const DevMinutesPage = import.meta.env.DEV ? lazy(() => import('./pages/dev/DevMinutesPage')) : null;
 
 export default function App() {
   return (
@@ -82,6 +86,18 @@ export default function App() {
             </RequireAuth>
           }
         />
+        {DevMinutesPage && (
+          <Route
+            path="/dev/minutes/:meetingId"
+            element={
+              <RequireAuth>
+                <Suspense fallback={null}>
+                  <DevMinutesPage />
+                </Suspense>
+              </RequireAuth>
+            }
+          />
+        )}
         {/* REQ-119~121 회의록 양식. 새 양식은 ?from=양식ID 로 복사해서 시작할 수 있다 */}
         <Route
           path="/templates"
