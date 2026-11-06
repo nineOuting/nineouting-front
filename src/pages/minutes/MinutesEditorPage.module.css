@@ -141,3 +141,22 @@
   font-size: var(--font-size-b1);
   color: var(--grey-70);
 }
+
+/* REQ-101, REQ-161 AI 초안 만드는 중·실패 안내 (MSG-055, MSG-056) */
+.draftNotice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 62px 0;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: var(--blue-10);
+  font-size: var(--font-size-b2);
+  color: var(--grey-70);
+}
+
+.draftFailed {
+  justify-content: space-between;
+  background: var(--red-10);
+  color: var(--red-100);
+}
