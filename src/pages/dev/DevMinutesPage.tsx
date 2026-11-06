@@ -4,11 +4,10 @@ import { isApiError } from '../../api/client';
 import {
   getAiStatus,
   getTodaySummary,
-  requestMinutesDraft,
   type AiStatus,
   type TodaySummary,
 } from '../../api/devMinutes';
-import { getMinutesByMeeting, type MinutesDetail } from '../../api/minutes';
+import { getMinutesByMeeting, requestMinutesDraft, type MinutesDetail } from '../../api/minutes';
 import Button from '../../components/Button';
 import { API_LOG_CHANNEL, type ApiLogEntry } from '../../dev/apiLog';
 import styles from './DevMinutesPage.module.css';
@@ -82,12 +81,14 @@ function signals({ summary, minutes, ai, summaryError, minutesError, aiError }: 
   };
 }
 
-/** 409는 저장되지 않아 draftStatus가 비어 있다. 요약 도착 여부와 묶어서 지금 단계를 판단한다 */
+/** 요청 전(draftStatus가 null)이면 요약 도착 여부로 단계를 나눈다 */
 function stageOf({ summary, minutes }: Snapshot) {
   if (!minutes) {
     return '회의록 없음';
   }
   switch (minutes.draftStatus) {
+    case 'WAITING_SOURCE':
+      return '요약 기다리는 중';
     case 'REQUESTED':
       return '초안 생성 중';
     case 'SUCCEEDED':
@@ -191,10 +192,6 @@ function DevMinutesMonitor({ meetingId }: { meetingId: number }) {
   }, []);
 
   async function sendDraftRequest(minutes: MinutesDetail) {
-    // 진행 중에 다시 요청하면 앞 요청의 결과가 버려진다
-    if (minutes.draftStatus === 'REQUESTED' && !window.confirm('초안을 만드는 중입니다. 앞 요청의 결과를 버리고 다시 요청할까요?')) {
-      return;
-    }
     setSending(true);
     addLog('초안 재요청', '보냄');
     try {

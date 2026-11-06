@@ -13,11 +13,6 @@ export function getTodaySummary(meetingId: number) {
   return request<TodaySummary>('GET', `/api/meetings/${meetingId}/today-summary`);
 }
 
-/** 작성자만 부를 수 있다. 요약이 없으면 409 DRAFT_SOURCE_NOT_READY */
-export function requestMinutesDraft(minutesId: number) {
-  return request<{ draftStatus: string | null }>('POST', `/api/minutes/${minutesId}/draft`);
-}
-
 /** 작업별 AI 호출 기록. halted는 호출 상한이나 연속 실패로 멈췄을 때의 사유다 */
 export interface AiWorkInfo {
   calls: number;
