@@ -9,6 +9,7 @@ import {
   listMinutesTemplates,
   markMinutesViewed,
   MINUTES_ERROR_CODES,
+  requestMinutesDraft,
   saveMinutesSections,
   shareMinutes,
   type ExportFormat,
@@ -38,9 +39,14 @@ const SAVE_FAILED_MESSAGE = '임시저장하지 못했습니다. 잠시 후 다�
 const DOWNLOAD_FAILED_MESSAGE = '파일을 다운로드하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 const SAVED_MESSAGE = '임시저장했어요.';
 const DRAFT_FILLED_MESSAGE = 'AI 초안으로 비어 있던 칸을 채웠어요.';
-// REQ-101 AI 초안이 오는지 보는 간격과 횟수 (보통 수십 초 안에 온다)
+// MSG-055~057 (REQ-101, REQ-161)
+const DRAFTING_MESSAGE = 'AI 초안을 만들고 있어요. 완성되면 비어 있는 칸에 채워 드려요.';
+const DRAFT_FAILED_MESSAGE = 'AI 초안을 만들지 못했어요. [다시 만들기]를 눌러 다시 시도해 주세요.';
+const DRAFT_RETRY_FAILED_MESSAGE = 'AI 초안을 다시 요청하지 못했어요. 잠시 후 다시 시도해 주세요.';
+// REQ-101 AI 초안이 오는지 보는 간격과 횟수. 서버가 오늘 회의 요약을 최대 10분 기다렸다가 요청하므로 12분까지 본다
 const DRAFT_POLL_MS = 3000;
-const DRAFT_POLL_MAX = 60;
+const DRAFT_POLL_MAX = 240;
+const DRAFTING_STATUSES: ReadonlyArray<MinutesDetail['draftStatus']> = ['WAITING_SOURCE', 'REQUESTED'];
 // 회의를 마무리하면 회의록이 Kafka로 비동기 생성된다. 그동안 1.5초마다 다시 불러온다 (최대 약 30초)
 const NOT_READY_RETRY_MS = 1500;
 const NOT_READY_MAX_RETRIES = 20;
@@ -95,6 +101,7 @@ export default function MinutesEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isRetryingDraft, setIsRetryingDraft] = useState(false);
   const [dialog, setDialog] = useState<'download' | 'share' | null>(searchParams.get('download') ? 'download' : null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -147,7 +154,7 @@ export default function MinutesEditorPage() {
 
   // REQ-101 AI 초안이 만들어지는 동안 다시 받아, 서버가 채운 칸을 화면에 넣는다.
   // 서버는 비어 있던 칸만 채우므로 화면에서도 비어 있는 칸만 바꾸고, 그사이 쓴 글은 그대로 둔다
-  const isDrafting = minutes?.draftStatus === 'REQUESTED';
+  const isDrafting = DRAFTING_STATUSES.includes(minutes?.draftStatus ?? null);
   useEffect(() => {
     if (!isDrafting) {
       return undefined;
@@ -161,7 +168,7 @@ export default function MinutesEditorPage() {
       }
       getMinutesByMeeting(id)
         .then((latest) => {
-          if (latest.draftStatus === 'REQUESTED') {
+          if (DRAFTING_STATUSES.includes(latest.draftStatus)) {
             return;
           }
           window.clearInterval(timerId);
@@ -296,6 +303,26 @@ export default function MinutesEditorPage() {
     }
   };
 
+  // REQ-161 서버가 비어 있는 칸만 채우므로, 쓰던 글을 먼저 저장해 두어 AI가 덮지 않게 한다
+  const retryDraft = async () => {
+    setIsRetryingDraft(true);
+    try {
+      if (isDirty) {
+        await save();
+      }
+      apply(await requestMinutesDraft(minutes.minutesId));
+    } catch (error) {
+      if (isApiError(error, MINUTES_ERROR_CODES.draftInProgress)) {
+        apply(await getMinutesByMeeting(id).catch(() => minutes));
+        return;
+      }
+      setToast({ text: failMessage(error, DRAFT_RETRY_FAILED_MESSAGE), variant: 'error' });
+    } finally {
+      setIsRetryingDraft(false);
+    }
+  };
+  const showDraftNotice = isWriter && minutes.status === 'WRITING';
+
   const changeTemplate = async (templateId: number) => {
     if (templateId === minutes.templateId) {
       return;
@@ -351,6 +378,21 @@ export default function MinutesEditorPage() {
           )}
         </div>
       </div>
+      {showDraftNotice && isDrafting && (
+        <p className={styles.draftNotice} role="status">
+          <span className={styles.spinner} aria-hidden="true" />
+          {DRAFTING_MESSAGE}
+        </p>
+      )}
+      {showDraftNotice && minutes.draftStatus === 'FAILED' && (
+        <div className={`${styles.draftNotice} ${styles.draftFailed}`} role="alert">
+          <span>{DRAFT_FAILED_MESSAGE}</span>
+          <button type="button" className={styles.secondary} disabled={isRetryingDraft} onClick={retryDraft}>
+            {isRetryingDraft ? <span className={styles.spinner} aria-hidden="true" /> : <Placeholder size={BUTTON_ICON_SIZE} />}
+            다시 만들기
+          </button>
+        </div>
+      )}
       <div className={styles.content}>
         <MinutesDocument
           minutes={minutes}

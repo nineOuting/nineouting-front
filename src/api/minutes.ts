@@ -111,6 +111,7 @@ export function markMinutesViewed(minutesId: number) {
 export const MINUTES_ERROR_CODES = {
   notReady: 'MINUTES_NOT_READY',
   versionConflict: 'MINUTES_VERSION_CONFLICT',
+  draftInProgress: 'DRAFT_IN_PROGRESS',
 } as const;
 
 export interface MinutesSection {
@@ -137,8 +138,11 @@ export interface MinutesDetail {
   /** 저장할 때 그대로 돌려보낸다 (다른 곳에서 먼저 저장했으면 거절) */
   version: number;
   sections: MinutesSection[];
-  /** REQ-101 AI 초안. 양식을 처음 고르면 요청한다. 요청 전이면 null */
-  draftStatus: 'REQUESTED' | 'SUCCEEDED' | 'FAILED' | null;
+  /**
+   * REQ-101 AI 초안. 양식을 처음 고르면 요청한다. 요청 전이면 null.
+   * WAITING_SOURCE: 오늘 회의 요약을 기다리는 중 (오면 서버가 요청한다). REQUESTED와 함께 "만드는 중"
+   */
+  draftStatus: 'WAITING_SOURCE' | 'REQUESTED' | 'SUCCEEDED' | 'FAILED' | null;
   draftError: string | null;
 }
 
@@ -166,6 +170,11 @@ export async function saveMinutesSections(minutesId: number, version: number, se
   return toMinutesDetail(
     await request<MinutesDetailResponse>('PUT', `/api/minutes/${minutesId}/sections`, { version, sections }),
   );
+}
+
+/** REQ-161 AI 초안 다시 만들기 (작성자, 작성 중에만). 만드는 중이면 DRAFT_IN_PROGRESS */
+export async function requestMinutesDraft(minutesId: number) {
+  return toMinutesDetail(await request<MinutesDetailResponse>('POST', `/api/minutes/${minutesId}/draft`));
 }
 
 /** REQ-140 양식 변경 (작성자, 작성 중에만). 제목이 같은 칸의 내용은 남는다 */
