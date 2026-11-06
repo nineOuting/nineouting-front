@@ -8,7 +8,6 @@ import {
   editDecision,
   editTranscript,
   getAgendaBoard,
-  getLiveSummary,
   getMeetingDetail,
   listTranscripts,
   pauseMeeting,
@@ -26,7 +25,7 @@ import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
 import { SttStream } from '../../meeting/SttStream';
 import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
-import type { LiveSummary, RoomAgenda, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
+import type { RoomAgenda, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
 import AddAgendaModal from './room/AddAgendaModal';
 import AgendaStatusCard from './room/AgendaStatusCard';
 import EvidencePanel from './room/EvidencePanel';
@@ -38,7 +37,6 @@ import {
   formatElapsed,
   mergeTranscript,
   removeTranscript,
-  toLiveSummary,
   toRoomAgenda,
   toTranscriptLine,
 } from './room/roomData';
@@ -68,7 +66,6 @@ export default function MeetingRoomPage() {
   const [isWriter, setIsWriter] = useState(false);
   const [agendas, setAgendas] = useState<RoomAgenda[]>([]);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
-  const [summary, setSummary] = useState<LiveSummary | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -124,9 +121,8 @@ export default function MeetingRoomPage() {
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
   const reloadLive = useCallback(
     async (id: number) => {
-      const [lines, live, board] = await Promise.all([listTranscripts(id), getLiveSummary(id), getAgendaBoard(id)]);
+      const [lines, board] = await Promise.all([listTranscripts(id), getAgendaBoard(id)]);
       setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
-      setSummary(toLiveSummary(live));
       if (board) {
         showBoard(board);
       }
@@ -220,9 +216,6 @@ export default function MeetingRoomPage() {
       case 'resumed':
         setIsPaused(false);
         break;
-      case 'liveSummary':
-        setSummary(toLiveSummary(message.liveSummary));
-        break;
       case 'aiStatus':
         setIsAiAvailable(message.available);
         break;
@@ -259,11 +252,6 @@ export default function MeetingRoomPage() {
   const meetingIdNumber = detail.meetingId;
   const currentAgenda =
     agendas.find(({ id }) => id === currentAgendaId) ?? agendas.find(({ status }) => status === 'discussing');
-  // REQ-087 주요 의견·아직 합의되지 않은 부분은 지금 논의 중인 안건의 안건 보드에서 가져온다
-  const shownSummary =
-    summary && currentAgenda
-      ? { ...summary, opinions: currentAgenda.opinions, openIssues: currentAgenda.openIssues }
-      : summary;
   const selectedDecision = agendas
     .find(({ id }) => id === selectedAgendaId)
     ?.decisionPoints.find(({ id }) => id === selectedDecisionId);
@@ -399,7 +387,7 @@ export default function MeetingRoomPage() {
 
       <div className={styles.body}>
         <div className={styles.board}>
-          <LiveSummaryCard summary={shownSummary} agenda={currentAgenda} />
+          <LiveSummaryCard agenda={currentAgenda} />
           <AgendaStatusCard
             agendas={agendas}
             selectedAgendaId={selectedAgendaId}

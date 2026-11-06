@@ -2,11 +2,10 @@ import type {
   AgendaBoard,
   AgendaResponse,
   AgendaStatusCode,
-  LiveSummaryResponse,
   MeetingDetailResponse,
   TranscriptLineResponse,
 } from '../../../api/meeting';
-import type { AgendaStatus, DecisionStatus, LiveSummary, RoomAgenda, TranscriptLine } from '../../../types/meetingRoom';
+import type { AgendaStatus, DecisionStatus, RoomAgenda, TranscriptLine } from '../../../types/meetingRoom';
 
 // meeting-service 응답을 회의 진행 화면 모양으로 바꾼다
 
@@ -46,6 +45,7 @@ export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
       status: 'notDiscussed',
       evidenceSeqs: [],
     })),
+    summary: [],
     opinions: [],
     openIssues: [],
   };
@@ -53,7 +53,7 @@ export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
 
 /**
  * REQ-086~088, 124~125 안건 보드를 안건 목록에 입힌다. 제목·결정할 사항 문구는 회의 정보 그대로 두고,
- * 상태·결정 내용·근거 발언·의견만 보드에서 가져온다. 보드에 없는 안건(방금 추가한 안건 등)은 그대로 둔다
+ * 상태·결정 내용·근거 발언·요약·의견만 보드에서 가져온다. 보드에 없는 안건(방금 추가한 안건 등)은 그대로 둔다
  */
 export function applyBoard(agendas: RoomAgenda[], board: AgendaBoard): RoomAgenda[] {
   const byId = new Map(board.agendas.map((agenda) => [String(agenda.agendaId), agenda]));
@@ -81,6 +81,7 @@ export function applyBoard(agendas: RoomAgenda[], board: AgendaBoard): RoomAgend
           evidenceSeqs: point.evidenceSeqs,
         };
       }),
+      summary: (boardAgenda.summary ?? []).map(({ text }) => text),
       opinions: opinions.filter(({ kind }) => !OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
       openIssues: opinions.filter(({ kind }) => OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
     };
@@ -120,13 +121,6 @@ export function mergeTranscript(lines: TranscriptLine[], line: TranscriptLine) {
 
 export function removeTranscript(lines: TranscriptLine[], seq: number, rev: number) {
   return lines.filter((line) => line.seq !== seq || line.rev > rev);
-}
-
-export function toLiveSummary(response: LiveSummaryResponse | null): LiveSummary | null {
-  if (!response || response.summary.length === 0) {
-    return null;
-  }
-  return { summary: response.summary.map(({ text }) => text), opinions: [], openIssues: [] };
 }
 
 /** REQ-081 경과 시간 = 지금 - 시작 - 멈춘 시간 (멈춘 동안은 늘지 않는다) */
