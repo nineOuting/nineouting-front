@@ -1,6 +1,6 @@
 import dividerSummary from '../../../assets/divider-summary.svg';
 import Placeholder from '../../../components/Placeholder';
-import type { LiveSummary, RoomAgenda } from '../../../types/meetingRoom';
+import type { RoomAgenda } from '../../../types/meetingRoom';
 import room from './room.module.css';
 import StatusPill from './StatusPill';
 import styles from './LiveSummaryCard.module.css';
@@ -9,13 +9,12 @@ const TITLE_ICON_SIZE = 24;
 const EMPTY_ICON_SIZE = 48;
 
 interface LiveSummaryCardProps {
-  summary: LiveSummary | null;
-  /** 지금 논의 중인 안건 (안건 보드가 정한다) */
+  /** 지금 논의 중인 안건 (안건 보드가 정한다). 요약·의견도 이 안건의 것을 보여 준다 */
   agenda?: RoomAgenda;
 }
 
-/** REQ-085, 087 지금 논의 중인 안건과 지금까지 요약, 주요 의견, 아직 합의되지 않은 부분 */
-export default function LiveSummaryCard({ summary, agenda }: LiveSummaryCardProps) {
+/** REQ-085, 087 지금 논의 중인 안건과 그 안건의 지금까지 요약, 주요 의견, 아직 합의되지 않은 부분 (안건 보드) */
+export default function LiveSummaryCard({ agenda }: LiveSummaryCardProps) {
   return (
     <section className={styles.card} aria-labelledby="live-summary-title">
       <div className={styles.head}>
@@ -29,27 +28,25 @@ export default function LiveSummaryCard({ summary, agenda }: LiveSummaryCardProp
       </div>
       <img src={dividerSummary} alt="" width={740} height={1} className={room.divider} />
 
-      {summary ? (
+      {agenda && agenda.summary.length > 0 ? (
         <div className={styles.content}>
-          {agenda && (
-            <div className={styles.block}>
-              <p className={styles.label}>현재 논의</p>
-              <div className={styles.currentRow}>
-                <p className={styles.currentTitle}>{agenda.title}</p>
-                <StatusPill status={agenda.status} soft />
-              </div>
+          <div className={styles.block}>
+            <p className={styles.label}>현재 논의</p>
+            <div className={styles.currentRow}>
+              <p className={styles.currentTitle}>{agenda.title}</p>
+              <StatusPill status={agenda.status} soft />
             </div>
-          )}
+          </div>
           <div className={styles.block}>
             <p className={styles.label}>지금까지 요약</p>
-            <p className={styles.summary}>{summary.summary.join(' ')}</p>
+            <p className={styles.summary}>{agenda.summary.join(' ')}</p>
           </div>
-          {(summary.opinions.length > 0 || summary.openIssues.length > 0) && (
+          {(agenda.opinions.length > 0 || agenda.openIssues.length > 0) && (
             <div className={styles.columns}>
               <div className={styles.column}>
                 <p className={styles.label}>주요 의견</p>
                 <ul className={styles.list}>
-                  {summary.opinions.map((opinion) => (
+                  {agenda.opinions.map((opinion) => (
                     <li key={opinion}>{opinion}</li>
                   ))}
                 </ul>
@@ -57,7 +54,7 @@ export default function LiveSummaryCard({ summary, agenda }: LiveSummaryCardProp
               <div className={styles.column}>
                 <p className={styles.label}>아직 합의되지 않은 부분</p>
                 <ul className={styles.list}>
-                  {summary.openIssues.map((issue) => (
+                  {agenda.openIssues.map((issue) => (
                     <li key={issue}>{issue}</li>
                   ))}
                 </ul>
