@@ -130,6 +130,25 @@ function ErrorLine({ message }: { message: string | null }) {
   return message ? <p className={styles.error}>{message}</p> : null;
 }
 
+/** 서버가 진행률을 주지 않아 막대는 움직임만 보여 준다. 시간은 이 화면이 그 상태를 처음 본 때부터 센다 */
+function DraftProgress({ label }: { label: string }) {
+  const [startedAt] = useState(() => Date.now());
+  const [now, setNow] = useState(startedAt);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const seconds = Math.floor((now - startedAt) / 1000);
+  return (
+    <span className={styles.progress} role="status">
+      <span className={styles.progressBar} />
+      {label} · {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}
+    </span>
+  );
+}
+
 /** SCRUM-182 회의 종료부터 초안 생성까지 확인하는 개발 화면. 기록은 메모리에만 둔다 */
 export default function DevMinutesPage() {
   const meetingId = Number(useParams().meetingId);
@@ -220,6 +239,7 @@ function DevMinutesMonitor({ meetingId }: { meetingId: number }) {
   const minutes = snapshot?.minutes ?? null;
   const ai = snapshot?.ai ?? null;
   const worksBefore = aiBefore ? aiWorks(aiBefore) : [];
+  const drafting = minutes?.draftStatus === 'WAITING_SOURCE' || minutes?.draftStatus === 'REQUESTED';
 
   return (
     <main className={styles.page}>
@@ -353,7 +373,10 @@ function DevMinutesMonitor({ meetingId }: { meetingId: number }) {
         </div>
 
         <section className={styles.card}>
-          <h2>칸별 결과</h2>
+          <div className={styles.logHeader}>
+            <h2>칸별 결과</h2>
+            {snapshot && drafting && <DraftProgress key={minutes.draftStatus} label={stageOf(snapshot)} />}
+          </div>
           {minutes && minutes.sections.length > 0 ? (
             minutes.sections.map(({ sectionId, title, content }) => (
               <details key={sectionId} className={styles.section}>

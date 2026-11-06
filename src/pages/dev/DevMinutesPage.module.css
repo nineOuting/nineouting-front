@@ -119,6 +119,46 @@
   background: var(--blue-10);
 }
 
+.progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue-100);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.progressBar {
+  position: relative;
+  width: 48px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--blue-10);
+}
+
+.progressBar::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--blue-100);
+  content: '';
+  animation: progress-move 1.2s ease-in-out infinite;
+}
+
+@keyframes progress-move {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
 .error {
   margin: 0;
   padding: 8px;
