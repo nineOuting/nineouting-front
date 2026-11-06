@@ -3,6 +3,7 @@ import Placeholder from '../../../components/Placeholder';
 import type { RoomAgenda } from '../../../types/meetingRoom';
 import room from './room.module.css';
 import StatusPill from './StatusPill';
+import TodoList from './TodoList';
 import styles from './LiveSummaryCard.module.css';
 
 const TITLE_ICON_SIZE = 24;
@@ -59,6 +60,12 @@ export default function LiveSummaryCard({ agenda }: LiveSummaryCardProps) {
                   ))}
                 </ul>
               </div>
+            </div>
+          )}
+          {agenda.todos.length > 0 && (
+            <div className={styles.block}>
+              <p className={styles.label}>할 일</p>
+              <TodoList todos={agenda.todos} />
             </div>
           )}
         </div>

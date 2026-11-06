@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
-import { getLiveSummary, getMeetingDetail, listTranscripts, type MeetingDetailResponse } from '../../api/meeting';
+import { getAgendaBoard, getMeetingDetail, listTranscripts, type MeetingDetailResponse } from '../../api/meeting';
 import {
   changeMinutesTemplate,
   downloadMinutes,
@@ -26,7 +26,7 @@ import { formatMeetingDate } from '../../utils/meetingFormat';
 import { toTranscriptLine } from '../meeting/room/roomData';
 import DownloadModal from './DownloadModal';
 import MinutesDocument from './MinutesDocument';
-import MinutesSidePanels from './MinutesSidePanels';
+import MinutesSidePanels, { type AgendaSummary } from './MinutesSidePanels';
 import ShareConfirmModal from './ShareConfirmModal';
 import styles from './MinutesEditorPage.module.css';
 
@@ -96,7 +96,7 @@ export default function MinutesEditorPage() {
   const [meeting, setMeeting] = useState<MeetingDetailResponse | null>(null);
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   const [myId, setMyId] = useState<number>();
-  const [summary, setSummary] = useState<{ topic: string | null; texts: string[] }>({ topic: null, texts: [] });
+  const [agendaSummaries, setAgendaSummaries] = useState<AgendaSummary[]>([]);
   const [lines, setLines] = useState<TranscriptLine[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -193,14 +193,22 @@ export default function MinutesEditorPage() {
     let isCurrent = true;
     getMeetingDetail(id)
       .then(async (detail) => {
-        const [transcripts, live] = await Promise.all([listTranscripts(id), getLiveSummary(id).catch(() => null)]);
+        const [transcripts, board] = await Promise.all([listTranscripts(id), getAgendaBoard(id).catch(() => null)]);
         if (!isCurrent) {
           return;
         }
         setMeeting(detail);
         setLines(transcripts.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
-        const items = live?.summary ?? [];
-        setSummary({ topic: items.at(-1)?.topic ?? null, texts: items.map(({ text }) => text) });
+        // REQ-133 회의가 끝난 뒤 오늘 회의 요약(마지막 값)이 있으면 그것을, 없으면 마지막 안건 보드의 안건 요약
+        const boardAgendas = board?.todaySummary?.agendas ?? board?.agendas ?? [];
+        const byId = new Map(boardAgendas.map((agenda) => [agenda.agendaId, agenda]));
+        setAgendaSummaries(
+          detail.agendas.map(({ agendaId, title }) => ({
+            id: String(agendaId),
+            title,
+            summary: (byId.get(agendaId)?.summary ?? []).map(({ text }) => text),
+          })),
+        );
       })
       .catch(() => undefined);
     return () => {
@@ -407,7 +415,7 @@ export default function MinutesEditorPage() {
           }}
           onChangeTemplate={changeTemplate}
         />
-        <MinutesSidePanels topic={summary.topic} summary={summary.texts} lines={lines} />
+        <MinutesSidePanels agendas={agendaSummaries} lines={lines} />
       </div>
       {dialog === 'download' && <DownloadModal isDownloading={isDownloading} onDownload={download} onClose={closeDialog} />}
       {dialog === 'share' && <ShareConfirmModal isSharing={isSharing} onShare={share} onClose={closeDialog} />}

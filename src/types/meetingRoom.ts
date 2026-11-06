@@ -25,6 +25,14 @@ export interface DecisionPoint {
   evidenceSeqs: number[];
 }
 
+/** REQ-097 할 일. 담당자·기한을 회의에서 정하지 않았으면 없다 */
+export interface RoomTodo {
+  id: string;
+  task: string;
+  assignee?: string;
+  due?: string;
+}
+
 export interface RoomAgenda {
   id: string;
   title: string;
@@ -32,6 +40,8 @@ export interface RoomAgenda {
   decisionPoints: DecisionPoint[];
   /** REQ-085 이 안건의 지금까지 요약 (안건 보드) */
   summary: string[];
+  /** REQ-097 할 일·담당자 (안건 보드) */
+  todos: RoomTodo[];
   /** REQ-087 안건 보드의 의견 (주요 의견: 의견·근거, 아직 합의되지 않은 부분: 우려·질문) */
   opinions: string[];
   openIssues: string[];

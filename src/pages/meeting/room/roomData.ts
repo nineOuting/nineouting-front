@@ -2,10 +2,12 @@ import type {
   AgendaBoard,
   AgendaResponse,
   AgendaStatusCode,
+  BoardEndSnapshot,
+  BoardTodo,
   MeetingDetailResponse,
   TranscriptLineResponse,
 } from '../../../api/meeting';
-import type { AgendaStatus, DecisionStatus, RoomAgenda, TranscriptLine } from '../../../types/meetingRoom';
+import type { AgendaStatus, DecisionStatus, RoomAgenda, RoomTodo, TranscriptLine } from '../../../types/meetingRoom';
 
 // meeting-service 응답을 회의 진행 화면 모양으로 바꾼다
 
@@ -46,9 +48,20 @@ export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
       evidenceSeqs: [],
     })),
     summary: [],
+    todos: [],
     opinions: [],
     openIssues: [],
   };
+}
+
+/** REQ-097 보드의 할 일을 화면 모양으로 */
+export function toRoomTodos(todos: BoardTodo[] | undefined): RoomTodo[] {
+  return (todos ?? []).map(({ id, task, assigneeName, dueText }) => ({
+    id,
+    task,
+    assignee: assigneeName ?? undefined,
+    due: dueText ?? undefined,
+  }));
 }
 
 /**
@@ -82,10 +95,20 @@ export function applyBoard(agendas: RoomAgenda[], board: AgendaBoard): RoomAgend
         };
       }),
       summary: (boardAgenda.summary ?? []).map(({ text }) => text),
+      todos: toRoomTodos(boardAgenda.todos),
       opinions: opinions.filter(({ kind }) => !OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
       openIssues: opinions.filter(({ kind }) => OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
     };
   });
+}
+
+/** REQ-093~097 끝내기 뒤 보드 값(남은 안건 목록·오늘 회의 요약)에 든 안건만, 그 값의 상태·요약·할 일로 */
+export function snapshotAgendas(agendas: RoomAgenda[], snapshot: BoardEndSnapshot): RoomAgenda[] {
+  const ids = new Set(snapshot.agendas.map(({ agendaId }) => String(agendaId)));
+  return applyBoard(
+    agendas.filter(({ id }) => ids.has(id)),
+    { version: 0, currentAgendaId: null, agendas: snapshot.agendas, offTopic: null },
+  );
 }
 
 /** 2026-10-23T14:00:00 (한국 시간, 시간대 없음) → 브라우저 시각 */
