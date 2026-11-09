@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import { getMeetingDetail, listCalendarMeetings, type MeetingDetailResponse } from '../../api/meeting';
 import { listWritingMinutes, type WritingMinutes } from '../../api/minutes';
 import { getMe } from '../../api/user';
-import { listFavorites, listMyWorkspaces, setFavorite } from '../../api/workspace';
+import { createWorkspace, listFavorites, listMyWorkspaces, setFavorite } from '../../api/workspace';
 import AppLayout from '../../components/AppLayout';
+import Button from '../../components/Button';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Favorite, WorkspaceSummary } from '../../types/workspace';
 import { addDays, startOfWeek, toIsoDate } from '../../utils/calendar';
+import FolderNameModal from '../workspace/FolderNameModal';
 import FavoritesCard from './FavoritesCard';
 import HomeCalendar from './HomeCalendar';
 import styles from './HomePage.module.css';
@@ -27,6 +30,8 @@ export default function HomePage() {
   const [writing, setWriting] = useState<WritingMinutes[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
   const closeToast = useCallback(() => setToast(null), []);
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
 
@@ -75,12 +80,24 @@ export default function HomePage() {
     }
   };
 
+  // REQ-031 만든 사람이 소유자가 되고, 만든 워크스페이스로 바로 들어간다
+  const addWorkspace = async (name: string) => {
+    const created = await createWorkspace(name);
+    navigate(`/workspaces/${created.workspaceId}`);
+  };
+
   return (
     <AppLayout className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
-      <h1 className={styles.greeting}>
-        {myName}님, 이번 주에 총 {weekCount ?? 0}개의 회의가 예정되어있습니다
-      </h1>
+      <div className={styles.head}>
+        <h1 className={styles.greeting}>
+          {myName}님, 이번 주에 총 {weekCount ?? 0}개의 회의가 예정되어있습니다
+        </h1>
+        {/* 임시 배치 (디자인 없음) */}
+        <Button className={styles.create} onClick={() => setIsCreating(true)}>
+          새 워크스페이스 만들기
+        </Button>
+      </div>
       <div className={styles.top}>
         <HomeCalendar workspaces={workspaces} />
         <div className={styles.side}>
@@ -89,6 +106,18 @@ export default function HomePage() {
         </div>
       </div>
       <FavoritesCard items={favorites} onRemove={removeFavorite} />
+      {isCreating && (
+        <FolderNameModal
+          title="새 워크스페이스 만들기"
+          description="만든 사람이 워크스페이스 소유자가 됩니다"
+          submitLabel="만들기"
+          fieldLabel="워크스페이스 이름"
+          siblingNames={[]}
+          onSubmit={addWorkspace}
+          toErrorMessage={errorMessage}
+          onClose={() => setIsCreating(false)}
+        />
+      )}
     </AppLayout>
   );
 }

@@ -14,6 +14,8 @@ interface FolderNameModalProps {
   description: string;
   submitLabel: string;
   initialName?: string;
+  /** 입력 칸 이름. 워크스페이스 만들기(REQ-031)에도 이 창을 쓴다 */
+  fieldLabel?: string;
   /** 같은 위치의 다른 폴더 이름 (이름 중복 확인, REQ-039) */
   siblingNames: string[];
   /** 실패하면 던진다. 서버 오류를 칸 아래 문구로 바꾼다 */
@@ -28,6 +30,7 @@ export default function FolderNameModal({
   description,
   submitLabel,
   initialName = '',
+  fieldLabel = '폴더명',
   siblingNames,
   onSubmit,
   toErrorMessage,
@@ -75,12 +78,12 @@ export default function FolderNameModal({
         </div>
         <div className={styles.field}>
           <label htmlFor={inputId} className={styles.label}>
-            폴더명 *
+            {fieldLabel} *
           </label>
           <input
             id={inputId}
             className={[styles.input, error ? styles.inputError : ''].filter(Boolean).join(' ')}
-            placeholder="폴더명을 입력해 주세요"
+            placeholder={`${fieldLabel}을 입력해 주세요`}
             maxLength={NAME_MAX_LENGTH}
             value={name}
             autoFocus

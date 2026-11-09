@@ -79,6 +79,12 @@ export async function listMyWorkspaces(): Promise<WorkspaceSummary[]> {
   return items.map(({ workspaceId, name }) => ({ workspaceId, name }));
 }
 
+/** REQ-031 새 워크스페이스. 만든 사람이 소유자가 된다 */
+export async function createWorkspace(name: string): Promise<WorkspaceSummary> {
+  const { workspaceId, name: createdName } = await request<WorkspaceResponse>('POST', '/api/workspaces', { name });
+  return { workspaceId, name: createdName };
+}
+
 /** REQ-028 멤버만 들어올 수 있다 (아니면 403) */
 export async function getWorkspace(workspaceId: number): Promise<WorkspaceDetail> {
   const detail = await request<{ workspaceId: number; name: string; myRole: WorkspaceRole; memberCount: number }>(
