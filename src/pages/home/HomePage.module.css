@@ -26,3 +26,17 @@
   flex-direction: column;
   gap: 20px;
 }
+
+/* 인사말과 새 워크스페이스 만들기 버튼 (임시 배치) */
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.create {
+  flex-shrink: 0;
+  width: auto;
+  padding: 10px 20px;
+}
