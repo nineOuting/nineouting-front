@@ -1,0 +1,285 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--color-black);
+  font-size: var(--font-size-b2);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: var(--font-size-h1);
+}
+
+.stage {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--blue-10);
+  color: var(--blue-100);
+  font-size: var(--font-size-h3);
+}
+
+.caption {
+  margin: 4px 0 0;
+  color: var(--grey-70);
+  font-size: var(--font-size-caption);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--grey-20);
+  border-radius: 8px;
+  background: var(--color-white);
+}
+
+.wideCard {
+  composes: card;
+  grid-column: span 2;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: var(--font-size-h3);
+}
+
+.card dl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field dt {
+  color: var(--grey-70);
+}
+
+.field dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.workTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.workTable th,
+.workTable td {
+  padding: 4px;
+  border-bottom: 1px solid var(--grey-20);
+  text-align: right;
+}
+
+.workTable th {
+  color: var(--grey-70);
+  font-weight: 400;
+}
+
+.workTable th:first-child,
+.workTable td:first-child {
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.workActive {
+  background: var(--blue-10);
+}
+
+.progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue-100);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.progressBar {
+  position: relative;
+  width: 48px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--blue-10);
+}
+
+.progressBar::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--blue-100);
+  content: '';
+  animation: progress-move 1.2s ease-in-out infinite;
+}
+
+@keyframes progress-move {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.error {
+  margin: 0;
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--red-10);
+  color: var(--red-100);
+  overflow-wrap: anywhere;
+}
+
+.code {
+  max-height: 320px;
+  margin: 8px 0 0;
+  padding: 8px;
+  overflow: auto;
+  border-radius: 4px;
+  background: var(--grey-10);
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: var(--font-size-caption);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 요약이 오기 전후로 아래 재요청 버튼이 움직이지 않게 높이를 고정한다 */
+.summaryCode {
+  composes: code;
+  height: 320px;
+  margin: 0;
+}
+
+.section summary {
+  cursor: pointer;
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+.log time {
+  color: var(--grey-70);
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+
+.apiPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 12px;
+  height: 560px;
+}
+
+.apiList {
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.apiItem,
+.apiItemSelected {
+  width: 100%;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  overflow-wrap: anywhere;
+  text-align: left;
+  cursor: pointer;
+}
+
+.apiItem:hover {
+  background: var(--grey-10);
+}
+
+.apiItemSelected {
+  background: var(--blue-10);
+}
+
+.apiDetail {
+  min-width: 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.apiDetail p {
+  margin: 0;
+}
+
+.apiCode {
+  margin: 8px 0 0;
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--grey-10);
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: var(--font-size-caption);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wideCard {
+    grid-column: auto;
+  }
+}
