@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import { createMinutesTemplate, listMinutesTemplates, updateMinutesTemplate } from '../../api/minutes';
 import Checkbox from '../../components/Checkbox';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import addIcon from '../../assets/icons/add-plain.svg';
 import ballotIcon from '../../assets/icons/rail-ballot.svg';
 import layoutIcon from '../../assets/icons/rail-layout.svg';
@@ -85,6 +86,7 @@ export default function TemplateEditorPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<RailView>('items');
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
 
@@ -193,9 +195,28 @@ export default function TemplateEditorPage() {
 
   const usedCount = draft.items.length + (draft.layout.showMeetingInfo ? 1 : 0);
 
+  // REQ-158 항목 구성이나 서식을 바꾼 상태면 초기화 전에 묻는다 (MSG-052). 이름, 설명은 그대로 둔다
+  const defaultDraft = fromDefault(templates, draft.name, draft.description);
+  const isDefaultShape = JSON.stringify(draft) === JSON.stringify(defaultDraft);
+  const resetToDefault = () => {
+    setDraft(defaultDraft);
+    setSelectedIndex(0);
+    setIsResetDialogOpen(false);
+  };
+
   return (
     <div className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
+      {isResetDialogOpen && (
+        <ConfirmDialog
+          title="기본 양식으로 초기화할까요?"
+          message="지금까지 변경한 항목과 서식 설정이 기본값으로 돌아갑니다."
+          cancelLabel="취소"
+          confirmLabel="초기화"
+          onCancel={() => setIsResetDialogOpen(false)}
+          onConfirm={resetToDefault}
+        />
+      )}
       <EditorTopBar
         center={
           <label className={styles.nameField}>
@@ -217,10 +238,7 @@ export default function TemplateEditorPage() {
               type="button"
               className={`${editorBar.action} ${editorBar.secondary}`}
               disabled={!isLoaded}
-              onClick={() => {
-                setDraft((prev) => fromDefault(templates, prev.name, prev.description));
-                setSelectedIndex(0);
-              }}
+              onClick={() => (isDefaultShape ? resetToDefault() : setIsResetDialogOpen(true))}
             >
               <Icon src={refreshIcon} size={BUTTON_ICON_SIZE} />
               초기화
