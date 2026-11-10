@@ -18,7 +18,7 @@ interface TemplateGalleryModalProps {
   onClose: () => void;
 }
 
-/** REQ-100, 123 회의록 양식 전체보기 (디자인 TemplateSelectModal). 카드를 누르면 상세 보기, 별을 누르면 즐겨찾기 */
+/** REQ-100(레거시), 123 회의록 양식 전체보기 (디자인 TemplateSelectModal). 카드를 누르면 상세 보기, 별을 누르면 즐겨찾기 */
 export default function TemplateGalleryModal({
   templates,
   selectedId,

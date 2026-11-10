@@ -35,7 +35,7 @@ export interface Meeting extends MeetingBasicInfo {
   status: MeetingStatus;
   agendas: Agenda[];
   writer?: Member;
-  /** 회의록 양식·사전 자료는 아직 백엔드에 없어 화면에만 둔다 (REQ-100, 067) */
+  /** 회의록 양식은 아직 회의와 이어지지 않아 화면에만 둔다 (REQ-100 레거시). 사전 자료는 MeetingMaterials가 따로 불러온다 (REQ-067) */
   templateId?: string;
   materials: string[];
 }

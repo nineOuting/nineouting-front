@@ -76,7 +76,7 @@ function Avatar({ member }: { member: Member }) {
   );
 }
 
-/** REQ-064, 073~077, 100, 122 회의 대기 화면 */
+/** REQ-064, 073~077, 100(레거시), 122 회의 대기 화면 */
 export default function MeetingWaitingPage() {
   const navigate = useNavigate();
   const { meetingId } = useParams();
@@ -120,7 +120,7 @@ export default function MeetingWaitingPage() {
       setMeeting({
         ...loaded,
         agendas: withCarriedOverDates(loaded.agendas, usable),
-        // TODO(API 연동): 회의록 양식은 백엔드에 아직 없어 즐겨찾기 첫 양식을 고른다 (REQ-100)
+        // TODO(API 연동): 회의록 양식은 백엔드에 아직 없어 즐겨찾기 첫 양식을 고른다 (REQ-100 레거시)
         templateId: MINUTES_TEMPLATES.find(({ isFavorite }) => isFavorite)?.templateId,
       });
     };

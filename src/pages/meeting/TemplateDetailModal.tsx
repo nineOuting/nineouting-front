@@ -16,7 +16,7 @@ interface TemplateDetailModalProps {
   onClose: () => void;
 }
 
-/** REQ-100 회의록 양식 상세 보기 (디자인 TemplateDetail). 좌우 버튼으로 다른 양식을 넘겨 본다 */
+/** REQ-100(레거시) 회의록 양식 상세 보기 (디자인 TemplateDetail). 좌우 버튼으로 다른 양식을 넘겨 본다 */
 export default function TemplateDetailModal({ templates, index, onChangeIndex, onUse, onClose }: TemplateDetailModalProps) {
   const template = templates[index];
   const lastIndex = templates.length - 1;

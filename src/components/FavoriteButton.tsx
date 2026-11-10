@@ -12,7 +12,7 @@ interface FavoriteButtonProps {
   onError: (message: string) => void;
 }
 
-/** REQ-144 워크스페이스·폴더 즐겨찾기 등록·해제. 디자인이 없어 회의록 양식 즐겨찾기 별을 따랐다 */
+/** REQ-153 워크스페이스·폴더 즐겨찾기 등록·해제. 디자인이 없어 회의록 양식 즐겨찾기 별을 따랐다 */
 export default function FavoriteButton({ target, name, onError }: FavoriteButtonProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

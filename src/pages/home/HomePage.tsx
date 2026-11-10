@@ -23,7 +23,7 @@ const UPCOMING_RANGE_DAYS = 41;
 const DAYS_IN_WEEK = 7;
 const FAVORITE_SKELETONS = 3;
 
-/** REQ-018~020, 141~144 홈 (nep!nep! 디자인 HomePage) */
+/** REQ-018~020, 146~153 홈 (nep!nep! 디자인 HomePage) */
 export default function HomePage() {
   const [myName, setMyName] = useState('');
   // null이면 아직 불러오는 중

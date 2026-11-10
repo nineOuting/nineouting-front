@@ -342,7 +342,7 @@ interface FavoriteResponse {
   folderName: string | null;
 }
 
-/** REQ-143 홈의 즐겨찾기 (등록한 순) */
+/** REQ-151 홈의 즐겨찾기 (등록한 순) */
 export async function listFavorites(): Promise<Favorite[]> {
   const items = await request<FavoriteResponse[]>('GET', '/api/users/me/favorites');
   return items.map(({ workspaceId, workspaceName, folderId, folderName }) =>
@@ -352,7 +352,7 @@ export async function listFavorites(): Promise<Favorite[]> {
   );
 }
 
-/** REQ-144 즐겨찾기 등록·해제 (여러 번 해도 결과가 같다) */
+/** REQ-153 즐겨찾기 등록·해제 (여러 번 해도 결과가 같다) */
 export function setFavorite(favorite: Pick<Favorite, 'type' | 'workspaceId'> & { folderId?: number }, on: boolean) {
   const path =
     favorite.type === 'folder'
