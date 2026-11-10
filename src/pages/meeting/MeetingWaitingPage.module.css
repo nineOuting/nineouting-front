@@ -292,8 +292,13 @@
   text-align: left;
 }
 
-.selectBox:hover {
+.selectBox:hover:not(:disabled) {
   border-color: var(--border-strong);
+}
+
+/* REQ-130 참석자가 아니면 보기만 한다 */
+.selectBox:disabled {
+  cursor: default;
 }
 
 .selectValue {

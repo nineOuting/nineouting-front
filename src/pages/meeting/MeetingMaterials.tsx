@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { errorMessage } from '../../api/client';
 import { deleteMaterial, listMaterials, uploadMaterial, type MeetingMaterial } from '../../api/meeting';
-import { getMe } from '../../api/user';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
@@ -24,12 +23,11 @@ function formatSize(bytes: number) {
 interface MeetingMaterialsProps {
   meetingId: number;
   /** 참석자만 올린다. 지우기는 서버가 올린 사람, 회의를 만든 사람인지 확인한다 */
-  attendeeIds: number[];
+  canUpload: boolean;
 }
 
 /** REQ-067 회의 사전 자료: 파일은 저장소(S3)에 바로 올리고, 누르면 원래 이름으로 내려받는다 */
-export default function MeetingMaterials({ meetingId, attendeeIds }: MeetingMaterialsProps) {
-  const [myId, setMyId] = useState<number>();
+export default function MeetingMaterials({ meetingId, canUpload }: MeetingMaterialsProps) {
   const [materials, setMaterials] = useState<MeetingMaterial[] | null>(null);
   const [uploading, setUploading] = useState<string[]>([]);
   const [error, setError] = useState<string>();
@@ -37,9 +35,6 @@ export default function MeetingMaterials({ meetingId, attendeeIds }: MeetingMate
 
   useEffect(() => {
     let isCurrent = true;
-    getMe()
-      .then((me) => isCurrent && setMyId(me.userId))
-      .catch(() => undefined);
     listMaterials(meetingId)
       .then((items) => isCurrent && setMaterials(items))
       .catch((caught: unknown) => {
@@ -116,7 +111,7 @@ export default function MeetingMaterials({ meetingId, attendeeIds }: MeetingMate
           {name} 올리는 중
         </p>
       ))}
-      {myId !== undefined && attendeeIds.includes(myId) && (
+      {canUpload && (
         <>
           <button type="button" className={styles.addMaterial} onClick={() => fileInputRef.current?.click()}>
             <Icon src={uploadIcon} size={UPLOAD_ICON_SIZE} className={styles.mutedIcon} />
