@@ -17,6 +17,7 @@ import {
   markLastVisited,
   removeWorkspaceMember,
   renameFolder,
+  transferWorkspaceOwnership,
   updateWorkspace,
   WORKSPACE_ERROR_CODES,
   type WorkspaceDetail,
@@ -194,6 +195,16 @@ export default function WorkspacePage() {
     } catch (error) {
       showError(error);
     }
+  };
+
+  /** REQ-129 넘기면 나는 일반 멤버가 되어 관리 버튼이 사라진다 */
+  const transferOwnership = async (userId: number) => {
+    await transferWorkspaceOwnership(id, userId);
+    setMembers((prev) => prev.map((member) => ({ ...member, isOwner: member.userId === userId })));
+    setWorkspace((prev) => prev && { ...prev, isOwner: false });
+    closeDialog();
+    const newOwner = members.find((member) => member.userId === userId);
+    notice(`${newOwner?.name ?? '선택한 멤버'}님에게 워크스페이스 소유권을 넘겼어요.`);
   };
 
   const leave = async () => {
@@ -408,6 +419,7 @@ export default function WorkspacePage() {
           onCopyInviteLink={copyInviteLink}
           onAccessChange={updateAccess}
           onRemove={removeMember}
+          onTransfer={transferOwnership}
           onNotice={notice}
           onClose={closeDialog}
         />

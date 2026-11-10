@@ -11,14 +11,14 @@ const PREVIEW_LINES = [64, 128, 102, 128, 115, 51];
 
 interface TemplateGalleryModalProps {
   templates: MinutesTemplate[];
-  selectedId?: string;
+  selectedId?: number;
   onOpenDetail: (index: number) => void;
-  onToggleFavorite: (templateId: string) => void;
+  onToggleFavorite: (templateId: number) => void;
   onCreateTemplate: () => void;
   onClose: () => void;
 }
 
-/** REQ-100(레거시), 123 회의록 양식 전체보기 (디자인 TemplateSelectModal). 카드를 누르면 상세 보기, 별을 누르면 즐겨찾기 */
+/** REQ-123 회의록 양식 전체보기 (디자인 TemplateSelectModal). 카드를 누르면 상세 보기, 별을 누르면 즐겨찾기 */
 export default function TemplateGalleryModal({
   templates,
   selectedId,

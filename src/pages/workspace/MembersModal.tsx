@@ -20,6 +20,8 @@ interface MembersModalProps {
   onAdd: () => void;
   /** 소유자만 초대, 제외, 양도를 할 수 있다 (REQ-033) */
   canManage: boolean;
+  /** 소유권 양도 줄을 보여 줄지 (기본: canManage). 폴더는 폴더 소유자가 양도한다 (REQ-043) */
+  canTransfer?: boolean;
   ownershipLabel: string;
   onTransferOwnership: () => void;
   onClose: () => void;
@@ -37,6 +39,7 @@ export default function MembersModal({
   onInputChange,
   onAdd,
   canManage,
+  canTransfer = canManage,
   ownershipLabel,
   onTransferOwnership,
   onClose,
@@ -67,7 +70,7 @@ export default function MembersModal({
       )}
       <div className={styles.divider} />
       {children}
-      {canManage && (
+      {canTransfer && (
         <>
           <div className={styles.divider} />
           <div className={styles.footer}>

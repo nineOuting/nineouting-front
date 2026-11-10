@@ -35,13 +35,14 @@ export interface Meeting extends MeetingBasicInfo {
   status: MeetingStatus;
   agendas: Agenda[];
   writer?: Member;
-  /** 회의록 양식은 아직 회의와 이어지지 않아 화면에만 둔다 (REQ-100 레거시). 사전 자료는 MeetingMaterials가 따로 불러온다 (REQ-067) */
-  templateId?: string;
+  /** REQ-123 대기 화면에서 고른 회의록 양식 (minutes-service). 사전 자료는 MeetingMaterials가 따로 불러온다 (REQ-067) */
+  templateId?: number;
   materials: string[];
 }
 
+/** 대기 화면 양식 고르기 창에 보여 줄 양식 (REQ-123) */
 export interface MinutesTemplate {
-  templateId: string;
+  templateId: number;
   name: string;
   isFavorite: boolean;
 }

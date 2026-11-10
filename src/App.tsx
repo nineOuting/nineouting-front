@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { createBrowserRouter, createRoutesFromElements, Navigate, Outlet, Route, RouterProvider } from 'react-router-dom';
 import RequireAuth from './auth/RequireAuth';
 import ArchivePage from './pages/archive/ArchivePage';
 import FolderPage from './pages/folder/FolderPage';
@@ -30,11 +30,20 @@ import WorkspacePage from './pages/workspace/WorkspacePage';
 // 개발 서버에서만 쓰는 화면. 운영 빌드에서는 조건이 false로 바뀌어 번들에서 빠진다
 const DevMinutesPage = import.meta.env.DEV ? lazy(() => import('./pages/dev/DevMinutesPage')) : null;
 
-export default function App() {
+/** 모든 화면에 함께 그리는 것 */
+function RootLayout() {
   return (
-    <BrowserRouter>
+    <>
       <TooltipLayer />
-      <Routes>
+      <Outlet />
+    </>
+  );
+}
+
+// REQ-072 화면을 떠나기 전에 묻는 useBlocker는 data router에서만 동작한다
+const router = createBrowserRouter(
+  createRoutesFromElements(
+      <Route element={<RootLayout />}>
         <Route
           path="/home"
           element={
@@ -214,7 +223,10 @@ export default function App() {
           }
         />
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
+      </Route>,
+  ),
+);
+
+export default function App() {
+  return <RouterProvider router={router} />;
 }

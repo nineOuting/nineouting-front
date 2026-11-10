@@ -57,4 +57,6 @@ export interface MinutesTemplate {
   isDefault: boolean;
   items: TemplateItem[];
   layout: TemplateLayout;
+  /** REQ-123 내가 즐겨찾기했는지 */
+  favorite: boolean;
 }

@@ -49,6 +49,8 @@ export interface MeetingDetailResponse {
   paused: boolean;
   pausedAt: string | null;
   pausedSeconds: number;
+  /** REQ-123 대기 화면에서 고른 회의록 양식 */
+  templateId: number | null;
 }
 
 type MinutesProgress = 'REVIEWING' | 'CONFIRMED';
@@ -239,6 +241,7 @@ export function toMeeting(detail: MeetingDetailResponse): Meeting {
     attendees: detail.attendees.map(toMember),
     agendas: detail.agendas.map(toAgenda),
     writer: toMember(detail.writer),
+    templateId: detail.templateId ?? undefined,
     materials: [],
   };
 }
@@ -268,6 +271,11 @@ export function getMeetingDetail(meetingId: number | string) {
 /** REQ-064 회의 정보 수정 (참석자 모두, 시작 전에만). 안건·참석자·회의록 작성자도 통째로 바꾼다 */
 export async function updateMeeting(meeting: Meeting) {
   return toMeeting(await request<MeetingDetailResponse>('PUT', `/api/meetings/${meeting.meetingId}`, toRequest(meeting)));
+}
+
+/** REQ-123 회의록 양식 고르기 (참석자, 시작 전). 회의를 마무리하면 이 양식으로 회의록을 만든다. null이면 뺀다 */
+export async function chooseMeetingTemplate(meetingId: number, templateId: number | null) {
+  return toMeeting(await request<MeetingDetailResponse>('PUT', `/api/meetings/${meetingId}/template`, { templateId }));
 }
 
 /** REQ-073 회의 취소 */

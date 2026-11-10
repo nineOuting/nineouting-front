@@ -222,6 +222,11 @@ export async function listMinutesTemplates() {
 
 type TemplateRequest = Pick<MinutesTemplate, 'name' | 'description' | 'items' | 'layout'>;
 
+/** REQ-123 양식 즐겨찾기 등록·해제 (나만 보는 표시) */
+export function setTemplateFavorite(templateId: number, favorite: boolean) {
+  return request(favorite ? 'PUT' : 'DELETE', `/api/minutes-templates/${templateId}/favorite`);
+}
+
 /** REQ-120 새 양식 */
 export async function createMinutesTemplate(template: TemplateRequest) {
   return toTemplate(await request<TemplateResponse>('POST', '/api/minutes-templates', template));
