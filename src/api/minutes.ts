@@ -6,7 +6,7 @@ import { toMember } from './meeting';
 
 // minutes-service API (docs/services/minutes-service.md). 시각은 한국 시간 LocalDateTime 문자열
 
-/** REQ-142 홈의 작성 중인 회의록 (내가 작성자, 회의 날짜가 오래된 순) */
+/** REQ-149~150 홈의 작성 중인 회의록 (내가 작성자, 회의 날짜가 오래된 순) */
 export interface WritingMinutes {
   minutesId: number;
   meetingId: number;
@@ -55,7 +55,7 @@ interface ArchivePageResponse {
   hasNext: boolean;
 }
 
-/** REQ-053~055, 145 검색 조건. 날짜는 2026-10-26 */
+/** REQ-053~055, 029~030 검색 조건. 날짜는 2026-10-26 */
 export interface ArchiveQuery {
   q: string;
   from?: string;
@@ -67,7 +67,7 @@ export interface ArchiveQuery {
 
 const ARCHIVE_PAGE_SIZE = 20;
 
-/** REQ-053~055, 145 워크스페이스에서 내가 들어갈 수 있는 모든 폴더의 회의록 */
+/** REQ-053~055, 029~030 워크스페이스에서 내가 들어갈 수 있는 모든 폴더의 회의록 */
 export async function listWorkspaceMinutes(workspaceId: number, query: ArchiveQuery, page: number) {
   const params = new URLSearchParams({ sort: query.sort, page: String(page), size: String(ARCHIVE_PAGE_SIZE) });
   if (query.q.trim()) {
@@ -90,7 +90,7 @@ export function listMinutesLocations(workspaceId: number) {
   return request<string[]>('GET', `/api/workspaces/${workspaceId}/minutes/locations`);
 }
 
-/** REQ-146 워크스페이스에서 최근 본 회의록 */
+/** REQ-159 워크스페이스에서 최근 본 회의록 */
 export interface ViewedMinutes {
   minutesId: number;
   meetingId: number;
@@ -103,7 +103,7 @@ export function listViewedMinutes(workspaceId: number, size: number) {
   return request<ViewedMinutes[]>('GET', `/api/workspaces/${workspaceId}/viewed-minutes?size=${size}`);
 }
 
-/** REQ-146 회의록을 열 때마다 부른다 */
+/** REQ-159 회의록을 열 때마다 부른다 */
 export function markMinutesViewed(minutesId: number) {
   return request('POST', `/api/minutes/${minutesId}/view`);
 }

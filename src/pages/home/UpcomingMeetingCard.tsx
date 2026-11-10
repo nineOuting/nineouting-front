@@ -25,7 +25,7 @@ function dDay(startAt: string) {
   return days <= 0 ? 'D-day' : `D-${days}`;
 }
 
-/** REQ-141 곧 다가오는 회의: 가장 가까운 예정 회의의 기본 정보, 참여자, 주요 안건 */
+/** REQ-148 곧 다가오는 회의: 가장 가까운 예정 회의의 기본 정보, 참여자, 주요 안건 */
 export default function UpcomingMeetingCard({ meeting }: UpcomingMeetingCardProps) {
   return (
     <section className={card.card} aria-labelledby="upcoming-title">

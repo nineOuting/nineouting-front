@@ -21,7 +21,7 @@ function daysSince(meetingStartAt: string) {
   return Math.max(0, daysBetween(fromIsoDate(meetingStartAt), new Date()));
 }
 
-/** REQ-142 작성 중인 회의록: 내가 작성자인 작성 중 회의록. 누르면 회의록 작성 화면으로 간다 */
+/** REQ-149~150 작성 중인 회의록: 내가 작성자인 작성 중 회의록. 누르면 회의록 작성 화면으로 간다 */
 export default function WritingMinutesCard({ items }: WritingMinutesCardProps) {
   return (
     <section className={card.card} aria-labelledby="writing-title">

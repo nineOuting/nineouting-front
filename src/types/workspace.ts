@@ -51,7 +51,7 @@ export interface FolderPendingAgenda {
   carriedAt: string;
 }
 
-/** REQ-143 즐겨찾기한 워크스페이스·폴더 */
+/** REQ-151 즐겨찾기한 워크스페이스·폴더 */
 export type Favorite =
   | { type: 'workspace'; workspaceId: number; workspaceName: string; folderId?: undefined; folderName?: undefined }
   | { type: 'folder'; workspaceId: number; workspaceName: string; folderId: number; folderName: string };

@@ -16,7 +16,7 @@ interface FavoritesCardProps {
 const favoritePath = (favorite: Favorite) =>
   favorite.type === 'folder' ? `/folders/${favorite.folderId}` : `/workspaces/${favorite.workspaceId}`;
 
-/** REQ-143~144 즐겨찾기한 워크스페이스, 폴더. 별을 누르면 즐겨찾기에서 뺀다 */
+/** REQ-151~153 즐겨찾기한 워크스페이스, 폴더. 별을 누르면 즐겨찾기에서 뺀다 */
 export default function FavoritesCard({ items, onRemove }: FavoritesCardProps) {
   return (
     <section className={card.card} aria-labelledby="favorites-title">

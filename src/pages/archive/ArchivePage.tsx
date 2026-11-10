@@ -119,7 +119,7 @@ function FilterChip({ label, isApplied, isOpen, onToggle, onClear, children }: F
   );
 }
 
-/** REQ-053~055, 145~146 회의록 아카이브 (Figma 23-2). 워크스페이스에서 내가 들어갈 수 있는 폴더의 회의록을 모아 본다 */
+/** REQ-053~055, 029~030, 159 회의록 아카이브 (Figma 23-2). 워크스페이스에서 내가 들어갈 수 있는 폴더의 회의록을 모아 본다 */
 export default function ArchivePage() {
   const navigate = useNavigate();
   const { workspaceId } = useParams();
