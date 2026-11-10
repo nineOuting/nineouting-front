@@ -324,7 +324,10 @@ export default function MeetingWaitingPage() {
           <div className={styles.startBlock}>
             <p className={[styles.readiness, isReady ? styles.ready : ''].filter(Boolean).join(' ')}>
               <Icon src={isReady ? checkCircleIcon : infoIcon} size={SMALL_ICON_SIZE} />
-              {readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer))}
+              {/* 취소된 회의는 준비 상태 대신 취소됐다고만 알린다 */}
+              {meeting.status === 'CANCELLED'
+                ? '취소된 회의예요'
+                : readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer))}
             </p>
             <Button disabled={!isReady || isStarting} onClick={() => setIsConsentOpen(true)}>
               <Icon src={playIcon} size={ICON_SIZE} />
@@ -474,7 +477,7 @@ export default function MeetingWaitingPage() {
               <h2 className={styles.sideTitle}>사전 자료</h2>
               <p className={styles.sectionCaption}>회의 전에 필요한 자료를 공유해요</p>
             </div>
-            <MeetingMaterials meetingId={meeting.meetingId} canUpload={isAttendee} />
+            <MeetingMaterials meetingId={meeting.meetingId} canUpload={isAttendee && meeting.status !== 'CANCELLED'} />
           </section>
           </div>
 

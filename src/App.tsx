@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, createRoutesFromElements, Navigate, Outlet, Route, RouterProvider } from 'react-router-dom';
+import GuestOnly from './auth/GuestOnly';
 import RequireAuth from './auth/RequireAuth';
 import ArchivePage from './pages/archive/ArchivePage';
 import FolderPage from './pages/folder/FolderPage';
@@ -85,8 +86,23 @@ const router = createBrowserRouter(
             </RequireAuth>
           }
         />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        {/* 로그인한 사람이 로그인, 회원가입 주소를 열면 홈으로 */}
+        <Route
+          path="/login"
+          element={
+            <GuestOnly>
+              <LoginPage />
+            </GuestOnly>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <GuestOnly>
+              <SignupPage />
+            </GuestOnly>
+          }
+        />
         <Route path="/signup/complete" element={<SignupCompletePage />} />
         <Route path="/password/find" element={<PasswordFindPage />} />
         <Route path="/password/verify" element={<PasswordVerifyPage />} />
