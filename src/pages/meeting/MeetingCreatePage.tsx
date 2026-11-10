@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useBlocker, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import { createMeeting, listPendingAgendas, updateMeeting } from '../../api/meeting';
 import { getMe } from '../../api/user';
@@ -101,7 +101,6 @@ export default function MeetingCreatePage() {
   const [me, setMe] = useState<Member>();
   const [openMenu, setOpenMenu] = useState<OpenMenu | null>(null);
   const [isLoadPreviousOpen, setIsLoadPreviousOpen] = useState(false);
-  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -113,6 +112,11 @@ export default function MeetingCreatePage() {
   // 만든 사람은 참석자로 자동으로 들어가므로(meeting-service) 회의록 작성자 후보에도 넣는다
   const writerCandidates =
     me && !form.attendees.some(({ userId }) => userId === me.userId) ? [me, ...form.attendees] : form.attendees;
+  // REQ-072 입력한 내용이 있으면 뒤로 가기, 사이드바 등 어느 쪽으로 나가든 먼저 묻는다. 저장하고 넘어갈 때는 묻지 않는다
+  const leaveBlocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isDirty && !isSubmitting && currentLocation.pathname !== nextLocation.pathname,
+  );
 
   useEffect(() => {
     if (!isDirty) {
@@ -206,13 +210,7 @@ export default function MeetingCreatePage() {
     setIsLoadPreviousOpen(false);
   };
 
-  const handleBack = () => {
-    if (isDirty) {
-      setIsLeaveDialogOpen(true);
-      return;
-    }
-    navigate(-1);
-  };
+  const handleBack = () => navigate(-1);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -469,14 +467,14 @@ export default function MeetingCreatePage() {
           onApply={applyPreviousSettings}
         />
       )}
-      {isLeaveDialogOpen && (
+      {leaveBlocker.state === 'blocked' && (
         <ConfirmDialog
           title="작성 중인 회의가 있어요"
           message={'지금 나가면 입력한 내용이 모두 사라져요.\n정말 나가시겠어요?'}
           cancelLabel="계속 작성하기"
           confirmLabel="나가기"
-          onCancel={() => setIsLeaveDialogOpen(false)}
-          onConfirm={() => navigate(-1)}
+          onCancel={() => leaveBlocker.reset()}
+          onConfirm={() => leaveBlocker.proceed()}
         />
       )}
     </AppLayout>
