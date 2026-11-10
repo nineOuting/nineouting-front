@@ -282,6 +282,11 @@ export function removeWorkspaceMember(workspaceId: number, userId: number) {
   return request('DELETE', `/api/workspaces/${workspaceId}/members/${userId}`);
 }
 
+/** REQ-129 워크스페이스 소유권 양도 (소유자). 나는 일반 멤버가 된다 */
+export function transferWorkspaceOwnership(workspaceId: number, userId: number) {
+  return request('PUT', `/api/workspaces/${workspaceId}/owner`, { userId });
+}
+
 /** REQ-032 워크스페이스 나가기 (소유자는 OWNER_CANNOT_LEAVE) */
 export function leaveWorkspace(workspaceId: number) {
   return request('DELETE', `/api/workspaces/${workspaceId}/members/me`);
@@ -326,6 +331,11 @@ export function addFolderMember(folderId: number, userId: number) {
 /** REQ-042 폴더에서 제외 (폴더 소유자) */
 export function removeFolderMember(folderId: number, userId: number) {
   return request('DELETE', `/api/folders/${folderId}/members/${userId}`);
+}
+
+/** REQ-043 폴더 소유권 양도 (폴더 소유자, 초대된 폴더 멤버에게). 나는 폴더 멤버로 남는다 */
+export function transferFolderOwnership(folderId: number, userId: number) {
+  return request('PUT', `/api/folders/${folderId}/owner`, { userId });
 }
 
 /** REQ-139 폴더 나가기 (폴더 소유자는 FOLDER_OWNER_CANNOT_LEAVE) */

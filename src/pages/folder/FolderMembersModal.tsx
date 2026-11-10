@@ -5,11 +5,11 @@ import TopConfirm from '../../components/TopConfirm';
 import type { FolderMember, WorkspaceMember } from '../../types/workspace';
 import MemberChips from '../meeting/MemberChips';
 import MembersModal, { MemberIdentity } from '../workspace/MembersModal';
+import TransferOwnerDialog from '../workspace/TransferOwnerDialog';
 import styles from '../workspace/MembersModal.module.css';
 
 // MSG-032
 const NO_MATCH_MESSAGE = '일치하는 멤버가 없습니다. 이름이나 이메일을 다시 확인해 주세요.';
-const TRANSFER_PENDING_MESSAGE = '소유권 양도 화면은 디자인이 나오면 연결돼요.';
 const DIVIDER_WIDTH = 542;
 
 interface FolderMembersModalProps {
@@ -19,9 +19,12 @@ interface FolderMembersModalProps {
   /** 워크스페이스 멤버 목록을 못 받은 이유 (검색할 때 보여 준다) */
   workspaceMembersError?: string;
   canManage: boolean;
+  /** REQ-043 폴더 소유자만 양도한다 */
+  canTransfer: boolean;
   /** 실패하면 던진다 */
   onAdd: (userIds: number[]) => Promise<void>;
   onRemove: (userIds: number[]) => Promise<void>;
+  onTransfer: (userId: number) => Promise<void>;
   onNotice: (text: string) => void;
   onClose: () => void;
 }
@@ -38,11 +41,14 @@ export default function FolderMembersModal({
   workspaceMembers,
   workspaceMembersError,
   canManage,
+  canTransfer,
   onAdd,
   onRemove,
+  onTransfer,
   onNotice,
   onClose,
 }: FolderMembersModalProps) {
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [toAdd, setToAdd] = useState<SelectableRow[]>([]);
   const [toRemove, setToRemove] = useState<number[]>([]);
@@ -91,8 +97,9 @@ export default function FolderMembersModal({
         onInputChange={setQuery}
         onAdd={addSelected}
         canManage={canManage}
+        canTransfer={canTransfer}
         ownershipLabel="프로젝트 소유권 관리"
-        onTransferOwnership={() => onNotice(TRANSFER_PENDING_MESSAGE)}
+        onTransferOwnership={() => setIsTransferOpen(true)}
         onClose={onClose}
       >
         {isSearching ? (
@@ -157,6 +164,18 @@ export default function FolderMembersModal({
           confirmLabel="제외하기"
           onCancel={() => setIsRemoveConfirmOpen(false)}
           onConfirm={removeSelected}
+        />
+      )}
+      {isTransferOpen && (
+        <TransferOwnerDialog
+          target="폴더"
+          // 서버는 폴더에 초대된 멤버에게만 넘긴다 ("모든 폴더" 권한으로 들어오는 멤버는 빼고)
+          candidates={removable}
+          onTransfer={async (userId) => {
+            await onTransfer(userId);
+            setIsTransferOpen(false);
+          }}
+          onClose={() => setIsTransferOpen(false)}
         />
       )}
     </>
