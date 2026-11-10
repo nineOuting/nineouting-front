@@ -53,7 +53,11 @@ export default function LoginPage() {
         setLockedLogin({ email, message: error.message });
         loginLock.lock(LOGIN_LOCK_SECONDS);
       } else {
-        const text = isApiError(error, AUTH_ERROR_CODES.loginFailed) ? error.message : MESSAGES.loginUnavailable;
+        // 서버가 입력값을 거절하면(형식 등) 그 이유를 보여 준다. 그 밖의 오류만 "일시적인 오류"
+        const fieldReason = isApiError(error) && error.status === 400 ? error.fieldErrors[0]?.reason : undefined;
+        const text = isApiError(error, AUTH_ERROR_CODES.loginFailed)
+          ? error.message
+          : (fieldReason ?? MESSAGES.loginUnavailable);
         setToast({ text, variant: 'error' });
       }
       setIsSubmitting(false);
