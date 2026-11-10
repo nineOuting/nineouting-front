@@ -10,6 +10,7 @@ import {
   toMeeting,
   updateMeeting,
 } from '../../api/meeting';
+import { getMe } from '../../api/user';
 import { getFolder, listFolderMembers } from '../../api/workspace';
 import checkCircleIcon from '../../assets/icons/check-circle.svg';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
@@ -81,6 +82,7 @@ export default function MeetingWaitingPage() {
   const navigate = useNavigate();
   const { meetingId } = useParams();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [myId, setMyId] = useState<number>();
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
   const [pendingAgendas, setPendingAgendas] = useState<PendingAgenda[]>([]);
   const [templates, setTemplates] = useState(MINUTES_TEMPLATES);
@@ -105,15 +107,17 @@ export default function MeetingWaitingPage() {
     let isCurrent = true;
     const load = async () => {
       const loaded = toMeeting(await getMeetingDetail(meetingId ?? ''));
-      const [members, pending, folder] = await Promise.all([
+      const [members, pending, folder, me] = await Promise.all([
         listFolderMembers(loaded.folderId),
         listPendingAgendas(loaded.folderId),
         getFolder(loaded.folderId).catch(() => null),
+        getMe().catch(() => null),
       ]);
       if (!isCurrent) {
         return;
       }
       setFolderName(folder?.name ?? '');
+      setMyId(me?.userId);
       const usable = pendingAgendasFor(pending, loaded.meetingId);
       setFolderMembers(members);
       setPendingAgendas(usable);
@@ -142,6 +146,9 @@ export default function MeetingWaitingPage() {
   }
 
   const isScheduled = meeting.status === 'SCHEDULED';
+  const isAttendee = meeting.attendees.some(({ userId }) => userId === myId);
+  // REQ-130 회의 시작 전에는 참석자만 안건, 참여자, 작성자를 고친다. 참석자가 아닌 폴더 멤버는 보기만 한다
+  const canEdit = isScheduled && isAttendee;
   const isReady = isScheduled && meeting.agendas.length > 0 && Boolean(meeting.writer);
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
@@ -271,7 +278,7 @@ export default function MeetingWaitingPage() {
             )}
           </div>
         </div>
-        {isScheduled && (
+        {canEdit && (
           <button
             type="button"
             className={styles.editInfo}
@@ -294,6 +301,7 @@ export default function MeetingWaitingPage() {
               agendas={meeting.agendas}
               pendingAgendas={pendingAgendas}
               onChange={(agendas) => void saveMeeting({ agendas })}
+              readOnly={!canEdit}
             />
           </section>
 
@@ -315,17 +323,19 @@ export default function MeetingWaitingPage() {
           <section className={styles.attendees}>
             <div className={`${styles.attendeeHead} ${styles.menuAnchor}`}>
               <h2 className={styles.sideTitle}>회의 참여자</h2>
-              <button
-                ref={attendeeAnchorRef}
-                type="button"
-                className={styles.iconButton}
-                aria-label="참여자 추가"
-                aria-haspopup="listbox"
-                aria-expanded={openMenu === 'attendee'}
-                onClick={() => toggleMenu('attendee')}
-              >
-                <Icon src={groupAddIcon} size={ICON_SIZE} />
-              </button>
+              {canEdit && (
+                <button
+                  ref={attendeeAnchorRef}
+                  type="button"
+                  className={styles.iconButton}
+                  aria-label="참여자 추가"
+                  aria-haspopup="listbox"
+                  aria-expanded={openMenu === 'attendee'}
+                  onClick={() => toggleMenu('attendee')}
+                >
+                  <Icon src={groupAddIcon} size={ICON_SIZE} />
+                </button>
+              )}
               {openMenu === 'attendee' && (
                 <DropdownMenu
                   label="참여자 추가"
@@ -409,6 +419,7 @@ export default function MeetingWaitingPage() {
                     className={styles.selectBox}
                     aria-haspopup="listbox"
                     aria-expanded={openMenu === 'writer'}
+                    disabled={!canEdit}
                     onClick={() => toggleMenu('writer')}
                   >
                     <span className={meeting.writer ? styles.selectValue : styles.selectPlaceholder}>
@@ -446,11 +457,11 @@ export default function MeetingWaitingPage() {
               <h2 className={styles.sideTitle}>사전 자료</h2>
               <p className={styles.sectionCaption}>회의 전에 필요한 자료를 공유해요</p>
             </div>
-            <MeetingMaterials meetingId={meeting.meetingId} attendeeIds={meeting.attendees.map(({ userId }) => userId)} />
+            <MeetingMaterials meetingId={meeting.meetingId} canUpload={isAttendee} />
           </section>
           </div>
 
-          {isScheduled && (
+          {canEdit && (
             <Button variant="danger" size="md" block onClick={() => setIsCancelDialogOpen(true)}>
               회의 취소하기
             </Button>

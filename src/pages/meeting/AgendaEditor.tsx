@@ -15,10 +15,12 @@ interface AgendaEditorProps {
   /** 폴더의 남은 안건 (다른 회의가 불러간 것은 빼고 넘긴다) */
   pendingAgendas: PendingAgenda[];
   onChange: (agendas: Agenda[]) => void;
+  /** REQ-130 참석자가 아니면 보기만 한다 (펼쳐 보기만 된다) */
+  readOnly?: boolean;
 }
 
 /** REQ-065~066, 068~069 안건 목록. 카드를 펼쳐 결정할 사항을 보고, 고치고, 끌어서 순서를 바꾼다 */
-export default function AgendaEditor({ agendas, pendingAgendas, onChange }: AgendaEditorProps) {
+export default function AgendaEditor({ agendas, pendingAgendas, onChange, readOnly = false }: AgendaEditorProps) {
   const [expandedAgendaId, setExpandedAgendaId] = useState<string | undefined>(agendas[0]?.id);
   const [agendaForm, setAgendaForm] = useState<AgendaFormState | null>(null);
   const dragIndexRef = useRef<number | null>(null);
@@ -71,12 +73,14 @@ export default function AgendaEditor({ agendas, pendingAgendas, onChange }: Agen
               agenda={agenda}
               isExpanded={expandedAgendaId === agenda.id}
               onToggle={() => setExpandedAgendaId((current) => (current === agenda.id ? undefined : agenda.id))}
-              onEdit={() => setAgendaForm({ mode: 'edit', agendaId: agenda.id })}
-              onDelete={agendas.length > 1 ? () => onChange(agendas.filter(({ id }) => id !== agenda.id)) : undefined}
-              onDragStart={() => {
-                dragIndexRef.current = index;
-              }}
-              onDrop={() => moveAgenda(index)}
+              {...(!readOnly && {
+                onEdit: () => setAgendaForm({ mode: 'edit', agendaId: agenda.id }),
+                onDelete: agendas.length > 1 ? () => onChange(agendas.filter(({ id }) => id !== agenda.id)) : undefined,
+                onDragStart: () => {
+                  dragIndexRef.current = index;
+                },
+                onDrop: () => moveAgenda(index),
+              })}
             />
           ),
         )}
@@ -86,10 +90,12 @@ export default function AgendaEditor({ agendas, pendingAgendas, onChange }: Agen
           </li>
         )}
       </ul>
-      <button type="button" className={styles.addAgenda} onClick={() => setAgendaForm({ mode: 'new' })}>
-        <Icon src={addIcon} size={ICON_SIZE} />
-        안건 추가하기
-      </button>
+      {!readOnly && (
+        <button type="button" className={styles.addAgenda} onClick={() => setAgendaForm({ mode: 'new' })}>
+          <Icon src={addIcon} size={ICON_SIZE} />
+          안건 추가하기
+        </button>
+      )}
     </>
   );
 }
