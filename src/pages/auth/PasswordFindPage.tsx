@@ -66,7 +66,7 @@ export default function PasswordFindPage() {
                 setEmailError(undefined);
               }}
             />
-            <Button type="submit" disabled={isSubmitting}>
+            <Button isLoading={isSubmitting} type="submit" disabled={isSubmitting}>
               인증 번호 받기
             </Button>
           </div>

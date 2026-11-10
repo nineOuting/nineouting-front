@@ -100,7 +100,7 @@ export default function LoginPage() {
               {lockedLogin?.message}
             </p>
           )}
-          <Button type="submit" disabled={isSubmitting || isLoginLocked}>
+          <Button isLoading={isSubmitting} type="submit" disabled={isSubmitting || isLoginLocked}>
             로그인
           </Button>
         </div>

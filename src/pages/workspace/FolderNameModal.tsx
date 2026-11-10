@@ -75,7 +75,7 @@ export default function FolderNameModal({
               취소
             </Button>
             {/* REQ-040 폴더명을 입력하기 전에는 누를 수 없다 */}
-            <Button type="submit" size="md" disabled={!name.trim() || isSubmitting}>
+            <Button isLoading={isSubmitting} type="submit" size="md" disabled={!name.trim() || isSubmitting}>
               {submitLabel}
             </Button>
           </>

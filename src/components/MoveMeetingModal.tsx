@@ -67,7 +67,7 @@ export default function MoveMeetingModal({ meetingId, title, workspaceId, curren
           <Button variant="secondary" size="md" onClick={onClose}>
             취소
           </Button>
-          <Button variant="primary" size="md" disabled={target === undefined || isMoving} onClick={() => void move()}>
+          <Button isLoading={isMoving} variant="primary" size="md" disabled={target === undefined || isMoving} onClick={() => void move()}>
             {isMoving ? '옮기는 중' : '이동'}
           </Button>
         </>

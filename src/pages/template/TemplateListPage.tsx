@@ -7,6 +7,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import addIcon from '../../assets/icons/add-sm.svg';
 import templateIcon from '../../assets/icons/template.svg';
 import Icon from '../../components/Icon';
+import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate } from '../../types/template';
 import styles from './TemplateListPage.module.css';
@@ -22,7 +23,8 @@ const SAVED_MESSAGE = '양식을 저장했어요.';
 export default function TemplateListPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
+  // null이면 불러오는 중
+  const [templates, setTemplates] = useState<MinutesTemplate[] | null>(null);
   const [deleting, setDeleting] = useState<MinutesTemplate | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(() =>
     (location.state as { saved?: boolean } | null)?.saved ? { text: SAVED_MESSAGE, variant: 'info' } : null,
@@ -42,7 +44,7 @@ export default function TemplateListPage() {
   const remove = async (template: MinutesTemplate) => {
     try {
       await deleteMinutesTemplate(template.templateId);
-      setTemplates((prev) => prev.filter(({ templateId }) => templateId !== template.templateId));
+      setTemplates((prev) => prev && prev.filter(({ templateId }) => templateId !== template.templateId));
       setToast({ text: '양식을 삭제했어요.', variant: 'info' });
     } catch (error) {
       setToast({ text: errorMessage(error), variant: 'error' });
@@ -64,8 +66,15 @@ export default function TemplateListPage() {
           새 양식 만들기
         </button>
       </div>
+      {/* REQ-178 불러오는 동안 회색 자리 */}
+      {templates === null && (
+        <div className={styles.grid}>
+          <Skeleton height={150} />
+          <Skeleton height={150} />
+        </div>
+      )}
       <ul className={styles.grid}>
-        {templates.map((template) => (
+        {templates?.map((template) => (
           <li key={template.templateId} className={styles.card}>
             <div className={styles.cardHead}>
               <span className={styles.cardIcon}><Icon src={templateIcon} size={CARD_GLYPH_SIZE} /></span>

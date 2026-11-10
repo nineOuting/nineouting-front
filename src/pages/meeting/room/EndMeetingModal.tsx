@@ -77,7 +77,7 @@ export default function EndMeetingModal({
     waiting: (
       <>
         {continueButton}
-        <Button type="button" variant="primary" size="md" disabled={isBusy} onClick={onFinish}>
+        <Button isLoading={isBusy} type="button" variant="primary" size="md" disabled={isBusy} onClick={onFinish}>
           바로 회의 끝내기
         </Button>
       </>
@@ -85,7 +85,7 @@ export default function EndMeetingModal({
     leftover: (
       <>
         {continueButton}
-        <Button type="button" variant="primary" size="md" disabled={isBusy} onClick={() => onCarryOver(selected)}>
+        <Button isLoading={isBusy} type="button" variant="primary" size="md" disabled={isBusy} onClick={() => onCarryOver(selected)}>
           다음
         </Button>
       </>
@@ -93,7 +93,7 @@ export default function EndMeetingModal({
     summary: (
       <>
         {continueButton}
-        <Button type="button" variant="primary" size="md" disabled={isBusy} onClick={onFinish}>
+        <Button isLoading={isBusy} type="button" variant="primary" size="md" disabled={isBusy} onClick={onFinish}>
           회의 끝내기
         </Button>
       </>

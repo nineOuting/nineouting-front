@@ -151,7 +151,7 @@ export default function ProfilePage() {
               <TextField label="이메일" value={profile.email} disabled helper="이메일은 바꿀 수 없어요" />
             </div>
             <div className={styles.footer}>
-              <Button type="submit" size="md" disabled={isBusy || !name.trim()}>
+              <Button isLoading={isBusy} type="submit" size="md" disabled={isBusy || !name.trim()}>
                 저장
               </Button>
             </div>

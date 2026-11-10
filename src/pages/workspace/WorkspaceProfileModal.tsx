@@ -114,7 +114,7 @@ export default function WorkspaceProfileModal({ workspaceId, onSaved, onClose }:
           <Button variant="secondary" size="md" onClick={onClose}>
             취소
           </Button>
-          <Button type="submit" size="md" disabled={!profile || isBusy}>
+          <Button isLoading={isBusy} type="submit" size="md" disabled={!profile || isBusy}>
             저장
           </Button>
         </>
@@ -135,7 +135,7 @@ export default function WorkspaceProfileModal({ workspaceId, onSaved, onClose }:
               className={styles.fileInput}
               onChange={changeImage}
             />
-            <Button variant="neutral" size="md" disabled={isBusy} onClick={() => fileRef.current?.click()}>
+            <Button isLoading={isBusy} variant="neutral" size="md" disabled={isBusy} onClick={() => fileRef.current?.click()}>
               사진 바꾸기
             </Button>
             {profile.customProfileImage && (

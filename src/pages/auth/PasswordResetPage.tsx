@@ -127,7 +127,7 @@ export default function PasswordResetPage() {
                 onChange={(event) => setPasswordConfirm(event.target.value)}
               />
             </div>
-            <Button type="submit" disabled={!canSubmit || isSubmitting}>
+            <Button isLoading={isSubmitting} type="submit" disabled={!canSubmit || isSubmitting}>
               비밀번호 변경
             </Button>
           </div>

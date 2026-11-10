@@ -57,7 +57,7 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
             <Button variant="secondary" size="md" onClick={requestClose}>
               취소
             </Button>
-            <Button type="submit" size="md" disabled={!current || !next || !confirm || isSubmitting}>
+            <Button isLoading={isSubmitting} type="submit" size="md" disabled={!current || !next || !confirm || isSubmitting}>
               변경하기
             </Button>
           </>
