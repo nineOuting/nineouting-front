@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
   cancelMeeting,
+  chooseMeetingTemplate,
   getMeetingDetail,
   listPendingAgendas,
   MEETING_ERROR_CODES,
@@ -10,6 +11,7 @@ import {
   toMeeting,
   updateMeeting,
 } from '../../api/meeting';
+import { listMinutesTemplates, setTemplateFavorite } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import { getFolder, listFolderMembers } from '../../api/workspace';
 import checkCircleIcon from '../../assets/icons/check-circle.svg';
@@ -27,8 +29,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import { MINUTES_TEMPLATES } from '../../mocks/meeting';
-import type { Meeting, MeetingStatus, Member, PendingAgenda } from '../../types/meeting';
+import type { Meeting, MeetingStatus, Member, MinutesTemplate, PendingAgenda } from '../../types/meeting';
 import { formatMeetingSchedule } from '../../utils/meetingFormat';
 import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
 import AgendaEditor from './AgendaEditor';
@@ -44,7 +45,6 @@ const SEPARATOR_ICON_SIZE = 16;
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
 const START_FAILED_MESSAGE = '회의를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.';
-const NEW_TEMPLATE_PENDING_MESSAGE = '새 양식 만들기는 설정의 회의록 양식 관리 화면이 나오면 연결돼요.';
 
 type TemplateModalState = { view: 'gallery' } | { view: 'detail'; index: number };
 type OpenMenu = 'attendee' | 'template' | 'writer';
@@ -77,7 +77,7 @@ function Avatar({ member }: { member: Member }) {
   );
 }
 
-/** REQ-064, 073~077, 100, 122 회의 대기 화면 */
+/** REQ-064, 073~077, 122~123 회의 대기 화면 */
 export default function MeetingWaitingPage() {
   const navigate = useNavigate();
   const { meetingId } = useParams();
@@ -85,7 +85,8 @@ export default function MeetingWaitingPage() {
   const [myId, setMyId] = useState<number>();
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
   const [pendingAgendas, setPendingAgendas] = useState<PendingAgenda[]>([]);
-  const [templates, setTemplates] = useState(MINUTES_TEMPLATES);
+  // REQ-123 내가 쓸 수 있는 회의록 양식 (기본 양식 + 내 양식)과 즐겨찾기 표시
+  const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   const [openMenu, setOpenMenu] = useState<OpenMenu | null>(null);
   const [templateModal, setTemplateModal] = useState<TemplateModalState | null>(null);
   const [isConsentOpen, setIsConsentOpen] = useState(false);
@@ -107,11 +108,12 @@ export default function MeetingWaitingPage() {
     let isCurrent = true;
     const load = async () => {
       const loaded = toMeeting(await getMeetingDetail(meetingId ?? ''));
-      const [members, pending, folder, me] = await Promise.all([
+      const [members, pending, folder, me, templateList] = await Promise.all([
         listFolderMembers(loaded.folderId),
         listPendingAgendas(loaded.folderId),
         getFolder(loaded.folderId).catch(() => null),
         getMe().catch(() => null),
+        listMinutesTemplates().catch(() => []),
       ]);
       if (!isCurrent) {
         return;
@@ -121,12 +123,8 @@ export default function MeetingWaitingPage() {
       const usable = pendingAgendasFor(pending, loaded.meetingId);
       setFolderMembers(members);
       setPendingAgendas(usable);
-      setMeeting({
-        ...loaded,
-        agendas: withCarriedOverDates(loaded.agendas, usable),
-        // TODO(API 연동): 회의록 양식은 백엔드에 아직 없어 즐겨찾기 첫 양식을 고른다 (REQ-100)
-        templateId: MINUTES_TEMPLATES.find(({ isFavorite }) => isFavorite)?.templateId,
-      });
+      setTemplates(templateList.map(({ templateId, name, favorite }) => ({ templateId, name, isFavorite: favorite })));
+      setMeeting({ ...loaded, agendas: withCarriedOverDates(loaded.agendas, usable) });
     };
     load().catch((error: unknown) => {
       if (isCurrent) {
@@ -152,9 +150,6 @@ export default function MeetingWaitingPage() {
   const isReady = isScheduled && meeting.agendas.length > 0 && Boolean(meeting.writer);
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
-  /** 화면에만 있는 값(양식·사전 자료)은 바로 바꾼다 */
-  const updateLocal = (patch: Partial<Meeting>) => setMeeting((prev) => prev && { ...prev, ...patch });
-
   /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
   const saveMeeting = async (patch: Partial<Meeting>) => {
     const before = meeting;
@@ -167,7 +162,6 @@ export default function MeetingWaitingPage() {
           prev && {
             ...saved,
             agendas: withCarriedOverDates(saved.agendas, pendingAgendas),
-            templateId: prev.templateId,
             materials: prev.materials,
           },
       );
@@ -185,13 +179,35 @@ export default function MeetingWaitingPage() {
     }
   };
 
-  const toggleFavorite = (templateId: string) => {
-    // TODO(API 연동): 양식 즐겨찾기 API (REQ-123)
-    setTemplates((prev) =>
-      prev.map((template) =>
-        template.templateId === templateId ? { ...template, isFavorite: !template.isFavorite } : template,
-      ),
-    );
+  /** REQ-123 고른 양식은 바로 저장한다. 회의를 마무리하면 이 양식으로 회의록을 만든다. 실패하면 되돌린다 */
+  const chooseTemplate = async (templateId: number) => {
+    const before = meeting.templateId;
+    setMeeting((prev) => prev && { ...prev, templateId });
+    try {
+      await chooseMeetingTemplate(meeting.meetingId, templateId);
+    } catch (error) {
+      setMeeting((prev) => prev && { ...prev, templateId: before });
+      setToast({ text: errorMessage(error), variant: 'error' });
+    }
+  };
+
+  /** REQ-123 즐겨찾기는 나만 보는 표시라 참석자가 아니어도 된다. 실패하면 되돌린다 */
+  const toggleFavorite = async (templateId: number) => {
+    const target = templates.find((template) => template.templateId === templateId);
+    if (!target) {
+      return;
+    }
+    const flip = (isFavorite: boolean) =>
+      setTemplates((prev) =>
+        prev.map((template) => (template.templateId === templateId ? { ...template, isFavorite } : template)),
+      );
+    flip(!target.isFavorite);
+    try {
+      await setTemplateFavorite(templateId, !target.isFavorite);
+    } catch (error) {
+      flip(target.isFavorite);
+      setToast({ text: errorMessage(error), variant: 'error' });
+    }
   };
 
   /** REQ-077 동의하면 마이크 권한을 확인한다. 처음이면 먼저 안내하고(MSG-065), 꺼져 있으면 켜는 방법을 알려 준다(MSG-066) */
@@ -381,6 +397,7 @@ export default function MeetingWaitingPage() {
                     className={styles.selectBox}
                     aria-haspopup="listbox"
                     aria-expanded={openMenu === 'template'}
+                    disabled={!canEdit}
                     onClick={() => toggleMenu('template')}
                   >
                     <span className={selectedTemplate ? styles.selectValue : styles.selectPlaceholder}>
@@ -396,12 +413,12 @@ export default function MeetingWaitingPage() {
                       items={templates
                         .filter(({ isFavorite }) => isFavorite)
                         .map((template) => ({
-                          id: template.templateId,
+                          id: String(template.templateId),
                           label: template.name,
                           isSelected: template.templateId === meeting.templateId,
                         }))}
                       onSelect={(id) => {
-                        updateLocal({ templateId: id });
+                        void chooseTemplate(Number(id));
                         closeMenu();
                       }}
                       onClose={closeMenu}
@@ -474,8 +491,8 @@ export default function MeetingWaitingPage() {
           templates={templates}
           selectedId={meeting.templateId}
           onOpenDetail={(index) => setTemplateModal({ view: 'detail', index })}
-          onToggleFavorite={toggleFavorite}
-          onCreateTemplate={() => setToast({ text: NEW_TEMPLATE_PENDING_MESSAGE, variant: 'info' })}
+          onToggleFavorite={(templateId) => void toggleFavorite(templateId)}
+          onCreateTemplate={() => navigate('/templates/new')}
           onClose={() => setTemplateModal(null)}
         />
       )}
@@ -484,10 +501,14 @@ export default function MeetingWaitingPage() {
           templates={templates}
           index={templateModal.index}
           onChangeIndex={(index) => setTemplateModal({ view: 'detail', index })}
-          onUse={(templateId) => {
-            updateLocal({ templateId });
-            setTemplateModal(null);
-          }}
+          onUse={
+            canEdit
+              ? (templateId) => {
+                  void chooseTemplate(templateId);
+                  setTemplateModal(null);
+                }
+              : undefined
+          }
           onClose={() => setTemplateModal({ view: 'gallery' })}
         />
       )}
