@@ -12,11 +12,12 @@ interface TemplateDetailModalProps {
   templates: MinutesTemplate[];
   index: number;
   onChangeIndex: (index: number) => void;
-  onUse: (templateId: string) => void;
+  /** 없으면 보기만 한다 (참석자가 아니면, REQ-130) */
+  onUse?: (templateId: number) => void;
   onClose: () => void;
 }
 
-/** REQ-100 회의록 양식 상세 보기 (디자인 TemplateDetail). 좌우 버튼으로 다른 양식을 넘겨 본다 */
+/** REQ-123 회의록 양식 상세 보기 (디자인 TemplateDetail). 좌우 버튼으로 다른 양식을 넘겨 본다 */
 export default function TemplateDetailModal({ templates, index, onChangeIndex, onUse, onClose }: TemplateDetailModalProps) {
   const template = templates[index];
   const lastIndex = templates.length - 1;
@@ -32,9 +33,11 @@ export default function TemplateDetailModal({ templates, index, onChangeIndex, o
           <Button variant="secondary" size="md" onClick={onClose}>
             목록으로
           </Button>
-          <Button size="md" onClick={() => onUse(template.templateId)}>
-            이 양식 사용하기
-          </Button>
+          {onUse && (
+            <Button size="md" onClick={() => onUse(template.templateId)}>
+              이 양식 사용하기
+            </Button>
+          )}
         </>
       }
     >
