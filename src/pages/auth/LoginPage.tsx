@@ -43,10 +43,9 @@ export default function LoginPage() {
       setToast({ text: MESSAGES.invalidEmail, variant: 'error' });
       return;
     }
-    // keepLoggedIn은 요구사항이 정해질 때까지 화면에만 둔다 (docs/backlog.md)
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await login(email, password, keepLoggedIn);
       navigate(redirectTo, { replace: true });
     } catch (error) {
       if (isApiError(error, AUTH_ERROR_CODES.loginLocked)) {
