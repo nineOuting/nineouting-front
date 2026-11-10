@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MinutesDetail, MinutesSection } from '../../api/minutes';
 import DropdownMenu from '../../components/DropdownMenu';
-import Placeholder from '../../components/Placeholder';
+import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import chevronRightIcon from '../../assets/icons/chevron-right.svg';
+import Icon from '../../components/Icon';
 import SectionContent from '../../components/SectionContent';
 import type { MinutesTemplate } from '../../types/template';
 import { DEFAULT_LAYOUT, PAPER_FONT_SCALE, PX_PER_MM, withItemDefaults } from '../../utils/templateSettings';
@@ -70,7 +73,7 @@ export default function MinutesDocument({
     <section className={styles.panel} aria-label="회의록 문서">
       <div className={styles.pager}>
         <button type="button" className={styles.iconButton} aria-label="이전 쪽" disabled={page <= 1} onClick={() => goTo(page - 1)}>
-          <Placeholder size={NAV_ICON_SIZE} />
+          <Icon src={chevronLeftIcon} size={NAV_ICON_SIZE} />
         </button>
         <span className={styles.pageLabel}>
           {page}/{pageCount}
@@ -82,7 +85,7 @@ export default function MinutesDocument({
           disabled={page >= pageCount}
           onClick={() => goTo(page + 1)}
         >
-          <Placeholder size={NAV_ICON_SIZE} />
+          <Icon src={chevronRightIcon} size={NAV_ICON_SIZE} />
         </button>
       </div>
       <div className={styles.toolbar} role="toolbar" aria-label="편집 도구">
@@ -99,7 +102,7 @@ export default function MinutesDocument({
               </option>
             ))}
           </select>
-          <Placeholder size={TOOL_ICON_SIZE} />
+          <Icon src={chevronUpIcon} size={TOOL_ICON_SIZE} className={styles.flipped} />
         </label>
         <span className={styles.anchor}>
           <button
@@ -113,7 +116,7 @@ export default function MinutesDocument({
             onClick={() => setIsTemplateOpen((open) => !open)}
           >
             회의록 양식 변경
-            <Placeholder size={TOOL_ICON_SIZE} />
+            <Icon src={chevronUpIcon} size={TOOL_ICON_SIZE} className={isTemplateOpen ? undefined : styles.flipped} />
           </button>
           {isTemplateOpen && (
             <DropdownMenu
@@ -144,6 +147,8 @@ export default function MinutesDocument({
         <div
           ref={paperRef}
           className={styles.paper}
+          // 다크 모드에서도 문서 종이는 인쇄물처럼 밝게 보인다
+          data-theme="light"
           style={{
             zoom: zoom / 100,
             gap: layout.sectionGap,

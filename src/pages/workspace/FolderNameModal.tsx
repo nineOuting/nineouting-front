@@ -1,9 +1,9 @@
-import { useId, useState, type FormEvent } from 'react';
-import Modal from '../../components/Modal';
-import Placeholder from '../../components/Placeholder';
-import styles from './FolderNameModal.module.css';
+import { useState, type FormEvent } from 'react';
+import Button from '../../components/Button';
+import Dialog from '../../components/Dialog';
+import TextField from '../../components/TextField';
+import useCloseGuard from '../../components/useCloseGuard';
 
-const CLOSE_ICON_SIZE = 24;
 // workspace-service CreateFolderRequest 길이 제한과 같다
 const NAME_MAX_LENGTH = 50;
 // MSG-031
@@ -24,7 +24,7 @@ interface FolderNameModalProps {
   onClose: () => void;
 }
 
-/** REQ-039~040, 046~047 새 폴더 만들기. 이름 바꾸기에도 같은 창을 쓴다 */
+/** REQ-039~040, 046~047 새 폴더 만들기 (디자인 NewFolderModal). 이름 바꾸기에도 같은 창을 쓴다 */
 export default function FolderNameModal({
   title,
   description,
@@ -36,11 +36,11 @@ export default function FolderNameModal({
   toErrorMessage,
   onClose,
 }: FolderNameModalProps) {
-  const titleId = useId();
-  const inputId = useId();
   const [name, setName] = useState(initialName);
   const [error, setError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // REQ-179 입력한 내용이 있으면 닫기 전에 묻는다
+  const { requestClose, confirmElement } = useCloseGuard(name.trim() !== initialName.trim(), onClose);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -63,45 +63,39 @@ export default function FolderNameModal({
   };
 
   return (
-    <Modal labelledBy={titleId} onClose={onClose} closeOnDimClick className={styles.card}>
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
-        <div className={styles.head}>
-          <div className={styles.texts}>
-            <h2 id={titleId} className={styles.title}>
-              {title}
-            </h2>
-            <p className={styles.description}>{description}</p>
-          </div>
-          <button type="button" className={styles.iconButton} aria-label="닫기" onClick={onClose}>
-            <Placeholder size={CLOSE_ICON_SIZE} />
-          </button>
-        </div>
-        <div className={styles.field}>
-          <label htmlFor={inputId} className={styles.label}>
-            {fieldLabel} *
-          </label>
-          <input
-            id={inputId}
-            className={[styles.input, error ? styles.inputError : ''].filter(Boolean).join(' ')}
-            placeholder={`${fieldLabel}을 입력해 주세요`}
-            maxLength={NAME_MAX_LENGTH}
-            value={name}
-            autoFocus
-            aria-invalid={Boolean(error)}
-            onChange={(event) => {
-              setName(event.target.value);
-              setError(undefined);
-            }}
-          />
-          {error && <p className={styles.error}>{error}</p>}
-        </div>
-        <div className={styles.actions}>
-          {/* REQ-040 폴더명을 입력하기 전에는 누를 수 없다 */}
-          <button type="submit" className={styles.submit} disabled={!name.trim() || isSubmitting}>
-            {submitLabel}
-          </button>
-        </div>
-      </form>
-    </Modal>
+    <>
+      <Dialog
+        title={title}
+        description={description}
+        onClose={requestClose}
+        onSubmit={handleSubmit}
+        footer={
+          <>
+            <Button variant="secondary" size="md" onClick={requestClose}>
+              취소
+            </Button>
+            {/* REQ-040 폴더명을 입력하기 전에는 누를 수 없다 */}
+            <Button type="submit" size="md" disabled={!name.trim() || isSubmitting}>
+              {submitLabel}
+            </Button>
+          </>
+        }
+      >
+        <TextField
+          label={fieldLabel}
+          required
+          placeholder={`${fieldLabel}을 입력해 주세요`}
+          maxLength={NAME_MAX_LENGTH}
+          value={name}
+          autoFocus
+          error={error}
+          onChange={(event) => {
+            setName(event.target.value);
+            setError(undefined);
+          }}
+        />
+      </Dialog>
+      {confirmElement}
+    </>
   );
 }

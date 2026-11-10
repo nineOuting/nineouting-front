@@ -4,6 +4,8 @@ import { errorMessage } from '../../api/client';
 import {
   finishMeeting,
   addMeetingAgenda,
+  deleteMeetingAgenda,
+  renameMeetingAgenda,
   cancelMeetingEnd,
   carryOverAgendas,
   correctLineAgenda,
@@ -24,8 +26,18 @@ import {
 import { getMe } from '../../api/user';
 import dotNotDiscussed from '../../assets/dot-not-discussed.svg';
 import dotRecording from '../../assets/dot-recording.svg';
-import AppLayout from '../../components/AppLayout';
-import Placeholder from '../../components/Placeholder';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import pauseIcon from '../../assets/icons/pause.svg';
+import playIcon from '../../assets/icons/play.svg';
+import stopIcon from '../../assets/icons/stop.svg';
+import AiNotice from '../../components/AiNotice';
+import Button from '../../components/Button';
+import Coachmark from '../../components/Coachmark';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import Dialog from '../../components/Dialog';
+import Icon from '../../components/Icon';
+import TextField from '../../components/TextField';
+import OfflineBanner from '../../components/OfflineBanner';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
 import { SttStream } from '../../meeting/SttStream';
@@ -50,6 +62,10 @@ import {
 import TranscriptPanel from './room/TranscriptPanel';
 import styles from './MeetingRoomPage.module.css';
 
+// REQ-174 첫 사용 안내를 본 적 있는지 (브라우저에 남긴다)
+const ONBOARDING_KEY = 'nepnep-room-onboarding';
+const AGENDA_TITLE_MAX_LENGTH = 100;
+const SMALL_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 16;
 const DOT_SIZE = 8;
 const TICK_MS = 1000;
@@ -119,6 +135,47 @@ export default function MeetingRoomPage() {
   const isFinishingRef = useRef(false);
   const numericMeetingId = detail?.meetingId;
   const isLive = detail?.status === 'IN_PROGRESS' && !isFinished;
+  // REQ-171 회의 화면 나가기 확인 (MSG-068)
+  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
+  // REQ-173 안건 수정하기, 안건 삭제
+  const [renaming, setRenaming] = useState<{ agendaId: string; title: string } | null>(null);
+  const [deletingAgendaId, setDeletingAgendaId] = useState<string | null>(null);
+  // REQ-174 회의 중 화면을 처음 열면 한 번만 안내한다
+  const [isOnboarding, setIsOnboarding] = useState(() => {
+    try {
+      return localStorage.getItem(ONBOARDING_KEY) !== 'done';
+    } catch {
+      return false;
+    }
+  });
+  const finishOnboarding = useCallback(() => {
+    setIsOnboarding(false);
+    try {
+      localStorage.setItem(ONBOARDING_KEY, 'done');
+    } catch {
+      // 저장하지 못하면 다음에 한 번 더 보일 뿐이다
+    }
+  }, []);
+
+  // REQ-171 회의 중에 새로고침, 탭 닫기, 브라우저 뒤로 가기로 나가려 하면 확인한다
+  useEffect(() => {
+    if (!isLive) {
+      return undefined;
+    }
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault();
+    // 뒤로 가기를 한 번 받아 둘 자리를 쌓아 두고, 뒤로 가면 다시 쌓은 뒤 확인 창을 띄운다
+    window.history.pushState({ roomGuard: true }, '');
+    const handlePopState = () => {
+      window.history.pushState({ roomGuard: true }, '');
+      setIsLeaveOpen(true);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isLive]);
 
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
 
@@ -283,13 +340,44 @@ export default function MeetingRoomPage() {
 
   if (!detail) {
     return (
-      <AppLayout variant="compact" className={styles.page}>
-        {toast && <Toast message={toast} onClose={closeToast} />}
-      </AppLayout>
+      <div className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</div>
     );
   }
 
   const meetingIdNumber = detail.meetingId;
+
+  // REQ-171 나가도 녹음, 전사는 계속되고 다시 들어올 수 있다
+  const leaveRoom = () => {
+    setIsLeaveOpen(false);
+    navigate(`/folders/${detail.folderId}`, { replace: true });
+  };
+
+  const renameAgenda = async () => {
+    if (!renaming || !renaming.title.trim()) {
+      return;
+    }
+    try {
+      const saved = await renameMeetingAgenda(meetingIdNumber, Number(renaming.agendaId), renaming.title.trim());
+      setAgendas((prev) => prev.map((agenda) => (agenda.id === renaming.agendaId ? { ...agenda, title: saved.title } : agenda)));
+      setRenaming(null);
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const deleteAgenda = async (agendaId: string) => {
+    setDeletingAgendaId(null);
+    try {
+      await deleteMeetingAgenda(meetingIdNumber, Number(agendaId));
+      setAgendas((prev) => prev.filter(({ id }) => id !== agendaId));
+      if (selectedAgendaId === agendaId) {
+        setSelectedAgendaId('');
+        setSelectedDecisionId(undefined);
+      }
+    } catch (error) {
+      showError(error);
+    }
+  };
   // REQ-093·096 끝내기 요청 뒤 남은 안건 목록이 오면: 비었으면 바로 오늘 회의 요약, 아니면 목록
   const shownEndStep: EndStep | null =
     endStep === 'waiting' && leftover ? (leftover.agendas.length === 0 ? 'summary' : 'leftover') : endStep;
@@ -443,11 +531,21 @@ export default function MeetingRoomPage() {
   };
 
   return (
-    <AppLayout variant="compact" className={styles.page}>
+    <div className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
+      <OfflineBanner />
 
+      {/* 디자인 MeetingHeader: 회의 중에는 왼쪽 메뉴, 상단 바 없이 회의에만 집중한다 */}
       <header className={styles.meetingHeader}>
         <div className={styles.headerInfo}>
+          <button
+            type="button"
+            className={styles.backButton}
+            aria-label="뒤로 가기"
+            onClick={() => (isLive ? setIsLeaveOpen(true) : navigate(-1))}
+          >
+            <Icon src={chevronLeftIcon} size={BUTTON_ICON_SIZE} />
+          </button>
           <h1 className={styles.title}>{detail.title}</h1>
           <div className={styles.metaRow}>
             <span className={styles.recording}>
@@ -469,14 +567,14 @@ export default function MeetingRoomPage() {
         <div className={styles.headerActions}>
           {isWriter && isLive && (
             <button type="button" className={styles.pauseButton} aria-pressed={isPaused} onClick={togglePause}>
-              <Placeholder size={BUTTON_ICON_SIZE} />
+              <Icon src={isPaused ? playIcon : pauseIcon} size={SMALL_ICON_SIZE} />
               {isPaused ? '다시 시작' : '일시정지'}
             </button>
           )}
           {/* REQ-098 회의록 작성자만 마무리한다. 회의 끝내기 단계(REQ-093~097)는 디자인이 없어 건너뛰고 바로 회의록으로 간다 */}
           {isWriter && isLive && (
             <button type="button" className={styles.endButton} disabled={isEnding || endStep !== null} onClick={() => void startEnd()}>
-              <Placeholder size={BUTTON_ICON_SIZE} />
+              <Icon src={stopIcon} size={SMALL_ICON_SIZE} />
               회의 끝내기
             </button>
           )}
@@ -485,7 +583,10 @@ export default function MeetingRoomPage() {
 
       <div className={styles.body}>
         <div className={styles.board}>
-          <LiveSummaryCard agenda={currentAgenda} />
+          <LiveSummaryCard
+            agenda={currentAgenda}
+            notice={<AiNotice meetingId={meetingIdNumber} target="LIVE_SUMMARY" />}
+          />
           <AgendaStatusCard
             agendas={agendas}
             selectedAgendaId={selectedAgendaId}
@@ -498,15 +599,20 @@ export default function MeetingRoomPage() {
             onSelectDecision={setSelectedDecisionId}
             onSaveDecision={(decisionId, decisionSummary) => void saveDecision(decisionId, decisionSummary)}
             onAddAgenda={() => setAddAgendaTitle('')}
+            onRenameAgenda={(agendaId) =>
+              setRenaming({ agendaId, title: agendas.find(({ id }) => id === agendaId)?.title ?? '' })
+            }
+            onDeleteAgenda={setDeletingAgendaId}
           />
         </div>
 
-        <aside className={styles.sidePanel} aria-label={selectedDecision ? '결정 근거' : '실시간 전사'}>
+        <aside id="room-side-panel" className={styles.sidePanel} aria-label={selectedDecision ? '결정 근거' : '실시간 전사'}>
           {selectedDecision ? (
             <EvidencePanel
               decision={selectedDecision}
               lines={transcript.filter(({ seq }) => selectedDecision.evidenceSeqs.includes(seq))}
               onClose={() => setSelectedDecisionId(undefined)}
+              notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" />}
             />
           ) : (
             <TranscriptPanel
@@ -521,6 +627,76 @@ export default function MeetingRoomPage() {
         </aside>
       </div>
 
+      {isLeaveOpen && (
+        // MSG-068
+        <ConfirmDialog
+          title="회의 화면에서 나갈까요?"
+          message={'나가도 다른 참여자와 녹음, 전사는 계속돼요. 언제든 다시 들어올 수 있어요.\n(회의를 끝내려면 [회의 끝내기]를 눌러 주세요.)'}
+          cancelLabel="계속 참여하기"
+          confirmLabel="나가기"
+          onCancel={() => setIsLeaveOpen(false)}
+          onConfirm={leaveRoom}
+        />
+      )}
+      {renaming && (
+        <Dialog
+          title="안건 수정하기"
+          onClose={() => setRenaming(null)}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void renameAgenda();
+          }}
+          footer={
+            <>
+              <Button type="button" variant="secondary" size="md" onClick={() => setRenaming(null)}>
+                취소
+              </Button>
+              <Button type="submit" variant="primary" size="md" disabled={!renaming.title.trim()}>
+                저장
+              </Button>
+            </>
+          }
+        >
+          <TextField
+            label="안건"
+            value={renaming.title}
+            maxLength={AGENDA_TITLE_MAX_LENGTH}
+            autoFocus
+            onChange={(event) => setRenaming({ ...renaming, title: event.target.value })}
+          />
+        </Dialog>
+      )}
+      {deletingAgendaId && (
+        <ConfirmDialog
+          title="안건을 삭제할까요?"
+          message="이 안건으로 나뉜 발언은 '안건 없음'으로 바뀌어요."
+          cancelLabel="취소"
+          confirmLabel="삭제"
+          isDanger
+          onCancel={() => setDeletingAgendaId(null)}
+          onConfirm={() => void deleteAgenda(deletingAgendaId)}
+        />
+      )}
+      {isOnboarding && isLive && (
+        // REQ-174, MSG-075
+        <Coachmark
+          steps={[
+            {
+              targetId: 'live-summary-title',
+              text: '실시간 요약이 여기에 쌓여요.\n대화가 시작되면 AI가 핵심 의견과 할 일을 자동으로 정리해요.',
+            },
+            {
+              targetId: 'room-side-panel',
+              text: '발언이 여기에 실시간으로 받아 적혀요.\n회의록 작성자는 발언을 눌러 바로 고칠 수 있어요.',
+            },
+            {
+              targetId: 'agenda-status-title',
+              text: '안건마다 논의 상태를 보여 줘요.\n결정 내용을 누르면 근거가 된 발언을 확인할 수 있어요.',
+            },
+          ]}
+          onFinish={finishOnboarding}
+        />
+      )}
       {addAgendaTitle !== null && (
         <AddAgendaModal
           initialTitle={addAgendaTitle}
@@ -561,6 +737,6 @@ export default function MeetingRoomPage() {
           onFinish={() => void endMeeting()}
         />
       )}
-    </AppLayout>
+    </div>
   );
 }

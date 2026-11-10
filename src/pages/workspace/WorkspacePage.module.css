@@ -1,6 +1,9 @@
+/* 디자인 WorkspacePage Body: 위 24px, 좌우 32px, 묶음 사이 32px. 폴더 + 멤버 368px */
 .page {
-  padding: 28px 59px 40px 34px;
-  background: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+  padding: var(--spacing-6) var(--layout-page-margin) var(--spacing-8);
 }
 
 .head {
@@ -12,27 +15,27 @@
 .titleBlock {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-2);
 }
 
 .breadcrumb {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-60);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-1);
 }
 
 .title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  color: var(--text-primary);
 }
 
 .anchor {
@@ -42,38 +45,47 @@
 
 .iconButton {
   display: flex;
-  padding: 0;
-  border: none;
-  background: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
 }
 
 .newFolder {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 16px;
-  background: var(--blue-100);
-  border: none;
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--color-white);
+  gap: var(--gap-inline);
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  background: var(--primary-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-on-primary);
+}
+
+.newFolder:hover {
+  background: var(--primary-hover);
 }
 
 .columns {
   display: flex;
   align-items: flex-start;
-  gap: 32px;
-  margin-top: 30px;
+  gap: var(--layout-gutter);
 }
 
 .folders {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 16px;
-  width: 817px;
+  gap: var(--gap-content);
+  min-width: 0;
 }
 
 .sectionHead {
@@ -83,36 +95,38 @@
 }
 
 .sectionTitle {
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
 }
 
 .count {
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-60);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .folderGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--spacing-4);
 }
 
+/* 디자인 FolderCard */
 .folderCard {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.folderCard:hover {
+  border-color: var(--border-strong);
 }
 
 .folderLink {
@@ -120,11 +134,8 @@
   flex: 1;
   flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+  gap: var(--spacing-3);
   min-width: 0;
-  padding: 0;
-  border: none;
-  background: none;
   text-align: left;
 }
 
@@ -132,7 +143,7 @@
 .folderLink::after {
   position: absolute;
   inset: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   content: '';
 }
 
@@ -140,59 +151,76 @@
   z-index: 1;
 }
 
+.folderIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--primary-subtle);
+  border-radius: var(--radius-md);
+  color: var(--primary-default);
+}
+
 .folderTexts {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-weight: 500;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .folderName {
-  line-height: 1.5;
-  color: var(--color-black);
+  overflow: hidden;
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .folderMeta {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .hint {
-  padding: 4px 12px;
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .side {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 258px;
+  gap: var(--gap-content);
+  width: 368px;
 }
 
 .memberSection {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--gap-content);
 }
 
+/* 디자인 MemberCard */
 .memberCard {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  gap: var(--gap-content);
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .memberSummary {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--gap-content);
 }
 
 .memberHead {
@@ -202,50 +230,64 @@
 }
 
 .memberLabel {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--color-black);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
 }
 
 .memberCount {
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
-.divider {
-  display: block;
-  width: 100%;
-  max-width: none;
-}
-
-.rowButton {
+/* 디자인 Button secondary */
+.manageButton {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: var(--gap-inline);
   width: 100%;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  background: var(--secondary-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-on-secondary);
 }
 
-.leave {
-  border-color: var(--red-20);
+.manageButton:hover {
+  background: var(--secondary-hover);
 }
 
-.deleteWorkspace {
+.links {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0;
-  border: none;
-  background: none;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 디자인 Button text */
+.textButton {
+  height: 32px;
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
+}
+
+.textButton:hover {
+  color: var(--text-link-hover);
+  background: var(--primary-ghost-hover);
+}
+
+/* REQ-163 워크스페이스 설명 */
+.workspaceDescription {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }

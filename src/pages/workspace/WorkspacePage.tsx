@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import { countFolderMeetings } from '../../api/meeting';
 import {
@@ -17,31 +17,37 @@ import {
   markLastVisited,
   removeWorkspaceMember,
   renameFolder,
+  updateWorkspace,
   WORKSPACE_ERROR_CODES,
   type WorkspaceDetail,
 } from '../../api/workspace';
-import dividerWsMember from '../../assets/divider-ws-member.svg';
+import addIcon from '../../assets/icons/add-sm.svg';
+import arrowDownIcon from '../../assets/icons/arrow-down.svg';
+import folderIcon from '../../assets/icons/folder-md.svg';
+import groupAddIcon from '../../assets/icons/group-add.svg';
+import moreIcon from '../../assets/icons/more-vert.svg';
 import AppLayout from '../../components/AppLayout';
 import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import FavoriteButton from '../../components/FavoriteButton';
-import Placeholder from '../../components/Placeholder';
+import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderAccess, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
+import deleteIcon from '../../assets/icons/delete.svg';
+import editIcon from '../../assets/icons/edit.svg';
 import ActionMenu from './ActionMenu';
+import CreateWorkspaceModal from './CreateWorkspaceModal';
 import FolderNameModal from './FolderNameModal';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceProfileModal from './WorkspaceProfileModal';
+import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import styles from './WorkspacePage.module.css';
 
-const SMALL_ICON_SIZE = 16;
-const TITLE_ICON_SIZE = 20;
-const FOLDER_ICON_SIZE = 24;
-const DELETE_ICON_SIZE = 27;
-const MEMBER_DIVIDER_WIDTH = 224;
-const CREATE_WORKSPACE_PENDING_MESSAGE = '새 워크스페이스 만들기 화면은 디자인이 나오면 연결돼요.';
-const INVITED_MESSAGE = '초대 메일을 보냈어요. 받은 사람이 메일의 링크로 수락하면 멤버가 돼요.';
+const ICON_SIZE = 20;
+const ARROW_ICON_SIZE = 24;
+// MSG-061
+const INVITED_MESSAGE = '초대 메일을 1명에게 보냈어요.';
 // MSG-031 (서버 FOLDER_NAME_DUPLICATED)
 const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있습니다. 다른 이름을 입력해 주세요.';
 
@@ -52,7 +58,9 @@ type Dialog =
   | { type: 'members' }
   | { type: 'profile' }
   | { type: 'leave' }
-  | { type: 'deleteWorkspace' };
+  | { type: 'deleteWorkspace' }
+  | { type: 'createWorkspace' }
+  | { type: 'settings' };
 
 /** 폴더 이름 중복은 창 안에서 안내한다 (MSG-031) */
 function folderNameError(error: unknown) {
@@ -72,7 +80,10 @@ export default function WorkspacePage() {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [menuFolderId, setMenuFolderId] = useState<number | null>(null);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const location = useLocation();
+  // 새 워크스페이스 만들기에서 초대 메일을 보내고 넘어오면 결과를 토스트로 보여 준다 (MSG-061)
+  const arrivedNotice = (location.state as { notice?: string } | null)?.notice;
+  const [toast, setToast] = useState<ToastMessage | null>(arrivedNotice ? { text: arrivedNotice, variant: 'success' } : null);
   const closeToast = useCallback(() => setToast(null), []);
   const closeDialog = () => setDialog(null);
   const closeSwitcher = useCallback(() => setIsSwitcherOpen(false), []);
@@ -199,15 +210,6 @@ export default function WorkspacePage() {
     <AppLayout
       className={styles.page}
       workspaceId={id}
-      sidebarFooter={
-        // REQ-138 워크스페이스 소유자만 삭제할 수 있다
-        isOwner && (
-          <button type="button" className={styles.deleteWorkspace} onClick={() => setDialog({ type: 'deleteWorkspace' })}>
-            이 워크스페이스 삭제
-            <Placeholder size={DELETE_ICON_SIZE} />
-          </button>
-        )
-      }
     >
       {toast && <Toast message={toast} onClose={closeToast} />}
 
@@ -225,7 +227,7 @@ export default function WorkspacePage() {
                 aria-expanded={isSwitcherOpen}
                 onClick={() => setIsSwitcherOpen((value) => !value)}
               >
-                <Placeholder size={TITLE_ICON_SIZE} />
+                <Icon src={arrowDownIcon} size={ARROW_ICON_SIZE} />
               </button>
               {isSwitcherOpen && (
                 <WorkspaceSwitcher
@@ -238,7 +240,11 @@ export default function WorkspacePage() {
                   }}
                   onCreate={() => {
                     closeSwitcher();
-                    notice(CREATE_WORKSPACE_PENDING_MESSAGE);
+                    setDialog({ type: 'createWorkspace' });
+                  }}
+                  onSettings={() => {
+                    closeSwitcher();
+                    setDialog({ type: 'settings' });
                   }}
                   onClose={closeSwitcher}
                 />
@@ -250,9 +256,10 @@ export default function WorkspacePage() {
               onError={(text) => setToast({ text, variant: 'error' })}
             />
           </div>
+          {workspace.description && <p className={styles.workspaceDescription}>{workspace.description}</p>}
         </div>
         <button type="button" className={styles.newFolder} onClick={() => setDialog({ type: 'newFolder' })}>
-          <Placeholder size={SMALL_ICON_SIZE} />새 폴더
+          <Icon src={addIcon} size={ICON_SIZE} />새 폴더
         </button>
       </div>
 
@@ -273,7 +280,9 @@ export default function WorkspacePage() {
                   className={styles.folderLink}
                   onClick={() => navigate(`/folders/${folder.folderId}`)}
                 >
-                  <Placeholder size={FOLDER_ICON_SIZE} />
+                  <span className={styles.folderIcon}>
+                    <Icon src={folderIcon} size={ICON_SIZE} />
+                  </span>
                   <span className={styles.folderTexts}>
                     <span className={styles.folderName}>{folder.name}</span>
                     <span className={styles.folderMeta}>회의 {folder.meetingCount}개</span>
@@ -290,7 +299,7 @@ export default function WorkspacePage() {
               </li>
             ))}
           </ul>
-          <p className={styles.hint}>폴더를 선택하면 해당 프로젝트 폴더로 이동할 수 있어요.</p>
+          <p className={styles.hint}>폴더를 누르면 해당 프로젝트 폴더로 이동해요</p>
         </section>
 
         <aside className={styles.side}>
@@ -305,37 +314,46 @@ export default function WorkspacePage() {
                   <span className={styles.memberCount}>총 {workspace.memberCount}명</span>
                 </div>
                 {members.length > 0 && (
-                  <AvatarStack
-                    members={members}
-                    layout="spaced"
-                    label={`워크스페이스 멤버 ${workspace.memberCount}명`}
-                  />
+                  <AvatarStack members={members} label={`워크스페이스 멤버 ${workspace.memberCount}명`} />
                 )}
               </div>
-              <img src={dividerWsMember} alt="" width={MEMBER_DIVIDER_WIDTH} height={1} className={styles.divider} />
               {/* 멤버는 목록만 보고, 관리는 소유자만 (REQ-033) */}
-              <button type="button" className={styles.rowButton} onClick={() => setDialog({ type: 'members' })}>
-                {isOwner ? '멤버 권한 및 관리' : '멤버 목록'}
-                <Placeholder size={SMALL_ICON_SIZE} />
+              <button type="button" className={styles.manageButton} onClick={() => setDialog({ type: 'members' })}>
+                <Icon src={groupAddIcon} size={ICON_SIZE} />
+                {isOwner ? '멤버 권한 관리' : '멤버 목록'}
               </button>
             </div>
           </section>
-          {/* REQ-114·115·118 디자인이 없어 나가기 버튼과 같은 모양으로 넣었다 */}
-          <button type="button" className={styles.rowButton} onClick={() => setDialog({ type: 'profile' })}>
-            이 워크스페이스에서 내 프로필
-            <Placeholder size={SMALL_ICON_SIZE} />
-          </button>
-          <button
-            type="button"
-            className={`${styles.rowButton} ${styles.leave}`}
-            onClick={() => setDialog({ type: 'leave' })}
-          >
-            이 워크스페이스 나가기
-            <Placeholder size={SMALL_ICON_SIZE} />
-          </button>
+          <div className={styles.links}>
+            {/* REQ-114·115·118 디자인이 없어 나가기 버튼과 같은 글자 버튼으로 넣었다 */}
+            <button type="button" className={styles.textButton} onClick={() => setDialog({ type: 'profile' })}>
+              이 워크스페이스에서 내 프로필
+            </button>
+            <button type="button" className={styles.textButton} onClick={() => setDialog({ type: 'leave' })}>
+              이 워크스페이스 나가기
+            </button>
+          </div>
         </aside>
       </div>
 
+      {dialog?.type === 'createWorkspace' && <CreateWorkspaceModal onClose={closeDialog} />}
+      {dialog?.type === 'settings' && (
+        <WorkspaceSettingsModal
+          name={workspace.name}
+          description={workspace.description}
+          isOwner={isOwner}
+          onSave={async (name, description) => {
+            const saved = await updateWorkspace(id, name, description);
+            setWorkspace((prev) => prev && { ...prev, ...saved });
+            setWorkspaces((prev) => prev.map((item) => (item.workspaceId === id ? { ...item, name: saved.name } : item)));
+            closeDialog();
+            setToast({ text: '워크스페이스 설정을 저장했어요', variant: 'success' });
+          }}
+          onLeave={() => setDialog({ type: 'leave' })}
+          onDelete={() => setDialog({ type: 'deleteWorkspace' })}
+          onClose={closeDialog}
+        />
+      )}
       {dialog?.type === 'newFolder' && (
         <FolderNameModal
           title="새 프로젝트 폴더"
@@ -373,6 +391,7 @@ export default function WorkspacePage() {
       )}
       {dialog?.type === 'members' && (
         <WorkspaceMembersModal
+          workspaceId={id}
           members={members}
           canManage={isOwner}
           onInvite={invite}
@@ -443,9 +462,9 @@ interface FolderMenuProps {
 /** 폴더 카드 오른쪽 위 더보기. 기본 폴더는 지울 수 없다 (REQ-044) */
 function FolderMenu({ folder, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
-  const items = [{ label: '이름 바꾸기', onSelect: onRename }];
+  const items = [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }];
   if (!folder.isDefault) {
-    items.push({ label: '폴더 삭제', onSelect: onDelete });
+    items.push({ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true });
   }
 
   return (
@@ -459,7 +478,7 @@ function FolderMenu({ folder, isOpen, onToggle, onClose, onRename, onDelete }: F
         aria-expanded={isOpen}
         onClick={onToggle}
       >
-        <Placeholder size={SMALL_ICON_SIZE} />
+        <Icon src={moreIcon} size={ICON_SIZE} />
       </button>
       {isOpen && <ActionMenu label={`${folder.name} 메뉴`} items={items} anchorRef={anchorRef} onClose={onClose} />}
     </span>

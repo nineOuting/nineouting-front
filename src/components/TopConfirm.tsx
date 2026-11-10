@@ -1,8 +1,5 @@
 import { useEffect, useId } from 'react';
-import Placeholder from './Placeholder';
 import styles from './TopConfirm.module.css';
-
-const ICON_SIZE = 16;
 
 interface TopConfirmProps {
   title: string;
@@ -38,7 +35,6 @@ export default function TopConfirm({
     <div role="alertdialog" aria-labelledby={titleId} className={styles.confirm}>
       <div className={styles.texts}>
         <p id={titleId} className={styles.title}>
-          <Placeholder size={ICON_SIZE} />
           {title}
         </p>
         <p className={styles.message}>{message}</p>

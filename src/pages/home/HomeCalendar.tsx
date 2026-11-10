@@ -1,28 +1,30 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { listCalendarMeetings, type CalendarMeeting } from '../../api/meeting';
 import { listFolders } from '../../api/workspace';
-import dotCalendarEvent from '../../assets/dot-calendar-event.svg';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import chevronRightIcon from '../../assets/icons/chevron-right.svg';
+import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
 import DropdownMenu from '../../components/DropdownMenu';
-import Placeholder from '../../components/Placeholder';
 import type { WorkspaceSummary } from '../../types/workspace';
 import { addDays, minutesOfDay, monthGridDays, toIsoDate, toTime, weekDays } from '../../utils/calendar';
 import { meetingPath } from '../../utils/meetingFormat';
+import MeetingPreviewCard from './MeetingPreviewCard';
 import styles from './HomeCalendar.module.css';
 
 type View = 'week' | 'month';
 
-const DAY_NAMES = ['MON', 'TUE', 'WED', 'THUR', 'FRI', 'SAT', 'SUN'];
+const DAY_NAMES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
-// 디자인 칸 높이 69px = 1시간. 처음에는 09:00부터 보인다
-const HOUR_HEIGHT = 69;
+// 디자인 칸 높이 56px = 1시간. 처음에는 09:00부터 보인다
+const HOUR_HEIGHT = 56;
 const FIRST_VISIBLE_HOUR = 9;
+// 칸 경계선과 겹치지 않게 위아래로 띄운다
+const EVENT_GAP = 2;
 // 30분보다 짧은 회의도 제목은 보이게 한다
-const MIN_EVENT_HEIGHT = 23;
-const ICON_SIZE = 26;
-const FILTER_ICON_SIZE = 20;
-const FOLDER_ICON_SIZE = 16;
-const DOT_SIZE = 5;
+const MIN_EVENT_HEIGHT = 24;
+const ARROW_ICON_SIZE = 20;
+const FILTER_ICON_SIZE = 16;
 const MONTH_EVENT_LIMIT = 2;
 const ALL_FOLDERS = 'all';
 
@@ -35,14 +37,33 @@ interface FolderOption {
   label: string;
 }
 
-function EventDot() {
-  return <img src={dotCalendarEvent} alt="" width={DOT_SIZE} height={DOT_SIZE} className={styles.dot} />;
+/** 주간: 2026년 10월 19일 ~ 25일 (달이 바뀌면 ~ 11월 1일), 월간: 2026년 10월 */
+function rangeLabel(view: View, cursor: Date, days: Date[]) {
+  if (view === 'month') {
+    return `${cursor.getFullYear()}년 ${cursor.getMonth() + 1}월`;
+  }
+  const [first, last] = [days[0], days[days.length - 1]];
+  const end = first.getMonth() === last.getMonth() ? `${last.getDate()}일` : `${last.getMonth() + 1}월 ${last.getDate()}일`;
+  return `${first.getFullYear()}년 ${first.getMonth() + 1}월 ${first.getDate()}일 ~ ${end}`;
 }
 
 /** REQ-018~020 홈 캘린더 (주간·월간). 끝난 회의는 회색으로 구분한다 */
 export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
   const navigate = useNavigate();
-  const [view, setView] = useState<View>('week');
+  // REQ-180 보기 방식(주간/월간)은 주소에 둬서 회의를 보고 뒤로 와도 그대로다
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view: View = searchParams.get('view') === 'month' ? 'month' : 'week';
+  const setView = (next: View) => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'month') {
+      params.set('view', 'month');
+    } else {
+      params.delete('view');
+    }
+    setSearchParams(params, { replace: true });
+  };
+  // REQ-019 누른 회의의 미리보기 카드
+  const [preview, setPreview] = useState<{ meeting: CalendarMeeting; anchor: DOMRect } | null>(null);
   const [cursor, setCursor] = useState(() => new Date());
   const [today] = useState(() => toIsoDate(new Date()));
   // 프로젝트 = 프로젝트 폴더. 워크스페이스가 아니라 폴더 단위로 거른다
@@ -123,20 +144,19 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
   return (
     <section className={styles.calendar} aria-label="캘린더">
       <div className={styles.toolbar}>
-        <div className={styles.month}>
-          <button type="button" className={styles.pill} onClick={() => setCursor(new Date())}>
+        <div className={styles.dateNav}>
+          <button type="button" className={styles.today} onClick={() => setCursor(new Date())}>
             오늘
           </button>
           <button type="button" className={styles.iconButton} aria-label={view === 'week' ? '이전 주' : '이전 달'} onClick={() => move(-1)}>
-            <Placeholder size={ICON_SIZE} />
+            <img src={chevronLeftIcon} alt="" width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} />
           </button>
-          <span className={styles.monthLabel}>
-            {cursor.getFullYear()}년 {cursor.getMonth() + 1}월
-          </span>
+          <span className={styles.rangeLabel}>{rangeLabel(view, cursor, days)}</span>
           <button type="button" className={styles.iconButton} aria-label={view === 'week' ? '다음 주' : '다음 달'} onClick={() => move(1)}>
-            <Placeholder size={ICON_SIZE} />
+            <img src={chevronRightIcon} alt="" width={ARROW_ICON_SIZE} height={ARROW_ICON_SIZE} />
           </button>
         </div>
+        <div className={styles.viewOptions}>
         <div className={styles.toggle} role="group" aria-label="보기">
           {(['week', 'month'] as const).map((option) => (
             <button
@@ -154,13 +174,19 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
           <button
             ref={filterRef}
             type="button"
-            className={`${styles.pill} ${styles.filterButton}`}
+            className={styles.filterButton}
             aria-haspopup="listbox"
             aria-expanded={isFilterOpen}
             onClick={() => setIsFilterOpen((open) => !open)}
           >
             {filterLabel}
-            <Placeholder size={FILTER_ICON_SIZE} />
+            <img
+              src={chevronUpIcon}
+              alt=""
+              width={FILTER_ICON_SIZE}
+              height={FILTER_ICON_SIZE}
+              className={isFilterOpen ? undefined : styles.flipped}
+            />
           </button>
           {isFilterOpen && (
             <DropdownMenu
@@ -184,6 +210,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
             />
           )}
         </div>
+        </div>
       </div>
 
       {error && <p className={styles.error}>회의 일정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>}
@@ -193,8 +220,9 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
           <div className={styles.weekHead}>
             <span className={styles.timeSpacer} />
             {days.map((day, index) => (
-              <span key={index} className={[styles.dayName, toIsoDate(day) === today ? styles.today : ''].filter(Boolean).join(' ')}>
-                {DAY_NAMES[index]} <span className={styles.dayNumber}>{day.getDate()}</span>
+              <span key={index} className={[styles.dayHeader, toIsoDate(day) === today ? styles.isToday : ''].filter(Boolean).join(' ')}>
+                <span className={styles.dayName}>{DAY_NAMES[index]}</span>
+                <span className={styles.dateCircle}>{day.getDate()}</span>
               </span>
             ))}
           </div>
@@ -207,7 +235,10 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
               ))}
             </div>
             {days.map((day) => (
-              <div key={toIsoDate(day)} className={styles.dayColumn}>
+              <div
+                key={toIsoDate(day)}
+                className={[styles.dayColumn, toIsoDate(day) === today ? styles.todayColumn : ''].filter(Boolean).join(' ')}
+              >
                 {HOURS.map((hour) => (
                   <span key={hour} className={styles.hourCell} />
                 ))}
@@ -220,22 +251,15 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
                       type="button"
                       className={`${eventClass(meeting)} ${styles.weekEvent}`}
                       style={{
-                        top: (start / 60) * HOUR_HEIGHT,
-                        height: Math.max(((end - start) / 60) * HOUR_HEIGHT, MIN_EVENT_HEIGHT),
+                        top: (start / 60) * HOUR_HEIGHT + EVENT_GAP,
+                        height: Math.max(((end - start) / 60) * HOUR_HEIGHT - EVENT_GAP * 2, MIN_EVENT_HEIGHT),
                       }}
                       aria-label={eventLabel(meeting)}
-                      onClick={() => navigate(meetingPath(meeting))}
+                      onClick={(event) => setPreview({ meeting, anchor: event.currentTarget.getBoundingClientRect() })}
                     >
-                      <span className={styles.eventTitle}>
-                        <EventDot />
-                        <span className={styles.ellipsis}>{meeting.title}</span>
-                      </span>
+                      <span className={styles.eventTitle}>{meeting.title}</span>
                       <span className={styles.eventMeta}>
-                        {toTime(meeting.startAt)} - {toTime(meeting.endAt)}
-                      </span>
-                      <span className={styles.eventFolder}>
-                        <Placeholder size={FOLDER_ICON_SIZE} />
-                        <span className={styles.ellipsis}>{meeting.folderName}</span>
+                        {toTime(meeting.startAt)} ~ {toTime(meeting.endAt)}
                       </span>
                     </button>
                   );
@@ -247,7 +271,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
       ) : (
         <div className={styles.monthGrid}>
           {DAY_NAMES.map((name) => (
-            <span key={name} className={styles.dayName}>
+            <span key={name} className={`${styles.dayName} ${styles.monthDayName}`}>
               {name}
             </span>
           ))}
@@ -256,7 +280,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
             const isOtherMonth = day.getMonth() !== cursor.getMonth();
             return (
               <div key={toIsoDate(day)} className={[styles.monthCell, isOtherMonth ? styles.otherMonth : ''].filter(Boolean).join(' ')}>
-                <span className={[styles.monthDate, toIsoDate(day) === today ? styles.today : ''].filter(Boolean).join(' ')}>
+                <span className={[styles.monthDate, toIsoDate(day) === today ? styles.isToday : ''].filter(Boolean).join(' ')}>
                   {day.getDate()}
                 </span>
                 {items.slice(0, MONTH_EVENT_LIMIT).map((meeting) => (
@@ -265,12 +289,9 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
                     type="button"
                     className={`${eventClass(meeting)} ${styles.monthEvent}`}
                     aria-label={eventLabel(meeting)}
-                    onClick={() => navigate(meetingPath(meeting))}
+                    onClick={(event) => setPreview({ meeting, anchor: event.currentTarget.getBoundingClientRect() })}
                   >
-                    <span className={styles.eventTitle}>
-                      <EventDot />
-                      <span className={styles.ellipsis}>{meeting.title}</span>
-                    </span>
+                    <span className={styles.eventTitle}>{meeting.title}</span>
                   </button>
                 ))}
                 {items.length > MONTH_EVENT_LIMIT && (
@@ -289,6 +310,14 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
             );
           })}
         </div>
+      )}
+      {preview && (
+        <MeetingPreviewCard
+          meeting={preview.meeting}
+          anchor={preview.anchor}
+          onOpen={() => navigate(meetingPath(preview.meeting))}
+          onClose={() => setPreview(null)}
+        />
       )}
     </section>
   );

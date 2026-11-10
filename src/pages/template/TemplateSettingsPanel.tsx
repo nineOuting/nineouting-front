@@ -1,12 +1,16 @@
-import { useState, type ReactNode } from 'react';
-import Placeholder from '../../components/Placeholder';
+import type { ReactNode } from 'react';
+import alignCenterIcon from '../../assets/icons/align-center.svg';
+import alignLeftIcon from '../../assets/icons/align-left.svg';
+import alignRightIcon from '../../assets/icons/align-right.svg';
+import chevronDownIcon from '../../assets/icons/chevron-down.svg';
+import ballotIcon from '../../assets/icons/rail-ballot.svg';
+import uploadIcon from '../../assets/icons/upload-file.svg';
+import Icon from '../../components/Icon';
 import Switch from '../../components/Switch';
 import type { Align, ItemSettings, RecordType, TableBorder, TemplateItem, TemplateLayout } from '../../types/template';
 import styles from './TemplateSettingsPanel.module.css';
 
-const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
-const MAX_TITLE_LENGTH = 100;
 const MAX_EDGE_LENGTH = 50;
 const MAX_MARGIN_MM = 50;
 const MAX_ROWS = 20;
@@ -45,10 +49,10 @@ const BORDERS: { value: TableBorder; label: string }[] = [
   { value: 'NONE', label: '없음' },
   { value: 'BOLD', label: '굵게' },
 ];
-const ALIGNS: { value: Align; label: string }[] = [
-  { value: 'LEFT', label: '왼쪽 정렬' },
-  { value: 'CENTER', label: '가운데 정렬' },
-  { value: 'RIGHT', label: '오른쪽 정렬' },
+const ALIGNS: { value: Align; label: string; icon: string }[] = [
+  { value: 'LEFT', label: '왼쪽 정렬', icon: alignLeftIcon },
+  { value: 'CENTER', label: '가운데 정렬', icon: alignCenterIcon },
+  { value: 'RIGHT', label: '오른쪽 정렬', icon: alignRightIcon },
 ];
 const TEXT_COLORS = [
   { value: '#383838', label: '검정' },
@@ -63,14 +67,21 @@ const HEADER_COLORS = [
   { value: '#ebffeb', label: '연한 초록' },
 ];
 
-type Tab = 'section' | 'layout';
+export type SettingsView = 'table' | 'text' | 'layout';
+
+const VIEW_TEXTS: Record<SettingsView, { title: string; description: string }> = {
+  table: { title: '표', description: '표 형식 섹션의 행과 열, 셀 모양을 설정해요.' },
+  text: { title: '글자', description: '선택한 섹션의 글자 크기와 색상, 여백을 설정해요.' },
+  layout: { title: '레이아웃', description: '문서 전체의 간격과 여백, 페이지 구성을 설정해요.' },
+};
 
 interface TemplateSettingsPanelProps {
-  item: TemplateItem | null;
+  view: SettingsView;
+  items: TemplateItem[];
+  selectedIndex: number | null;
+  onSelect: (index: number) => void;
   layout: TemplateLayout;
   onChangeItem: (item: TemplateItem) => void;
-  onRemoveItem: () => void;
-  canRemoveItem: boolean;
   onChangeLayout: (layout: TemplateLayout) => void;
 }
 
@@ -116,7 +127,7 @@ function Select<T extends string | number>({
           </option>
         ))}
       </select>
-      <Placeholder size={SMALL_ICON_SIZE} />
+      <Icon src={chevronDownIcon} size={SMALL_ICON_SIZE} className={styles.selectIcon} />
     </span>
   );
 }
@@ -167,7 +178,7 @@ function AlignButtons({ label, value, onChange, disabled }: { label: string; val
           className={[styles.segment, value === option.value ? styles.segmentOn : ''].filter(Boolean).join(' ')}
           onClick={() => onChange(option.value)}
         >
-          <Placeholder size={SMALL_ICON_SIZE} />
+          <Icon src={option.icon} size={SMALL_ICON_SIZE} />
         </button>
       ))}
     </span>
@@ -213,88 +224,74 @@ function NumberField({
   );
 }
 
-/** 섹션 설정 · 레이아웃 설정 (디자인 23:72, 23:278) */
+/** 디자인 TemplateEditorPage_Table, _Text, _Layout 왼쪽 패널. 섹션 이름 고치기, 삭제는 미리보기 카드에서 한다 */
 export default function TemplateSettingsPanel({
-  item,
+  view,
+  items,
+  selectedIndex,
+  onSelect,
   layout,
   onChangeItem,
-  onRemoveItem,
-  canRemoveItem,
   onChangeLayout,
 }: TemplateSettingsPanelProps) {
-  const [tab, setTab] = useState<Tab>('section');
+  const item = selectedIndex !== null ? (items[selectedIndex] ?? null) : null;
   const setSettings = (patch: Partial<ItemSettings>) => item && onChangeItem({ ...item, settings: { ...item.settings, ...patch } });
   const setTable = (patch: Partial<ItemSettings['table']>) =>
     item && setSettings({ table: { ...item.settings.table, ...patch } });
   const isTable = item?.settings.recordType === 'TABLE';
+  const texts = VIEW_TEXTS[view];
+
+  const sectionPicker = (
+    <div className={styles.section}>
+      <h3 className={styles.heading}>선택한 섹션</h3>
+      <span className={`${styles.selectBox} ${styles.pickerBox}`}>
+        <Icon src={ballotIcon} size={SMALL_ICON_SIZE} className={styles.selectIcon} />
+        <select
+          className={styles.select}
+          aria-label="선택한 섹션"
+          value={selectedIndex ?? ''}
+          onChange={(event) => onSelect(Number(event.target.value))}
+        >
+          {selectedIndex === null && <option value="">섹션을 골라 주세요</option>}
+          {items.map((option, index) => (
+            <option key={`${option.title}-${index}`} value={index}>
+              {option.title || '제목 없음'}
+            </option>
+          ))}
+        </select>
+        <Icon src={chevronDownIcon} size={SMALL_ICON_SIZE} className={styles.selectIcon} />
+      </span>
+    </div>
+  );
 
   return (
-    <aside className={styles.panel} aria-label="양식 설정">
-      <div className={styles.tabs} role="tablist">
-        {(['section', 'layout'] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={tab === value}
-            className={[styles.tab, tab === value ? styles.tabOn : ''].filter(Boolean).join(' ')}
-            onClick={() => setTab(value)}
-          >
-            {value === 'section' ? '섹션 설정' : '레이아웃 설정'}
-          </button>
-        ))}
+    <aside className={styles.panel} aria-label={`${texts.title} 설정`}>
+      <div className={styles.titleGroup}>
+        <h2 className={styles.title}>{texts.title}</h2>
+        <p className={styles.description}>{texts.description}</p>
       </div>
 
-      {tab === 'section' && !item && <p className={styles.empty}>미리보기에서 설정할 섹션을 골라 주세요.</p>}
+      {view !== 'layout' && sectionPicker}
 
-      {tab === 'section' && item && (
-        <div className={styles.body} role="tabpanel">
-          <div className={styles.group}>
-            <div className={styles.nameBox}>
-              <Placeholder size={ICON_SIZE} />
-              <input
-                className={styles.nameInput}
-                aria-label="섹션 이름"
-                maxLength={MAX_TITLE_LENGTH}
-                value={item.title}
-                onChange={(event) => onChangeItem({ ...item, title: event.target.value })}
-              />
-              <button type="button" className={styles.iconButton} aria-label="섹션 삭제" disabled={!canRemoveItem} onClick={onRemoveItem}>
-                <Placeholder size={ICON_SIZE} />
-              </button>
-            </div>
-            <div className={styles.field}>
-              <span className={styles.fieldLabel}>기록 방식</span>
+      {view === 'table' && item && (
+        <>
+          <div className={styles.section}>
+            <h3 className={styles.heading}>섹션 형식</h3>
+            <Row label="기록 방식">
               <Select
                 label="기록 방식"
                 value={item.settings.recordType}
                 options={RECORD_TYPES}
                 onChange={(recordType) => setSettings({ recordType })}
               />
-            </div>
-          </div>
-          <div className={styles.group}>
-            <Row label="제목 크기">
-              <Select label="제목 크기" value={item.settings.titleSize} options={TITLE_SIZES} onChange={(titleSize) => setSettings({ titleSize })} />
-            </Row>
-            <Row label="본문 크기">
-              <Select label="본문 크기" value={item.settings.bodySize} options={BODY_SIZES} onChange={(bodySize) => setSettings({ bodySize })} />
-            </Row>
-            <Row label="글자 색상">
-              <Swatches label="글자 색상" value={item.settings.color} options={TEXT_COLORS} onChange={(color) => setSettings({ color })} />
-            </Row>
-            <Row label="바깥 여백">
-              <Select label="바깥 여백" value={item.settings.margin} options={MARGINS} onChange={(margin) => setSettings({ margin })} />
             </Row>
           </div>
-          <hr className={styles.divider} />
-          <h3 className={styles.heading}>표/셀 설정</h3>
-          {!isTable && <p className={styles.hint}>기록 방식을 "표"로 고르면 바꿀 수 있어요.</p>}
-          <div className={styles.tableGroup}>
+          <div className={styles.section}>
+            <h3 className={styles.heading}>표/셀 설정</h3>
+            {!isTable && <p className={styles.hint}>기록 방식을 "표"로 고르면 바꿀 수 있어요.</p>}
             <Row label="행/열 수">
               <span className={styles.pair}>
                 <NumberField label="행 수" unit="행" value={item.settings.table.rows} min={1} max={MAX_ROWS} disabled={!isTable} onChange={(rows) => setTable({ rows })} />
-                <span className={styles.slash}>/</span>
                 <NumberField label="열 수" unit="열" value={item.settings.table.cols} min={1} max={MAX_COLS} disabled={!isTable} onChange={(cols) => setTable({ cols })} />
               </span>
             </Row>
@@ -333,13 +330,36 @@ export default function TemplateSettingsPanel({
               />
             </Row>
           </div>
-        </div>
+        </>
       )}
 
-      {tab === 'layout' && (
-        <div className={`${styles.body} ${styles.layoutBody}`} role="tabpanel">
-          <h3 className={styles.heading}>간격과 정렬</h3>
-          <div className={styles.group}>
+      {view === 'text' && item && (
+        <>
+          <div className={styles.section}>
+            <h3 className={styles.heading}>글자 서식</h3>
+            <Row label="제목 크기">
+              <Select label="제목 크기" value={item.settings.titleSize} options={TITLE_SIZES} onChange={(titleSize) => setSettings({ titleSize })} />
+            </Row>
+            <Row label="본문 크기">
+              <Select label="본문 크기" value={item.settings.bodySize} options={BODY_SIZES} onChange={(bodySize) => setSettings({ bodySize })} />
+            </Row>
+            <Row label="글자 색상">
+              <Swatches label="글자 색상" value={item.settings.color} options={TEXT_COLORS} onChange={(color) => setSettings({ color })} />
+            </Row>
+          </div>
+          <div className={styles.section}>
+            <h3 className={styles.heading}>여백</h3>
+            <Row label="바깥 여백">
+              <Select label="바깥 여백" value={item.settings.margin} options={MARGINS} onChange={(margin) => setSettings({ margin })} />
+            </Row>
+          </div>
+        </>
+      )}
+
+      {view === 'layout' && (
+        <>
+          <div className={styles.section}>
+            <h3 className={styles.heading}>간격과 정렬</h3>
             <Row label="섹션 간격">
               <Select
                 label="섹션 간격"
@@ -348,31 +368,31 @@ export default function TemplateSettingsPanel({
                 onChange={(sectionGap) => onChangeLayout({ ...layout, sectionGap })}
               />
             </Row>
-            <div className={styles.subGroup}>
-              <p className={styles.subHeading}>페이지 여백</p>
-              <Row label="위쪽/아래쪽">
-                <NumberField
-                  label="위쪽/아래쪽 여백"
-                  unit="mm"
-                  value={layout.marginVerticalMm}
-                  min={0}
-                  max={MAX_MARGIN_MM}
-                  onChange={(marginVerticalMm) => onChangeLayout({ ...layout, marginVerticalMm })}
-                />
-              </Row>
-              <Row label="왼쪽/오른쪽">
-                <NumberField
-                  label="왼쪽/오른쪽 여백"
-                  unit="mm"
-                  value={layout.marginHorizontalMm}
-                  min={0}
-                  max={MAX_MARGIN_MM}
-                  onChange={(marginHorizontalMm) => onChangeLayout({ ...layout, marginHorizontalMm })}
-                />
-              </Row>
-            </div>
             <Row label="정렬 방식">
               <AlignButtons label="정렬 방식" value={layout.align} onChange={(align) => onChangeLayout({ ...layout, align })} />
+            </Row>
+          </div>
+          <div className={styles.section}>
+            <h3 className={styles.heading}>페이지 여백</h3>
+            <Row label="위쪽/아래쪽">
+              <NumberField
+                label="위쪽/아래쪽 여백"
+                unit="mm"
+                value={layout.marginVerticalMm}
+                min={0}
+                max={MAX_MARGIN_MM}
+                onChange={(marginVerticalMm) => onChangeLayout({ ...layout, marginVerticalMm })}
+              />
+            </Row>
+            <Row label="왼쪽/오른쪽">
+              <NumberField
+                label="왼쪽/오른쪽 여백"
+                unit="mm"
+                value={layout.marginHorizontalMm}
+                min={0}
+                max={MAX_MARGIN_MM}
+                onChange={(marginHorizontalMm) => onChangeLayout({ ...layout, marginHorizontalMm })}
+              />
             </Row>
           </div>
           <div className={styles.section}>
@@ -386,7 +406,7 @@ export default function TemplateSettingsPanel({
             <Row label="사진 업로드">
               {/* 파일 저장소(S3) 연결이 필요해 아직 막아 둔다 (docs/backlog.md) */}
               <button type="button" className={styles.iconButton} aria-label="배경 사진 업로드" disabled title="배경 사진은 준비 중이에요">
-                <Placeholder size={SMALL_ICON_SIZE} />
+                <Icon src={uploadIcon} size={SMALL_ICON_SIZE} />
               </button>
             </Row>
           </div>
@@ -413,7 +433,7 @@ export default function TemplateSettingsPanel({
               </div>
             ))}
           </div>
-        </div>
+        </>
       )}
     </aside>
   );

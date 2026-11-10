@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import { getAgendaBoard, getMeetingDetail, listTranscripts, type MeetingDetailResponse } from '../../api/meeting';
 import {
@@ -17,7 +17,17 @@ import {
   type MinutesSection,
 } from '../../api/minutes';
 import { getMe } from '../../api/user';
-import Placeholder from '../../components/Placeholder';
+import downloadIcon from '../../assets/icons/download.svg';
+import locationIcon from '../../assets/icons/location.svg';
+import personIcon from '../../assets/icons/person-sm.svg';
+import saveIcon from '../../assets/icons/save.svg';
+import scheduleIcon from '../../assets/icons/schedule.svg';
+import templateIcon from '../../assets/icons/template-sm.svg';
+import AiNotice from '../../components/AiNotice';
+import EditorTopBar from '../../components/EditorTopBar';
+import editorBar from '../../components/EditorTopBar.module.css';
+import Icon from '../../components/Icon';
+import Spinner from '../../components/Spinner';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { TranscriptLine } from '../../types/meetingRoom';
 import type { MinutesTemplate } from '../../types/template';
@@ -30,7 +40,7 @@ import MinutesSidePanels, { type AgendaSummary } from './MinutesSidePanels';
 import ShareConfirmModal from './ShareConfirmModal';
 import styles from './MinutesEditorPage.module.css';
 
-const META_ICON_SIZE = 20;
+const META_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 16;
 // MSG-037~040
 const SHARED_MESSAGE = '회의록을 저장하고 참석 멤버에게 공유했습니다.';
@@ -219,11 +229,7 @@ export default function MinutesEditorPage() {
   if (state.type !== 'ready' || !minutes) {
     return (
       <div className={styles.page}>
-        <header className={styles.topBar}>
-          <Link to="/home" className={styles.logo}>
-            sync
-          </Link>
-        </header>
+        <EditorTopBar />
         <div className={styles.message}>
           {state.type === 'loading' && <p>회의록을 준비하고 있어요. 잠시만 기다려 주세요.</p>}
           {state.type === 'notReady' && (
@@ -250,10 +256,10 @@ export default function MinutesEditorPage() {
   const isWriter = minutes.writer.userId === myId;
   const templateName = templates.find((template) => template.templateId === minutes.templateId)?.name;
   const meta = [
-    scheduleLabel(minutes.meetingStartAt, meeting?.endAt),
-    ...(minutes.location ? [minutes.location] : []),
-    `참석자 ${minutes.attendees.length}명`,
-    templateName ?? '양식 없음',
+    { icon: scheduleIcon, label: scheduleLabel(minutes.meetingStartAt, meeting?.endAt) },
+    ...(minutes.location ? [{ icon: locationIcon, label: minutes.location }] : []),
+    { icon: personIcon, label: `참석자 ${minutes.attendees.length}명` },
+    { icon: templateIcon, label: templateName ?? '양식 없음' },
   ];
   const documentMeta = [
     `일시: ${scheduleLabel(minutes.meetingStartAt, meeting?.endAt)}`,
@@ -348,47 +354,49 @@ export default function MinutesEditorPage() {
   return (
     <div className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
-      <header className={styles.topBar}>
-        <Link to="/home" className={styles.logo}>
-          sync
-        </Link>
-      </header>
+      <EditorTopBar
+        actions={
+          <>
+            {isWriter && (
+              <button
+                type="button"
+                className={`${editorBar.action} ${editorBar.secondary}`}
+                disabled={isSaving}
+                onClick={saveDraft}
+              >
+                {/* REQ-135 저장하는 동안 아이콘이 로딩 표시로 바뀐다 */}
+                {isSaving ? <Spinner size={BUTTON_ICON_SIZE} /> : <Icon src={saveIcon} size={BUTTON_ICON_SIZE} />}
+                {isSaving ? '저장 중' : '임시저장'}
+              </button>
+            )}
+            {isWriter && minutes.status === 'WRITING' && (
+              <button type="button" className={`${editorBar.action} ${editorBar.primary}`} onClick={() => setDialog('share')}>
+                작성 완료
+              </button>
+            )}
+          </>
+        }
+      />
+      {/* 디자인 MeetingInfoBar */}
       <div className={styles.headBar}>
-        <div className={styles.info}>
-          <h1 className={styles.title}>{minutes.title}</h1>
-          <ul className={styles.meta}>
-            {meta.map((item) => (
-              <li key={item} className={styles.metaItem}>
-                <Placeholder size={META_ICON_SIZE} />
-                {item}
-              </li>
-            ))}
-            {minutes.status !== 'WRITING' && <li className={styles.status}>{STATUS_LABELS[minutes.status]}</li>}
-          </ul>
-        </div>
-        <div className={styles.actions}>
-          <button type="button" className={styles.secondary} onClick={() => setDialog('download')}>
-            <Placeholder size={BUTTON_ICON_SIZE} />
-            다운로드
-          </button>
-          {isWriter && (
-            <button type="button" className={styles.secondary} disabled={isSaving} onClick={saveDraft}>
-              {/* REQ-135 저장하는 동안 아이콘이 로딩 표시로 바뀐다 */}
-              {isSaving ? <span className={styles.spinner} aria-hidden="true" /> : <Placeholder size={BUTTON_ICON_SIZE} />}
-              {isSaving ? '저장 중' : '임시저장'}
-            </button>
-          )}
-          {isWriter && minutes.status === 'WRITING' && (
-            <button type="button" className={styles.primary} onClick={() => setDialog('share')}>
-              <Placeholder size={BUTTON_ICON_SIZE} />
-              작성 완료
-            </button>
-          )}
-        </div>
+        <h1 className={styles.title}>{minutes.title}</h1>
+        <ul className={styles.meta}>
+          {meta.map((item) => (
+            <li key={item.label} className={styles.metaItem}>
+              <Icon src={item.icon} size={META_ICON_SIZE} className={styles.metaIcon} />
+              {item.label}
+            </li>
+          ))}
+          {minutes.status !== 'WRITING' && <li className={styles.status}>{STATUS_LABELS[minutes.status]}</li>}
+        </ul>
+        <button type="button" className={styles.download} onClick={() => setDialog('download')}>
+          <Icon src={downloadIcon} size={BUTTON_ICON_SIZE} />
+          다운로드
+        </button>
       </div>
       {showDraftNotice && isDrafting && (
         <p className={styles.draftNotice} role="status">
-          <span className={styles.spinner} aria-hidden="true" />
+          <Spinner size={BUTTON_ICON_SIZE} />
           {DRAFTING_MESSAGE}
         </p>
       )}
@@ -396,9 +404,26 @@ export default function MinutesEditorPage() {
         <div className={`${styles.draftNotice} ${styles.draftFailed}`} role="alert">
           <span>{DRAFT_FAILED_MESSAGE}</span>
           <button type="button" className={styles.secondary} disabled={isRetryingDraft} onClick={retryDraft}>
-            {isRetryingDraft ? <span className={styles.spinner} aria-hidden="true" /> : <Placeholder size={BUTTON_ICON_SIZE} />}
+            {isRetryingDraft && <Spinner size={BUTTON_ICON_SIZE} />}
             다시 만들기
           </button>
+        </div>
+      )}
+      {/* REQ-175 초안이 준비되면 작성자에게 (MSG-071), 다른 참석자에게는 작성자가 정리 중이라고 (MSG-072) */}
+      {minutes.status === 'WRITING' && minutes.draftStatus === 'SUCCEEDED' && isWriter && (
+        <p className={`${styles.draftNotice} ${styles.draftReady}`} role="status">
+          회의록 초안이 준비됐어요. 내가 다듬고 [작성 완료]를 누르면 참여자 모두에게 공개돼요.
+        </p>
+      )}
+      {minutes.status === 'WRITING' && !isWriter && (
+        <p className={styles.draftNotice} role="status">
+          작성자가 회의록을 정리하고 있어요. 완료되면 알림으로 알려 드릴게요.
+        </p>
+      )}
+      {/* REQ-172 AI가 만든 초안 위 안내 (MSG-070) */}
+      {minutes.draftStatus === 'SUCCEEDED' && (
+        <div className={styles.aiNotice}>
+          <AiNotice meetingId={minutes.meetingId} target="MINUTES_DRAFT" />
         </div>
       )}
       <div className={styles.content}>

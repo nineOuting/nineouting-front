@@ -1,0 +1,49 @@
+/* 디자인 Dim + Spotlight + Coachmark */
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 350;
+}
+
+/* 밝힐 영역 바깥을 큰 그림자로 어둡게 덮는다 */
+.spotlight {
+  position: fixed;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 55%);
+  pointer-events: none;
+}
+
+.card {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+  background: var(--bg-surface-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.text {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  white-space: pre-line;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progress {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.buttons {
+  display: flex;
+  gap: var(--spacing-2);
+}

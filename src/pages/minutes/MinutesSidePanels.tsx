@@ -1,11 +1,11 @@
 import { useRef, useState, type PointerEvent } from 'react';
-import dividerMinutesSide from '../../assets/divider-minutes-side.svg';
-import Placeholder from '../../components/Placeholder';
+import archiveIcon from '../../assets/icons/archive.svg';
+import transcriptIcon from '../../assets/icons/transcript.svg';
+import Icon from '../../components/Icon';
 import type { TranscriptLine } from '../../types/meetingRoom';
 import styles from './MinutesSidePanels.module.css';
 
 const TITLE_ICON_SIZE = 24;
-const DIVIDER_WIDTH = 454;
 // 요약본 410px : 전사 392px (디자인). 끌어서 바꿀 수 있는 범위
 const DEFAULT_RATIO = 410 / 802;
 const MIN_RATIO = 0.2;
@@ -45,12 +45,12 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
       <section className={styles.card} style={{ flexBasis: `${ratio * 100}%` }} aria-labelledby="minutes-summary-title">
         <div className={styles.head}>
           <h2 id="minutes-summary-title" className={styles.title}>
-            <Placeholder size={TITLE_ICON_SIZE} />
+            <Icon src={archiveIcon} size={TITLE_ICON_SIZE} className={styles.titleIcon} />
             회의 요약본
           </h2>
           <p className={styles.caption}>회의 중 정리된 요약을 보며 회의록을 작성해 보세요</p>
         </div>
-        <img src={dividerMinutesSide} alt="" width={DIVIDER_WIDTH} height={1} className={styles.divider} />
+        <div className={styles.divider} />
         <div className={styles.body}>
           {summarized.length === 0 ? (
             <p className={styles.empty}>정리된 요약이 없어요.</p>
@@ -86,12 +86,12 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
       <section className={styles.card} style={{ flexBasis: `${(1 - ratio) * 100}%` }} aria-labelledby="minutes-transcript-title">
         <div className={styles.head}>
           <h2 id="minutes-transcript-title" className={styles.title}>
-            <Placeholder size={TITLE_ICON_SIZE} />
-            회의 전사
+            <Icon src={transcriptIcon} size={TITLE_ICON_SIZE} className={styles.titleIcon} />
+            전사 기록
           </h2>
           <p className={styles.caption}>회의 중 받아쓴 발언을 시간 순서대로 볼 수 있어요</p>
         </div>
-        <img src={dividerMinutesSide} alt="" width={DIVIDER_WIDTH} height={1} className={styles.divider} />
+        <div className={styles.divider} />
         <div className={styles.body}>
           {lines.length === 0 ? (
             <p className={styles.empty}>받아쓴 발언이 없어요.</p>

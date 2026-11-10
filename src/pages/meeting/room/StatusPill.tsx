@@ -1,4 +1,8 @@
-import Placeholder from '../../../components/Placeholder';
+import decidedIcon from '../../../assets/icons/status-decided.svg';
+import discussingIcon from '../../../assets/icons/status-discussing.svg';
+import pendingIcon from '../../../assets/icons/status-pending.svg';
+import undecidedIcon from '../../../assets/icons/status-undecided.svg';
+import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionStatus } from '../../../types/meetingRoom';
 import styles from './StatusPill.module.css';
 
@@ -7,11 +11,19 @@ const ICON_SIZE = 16;
 type PillTone = 'discussing' | 'decided' | 'notStarted' | 'undecided' | 'decisionCheck';
 
 const LABELS: Record<PillTone, string> = {
-  discussing: '논의 중',
+  discussing: '논의중',
   decided: '결정',
   notStarted: '논의 전',
   undecided: '미결',
   decisionCheck: '결정 확인 필요',
+};
+
+const ICONS: Record<PillTone, string> = {
+  discussing: discussingIcon,
+  decided: decidedIcon,
+  notStarted: pendingIcon,
+  undecided: undecidedIcon,
+  decisionCheck: discussingIcon,
 };
 
 const DECISION_TONES: Record<DecisionStatus, PillTone> = {
@@ -31,7 +43,7 @@ interface StatusPillProps {
 export default function StatusPill({ status, soft = false }: StatusPillProps) {
   return (
     <span className={[styles.pill, styles[status], soft ? styles.soft : ''].filter(Boolean).join(' ')}>
-      <Placeholder size={ICON_SIZE} />
+      <Icon src={ICONS[status]} size={ICON_SIZE} />
       {LABELS[status]}
     </span>
   );

@@ -34,7 +34,7 @@
   gap: 8px;
   height: 44px;
   padding: 0 16px;
-  background: var(--blue-100);
+  background: var(--primary-default);
   border: none;
   border-radius: 8px;
   font-size: var(--font-size-b2);
@@ -86,7 +86,7 @@
   background: var(--blue-10);
   border-radius: 1000px;
   font-size: var(--font-size-caption);
-  color: var(--blue-100);
+  color: var(--primary-default);
 }
 
 .cardDescription,
@@ -114,4 +114,16 @@
 
 .danger {
   color: var(--red-90);
+}
+
+.cardIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--interactive-selected);
+  border-radius: var(--radius-md);
+  color: var(--primary-default);
 }

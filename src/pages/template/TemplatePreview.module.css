@@ -1,67 +1,78 @@
-/* 디자인 23:185: 532×792, 좌우 37px. 위 도구 · A4(456×675) · 쪽 이동 */
+/* 디자인 CanvasArea: 회색 바탕 가운데 문서, 아래 바 */
 .panel {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  height: 792px;
-  padding: 20px 37px;
-  overflow: hidden;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  min-width: 0;
+  background: var(--bg-surface-muted);
 }
 
-.toolbar {
+.viewport {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  width: 451px;
-  height: 17px;
+  flex: 1;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 0;
+  padding: var(--spacing-8) var(--spacing-6);
+  overflow: auto;
 }
 
-.zoom {
+.bottomBar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 var(--spacing-6);
+  background: var(--bg-surface);
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.tools,
+.zoom,
+.pager {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--spacing-2);
 }
 
 .zoomLabel {
-  width: 32px;
+  min-width: 56px;
+  padding: var(--spacing-1) var(--spacing-2);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
   text-align: center;
 }
 
 .iconButton {
   display: flex;
-  padding: 0;
-  background: none;
-  border: none;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--neutral-ghost-hover);
 }
 
 .iconButton:disabled {
   opacity: 0.4;
 }
 
-.viewport {
-  flex: 1;
-  width: 458px;
-  min-height: 0;
-  overflow: auto;
-  background: var(--grey-10);
-}
-
-/* 디자인 23:373: 흰 A4, 위아래 24 · 좌우 27 */
+/* 디자인 23:373: 흰 A4, 위아래 24, 좌우 27 */
 .paper {
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 456px;
   min-height: 675px;
   background: var(--color-white);
+  color: var(--text-primary);
 }
 
 .edge {
@@ -154,7 +165,7 @@
 .selectedRow {
   gap: 4px;
   padding: 8px 8px 5px;
-  border-color: var(--blue-100);
+  border-color: var(--primary-default);
 }
 
 .dragging {
@@ -270,14 +281,9 @@
   width: 100%;
 }
 
-.pager {
-  display: flex;
-  align-items: center;
-  gap: 17px;
-}
 
 .pageLabel {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }

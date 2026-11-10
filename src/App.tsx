@@ -17,7 +17,12 @@ import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
 import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
 import TemplateEditorPage from './pages/template/TemplateEditorPage';
 import TemplateListPage from './pages/template/TemplateListPage';
+import DisplaySettingsPage from './pages/settings/DisplaySettingsPage';
+import HelpPage from './pages/settings/HelpPage';
+import PlanPage from './pages/settings/PlanPage';
+import ProfilePage from './pages/settings/ProfilePage';
 import TrashPage from './pages/trash/TrashPage';
+import TooltipLayer from './components/TooltipLayer';
 import InvitationPage from './pages/workspace/InvitationPage';
 import InviteLinkPage from './pages/workspace/InviteLinkPage';
 import WorkspacePage from './pages/workspace/WorkspacePage';
@@ -28,12 +33,46 @@ const DevMinutesPage = import.meta.env.DEV ? lazy(() => import('./pages/dev/DevM
 export default function App() {
   return (
     <BrowserRouter>
+      <TooltipLayer />
       <Routes>
         <Route
           path="/home"
           element={
             <RequireAuth>
               <HomePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <ProfilePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RequireAuth>
+              <DisplaySettingsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/help"
+          element={
+            <RequireAuth>
+              <HelpPage />
+            </RequireAuth>
+          }
+        />
+        {/* REQ-176 요금제 안내 */}
+        <Route
+          path="/plan"
+          element={
+            <RequireAuth>
+              <PlanPage />
             </RequireAuth>
           }
         />

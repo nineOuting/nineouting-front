@@ -1,130 +1,295 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
-import { listTrash, purgeTrashFolder, restoreTrashFolder, type TrashFolder } from '../../api/workspace';
-import AppLayout from '../../components/AppLayout';
+import { listTrashMeetings, purgeMeeting, restoreMeeting } from '../../api/meeting';
+import { listMyWorkspaces, listTrash, purgeTrashFolder, restoreTrashFolder } from '../../api/workspace';
+import folderIcon from '../../assets/icons/folder-meta.svg';
+import minutesIcon from '../../assets/icons/minutes-doc.svg';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import EmptyState from '../../components/EmptyState';
+import Icon from '../../components/Icon';
+import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import { formatDateTime } from '../../utils/meetingFormat';
+import type { WorkspaceSummary } from '../../types/workspace';
+import SettingsLayout from '../settings/SettingsLayout';
 import styles from './TrashPage.module.css';
 
-const UNKNOWN_NAME = '알 수 없음';
+const ICON_SIZE = 16;
+const DAY_MS = 24 * 60 * 60 * 1000;
+// 남은 기간이 이 날수 이하면 빨갛게 보인다
+const URGENT_DAYS = 7;
+const LOADING_ROWS = 3;
+
+type Kind = 'folder' | 'minutes' | 'meeting';
+
+interface TrashItem {
+  key: string;
+  kind: Kind;
+  id: number;
+  name: string;
+  location: string;
+  deletedAt: string;
+  purgeAt: string;
+}
+
+const KIND_LABELS: Record<Kind, string> = { folder: '폴더', minutes: '회의록', meeting: '회의' };
+
+function daysLeft(purgeAt: string) {
+  return Math.max(0, Math.ceil((new Date(purgeAt).getTime() - Date.now()) / DAY_MS));
+}
+
+function formatDate(dateTime: string) {
+  return dateTime.slice(0, 10).replaceAll('-', '.');
+}
+
+/** MSG-073 "회의록 N개를 복구했어요." 종류가 섞이면 개수만 */
+function restoredMessage(items: TrashItem[]) {
+  const kinds = new Set(items.map(({ kind }) => kind));
+  const label = kinds.size === 1 ? `${KIND_LABELS[items[0].kind]} ` : '';
+  return `${label}${items.length}개를 복구했어요.`;
+}
 
 /**
- * REQ-143 쓰레기통. 지금은 지운 폴더만 들어온다 (2026-10-28 결정).
- * 디자인이 없어 양식 목록 화면 모양을 따랐다 (docs/backlog.md)
+ * REQ-143 삭제 목록 (디자인 TrashPage, 설정 안). 지운 폴더(workspace-service)와 회의, 회의록(meeting-service)을 함께 보여 주고
+ * 골라서 복구하거나 영구 삭제한다. 3개월이 지나면 자동으로 영구 삭제된다
  */
 export default function TrashPage() {
+  const navigate = useNavigate();
   const { workspaceId } = useParams();
   const id = Number(workspaceId);
-  const [folders, setFolders] = useState<TrashFolder[] | null>(null);
-  const [purging, setPurging] = useState<TrashFolder | null>(null);
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
+  const [items, setItems] = useState<TrashItem[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [isPurging, setIsPurging] = useState<TrashItem[] | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
 
+  const load = useCallback(async () => {
+    const [folders, meetings, mine] = await Promise.all([listTrash(id), listTrashMeetings(id), listMyWorkspaces()]);
+    const workspaceName = mine.find((workspace) => workspace.workspaceId === id)?.name ?? '';
+    const rows: TrashItem[] = [
+      ...folders.map((folder) => ({
+        key: `folder-${folder.folderId}`,
+        kind: 'folder' as const,
+        id: folder.folderId,
+        name: folder.name,
+        location: workspaceName,
+        deletedAt: folder.deletedAt,
+        purgeAt: folder.purgeAt,
+      })),
+      ...meetings.map((meeting) => ({
+        key: `meeting-${meeting.meetingId}`,
+        kind: meeting.hasMinutes ? ('minutes' as const) : ('meeting' as const),
+        id: meeting.meetingId,
+        name: meeting.title,
+        location: meeting.folderName,
+        deletedAt: meeting.deletedAt,
+        purgeAt: meeting.purgeAt,
+      })),
+    ].sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+    return { rows, mine };
+  }, [id]);
+
   useEffect(() => {
     let isCurrent = true;
-    listTrash(id)
-      .then((items) => isCurrent && setFolders(items))
+    load()
+      .then(({ rows, mine }) => {
+        if (isCurrent) {
+          setItems(rows);
+          setWorkspaces(mine);
+          setSelected(new Set());
+        }
+      })
       .catch((error: unknown) => {
         if (isCurrent) {
-          setFolders([]);
+          setItems([]);
           setToast({ text: errorMessage(error), variant: 'error' });
         }
       });
     return () => {
       isCurrent = false;
     };
-  }, [id]);
+  }, [load]);
 
-  const run = async (folder: TrashFolder, action: () => Promise<void>, doneMessage: string) => {
-    setBusyId(folder.folderId);
-    try {
-      await action();
-      setFolders((prev) => prev && prev.filter(({ folderId }) => folderId !== folder.folderId));
-      setToast({ text: doneMessage, variant: 'info' });
-    } catch (error) {
-      setToast({ text: errorMessage(error), variant: 'error' });
-    } finally {
-      setBusyId(null);
+  const run = async (targets: TrashItem[], action: 'restore' | 'purge') => {
+    setIsBusy(true);
+    const done: string[] = [];
+    let failure: unknown;
+    for (const item of targets) {
+      try {
+        if (item.kind === 'folder') {
+          await (action === 'restore' ? restoreTrashFolder(id, item.id) : purgeTrashFolder(id, item.id));
+        } else {
+          await (action === 'restore' ? restoreMeeting(item.id) : purgeMeeting(item.id));
+        }
+        done.push(item.key);
+      } catch (error) {
+        failure = error;
+      }
     }
+    setItems((prev) => prev && prev.filter((item) => !done.includes(item.key)));
+    setSelected((prev) => new Set([...prev].filter((key) => !done.includes(key))));
+    setIsBusy(false);
+    if (failure) {
+      setToast({ text: errorMessage(failure), variant: 'error' });
+      return;
+    }
+    const finished = targets.filter((item) => done.includes(item.key));
+    setToast({
+      text: action === 'restore' ? restoredMessage(finished) : `${finished.length}개를 영구 삭제했어요.`,
+      variant: 'success',
+    });
   };
 
-  const restore = (folder: TrashFolder) =>
-    run(folder, () => restoreTrashFolder(id, folder.folderId), `'${folder.name}' 폴더를 복구했어요.`);
-
-  const purge = (folder: TrashFolder) => {
-    setPurging(null);
-    return run(folder, () => purgeTrashFolder(id, folder.folderId), `'${folder.name}' 폴더를 영구 삭제했어요.`);
-  };
+  const toggle = (key: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  const selectedItems = items?.filter((item) => selected.has(item.key)) ?? [];
+  const isAllSelected = Boolean(items?.length) && selectedItems.length === items?.length;
 
   return (
-    <AppLayout className={styles.page} workspaceId={id}>
+    <SettingsLayout
+      title="삭제 목록"
+      description="삭제한 회의록과 폴더는 3개월 동안 보관된 뒤 영구 삭제돼요. 지운 사람과 만든 사람이 복구할 수 있어요."
+    >
       {toast && <Toast message={toast} onClose={closeToast} />}
-      <div>
-        <h1 className={styles.title}>쓰레기통</h1>
-        <p className={styles.description}>
-          삭제한 폴더는 3개월 동안 보관된 뒤 자동으로 영구 삭제돼요. 지운 사람과 워크스페이스 소유자가 복구할 수 있어요.
-        </p>
-      </div>
-      {folders && folders.length === 0 && <p className={styles.empty}>쓰레기통이 비어 있어요.</p>}
-      {folders && folders.length > 0 && (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th scope="col">폴더</th>
-              <th scope="col">삭제한 사람</th>
-              <th scope="col">삭제한 날</th>
-              <th scope="col">영구 삭제 예정</th>
-              <th scope="col">
-                <span className={styles.hidden}>관리</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {folders.map((folder) => (
-              <tr key={folder.folderId}>
-                <td className={styles.name}>{folder.name}</td>
-                <td>{folder.deletedByName ?? UNKNOWN_NAME}</td>
-                <td>{formatDateTime(folder.deletedAt)}</td>
-                <td>{formatDateTime(folder.purgeAt)}</td>
-                <td>
-                  <span className={styles.actions}>
-                    <button
-                      type="button"
-                      className={styles.secondary}
-                      disabled={busyId === folder.folderId}
-                      onClick={() => restore(folder)}
-                    >
-                      복구
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.secondary} ${styles.danger}`}
-                      disabled={busyId === folder.folderId}
-                      onClick={() => setPurging(folder)}
-                    >
-                      영구 삭제
-                    </button>
-                  </span>
-                </td>
-              </tr>
+      {workspaces.length > 1 && (
+        <label className={styles.workspacePicker}>
+          워크스페이스
+          <select
+            className={styles.workspaceSelect}
+            value={id}
+            onChange={(event) => navigate(`/workspaces/${event.target.value}/trash`, { replace: true })}
+          >
+            {workspaces.map((workspace) => (
+              <option key={workspace.workspaceId} value={workspace.workspaceId}>
+                {workspace.name}
+              </option>
             ))}
-          </tbody>
-        </table>
+          </select>
+        </label>
       )}
-      {purging && (
+      <div className={styles.card}>
+        {items === null && (
+          <div className={styles.loading}>
+            {Array.from({ length: LOADING_ROWS }, (_, index) => (
+              <Skeleton key={index} height={44} />
+            ))}
+          </div>
+        )}
+        {items?.length === 0 && <EmptyState title="삭제한 항목이 없어요" description="지운 회의록과 폴더가 여기에 모여요" />}
+        {items && items.length > 0 && (
+          <>
+            <div className={styles.toolbar}>
+              <span className={styles.selectedCount}>{selectedItems.length > 0 ? `${selectedItems.length}개 선택됨` : ''}</span>
+              <span className={styles.bulk}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  disabled={isBusy || selectedItems.length === 0}
+                  onClick={() => void run(selectedItems, 'restore')}
+                >
+                  복구
+                </button>
+                <button
+                  type="button"
+                  className={styles.danger}
+                  disabled={isBusy || selectedItems.length === 0}
+                  onClick={() => setIsPurging(selectedItems)}
+                >
+                  영구 삭제
+                </button>
+              </span>
+            </div>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col" className={styles.checkCell}>
+                    <input
+                      type="checkbox"
+                      aria-label="모두 선택"
+                      checked={isAllSelected}
+                      onChange={() => setSelected(isAllSelected ? new Set() : new Set(items.map((item) => item.key)))}
+                    />
+                  </th>
+                  <th scope="col">이름</th>
+                  <th scope="col">종류</th>
+                  <th scope="col">위치</th>
+                  <th scope="col">삭제한 날짜</th>
+                  <th scope="col">남은 기간</th>
+                  <th scope="col">
+                    <span className={styles.hidden}>복구</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => {
+                  const left = daysLeft(item.purgeAt);
+                  return (
+                    <tr key={item.key} className={selected.has(item.key) ? styles.selectedRow : undefined}>
+                      <td className={styles.checkCell}>
+                        <input
+                          type="checkbox"
+                          aria-label={`${item.name} 선택`}
+                          checked={selected.has(item.key)}
+                          onChange={() => toggle(item.key)}
+                        />
+                      </td>
+                      <td>
+                        <span className={styles.name}>
+                          <Icon src={item.kind === 'folder' ? folderIcon : minutesIcon} size={ICON_SIZE} className={styles.mutedIcon} />
+                          {item.name}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={styles.kind}>{KIND_LABELS[item.kind]}</span>
+                      </td>
+                      <td className={styles.location}>{item.location}</td>
+                      <td>{formatDate(item.deletedAt)}</td>
+                      <td>
+                        <span className={left <= URGENT_DAYS ? `${styles.days} ${styles.urgent}` : styles.days}>D-{left}</span>
+                      </td>
+                      <td className={styles.actionCell}>
+                        <button
+                          type="button"
+                          className={styles.textButton}
+                          disabled={isBusy}
+                          onClick={() => void run([item], 'restore')}
+                        >
+                          복구
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
+      {isPurging && (
         <ConfirmDialog
-          title="폴더를 영구 삭제하시겠습니까?"
-          message={'폴더 안의 회의와 회의록이 모두 함께 삭제되며\n되돌릴 수 없습니다.'}
+          title={`${isPurging.length}개를 영구 삭제할까요?`}
+          message="영구 삭제하면 다시 복구할 수 없어요"
           cancelLabel="취소"
           confirmLabel="영구 삭제"
           isDanger
-          onCancel={() => setPurging(null)}
-          onConfirm={() => purge(purging)}
+          onCancel={() => setIsPurging(null)}
+          onConfirm={() => {
+            const targets = isPurging;
+            setIsPurging(null);
+            void run(targets, 'purge');
+          }}
         />
       )}
-    </AppLayout>
+    </SettingsLayout>
   );
 }

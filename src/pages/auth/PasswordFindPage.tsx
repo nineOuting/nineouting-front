@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { requestPasswordReset } from '../../api/auth';
 import { errorMessage } from '../../api/client';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
-import Placeholder from '../../components/Placeholder';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
 import { EMAIL_MAX_LENGTH, EMAIL_REGEX, MESSAGES } from '../../constants/auth';
 import auth from './auth.module.css';
@@ -15,7 +16,9 @@ const BACK_ICON_SIZE = 24;
 /** REQ-009 비밀번호 찾기 - 이메일 입력 */
 export default function PasswordFindPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  // 인증 번호 화면에서 [이메일 다시 입력하기]로 돌아오면 넣었던 이메일을 채워 둔다 (REQ-009)
+  const returnedEmail = (useLocation().state as { email?: string } | null)?.email ?? '';
+  const [email, setEmail] = useState(returnedEmail);
   const [emailError, setEmailError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,7 +44,7 @@ export default function PasswordFindPage() {
         <div className={`${auth.cardBody} ${styles.body}`}>
           <div className={auth.intro}>
             <button type="button" className={auth.backButton} aria-label="뒤로 가기" onClick={() => navigate('/login')}>
-              <Placeholder size={BACK_ICON_SIZE} />
+              <Icon src={chevronLeftIcon} size={BACK_ICON_SIZE} />
             </button>
             <div className={auth.titleGroup}>
               <h1 className={auth.displayTitle}>비밀번호 찾기</h1>

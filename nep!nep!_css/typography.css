@@ -1,0 +1,134 @@
+/* ==========================================================================
+   nep!nep! Typography — typography.css
+   Generated from Figma text styles (실무통합_1팀) · 2026-11-05
+
+   - tokens.css 다음에 불러옵니다. 크기·줄 간격은 tokens.css 변수를 참조하므로
+     767px 이하에서 Mobile 값으로 자동 전환됩니다.
+   - 클래스 이름 = 피그마 텍스트 스타일 이름 (Heading/H1/Bold → .heading-h1-bold)
+   - Min Sans 웹폰트는 프로젝트에서 별도로 불러와 주세요.
+   ========================================================================== */
+
+:root {
+  --font-family-base: "Min Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --letter-spacing-base: 0.03em;  /* 피그마 3% */
+}
+
+body {
+  font-family: var(--font-family-base);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+}
+
+/* Display/Bold */
+.display-bold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-heading-xl);
+  line-height: var(--line-height-heading-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Heading/H1/Bold */
+.heading-h1-bold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-heading-lg);
+  line-height: var(--line-height-heading-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Heading/H2/SemiBold */
+.heading-h2-semibold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-heading-md);
+  line-height: var(--line-height-heading-md);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Heading/H3/SemiBold */
+.heading-h3-semibold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-heading-sm);
+  line-height: var(--line-height-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Body/B1/Regular */
+.body-b1-regular {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Body/B1/SemiBold */
+.body-b1-semibold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Body/B1/Bold */
+.body-b1-bold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Body/B2/Regular */
+.body-b2-regular {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Body/B2/SemiBold */
+.body-b2-semibold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Body/B2/Bold */
+.body-b2-bold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Caption/Regular */
+.caption-regular {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-base);
+}
+
+/* Caption/SemiBold */
+.caption-semibold {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-base);
+}

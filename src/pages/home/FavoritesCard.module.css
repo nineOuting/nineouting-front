@@ -1,75 +1,61 @@
-/* 디자인 23:878: 높이 182px, 카드 214×98을 13px 간격으로 */
-.card {
-  min-height: 182px;
-}
-
+/* 디자인 FolderCard: 240px, 안쪽 16px, 간격 16px */
 .list {
   display: flex;
   flex-wrap: wrap;
-  gap: 13px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--spacing-4);
 }
 
 .item {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  width: 214px;
-  height: 98px;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 240px;
+  padding: var(--spacing-4);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.iconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--primary-subtle);
+  border-radius: var(--radius-md);
 }
 
 .link {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  width: 148px;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
   color: inherit;
   text-decoration: none;
 }
 
-.texts {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+.link:hover {
+  color: inherit;
+  text-decoration: none;
 }
 
 .name {
   overflow: hidden;
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--color-black);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.kind {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--grey-50);
-  white-space: nowrap;
-}
-
-.ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.empty {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-60);
+.link:hover .name {
+  color: var(--primary-default);
 }

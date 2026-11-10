@@ -1,37 +1,37 @@
+/* 디자인 InviteLandingPage: 인증 화면 카드와 같은 모양 */
 .page {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 디자인이 없어 로그인 화면 카드 모양을 따랐다 */
 .card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 480px;
-  padding: 48px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 28px;
+  gap: var(--gap-content);
+  width: var(--layout-modal-width-sm);
+  padding: var(--padding-modal);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .title {
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-md);
+  color: var(--text-primary);
 }
 
 .caption {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-60);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .error {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--red-80);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
 }

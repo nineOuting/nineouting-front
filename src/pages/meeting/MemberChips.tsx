@@ -1,8 +1,9 @@
-import Placeholder from '../../components/Placeholder';
+import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
+import Icon from '../../components/Icon';
 import type { Member } from '../../types/meeting';
 import styles from './MemberChips.module.css';
 
-const REMOVE_ICON_SIZE = 16;
+const REMOVE_ICON_SIZE = 12;
 
 interface MemberChipsProps {
   members: Member[];
@@ -25,7 +26,7 @@ export default function MemberChips({ members, onRemove }: MemberChipsProps) {
             aria-label={`${member.name} 빼기`}
             onClick={() => onRemove(member)}
           >
-            <Placeholder size={REMOVE_ICON_SIZE} />
+            <Icon src={chipRemoveIcon} size={REMOVE_ICON_SIZE} />
           </button>
         </li>
       ))}

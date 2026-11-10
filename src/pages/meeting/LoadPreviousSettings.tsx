@@ -1,16 +1,19 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getMeetingDetail, listFolderMeetings, toDisplayDate, toMember } from '../../api/meeting';
 import Button from '../../components/Button';
 import Checkbox from '../../components/Checkbox';
-import Placeholder from '../../components/Placeholder';
+import groupIcon from '../../assets/icons/group-add-sm.svg';
+import infoIcon from '../../assets/icons/info.svg';
+import locationIcon from '../../assets/icons/location.svg';
+import searchIcon from '../../assets/icons/search.svg';
+import Dialog from '../../components/Dialog';
+import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
 import type { MeetingBasicInfo, PreviousMeeting } from '../../types/meeting';
 import styles from './LoadPreviousSettings.module.css';
 
-const BACK_ICON_SIZE = 24;
 const ICON_SIZE = 20;
 const META_ICON_SIZE = 16;
-const NOTE_ICON_SIZE = 17;
 // 최근 회의 몇 개까지 보여 줄지 (기획 미정, 임시)
 const RECENT_MEETING_COUNT = 10;
 
@@ -31,7 +34,6 @@ interface LoadPreviousSettingsProps {
 
 /** REQ-063 같은 프로젝트 폴더의 이전 회의에서 회의명·참석자·장소를 골라 불러온다 */
 export default function LoadPreviousSettings({ folderId, onBack, onApply }: LoadPreviousSettingsProps) {
-  const titleId = useId();
   const [keyword, setKeyword] = useState('');
   const [selectedId, setSelectedId] = useState<number>();
   const [keys, setKeys] = useState<SettingKey[]>([]);
@@ -85,97 +87,87 @@ export default function LoadPreviousSettings({ folderId, onBack, onApply }: Load
   };
 
   return (
-    <div className={styles.screen} role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <div className={styles.card}>
-        <div className={styles.intro}>
-          <div className={styles.header}>
-            <button type="button" className={styles.iconButton} aria-label="뒤로 가기" onClick={onBack}>
-              <Placeholder size={BACK_ICON_SIZE} />
-            </button>
-            <h2 id={titleId} className={styles.title}>
-              이전 회의 설정 불러오기
-            </h2>
-          </div>
-          <p className={styles.caption}>같은 프로젝트 폴더의 회의를 선택하세요</p>
-        </div>
+    <Dialog
+      title="이전 회의 설정 불러오기"
+      description="같은 프로젝트 폴더의 회의를 골라 주세요"
+      width="md"
+      onClose={onBack}
+      footer={
+        <>
+          <Button variant="secondary" size="md" onClick={onBack}>
+            취소
+          </Button>
+          <Button size="md" disabled={!selected || keys.length === 0} onClick={apply}>
+            선택한 설정 불러오기
+          </Button>
+        </>
+      }
+    >
+      <TextField
+        label="이전 회의 검색"
+        placeholder="회의명으로 검색"
+        value={keyword}
+        onChange={(event) => setKeyword(event.target.value)}
+        leading={<Icon src={searchIcon} size={ICON_SIZE} className={styles.metaIcon} />}
+      />
 
-        <TextField
-          label="이전 회의 검색"
-          className={styles.search}
-          placeholder="회의명으로 검색"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          trailing={<Placeholder size={ICON_SIZE} />}
-        />
-
-        <div className={styles.recent}>
-          <h3 className={styles.subTitle}>최근 회의</h3>
-          <ul className={styles.meetingList}>
-            {previousMeetings === null && <li className={styles.caption}>불러오는 중이에요</li>}
-            {previousMeetings?.length === 0 && <li className={styles.caption}>이 폴더에 지난 회의가 없어요</li>}
-            {Boolean(previousMeetings?.length) && meetings.length === 0 && (
-              <li className={styles.caption}>검색 결과가 없어요</li>
-            )}
-            {meetings.map((meeting) => (
-              <li key={meeting.meetingId}>
-                <button
-                  type="button"
-                  aria-pressed={meeting.meetingId === selectedId}
-                  className={[styles.meeting, meeting.meetingId === selectedId ? styles.meetingSelected : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => setSelectedId(meeting.meetingId)}
-                >
-                  <Placeholder size={ICON_SIZE} />
-                  <span className={styles.meetingInfo}>
-                    <span className={styles.meetingTitle}>{meeting.title}</span>
-                    <span className={styles.meetingDate}>{meeting.date}</span>
-                    <span className={styles.meetingMeta}>
-                      <span className={styles.metaItem}>
-                        <Placeholder size={META_ICON_SIZE} className={styles.metaIcon} />
-                        {meeting.attendees.length}명
-                      </span>
-                      {meeting.location && (
-                        <span className={styles.metaItem}>
-                          <Placeholder size={META_ICON_SIZE} className={styles.metaIcon} />
-                          {meeting.location}
-                        </span>
-                      )}
+      <div className={styles.recent}>
+        <h3 className={styles.subTitle}>최근 회의</h3>
+        <ul className={styles.meetingList}>
+          {previousMeetings === null && <li className={styles.caption}>불러오는 중이에요</li>}
+          {previousMeetings?.length === 0 && <li className={styles.caption}>이 폴더에 지난 회의가 없어요</li>}
+          {Boolean(previousMeetings?.length) && meetings.length === 0 && (
+            <li className={styles.caption}>검색 결과가 없어요</li>
+          )}
+          {meetings.map((meeting) => (
+            <li key={meeting.meetingId}>
+              <button
+                type="button"
+                aria-pressed={meeting.meetingId === selectedId}
+                className={[styles.meeting, meeting.meetingId === selectedId ? styles.meetingSelected : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => setSelectedId(meeting.meetingId)}
+              >
+                <span className={styles.radio} aria-hidden="true" />
+                <span className={styles.meetingInfo}>
+                  <span className={styles.meetingTitle}>{meeting.title}</span>
+                  <span className={styles.meetingDate}>{meeting.date}</span>
+                  <span className={styles.meetingMeta}>
+                    <span className={styles.metaItem}>
+                      <Icon src={groupIcon} size={META_ICON_SIZE} className={styles.metaIcon} />
+                      {meeting.attendees.length}명
                     </span>
+                    {meeting.location && (
+                      <span className={styles.metaItem}>
+                        <Icon src={locationIcon} size={META_ICON_SIZE} className={styles.metaIcon} />
+                        {meeting.location}
+                      </span>
+                    )}
                   </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <fieldset className={styles.options}>
-          <legend className={styles.optionsHead}>
-            <span className={styles.subTitle}>불러올 항목</span>
-            <span className={styles.caption}>필요한 설정만 선택할 수 있어요</span>
-          </legend>
-          {SETTING_OPTIONS.map(({ key, label }) => (
-            <Checkbox
-              key={key}
-              tone="muted"
-              className={styles.option}
-              checked={keys.includes(key)}
-              onChange={(event) => toggleKey(key, event.target.checked)}
-            >
-              {label}
-            </Checkbox>
+                </span>
+              </button>
+            </li>
           ))}
-        </fieldset>
-
-        <p className={styles.note}>
-          <Placeholder size={NOTE_ICON_SIZE} />
-          회의 날짜와 시간, 안건 및 사전 자료는 불러오지 않습니다.
-        </p>
-
-        <Button disabled={!selected || keys.length === 0} onClick={apply}>
-          선택한 설정 불러오기
-        </Button>
+        </ul>
       </div>
-    </div>
+
+      <fieldset className={styles.options}>
+        <legend className={styles.optionsHead}>
+          <span className={styles.subTitle}>불러올 항목</span>
+          <span className={styles.caption}>필요한 설정만 고를 수 있어요</span>
+        </legend>
+        {SETTING_OPTIONS.map(({ key, label }) => (
+          <Checkbox key={key} checked={keys.includes(key)} onChange={(event) => toggleKey(key, event.target.checked)}>
+            {label}
+          </Checkbox>
+        ))}
+      </fieldset>
+
+      <p className={styles.note}>
+        <Icon src={infoIcon} size={ICON_SIZE} />
+        회의 날짜와 시간, 안건, 사전 자료는 불러오지 않아요
+      </p>
+    </Dialog>
   );
 }

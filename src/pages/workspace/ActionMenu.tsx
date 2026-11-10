@@ -1,12 +1,17 @@
-import { Fragment, useEffect, useRef, type RefObject } from 'react';
-import dividerMenu from '../../assets/divider-menu.svg';
+import { useEffect, useRef, type RefObject } from 'react';
+import Icon from '../../components/Icon';
+import menu from '../../components/Menu.module.css';
 import styles from './ActionMenu.module.css';
 
-const DIVIDER_WIDTH = 84;
+const ICON_SIZE = 20;
 
 export interface ActionMenuItem {
   label: string;
   onSelect: () => void;
+  /** src/assets/icons 아이콘 */
+  icon?: string;
+  /** 삭제처럼 되돌릴 수 없는 일은 빨간 글자 */
+  isDanger?: boolean;
 }
 
 interface ActionMenuProps {
@@ -15,10 +20,11 @@ interface ActionMenuProps {
   /** 바깥 클릭으로 닫을 때 제외할 영역(메뉴를 연 버튼) */
   anchorRef: RefObject<HTMLElement | null>;
   onClose: () => void;
+  className?: string;
 }
 
-/** 더보기 버튼 아래 작은 메뉴 (폴더 카드: 이름 바꾸기·폴더 삭제). 부모는 position: relative */
-export default function ActionMenu({ label, items, anchorRef, onClose }: ActionMenuProps) {
+/** 더보기 버튼 아래 작은 메뉴 (디자인 FolderMenu). 부모는 position: relative */
+export default function ActionMenu({ label, items, anchorRef, onClose, className }: ActionMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,22 +48,21 @@ export default function ActionMenu({ label, items, anchorRef, onClose }: ActionM
   }, [anchorRef, onClose]);
 
   return (
-    <div ref={menuRef} role="menu" aria-label={label} className={styles.menu}>
-      {items.map((item, index) => (
-        <Fragment key={item.label}>
-          {index > 0 && <img src={dividerMenu} alt="" width={DIVIDER_WIDTH} height={1} className={styles.divider} />}
-          <button
-            type="button"
-            role="menuitem"
-            className={styles.item}
-            onClick={() => {
-              onClose();
-              item.onSelect();
-            }}
-          >
-            {item.label}
-          </button>
-        </Fragment>
+    <div ref={menuRef} role="menu" aria-label={label} className={[menu.menu, styles.menu, className].filter(Boolean).join(' ')}>
+      {items.map((item) => (
+        <button
+          key={item.label}
+          type="button"
+          role="menuitem"
+          className={[menu.item, item.isDanger ? menu.danger : ''].filter(Boolean).join(' ')}
+          onClick={() => {
+            onClose();
+            item.onSelect();
+          }}
+        >
+          {item.icon && <Icon src={item.icon} size={ICON_SIZE} className={menu.itemIcon} />}
+          {item.label}
+        </button>
       ))}
     </div>
   );

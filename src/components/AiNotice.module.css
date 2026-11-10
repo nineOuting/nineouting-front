@@ -1,0 +1,45 @@
+/* 디자인 AI 결과 안내 줄: 옅은 보라 바탕, 오른쪽 피드백 */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-md);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--primary-default);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--spacing-1);
+}
+
+.action {
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
+}
+
+.action:hover:not(:disabled) {
+  background: var(--primary-ghost-hover);
+}
+
+.selected {
+  background: var(--bg-surface);
+}

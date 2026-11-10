@@ -1,10 +1,10 @@
-import Placeholder from '../../components/Placeholder';
+import addIcon from '../../assets/icons/add-dark.svg';
+import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
 import { DECISION_POINT_MAX_COUNT, DECISION_POINT_MAX_LENGTH } from '../../constants/meeting';
 import styles from './DecisionPointFields.module.css';
 
 const ICON_SIZE = 16;
-const TRAILING_ICON_SIZE = 20;
 const LABEL = '결정할 내용';
 
 interface DecisionPointFieldsProps {
@@ -33,12 +33,11 @@ export default function DecisionPointFields({ values, onChange, isRequired, fiel
           maxLength={DECISION_POINT_MAX_LENGTH}
           value={value}
           onChange={(event) => change(index, event.target.value)}
-          trailing={<Placeholder size={TRAILING_ICON_SIZE} />}
         />
       ))}
       {values.length < DECISION_POINT_MAX_COUNT && (
         <button type="button" className={styles.add} onClick={() => onChange([...values, ''])}>
-          <Placeholder size={ICON_SIZE} />
+          <Icon src={addIcon} size={ICON_SIZE} />
           {LABEL} 추가
         </button>
       )}

@@ -6,7 +6,9 @@ import dot from '../../assets/dot.svg';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
 import PasswordField from '../../components/PasswordField';
-import Placeholder from '../../components/Placeholder';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import Icon from '../../components/Icon';
+import checkIcon from '../../assets/icons/check.svg';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import {
   AUTH_ERROR_CODES,
@@ -75,7 +77,7 @@ export default function PasswordResetPage() {
         <div className={`${auth.cardBody} ${styles.body}`}>
           <div className={auth.intro}>
             <button type="button" className={auth.backButton} aria-label="뒤로 가기" onClick={() => navigate(-1)}>
-              <Placeholder size={BACK_ICON_SIZE} />
+              <Icon src={chevronLeftIcon} size={BACK_ICON_SIZE} />
             </button>
             <div className={auth.titleGroup}>
               <h1 className={auth.displayTitle}>새 비밀번호 설정</h1>
@@ -109,7 +111,7 @@ export default function PasswordResetPage() {
                         </li>
                       )}
                       <li className={rule.test(password) ? styles.rulePassed : styles.rule}>
-                        <Placeholder size={RULE_ICON_SIZE} />
+                        <Icon src={checkIcon} size={RULE_ICON_SIZE} />
                         {rule.label}
                       </li>
                     </Fragment>

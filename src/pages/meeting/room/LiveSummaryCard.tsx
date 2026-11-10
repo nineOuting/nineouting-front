@@ -1,43 +1,51 @@
-import dividerSummary from '../../../assets/divider-summary.svg';
-import Placeholder from '../../../components/Placeholder';
+import type { ReactNode } from 'react';
+import summaryIcon from '../../../assets/icons/summary.svg';
+import Icon from '../../../components/Icon';
 import type { RoomAgenda } from '../../../types/meetingRoom';
 import room from './room.module.css';
-import StatusPill from './StatusPill';
 import TodoList from './TodoList';
 import styles from './LiveSummaryCard.module.css';
 
 const TITLE_ICON_SIZE = 24;
-const EMPTY_ICON_SIZE = 48;
+const EMPTY_ICON_SIZE = 40;
 
 interface LiveSummaryCardProps {
+  /** REQ-172 AI 결과 안내 줄 */
+  notice?: ReactNode;
   /** 지금 논의 중인 안건 (안건 보드가 정한다). 요약·의견도 이 안건의 것을 보여 준다 */
   agenda?: RoomAgenda;
 }
 
 /** REQ-085, 087 지금 논의 중인 안건과 그 안건의 지금까지 요약, 주요 의견, 아직 합의되지 않은 부분 (안건 보드) */
-export default function LiveSummaryCard({ agenda }: LiveSummaryCardProps) {
+export default function LiveSummaryCard({ agenda, notice }: LiveSummaryCardProps) {
   return (
     <section className={styles.card} aria-labelledby="live-summary-title">
       <div className={styles.head}>
-        <div className={room.titleRow}>
-          <Placeholder size={TITLE_ICON_SIZE} />
-          <h2 id="live-summary-title" className={room.title}>
-            실시간 요약
-          </h2>
+        <div className={styles.titleGroup}>
+          <div className={room.titleRow}>
+            <Icon src={summaryIcon} size={TITLE_ICON_SIZE} className={room.titleIcon} />
+            <h2 id="live-summary-title" className={room.title}>
+              실시간 요약
+            </h2>
+          </div>
+          <p className={room.caption}>논의 흐름을 실시간으로 정리해요</p>
         </div>
-        <p className={room.caption}>실시간으로 전사 내용을 수정해보세요</p>
+        {agenda && (
+          <div className={styles.currentAgenda}>
+            <span className={styles.currentTitle}>{agenda.title}</span>
+            <span className={room.soundWave} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </div>
+        )}
       </div>
-      <img src={dividerSummary} alt="" width={740} height={1} className={room.divider} />
+      <div className={room.divider} />
+      {notice}
 
       {agenda && agenda.summary.length > 0 ? (
         <div className={styles.content}>
-          <div className={styles.block}>
-            <p className={styles.label}>현재 논의</p>
-            <div className={styles.currentRow}>
-              <p className={styles.currentTitle}>{agenda.title}</p>
-              <StatusPill status={agenda.status} soft />
-            </div>
-          </div>
           <div className={styles.block}>
             <p className={styles.label}>지금까지 요약</p>
             <p className={styles.summary}>{agenda.summary.join(' ')}</p>
@@ -64,7 +72,7 @@ export default function LiveSummaryCard({ agenda }: LiveSummaryCardProps) {
           )}
           {agenda.todos.length > 0 && (
             <div className={styles.block}>
-              <p className={styles.label}>할 일</p>
+              <p className={styles.label}>해야 할 일 ㅣ 담당자 ㅣ 기한</p>
               <TodoList todos={agenda.todos} />
             </div>
           )}
@@ -72,7 +80,7 @@ export default function LiveSummaryCard({ agenda }: LiveSummaryCardProps) {
       ) : (
         // MSG-024
         <div className={room.empty}>
-          <Placeholder size={EMPTY_ICON_SIZE} />
+          <Icon src={summaryIcon} size={EMPTY_ICON_SIZE} className={room.emptyIcon} />
           <p className={room.emptyTitle}>아직 논의 내용이 없습니다.</p>
           <p className={room.emptyCaption}>회의 발언이 시작되면 이곳에서 논의 흐름과 주요 의견을 확인할 수 있습니다.</p>
         </div>

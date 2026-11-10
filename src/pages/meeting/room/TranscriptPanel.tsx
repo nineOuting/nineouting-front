@@ -1,12 +1,11 @@
 import { useState, type KeyboardEvent } from 'react';
-import dividerTranscript from '../../../assets/divider-transcript.svg';
-import Placeholder from '../../../components/Placeholder';
+import transcriptIcon from '../../../assets/icons/transcript.svg';
+import Icon from '../../../components/Icon';
 import type { TranscriptLine } from '../../../types/meetingRoom';
 import room from './room.module.css';
 import styles from './SidePanel.module.css';
 
 const TITLE_ICON_SIZE = 24;
-const EDIT_ICON_SIZE = 24;
 const EMPTY_ICON_SIZE = 48;
 
 const NO_AGENDA = '';
@@ -56,17 +55,17 @@ export default function TranscriptPanel({
     <>
       <div className={styles.head}>
         <div className={room.titleRow}>
-          <Placeholder size={TITLE_ICON_SIZE} />
+          <Icon src={transcriptIcon} size={TITLE_ICON_SIZE} className={room.titleIcon} />
           <h2 className={room.title}>실시간 전사</h2>
         </div>
-        <p className={room.caption}>실시간으로 전사 내용을 수정해보세요</p>
+        <p className={room.caption}>발언을 실시간으로 받아 적고 있어요</p>
       </div>
-      <img src={dividerTranscript} alt="" width={429} height={1} className={`${room.divider} ${styles.divider}`} />
+      <div className={styles.divider} />
 
       {lines.length === 0 ? (
         // MSG-025
         <div className={room.empty}>
-          <Placeholder size={EMPTY_ICON_SIZE} />
+          <Icon src={transcriptIcon} size={EMPTY_ICON_SIZE} className={room.emptyIcon} />
           <p className={room.emptyTitle}>회의 내용을 듣고 있습니다.</p>
           <p className={room.emptyCaption}>발언이 시작되면 이곳에 전사됩니다.</p>
         </div>
@@ -112,18 +111,24 @@ export default function TranscriptPanel({
                     onKeyDown={handleKeyDown}
                     onBlur={finishEditing}
                   />
+                ) : canEdit ? (
+                  // REQ-083 따로 수정 버튼 없이, 마우스를 올리면 바탕이 바뀌고 누르면 바로 고친다
+                  <p
+                    className={`${styles.text} ${styles.clickable}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${line.time} 발언 수정: ${line.text}`}
+                    onClick={() => setEditing({ seq: line.seq, text: line.text })}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        setEditing({ seq: line.seq, text: line.text });
+                      }
+                    }}
+                  >
+                    {line.text}
+                  </p>
                 ) : (
                   <p className={styles.text}>{line.text}</p>
-                )}
-                {canEdit && !isEditing && (
-                  <button
-                    type="button"
-                    className={`${room.iconButton} ${styles.edit}`}
-                    aria-label={`${line.time} 발언 수정`}
-                    onClick={() => setEditing({ seq: line.seq, text: line.text })}
-                  >
-                    <Placeholder size={EDIT_ICON_SIZE} />
-                  </button>
                 )}
               </li>
             );

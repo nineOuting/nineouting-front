@@ -1,55 +1,63 @@
+/* 디자인 Input: 라벨 14px, 칸 40px, 둥근 8px */
 .field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--gap-label-field);
   width: 100%;
 }
 
 .label {
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+  display: flex;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .required {
-  color: var(--blue-100);
+  color: var(--danger-default);
 }
 
 .description {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-70);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-1);
 }
 
 .box {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 57px;
-  padding: 0 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  gap: var(--spacing-2);
+  height: var(--input-md-height);
+  padding: 0 var(--input-md-padding-x);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.box:hover {
+  border-color: var(--border-strong);
 }
 
 .box:focus-within {
-  border-color: var(--blue-70);
+  border-color: var(--border-focus);
 }
 
 .boxError,
+.boxError:hover,
 .boxError:focus-within {
-  border-color: var(--red-90);
+  border-color: var(--border-error);
 }
 
 .box:has(.input:disabled) {
-  background: var(--grey-20);
+  background: var(--bg-surface-muted);
 }
 
 .input {
@@ -59,35 +67,25 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-100);
-}
-
-.input::placeholder {
-  font-weight: 400;
-  color: var(--grey-50);
+  font-size: var(--input-md-font-size);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .input:disabled {
-  font-weight: 400;
-  color: var(--color-black);
+  color: var(--text-secondary);
 }
 
 .helper,
 .error {
-  padding: 0 8px;
   font-size: var(--font-size-caption);
-  line-height: 1.4;
+  line-height: var(--line-height-caption);
 }
 
 .helper {
-  color: var(--grey-50);
+  color: var(--text-secondary);
 }
 
 .error {
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--red-80);
+  color: var(--danger-default);
 }

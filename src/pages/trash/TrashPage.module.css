@@ -1,75 +1,179 @@
-/* 디자인이 없어 양식 목록 화면의 여백과 버튼 모양을 따랐다 */
-.page {
+/* 디자인 TrashPage (설정 안): 선택 줄 + 표 */
+.workspacePicker {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.workspaceSelect {
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+}
+
+.card {
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.loading {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 28px 34px 40px;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
 }
 
-.title {
-  margin: 0;
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: var(--spacing-3) var(--spacing-4);
 }
 
-.description {
-  margin-top: 4px;
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--grey-50);
+.selectedCount {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
 }
 
-.empty {
-  font-size: var(--font-size-b2);
-  color: var(--grey-50);
+.bulk {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.secondary,
+.danger {
+  height: var(--button-sm-height);
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-sm);
+  font-size: var(--button-sm-font-size);
+  font-weight: var(--font-weight-semibold);
+}
+
+.secondary {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+}
+
+.danger {
+  background: var(--danger-default);
+  color: var(--text-on-primary);
+}
+
+.secondary:disabled,
+.danger:disabled {
+  background: var(--neutral-disabled);
+  color: var(--text-disabled);
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-b2);
-  color: var(--grey-100);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .table th {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--grey-20);
-  font-weight: 500;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--bg-surface-muted);
+  border-top: var(--border-width-default) solid var(--border-default);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
   text-align: left;
-  color: var(--grey-60);
+  color: var(--text-secondary);
 }
 
 .table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--grey-20);
+  padding: var(--spacing-3);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.selectedRow td {
+  background: var(--interactive-selected);
+}
+
+.checkCell {
+  width: 40px;
+}
+
+.checkCell input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-default);
 }
 
 .name {
-  font-weight: 500;
-}
-
-.actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-weight: var(--font-weight-semibold);
 }
 
-.secondary {
-  height: 36px;
-  padding: 0 14px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  color: var(--color-black);
-  white-space: nowrap;
+.mutedIcon {
+  flex-shrink: 0;
+  color: var(--neutral-default);
 }
 
-.danger {
-  color: var(--red-90);
+.kind {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.location {
+  color: var(--text-secondary);
+}
+
+.days {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.urgent {
+  background: var(--danger-subtle);
+  color: var(--danger-default);
+}
+
+.actionCell {
+  text-align: right;
+}
+
+.textButton {
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}
+
+.textButton:hover:not(:disabled) {
+  background: var(--primary-ghost-hover);
 }
 
 .hidden {

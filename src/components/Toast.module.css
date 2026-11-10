@@ -1,32 +1,61 @@
+/* 디자인 Toast: 옅은 바탕, 같은 색 테두리와 글자. REQ-177 화면 아래 */
 .toast {
   position: fixed;
-  top: 80px;
+  bottom: var(--spacing-8);
   left: 50%;
-  z-index: 10;
+  z-index: 300;
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 56px;
-  padding: 16px 24px;
-  border: 1px solid;
-  border-radius: 8px;
+  gap: var(--gap-inline);
+  min-width: 320px;
+  max-width: 560px;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: var(--border-width-default) solid;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   transform: translateX(-50%);
 }
 
-.error {
-  background: var(--red-10);
-  border-color: var(--red-100);
+.info {
+  background: var(--info-subtle);
+  border-color: var(--info-default);
+  color: var(--info-default);
 }
 
-.info {
-  background: var(--blue-10);
-  border-color: var(--blue-90);
+.success {
+  background: var(--success-subtle);
+  border-color: var(--success-default);
+  color: var(--success-default);
+}
+
+.error {
+  background: var(--danger-subtle);
+  border-color: var(--danger-default);
+  color: var(--danger-default);
 }
 
 .text {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  white-space: nowrap;
-  color: var(--color-black);
+  flex: 1;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+}
+
+.action {
+  height: 32px;
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
+}
+
+.action:hover {
+  background: var(--primary-ghost-hover);
+}
+
+.close {
+  display: flex;
+  color: var(--neutral-default);
 }

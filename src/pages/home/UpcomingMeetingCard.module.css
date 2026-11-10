@@ -1,41 +1,66 @@
-/* 디자인 23:793: 높이 385px, 안건이 많으면 안에서 스크롤 */
-.card {
-  height: 385px;
-  overflow: hidden;
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
 }
 
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-2);
+  min-width: 0;
 }
 
-.infoRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.title {
+  overflow: hidden;
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .people {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
+.agendaPreview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.agendaLabel {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 안건이 많으면 안에서 스크롤 */
 .agendas {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
+  gap: var(--spacing-2);
+  max-height: 136px;
   overflow-y: auto;
-  list-style: none;
+}
+
+.agenda {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
 }
 
 .agendaTitle {
   overflow: hidden;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

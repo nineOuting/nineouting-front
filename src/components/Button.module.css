@@ -1,77 +1,106 @@
+/* 디자인 Button */
 .button {
-  display: flex;
+  display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  line-height: 1.5;
+  gap: var(--gap-inline);
+  border: var(--border-width-default) solid transparent;
+  border-radius: var(--radius-md);
   white-space: nowrap;
 }
 
-.primary {
-  width: 100%;
-  height: 56px;
-  padding: 16px;
-  background: var(--blue-100);
-  color: var(--milkblue-10);
-  font-size: var(--font-size-b1);
+.lg {
+  height: var(--button-lg-height);
+  padding: 0 var(--button-lg-padding-x);
+  font-size: var(--button-lg-font-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
 }
 
-/* 비활성 상태는 디자인에 없어 회색으로 처리했다 */
-.primary:disabled {
-  background: var(--grey-30);
+.md {
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  font-size: var(--button-md-font-size);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+}
+
+.block {
+  width: 100%;
+}
+
+.primary {
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+}
+
+.primary:hover {
+  background: var(--primary-hover);
+}
+
+.primary:active {
+  background: var(--primary-pressed);
 }
 
 .secondary {
-  width: 100%;
-  padding: 10px;
-  background: var(--blue-10);
-  color: var(--blue-70);
-  font-size: var(--font-size-b2);
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
 }
 
-.muted {
-  width: 100%;
-  gap: 10px;
-  padding: 10px;
-  background: var(--grey-10);
-  color: var(--grey-60);
-  font-size: var(--font-size-b2);
+.secondary:hover {
+  background: var(--secondary-hover);
 }
 
-/* 확인 창의 보조 버튼 (계속 작성하기, 취소) */
+.secondary:active {
+  background: var(--secondary-pressed);
+}
+
 .neutral {
-  width: 100%;
-  height: 56px;
-  padding: 16px;
-  background: var(--grey-10);
-  border: 1px solid var(--grey-20);
-  color: var(--color-black);
-  font-size: var(--font-size-b1);
-  font-weight: 400;
+  background: var(--bg-surface);
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
 }
 
-.underline {
-  padding: 0;
-  background: none;
-  border-radius: 0;
-  border-bottom: 1px solid var(--blue-100);
-  color: var(--blue-100);
-  font-size: var(--font-size-b2);
-}
-
-.underline:disabled {
-  border-bottom-color: var(--grey-40);
-  color: var(--grey-40);
+.neutral:hover {
+  background: var(--neutral-ghost-hover);
 }
 
 /* 삭제처럼 되돌릴 수 없는 확인 (MSG-043, 046 "[삭제하기]는 빨간색") */
 .danger {
-  width: 100%;
-  height: 56px;
-  padding: 16px;
-  background: var(--red-100);
-  color: var(--color-white);
-  font-size: var(--font-size-b1);
+  background: var(--danger-default);
+  color: var(--text-on-primary);
+}
+
+.danger:hover {
+  background: var(--danger-hover);
+}
+
+/* 디자인 Button text: 32px, 글자 12px */
+.text {
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background: none;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
+}
+
+.text:hover {
+  background: var(--primary-ghost-hover);
+  color: var(--text-link-hover);
+}
+
+.button:disabled,
+.button:disabled:hover {
+  background: var(--primary-disabled);
+  border-color: transparent;
+  color: var(--text-disabled);
+}
+
+.text:disabled,
+.text:disabled:hover {
+  background: none;
 }

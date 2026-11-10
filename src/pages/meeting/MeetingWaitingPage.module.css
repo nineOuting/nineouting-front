@@ -1,349 +1,378 @@
+/* 디자인 MeetingWaitingPage: 위 회의 정보, 아래 안건(왼쪽) + 설정 435px(오른쪽) */
 .page {
-  padding: 100px 0 64px 84px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+  padding: var(--spacing-6) var(--layout-page-margin) var(--spacing-8);
 }
 
 .head {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  width: 612px;
+  gap: var(--gap-content);
 }
 
 .titleBlock {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-2);
 }
 
 .title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  color: var(--text-primary);
 }
 
 .badge {
-  padding: 2px 4px;
-  background: var(--blue-10);
-  border-radius: 4px;
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--blue-90);
-  white-space: nowrap;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--neutral-default);
 }
 
 .metaRow {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  gap: var(--spacing-3);
 }
 
-.location {
+.meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .mutedIcon {
-  background: var(--grey-40);
+  color: var(--neutral-default);
 }
 
 .editInfo {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-30);
-  border-radius: 16px;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-60);
-  white-space: nowrap;
+  gap: var(--gap-inline);
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  background: var(--secondary-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-on-secondary);
+}
+
+.editInfo:hover {
+  background: var(--secondary-hover);
 }
 
 .columns {
   display: flex;
   align-items: flex-start;
-  gap: 51px;
-  margin-top: 46px;
+  gap: var(--layout-gutter);
 }
 
 .main {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  width: 612px;
+  gap: var(--gap-content);
+  min-width: 0;
+}
+
+.card {
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .agendaSection {
   display: flex;
   flex-direction: column;
-  gap: 17px;
+  gap: var(--gap-content);
 }
 
-.agendaHead {
+.titleGroup {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
 }
 
-.agendaTitle {
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+.sectionTitle,
+.sideTitle {
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
 }
 
-.agendaCount {
-  font-weight: 500;
-  color: var(--grey-60);
-}
-
-.readiness {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  margin-top: 70px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 0;
-  height: 21px;
-}
-
-.divider img {
-  display: block;
-  max-width: none;
-  transform: rotate(90deg);
-}
-
-.readinessState {
-  color: var(--grey-70);
+.sectionCaption {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .startBlock {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 58px;
+  align-items: center;
+  gap: var(--gap-label-field);
 }
 
-/* 회의 준비 중일 때는 디자인대로 grey-40으로 표시한다 */
-.startBlock .startButtonBusy:disabled {
-  background: var(--grey-40);
+.readiness {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.ready {
+  color: var(--success-default);
 }
 
 .startNote {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .side {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
-  gap: 24px;
-  width: 333px;
+  gap: var(--gap-content);
+  width: 435px;
 }
 
-.attendees {
+/* 디자인 MeetingSettingsPanel: 묶음 사이 32px */
+.settingsPanel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--gap-section);
 }
 
-.attendeeHead {
+.attendees,
+.minutesSettings,
+.materials {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+.attendeeHead,
+.sideHead {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
 }
 
 .menuAnchor {
   position: relative;
 }
 
-.sideTitle {
-  font-size: var(--font-size-b1);
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--color-black);
+.attendeeHead .menuAnchor,
+.attendeeHead > ul {
+  right: 0;
 }
 
 .iconButton {
   display: flex;
-  padding: 0;
-  border: none;
-  background: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
 }
 
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.attendeeCount {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-secondary);
+}
+
+/* 40px 얼굴을 12px씩 겹친다 */
 .avatars {
   display: flex;
-  min-height: 64px;
+  flex-wrap: wrap;
+}
+
+.avatars > * + * {
+  margin-left: -12px;
 }
 
 .avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 64px;
-  height: 64px;
+  width: var(--profile-lg);
+  height: var(--profile-lg);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: var(--primary-subtle);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
   object-fit: cover;
-  background: var(--grey-20);
-  border: 2px solid var(--color-white);
-  border-radius: 50%;
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-  color: var(--grey-70);
-}
-
-.avatar + .avatar {
-  margin-left: -26px;
-}
-
-.attendeeCount {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-50);
 }
 
 .sideDivider {
-  display: block;
+  height: 1px;
+  background: var(--border-default);
 }
 
-.minutesSettings {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.textButton {
+  height: 32px;
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
+}
+
+.textButton:hover {
+  background: var(--primary-ghost-hover);
 }
 
 .settingGroup {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--gap-content);
 }
 
 .settingField {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--gap-label-field);
 }
 
 .settingLabelRow {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
-}
-
-.textButton {
-  padding: 0;
-  border: none;
-  background: none;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .selectBox {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--spacing-2);
   width: 100%;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-weight: 500;
-  color: var(--grey-100);
+  height: var(--input-md-height);
+  padding: 0 var(--input-md-padding-x);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--input-md-font-size);
+  line-height: var(--line-height-body-md);
+  text-align: left;
+}
+
+.selectBox:hover {
+  border-color: var(--border-strong);
+}
+
+.selectValue {
+  color: var(--text-primary);
+}
+
+.selectPlaceholder {
+  color: var(--text-disabled);
 }
 
 .settingCaption {
-  margin-top: -4px;
-  padding: 0 8px;
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
-}
-
-.materials {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.materialsHead {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.materialsTitle {
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--color-black);
-}
-
-.materialsCaption {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .materialList {
-  margin: 0;
-  padding-left: 20px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-100);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
+/* 디자인 UploadArea: 점선 상자 */
 .addMaterial {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  gap: var(--spacing-2);
   width: 100%;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  padding: var(--spacing-6);
+  background: var(--bg-surface-muted);
+  border: var(--border-width-default) dashed var(--border-strong);
+  border-radius: var(--radius-md);
 }
 
-.cancelMeeting {
-  width: 100%;
-  padding: 16px;
-  background: var(--grey-30);
-  border: 1px solid var(--grey-30);
-  border-radius: 8px;
-  font-weight: 500;
-  color: var(--grey-100);
+.addMaterial:hover {
+  border-color: var(--border-focus);
+}
+
+.addMaterialLabel {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-link);
+}
+
+/* MSG-067 사전 자료 업로드 실패 */
+.materialError {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
+}
+
+/* REQ-002 회의명 위 경로 */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+}
+
+.crumb {
+  color: var(--text-secondary);
+}
+
+.crumb:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+.separator {
+  color: var(--neutral-default);
+}
+
+.crumbCurrent {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }

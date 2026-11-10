@@ -1,237 +1,264 @@
-/* 디자인 23:9: 상단 바 64px, 흰 머리줄 96px(좌우 62px), 아래 왼쪽 429 · 미리보기 532 · 설정 354 */
+/* 디자인 TemplateEditorPage: 편집 바 56px 아래로 SideRail 72px, SidePanel 300px, 나머지는 CanvasArea */
 .page {
-  min-width: 1440px;
-  min-height: 100vh;
-  padding-bottom: 40px;
-  background: var(--color-white);
-}
-
-.topBar {
-  display: flex;
-  align-items: center;
-  height: 64px;
-  padding-left: 32px;
-  background: var(--layout-placeholder);
-}
-
-.logo {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
-  text-decoration: none;
-}
-
-.headBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 96px;
-  padding: 24px 62px;
-  border-bottom: 1px solid var(--grey-20);
-}
-
-.info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  min-width: 1200px;
+  height: 100vh;
+  background: var(--bg-page);
 }
 
-.title {
-  margin: 0;
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
-}
-
-.description {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-}
-
-.primary,
-.secondary {
+/* 디자인 EditorTopBar 가운데 양식 이름 칸 */
+.nameField {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 44px;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
+  gap: var(--spacing-2);
+  width: 320px;
+  height: 40px;
+  padding: 0 var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
 }
 
-.primary {
-  width: 138.5px;
-  background: var(--blue-100);
+.nameField:focus-within {
+  border-color: var(--border-focus);
+}
+
+.nameIcon {
+  flex-shrink: 0;
+  color: var(--neutral-default);
+}
+
+.nameInput {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
   border: none;
-  color: var(--color-white);
+  outline: none;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
-.secondary {
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  color: var(--color-black);
+.nameInput::placeholder {
+  color: var(--text-disabled);
 }
 
 .loading {
   padding-top: 160px;
-  font-size: var(--font-size-b1);
-  color: var(--grey-70);
+  font-size: var(--font-size-body-lg);
+  color: var(--text-secondary);
   text-align: center;
 }
 
-.content {
-  display: grid;
-  grid-template-columns: 429px 532px 354px;
-  justify-content: center;
-  align-items: start;
-  gap: 31px;
-  margin-top: 18px;
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
 }
 
-/* 디자인 23:14 */
-.left {
+/* 디자인 SideRail */
+.rail {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 72px;
+  padding: var(--spacing-3) var(--spacing-1);
+  background: var(--bg-surface);
+  border-right: var(--border-width-default) solid var(--border-default);
+}
+
+.railItem {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  height: 791px;
-  padding: 20px;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) 0;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.railItem:hover {
+  background: var(--interactive-hover);
+}
+
+.railItemOn,
+.railItemOn:hover {
+  background: var(--interactive-selected);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+/* 디자인 SidePanel */
+.side {
+  flex-shrink: 0;
+  width: 300px;
   overflow-y: auto;
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  background: var(--bg-surface);
+  border-right: var(--border-width-default) solid var(--border-default);
 }
 
-.block {
+.itemsPanel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-5);
+  padding: var(--spacing-6) var(--spacing-5);
 }
 
-.blockTitle {
-  margin: 0;
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+}
+
+.panelTitle {
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+}
+
+.panelDescription {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-2);
 }
 
 .label {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-50);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .optional {
-  color: var(--grey-30);
-}
-
-.input,
-.textareaBox {
-  padding: 8px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-disabled);
 }
 
 .textareaBox {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.textareaBox:focus-within {
+  border-color: var(--border-focus);
 }
 
 .textarea {
   padding: 0;
+  background: transparent;
   border: none;
   outline: none;
   font: inherit;
   color: inherit;
   resize: none;
-  field-sizing: content;
+}
+
+.textarea::placeholder {
+  color: var(--text-disabled);
 }
 
 .counter {
   align-self: flex-end;
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-30);
+  line-height: var(--line-height-caption);
+  color: var(--text-disabled);
+}
+
+.listHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.listTitle {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.listCount {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .items {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-2);
 }
 
-/* 디자인 23:34: 체크박스 20 · 아이콘 40 · 제목·설명 */
+/* 디자인 TemplateSectionItem: 체크박스, 제목, 설명 */
 .item {
   display: flex;
-  gap: 16px;
-  padding: 12px;
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
 }
 
-.itemBody {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+.item:hover {
+  background: var(--interactive-hover);
 }
 
 .itemText {
   display: flex;
   flex: 1;
   flex-direction: column;
+  gap: var(--gap-title-subtitle);
   min-width: 0;
 }
 
 .itemTitle {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .itemDescription {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
+/* 디자인 Button secondary md */
 .addCustom {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 48px;
-  margin-top: 6px;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--blue-100);
-  border-radius: 8px;
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--blue-100);
+  gap: var(--gap-inline);
+  height: var(--button-md-height);
+  background: var(--secondary-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-on-secondary);
+}
+
+.addCustom:hover {
+  background: var(--secondary-hover);
 }

@@ -1,54 +1,32 @@
+/* 디자인 ConfirmModal: 400px */
 .card {
-  gap: 8px;
-  width: 480px;
-  padding: 32px 48px;
-}
-
-.closeRow {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.iconButton {
-  display: flex;
-  padding: 0;
-  border: none;
-  background: none;
-}
-
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
+  gap: var(--gap-content);
+  width: var(--layout-modal-width-sm);
+  padding: var(--padding-modal);
 }
 
 .texts {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  text-align: center;
+  gap: var(--gap-title-subtitle);
 }
 
 .title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-md);
+  color: var(--text-primary);
 }
 
 .message {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
   white-space: pre-line;
-  color: var(--grey-60);
 }
 
 .actions {
   display: flex;
-  gap: 16px;
+  justify-content: flex-end;
+  gap: var(--gap-inline);
 }

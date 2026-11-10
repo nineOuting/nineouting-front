@@ -3,12 +3,20 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { errorMessage } from '../../api/client';
 import { createMeeting, listPendingAgendas, updateMeeting } from '../../api/meeting';
 import { getMe } from '../../api/user';
-import { listFolderMembers } from '../../api/workspace';
+import { getFolder, listFolderMembers, listFolders } from '../../api/workspace';
+import Spinner from '../../components/Spinner';
 import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
-import Placeholder from '../../components/Placeholder';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import chevronDownIcon from '../../assets/icons/chevron-down.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import closeIcon from '../../assets/icons/close-sm.svg';
+import personAddIcon from '../../assets/icons/person-add.svg';
+import pinIcon from '../../assets/icons/pin.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
+import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Agenda, Meeting, MeetingBasicInfo, Member, PendingAgenda } from '../../types/meeting';
@@ -78,7 +86,11 @@ export default function MeetingCreatePage() {
   const params = useParams();
   const editingMeeting = (useLocation().state as { meeting?: Meeting } | null)?.meeting;
   const isEdit = Boolean(params.meetingId);
-  const folderId = editingMeeting?.folderId ?? Number(params.folderId);
+  const routeFolderId = editingMeeting?.folderId ?? Number(params.folderId);
+  // REQ-169 회의를 저장할 프로젝트 폴더. 폴더 화면의 [새 회의]로 들어오면 그 폴더가 골라져 있다 (수정할 때는 바꾸지 않는다)
+  const [selectedFolderId, setSelectedFolderId] = useState(routeFolderId);
+  const [folderOptions, setFolderOptions] = useState<{ folderId: number; name: string }[]>([]);
+  const folderId = isEdit ? routeFolderId : selectedFolderId;
   const [initialForm] = useState<MeetingForm>(() =>
     editingMeeting ? { ...pickBasicInfo(editingMeeting), agendas: [] } : EMPTY_FORM,
   );
@@ -111,6 +123,20 @@ export default function MeetingCreatePage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
+
+  useEffect(() => {
+    if (isEdit || !Number.isInteger(routeFolderId)) {
+      return undefined;
+    }
+    let isCurrent = true;
+    getFolder(routeFolderId)
+      .then((folder) => listFolders(folder.workspaceId))
+      .then((folders) => isCurrent && setFolderOptions(folders))
+      .catch(() => undefined);
+    return () => {
+      isCurrent = false;
+    };
+  }, [isEdit, routeFolderId]);
 
   useEffect(() => {
     if (!hasFolder) {
@@ -214,28 +240,55 @@ export default function MeetingCreatePage() {
       <form className={styles.card} onSubmit={handleSubmit} noValidate>
         <div className={styles.header}>
           <button type="button" className={styles.iconButton} aria-label="뒤로 가기" onClick={handleBack}>
-            <Placeholder size={BACK_ICON_SIZE} />
+            <Icon src={chevronLeftIcon} size={BACK_ICON_SIZE} />
           </button>
-          <h1 className={styles.title}>{isEdit ? '회의 정보 수정' : '새 회의 만들기'}</h1>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.title}>{isEdit ? '회의 정보 수정' : '새 회의 만들기'}</h1>
+            <p className={styles.subtitle}>회의 정보를 입력하면 참석자에게 초대 알림이 가요</p>
+          </div>
         </div>
 
         {!isEdit && (
-          <button type="button" className={styles.loadPrevious} onClick={() => setIsLoadPreviousOpen(true)}>
-            <span className={styles.boxLead}>
-              <Placeholder size={ICON_SIZE} />
-              이전 회의 설정 불러오기
-            </span>
-            <Placeholder size={ICON_SIZE} />
-          </button>
+          <Button variant="secondary" size="md" block onClick={() => setIsLoadPreviousOpen(true)}>
+            <Icon src={refreshIcon} size={ICON_SIZE} />
+            이전 회의 설정 불러오기
+          </Button>
         )}
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>기본 정보</h2>
           <div className={styles.fields}>
+            {!isEdit && folderOptions.length > 0 && (
+              <label className={styles.field}>
+                <span className={styles.label}>
+                  프로젝트 폴더 <span className={styles.required}>*</span>
+                </span>
+                <select
+                  className={`${styles.box} ${styles.folderSelect}`}
+                  value={selectedFolderId}
+                  onChange={(event) => {
+                    // 참석자와 남은 안건은 폴더마다 달라 폴더를 바꾸면 다시 고른다
+                    setSelectedFolderId(Number(event.target.value));
+                    setForm((prev) => ({
+                      ...prev,
+                      attendees: [],
+                      writer: undefined,
+                      agendas: prev.agendas.filter((agenda) => agenda.pendingAgendaId === undefined),
+                    }));
+                  }}
+                >
+                  {folderOptions.map((folder) => (
+                    <option key={folder.folderId} value={folder.folderId}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <TextField
-              label="회의명 *"
-              className={styles.field}
-              placeholder="예 : 서비스 개선 방향 논의"
+              label="회의명"
+              required
+              placeholder="예: 서비스 개선 방향 논의"
               maxLength={TITLE_MAX_LENGTH}
               value={form.title}
               error={errors.title}
@@ -247,30 +300,29 @@ export default function MeetingCreatePage() {
                   aria-label="회의명 지우기"
                   onClick={() => update({ title: '' })}
                 >
-                  <Placeholder size={ICON_SIZE} />
+                  <Icon src={closeIcon} size={ICON_SIZE} />
                 </button>
               }
             />
             <div className={styles.row}>
               <TextField
-                label="회의날짜 *"
-                className={styles.field}
+                label="회의 날짜"
+                required
                 type="date"
                 value={form.date}
                 error={errors.date}
                 onChange={(event) => update({ date: event.target.value })}
-                leading={<Placeholder size={ICON_SIZE} />}
               />
               <div className={styles.field}>
                 <span className={styles.label} id="meeting-time-label">
-                  회의시간 *
+                  회의 시간<span className={styles.required}>*</span>
                 </span>
                 <div
                   role="group"
                   aria-labelledby="meeting-time-label"
                   className={[styles.box, errors.time ? styles.boxError : ''].filter(Boolean).join(' ')}
                 >
-                  <Placeholder size={ICON_SIZE} />
+                  <Icon src={clockIcon} size={ICON_SIZE} className={styles.leadingIcon} />
                   <input
                     type="time"
                     aria-label="시작 시간"
@@ -302,8 +354,9 @@ export default function MeetingCreatePage() {
                   aria-expanded={openMenu === 'attendee'}
                   onClick={() => setOpenMenu((menu) => (menu === 'attendee' ? null : 'attendee'))}
                 >
-                  <Placeholder size={ICON_SIZE} />
+                  <Icon src={personAddIcon} size={ICON_SIZE} className={styles.leadingIcon} />
                   <span className={styles.placeholderText}>참석자 선택</span>
+                  <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.trailingIcon} />
                 </button>
                 {openMenu === 'attendee' && (
                   <DropdownMenu
@@ -328,12 +381,11 @@ export default function MeetingCreatePage() {
             </div>
             <TextField
               label="장소"
-              className={styles.field}
               placeholder="회의 장소 입력"
               maxLength={LOCATION_MAX_LENGTH}
               value={form.location}
               onChange={(event) => update({ location: event.target.value })}
-              leading={<Placeholder size={ICON_SIZE} />}
+              leading={<Icon src={pinIcon} size={ICON_SIZE} className={styles.leadingIcon} />}
             />
           </div>
         </section>
@@ -341,7 +393,9 @@ export default function MeetingCreatePage() {
         {!isEdit && (
           <>
             <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>안건 *</h2>
+              <h2 className={styles.sectionTitle}>
+                안건<span className={styles.required}>*</span>
+              </h2>
               <AgendaEditor
                 agendas={form.agendas}
                 pendingAgendas={pendingAgendas}
@@ -351,7 +405,9 @@ export default function MeetingCreatePage() {
             </section>
 
             <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>회의록 작성자 *</h2>
+              <h2 className={styles.sectionTitle}>
+                회의록 작성자<span className={styles.required}>*</span>
+              </h2>
               <div className={`${styles.field} ${styles.menuAnchor}`}>
                 <button
                   ref={writerAnchorRef}
@@ -362,8 +418,12 @@ export default function MeetingCreatePage() {
                   aria-expanded={openMenu === 'writer'}
                   onClick={() => setOpenMenu((menu) => (menu === 'writer' ? null : 'writer'))}
                 >
-                  <Placeholder size={ICON_SIZE} />
-                  {form.writer ? form.writer.name : <span className={styles.placeholderText}>작성자 선택하기</span>}
+                  {form.writer ? (
+                    <span className={styles.value}>{form.writer.name}</span>
+                  ) : (
+                    <span className={styles.placeholderText}>작성자 선택하기</span>
+                  )}
+                  <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.trailingIcon} />
                 </button>
                 {openMenu === 'writer' && (
                   <DropdownMenu
@@ -385,16 +445,21 @@ export default function MeetingCreatePage() {
                 {errors.writer ? (
                   <p className={styles.error}>{errors.writer}</p>
                 ) : (
-                  <p className={styles.caption}>회의 참여자 중 한 명을 선택합니다.</p>
+                  <p className={styles.caption}>회의 참여자 중 한 명을 골라요</p>
                 )}
               </div>
             </section>
           </>
         )}
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isEdit ? '저장' : '회의 생성'}
-        </Button>
+        <div className={styles.footer}>
+          {/* REQ-070 만드는 동안 버튼이 로딩 표시로 바뀌고 다시 누를 수 없다 */}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Spinner size={20} />}
+            {isSubmitting ? (isEdit ? '저장하는 중' : '회의를 만드는 중') : isEdit ? '저장' : '회의 생성'}
+          </Button>
+          <p className={styles.caption}>* 표시는 꼭 입력해야 해요</p>
+        </div>
       </form>
 
       {isLoadPreviousOpen && (

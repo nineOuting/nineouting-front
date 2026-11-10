@@ -1,23 +1,25 @@
 .layout {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  background: var(--bg-page);
 }
 
 .header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
   height: 64px;
-  padding: 16px 32px;
+  padding: 0 var(--layout-page-margin);
 }
 
-.logo {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
-  text-decoration: none;
-}
-
+/* 디자인 Body: 위아래 56px, 카드를 가운데에 */
 .main {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 64px;
+  justify-content: center;
+  gap: var(--gap-content);
+  padding: var(--spacing-14) var(--layout-page-margin);
 }

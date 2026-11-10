@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { errorMessage } from '../../api/client';
 import {
   deleteWorkspaceProfileImage,
@@ -8,12 +8,12 @@ import {
   uploadWorkspaceProfileImage,
   type WorkspaceProfile,
 } from '../../api/user';
-import Modal from '../../components/Modal';
-import Placeholder from '../../components/Placeholder';
+import Button from '../../components/Button';
+import Dialog from '../../components/Dialog';
+import TextField from '../../components/TextField';
 import { NAME_MAX_LENGTH } from '../../constants/auth';
 import styles from './WorkspaceProfileModal.module.css';
 
-const CLOSE_ICON_SIZE = 24;
 const AVATAR_SIZE = 64;
 // user-service UpdateWorkspaceProfileRequest 길이 제한과 같다
 const AFFILIATION_MAX_LENGTH = 100;
@@ -27,12 +27,9 @@ interface WorkspaceProfileModalProps {
 
 /**
  * REQ-114·115·118 이 워크스페이스에서 보이는 내 프로필 (2026-10-28 결정: 워크스페이스마다 따로 정할 수 있다).
- * 디자인이 없어 새 폴더 창 모양을 따랐다 (docs/backlog.md)
+ * 디자인이 없어 디자인 Modal 틀에 맞췄다 (docs/backlog.md)
  */
 export default function WorkspaceProfileModal({ workspaceId, onSaved, onClose }: WorkspaceProfileModalProps) {
-  const titleId = useId();
-  const nameId = useId();
-  const affiliationId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<WorkspaceProfile | null>(null);
   const [name, setName] = useState('');
@@ -106,97 +103,70 @@ export default function WorkspaceProfileModal({ workspaceId, onSaved, onClose }:
   };
 
   return (
-    <Modal labelledBy={titleId} onClose={onClose} closeOnDimClick className={styles.card}>
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
-        <div className={styles.head}>
-          <div className={styles.texts}>
-            <h2 id={titleId} className={styles.title}>
-              이 워크스페이스에서 내 프로필
-            </h2>
-            <p className={styles.description}>
-              회의 참석자 등에 보이는 이름·소속·사진을 이 워크스페이스에서만 바꿀 수 있어요. 칸을 비우면 계정 프로필
-              값으로 돌아가요.
-            </p>
-          </div>
-          <button type="button" className={styles.iconButton} aria-label="닫기" onClick={onClose}>
-            <Placeholder size={CLOSE_ICON_SIZE} />
-          </button>
-        </div>
-
-        {profile && (
-          <>
-            <div className={styles.photoRow}>
-              {profile.profileImageUrl ? (
-                <img
-                  src={profile.profileImageUrl}
-                  alt=""
-                  width={AVATAR_SIZE}
-                  height={AVATAR_SIZE}
-                  className={styles.avatar}
-                />
-              ) : (
-                <span className={styles.avatar} aria-hidden="true" />
-              )}
-              <input
-                ref={fileRef}
-                type="file"
-                accept={PROFILE_IMAGE_TYPES.join(',')}
-                className={styles.fileInput}
-                onChange={changeImage}
-              />
-              <button
-                type="button"
-                className={styles.secondary}
-                disabled={isBusy}
-                onClick={() => fileRef.current?.click()}
-              >
-                사진 바꾸기
-              </button>
-              {profile.customProfileImage && (
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  disabled={isBusy}
-                  onClick={() => runBusy(() => deleteWorkspaceProfileImage(workspaceId))}
-                >
-                  계정 사진으로
-                </button>
-              )}
-            </div>
-            <div className={styles.field}>
-              <label htmlFor={nameId} className={styles.label}>
-                이름 {!profile.customName && <span className={styles.hint}>(계정 프로필 값)</span>}
-              </label>
-              <input
-                id={nameId}
-                className={styles.input}
-                maxLength={NAME_MAX_LENGTH}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor={affiliationId} className={styles.label}>
-                소속 {!profile.customAffiliation && <span className={styles.hint}>(계정 프로필 값)</span>}
-              </label>
-              <input
-                id={affiliationId}
-                className={styles.input}
-                placeholder="예: 디자인팀"
-                maxLength={AFFILIATION_MAX_LENGTH}
-                value={affiliation}
-                onChange={(event) => setAffiliation(event.target.value)}
-              />
-            </div>
-          </>
-        )}
-        {error && <p className={styles.error}>{error}</p>}
-        <div className={styles.actions}>
-          <button type="submit" className={styles.submit} disabled={!profile || isBusy}>
+    <Dialog
+      title="이 워크스페이스에서 내 프로필"
+      description="회의 참석자 등에 보이는 이름, 소속, 사진을 이 워크스페이스에서만 바꿀 수 있어요. 칸을 비우면 계정 프로필 값으로 돌아가요."
+      width="md"
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          <Button variant="secondary" size="md" onClick={onClose}>
+            취소
+          </Button>
+          <Button type="submit" size="md" disabled={!profile || isBusy}>
             저장
-          </button>
-        </div>
-      </form>
-    </Modal>
+          </Button>
+        </>
+      }
+    >
+      {profile && (
+        <>
+          <div className={styles.photoRow}>
+            {profile.profileImageUrl ? (
+              <img src={profile.profileImageUrl} alt="" width={AVATAR_SIZE} height={AVATAR_SIZE} className={styles.avatar} />
+            ) : (
+              <span className={styles.avatar} aria-hidden="true" />
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept={PROFILE_IMAGE_TYPES.join(',')}
+              className={styles.fileInput}
+              onChange={changeImage}
+            />
+            <Button variant="neutral" size="md" disabled={isBusy} onClick={() => fileRef.current?.click()}>
+              사진 바꾸기
+            </Button>
+            {profile.customProfileImage && (
+              <Button
+                variant="neutral"
+                size="md"
+                disabled={isBusy}
+                onClick={() => runBusy(() => deleteWorkspaceProfileImage(workspaceId))}
+              >
+                계정 사진으로
+              </Button>
+            )}
+          </div>
+          <TextField
+            label="이름"
+            helper={profile.customName ? undefined : '계정 프로필 값을 쓰고 있어요'}
+            maxLength={NAME_MAX_LENGTH}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+          <TextField
+            label="소속"
+            helper={profile.customAffiliation ? undefined : '계정 프로필 값을 쓰고 있어요'}
+            placeholder="예: 디자인팀"
+            maxLength={AFFILIATION_MAX_LENGTH}
+            value={affiliation}
+            onChange={(event) => setAffiliation(event.target.value)}
+          />
+        </>
+      )}
+      {error && <p className={styles.error}>{error}</p>}
+    </Dialog>
   );
 }

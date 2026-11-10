@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import menu from './Menu.module.css';
 import styles from './DropdownMenu.module.css';
 
 export interface DropdownItem {
@@ -20,10 +21,7 @@ interface DropdownMenuProps {
   className?: string;
 }
 
-/**
- * 입력 칸 아래에 뜨는 선택 목록. 디자인에 목록 모양이 없어 칸 모양에 맞춰 간단히 만들었다.
- * 부모는 position: relative 여야 한다.
- */
+/** 입력 칸 아래에 뜨는 선택 목록 (디자인 Menu). 부모는 position: relative 여야 한다 */
 export default function DropdownMenu({
   items,
   emptyText,
@@ -56,17 +54,19 @@ export default function DropdownMenu({
   }, [anchorRef, onClose]);
 
   return (
-    <ul ref={listRef} role="listbox" aria-label={label} className={[styles.menu, className].filter(Boolean).join(' ')}>
-      {items.length === 0 && <li className={styles.empty}>{emptyText}</li>}
+    <ul ref={listRef} role="listbox" aria-label={label} className={[menu.menu, styles.menu, className].filter(Boolean).join(' ')}>
+      {items.length === 0 && <li className={menu.empty}>{emptyText}</li>}
       {items.map((item) => (
         <li key={item.id} role="option" aria-selected={Boolean(item.isSelected)}>
           <button
             type="button"
-            className={[styles.item, item.isSelected ? styles.selected : ''].filter(Boolean).join(' ')}
+            className={[menu.item, item.isSelected ? menu.selected : ''].filter(Boolean).join(' ')}
             onClick={() => onSelect(item.id)}
           >
-            <span>{item.label}</span>
-            {item.description && <span className={styles.description}>{item.description}</span>}
+            <span className={menu.texts}>
+              <span>{item.label}</span>
+              {item.description && <span className={menu.description}>{item.description}</span>}
+            </span>
           </button>
         </li>
       ))}

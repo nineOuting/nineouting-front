@@ -1,0 +1,100 @@
+.legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--gap-content);
+  padding: 0;
+}
+
+.options {
+  display: flex;
+  clear: both;
+  gap: var(--spacing-4);
+}
+
+/* 디자인 ThemeOption */
+.option {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.preview {
+  display: flex;
+  height: 120px;
+  overflow: hidden;
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.selected .preview {
+  border: var(--border-width-focus) solid var(--primary-default);
+}
+
+/* 반쪽마다 data-theme를 붙여 그 테마의 토큰 색으로 그린다 */
+.half {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  background: var(--bg-page);
+}
+
+.previewBar {
+  height: 12px;
+  background: var(--bg-surface);
+  border-radius: 3px;
+}
+
+.previewCard {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 8px 0;
+  background: var(--bg-surface);
+  border-radius: 4px;
+}
+
+.line {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.lineText {
+  width: 42px;
+  background: var(--text-primary);
+}
+
+.lineMuted {
+  width: 54px;
+  background: var(--border-strong);
+}
+
+.linePrimary {
+  width: 24px;
+  background: var(--primary-default);
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.selected .labelRow {
+  font-weight: var(--font-weight-semibold);
+}
+
+.radio {
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+  accent-color: var(--secondary-strong);
+}

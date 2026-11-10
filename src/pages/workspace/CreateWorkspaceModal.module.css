@@ -1,0 +1,61 @@
+.inviteRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-inline);
+}
+
+.invited {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.invitedLabel {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+/* 디자인 InputChip */
+.chip {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+}
+
+.chipRemove {
+  display: flex;
+  color: var(--neutral-default);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-default);
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-inline);
+}
+
+.linkText {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}

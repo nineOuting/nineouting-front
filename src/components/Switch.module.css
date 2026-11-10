@@ -1,3 +1,4 @@
+/* 디자인 Switch: 켜면 보라 */
 .switch {
   position: relative;
   display: inline-flex;
@@ -13,32 +14,35 @@
 
 .track {
   position: relative;
-  width: 34px;
-  height: 16px;
-  background: var(--grey-50);
-  border-radius: 8px;
+  width: 36px;
+  height: 20px;
+  background: var(--control-track-off);
+  border-radius: var(--radius-full);
+  transition: background 0.15s;
 }
 
 .track::after {
   content: '';
   position: absolute;
   top: 2px;
-  left: 3px;
-  width: 12px;
-  height: 12px;
-  background: var(--color-white);
-  border-radius: 50%;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--control-knob);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: left 0.15s;
 }
 
 .input:checked + .track {
-  background: var(--blue-100);
+  background: var(--control-track-on);
 }
 
 .input:checked + .track::after {
-  left: 19px;
+  left: 18px;
 }
 
 .input:focus-visible + .track {
-  outline: 2px solid var(--blue-70);
+  outline: var(--border-width-focus) solid var(--border-focus);
   outline-offset: 2px;
 }

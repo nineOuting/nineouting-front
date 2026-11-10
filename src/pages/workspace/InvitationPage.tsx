@@ -6,6 +6,7 @@ import { getMe } from '../../api/user';
 import { acceptInvitation, getInvitation, type InvitationInfo } from '../../api/workspace';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
+import JoinConfirmDialog from './JoinConfirmDialog';
 import styles from './InvitationPage.module.css';
 
 type State =
@@ -88,12 +89,14 @@ export default function InvitationPage() {
                 </Button>
               </>
             ) : state.invitation.emailMatches ? (
-              <>
-                {acceptError && <p className={styles.error}>{acceptError}</p>}
-                <Button disabled={isAccepting} onClick={() => accept(state.invitation.workspaceId)}>
-                  참여하기
-                </Button>
-              </>
+              <JoinConfirmDialog
+                workspaceName={state.invitation.workspaceName}
+                inviterName={state.invitation.inviterName}
+                error={acceptError}
+                isBusy={isAccepting}
+                onReject={() => navigate('/home', { replace: true })}
+                onJoin={() => accept(state.invitation.workspaceId)}
+              />
             ) : (
               <>
                 <p className={styles.error}>

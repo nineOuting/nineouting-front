@@ -30,6 +30,8 @@ interface WorkspaceResponse {
 export interface WorkspaceDetail {
   workspaceId: number;
   name: string;
+  /** REQ-163 워크스페이스 설명 (없으면 빈 글자) */
+  description: string;
   isOwner: boolean;
   memberCount: number;
 }
@@ -87,16 +89,29 @@ export async function createWorkspace(name: string): Promise<WorkspaceSummary> {
 
 /** REQ-028 멤버만 들어올 수 있다 (아니면 403) */
 export async function getWorkspace(workspaceId: number): Promise<WorkspaceDetail> {
-  const detail = await request<{ workspaceId: number; name: string; myRole: WorkspaceRole; memberCount: number }>(
-    'GET',
-    `/api/workspaces/${workspaceId}`,
-  );
+  const detail = await request<{
+    workspaceId: number;
+    name: string;
+    description: string | null;
+    myRole: WorkspaceRole;
+    memberCount: number;
+  }>('GET', `/api/workspaces/${workspaceId}`);
   return {
     workspaceId: detail.workspaceId,
     name: detail.name,
+    description: detail.description ?? '',
     isOwner: detail.myRole === 'OWNER',
     memberCount: detail.memberCount,
   };
+}
+
+/** REQ-163 워크스페이스 이름, 설명 수정 (소유자). 바뀐 값을 돌려준다 */
+export async function updateWorkspace(workspaceId: number, name: string, description: string) {
+  const detail = await request<{ name: string; description: string | null }>('PATCH', `/api/workspaces/${workspaceId}`, {
+    name,
+    description,
+  });
+  return { name: detail.name, description: detail.description ?? '' };
 }
 
 /** REQ-030 마지막으로 접속한 워크스페이스 기억 */
@@ -154,6 +169,8 @@ export interface InvitationInfo {
   workspaceName: string;
   /** 초대받은 이메일 */
   email: string;
+  /** MSG-059 초대한 사람 이름 (찾지 못하면 null) */
+  inviterName: string | null;
   /** 로그인한 계정이 초대받은 이메일인지 (다르면 수락할 수 없다) */
   emailMatches: boolean;
   /** 이미 워크스페이스 멤버인지 */
@@ -170,6 +187,30 @@ export function acceptInvitation(token: string) {
   return request<WorkspaceResponse>('POST', `/api/workspaces/invitations/${encodeURIComponent(token)}/accept`);
 }
 
+export interface PendingInvitation {
+  invitationId: number;
+  email: string;
+  invitedAt: string;
+  expiresAt: string;
+  /** 유효 기간이 지나 메일 속 링크를 더는 쓸 수 없다 */
+  expired: boolean;
+}
+
+/** REQ-164 초대 대기 목록 (소유자) */
+export function listPendingInvitations(workspaceId: number) {
+  return request<PendingInvitation[]>('GET', `/api/workspaces/${workspaceId}/invitations`);
+}
+
+/** REQ-164 [다시 보내기] */
+export function resendInvitation(workspaceId: number, invitationId: number) {
+  return request('POST', `/api/workspaces/${workspaceId}/invitations/${invitationId}/resend`);
+}
+
+/** REQ-164 [취소] */
+export function cancelInvitation(workspaceId: number, invitationId: number) {
+  return request('DELETE', `/api/workspaces/${workspaceId}/invitations/${invitationId}`);
+}
+
 /** REQ-034 초대 링크 발급 (소유자). 1일 동안 쓸 수 있고, 새로 발급하면 이전 링크는 무효 */
 export async function issueInviteLink(workspaceId: number) {
   const { inviteUrl } = await request<{ inviteUrl: string }>('POST', `/api/workspaces/${workspaceId}/invite-link`);
@@ -179,17 +220,24 @@ export async function issueInviteLink(workspaceId: number) {
 export interface InviteLinkInfo {
   workspaceId: number;
   workspaceName: string;
+  /** MSG-059 링크를 만든 사람 이름 (찾지 못하면 null) */
+  inviterName: string | null;
   /** 이미 멤버인지 (PENDING·REJECTED는 승인 단계가 있던 때의 값이다) */
   isMember: boolean;
 }
 
 /** REQ-015 초대 링크(/invites/{token})를 연 사람에게 보여 줄 정보 */
 export async function getInviteLink(token: string): Promise<InviteLinkInfo> {
-  const info = await request<{ workspaceId: number; workspaceName: string; myStatus: string }>(
+  const info = await request<{ workspaceId: number; workspaceName: string; inviterName: string | null; myStatus: string }>(
     'GET',
     `/api/invites/${encodeURIComponent(token)}`,
   );
-  return { workspaceId: info.workspaceId, workspaceName: info.workspaceName, isMember: info.myStatus === 'MEMBER' };
+  return {
+    workspaceId: info.workspaceId,
+    workspaceName: info.workspaceName,
+    inviterName: info.inviterName ?? null,
+    isMember: info.myStatus === 'MEMBER',
+  };
 }
 
 /** REQ-015 초대 링크로 참여. 승인 없이 바로 멤버가 된다 (2026-10-28) */

@@ -10,14 +10,22 @@ import {
   toMeeting,
   updateMeeting,
 } from '../../api/meeting';
-import { listFolderMembers } from '../../api/workspace';
-import dividerLine from '../../assets/divider-line.svg';
-import dividerSide from '../../assets/divider-side.svg';
+import { getFolder, listFolderMembers } from '../../api/workspace';
+import checkCircleIcon from '../../assets/icons/check-circle.svg';
+import chevronDownIcon from '../../assets/icons/chevron-down.svg';
+import createIcon from '../../assets/icons/create.svg';
+import groupAddIcon from '../../assets/icons/group-add-sm.svg';
+import infoIcon from '../../assets/icons/info.svg';
+import locationIcon from '../../assets/icons/location.svg';
+import playIcon from '../../assets/icons/play.svg';
+import scheduleIcon from '../../assets/icons/schedule.svg';
+import separatorIcon from '../../assets/icons/breadcrumb-sep.svg';
+import uploadIcon from '../../assets/icons/upload-file.svg';
 import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
-import Placeholder from '../../components/Placeholder';
+import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import { MINUTES_TEMPLATES } from '../../mocks/meeting';
 import type { Meeting, MeetingStatus, Member, PendingAgenda } from '../../types/meeting';
@@ -25,16 +33,19 @@ import { formatMeetingSchedule } from '../../utils/meetingFormat';
 import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
 import AgendaEditor from './AgendaEditor';
 import ConsentModal from './ConsentModal';
+import MicPermissionDialog from './MicPermissionDialog';
 import StartingModal from './StartingModal';
 import TemplateDetailModal from './TemplateDetailModal';
 import TemplateGalleryModal from './TemplateGalleryModal';
 import styles from './MeetingWaitingPage.module.css';
 
+const SEPARATOR_ICON_SIZE = 16;
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
 const MATERIAL_ICON_SIZE = 24;
 const START_FAILED_MESSAGE = '회의를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.';
-const MIC_DENIED_MESSAGE = '마이크를 쓸 수 없어 회의를 시작하지 못했어요. 브라우저의 마이크 권한을 확인해 주세요.';
+// REQ-067 50MB 이하 파일만 (MSG-067)
+const MAX_MATERIAL_BYTES = 50 * 1024 * 1024;
 const NEW_TEMPLATE_PENDING_MESSAGE = '새 양식 만들기는 설정의 회의록 양식 관리 화면이 나오면 연결돼요.';
 
 type TemplateModalState = { view: 'gallery' } | { view: 'detail'; index: number };
@@ -49,7 +60,7 @@ const STATUS_LABELS: Record<MeetingStatus, string> = {
 
 function readinessMessage(hasAgenda: boolean, hasWriter: boolean) {
   if (hasAgenda && hasWriter) {
-    return '필수 정보 입력 완료';
+    return '필수 정보를 모두 입력했어요';
   }
   if (!hasAgenda && !hasWriter) {
     return '안건과 회의록 작성자를 정해 주세요';
@@ -80,6 +91,12 @@ export default function MeetingWaitingPage() {
   const [templateModal, setTemplateModal] = useState<TemplateModalState | null>(null);
   const [isConsentOpen, setIsConsentOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  // REQ-002 회의명 위 경로 (폴더 > 회의 상세)
+  const [folderName, setFolderName] = useState('');
+  // REQ-078 마이크 권한 안내 창 (MSG-065, MSG-066)
+  const [micDialog, setMicDialog] = useState<'request' | 'denied' | null>(null);
+  const [isCheckingMic, setIsCheckingMic] = useState(false);
+  const [materialError, setMaterialError] = useState<string>();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -93,13 +110,15 @@ export default function MeetingWaitingPage() {
     let isCurrent = true;
     const load = async () => {
       const loaded = toMeeting(await getMeetingDetail(meetingId ?? ''));
-      const [members, pending] = await Promise.all([
+      const [members, pending, folder] = await Promise.all([
         listFolderMembers(loaded.folderId),
         listPendingAgendas(loaded.folderId),
+        getFolder(loaded.folderId).catch(() => null),
       ]);
       if (!isCurrent) {
         return;
       }
+      setFolderName(folder?.name ?? '');
       const usable = pendingAgendasFor(pending, loaded.meetingId);
       setFolderMembers(members);
       setPendingAgendas(usable);
@@ -175,23 +194,43 @@ export default function MeetingWaitingPage() {
 
   const addMaterials = (event: ChangeEvent<HTMLInputElement>) => {
     // TODO(API 연동): 사전 자료 업로드 (REQ-067, S3)
-    const names = Array.from(event.target.files ?? [], (file) => file.name);
+    const files = Array.from(event.target.files ?? []);
+    const tooLarge = files.find((file) => file.size > MAX_MATERIAL_BYTES);
+    // MSG-067
+    setMaterialError(tooLarge ? `'${tooLarge.name}'을 올리지 못했어요. 50MB 이하 파일만 올릴 수 있어요.` : undefined);
+    const names = files.filter((file) => file.size <= MAX_MATERIAL_BYTES).map((file) => file.name);
     updateLocal({ materials: [...meeting.materials, ...names] });
     event.target.value = '';
   };
 
+  /** REQ-077 동의하면 마이크 권한을 확인한다. 처음이면 먼저 안내하고(MSG-065), 꺼져 있으면 켜는 방법을 알려 준다(MSG-066) */
   const start = async () => {
     setIsConsentOpen(false);
-    setIsStarting(true);
+    const state = await navigator.permissions
+      ?.query({ name: 'microphone' as PermissionName })
+      .then((status) => status.state)
+      .catch(() => 'prompt' as const);
+    if (state === 'granted') {
+      await requestMicAndStart();
+    } else {
+      setMicDialog(state === 'denied' ? 'denied' : 'request');
+    }
+  };
+
+  /** 브라우저에 마이크 권한을 요청한다. 녹음은 회의 진행 화면에서 시작한다 */
+  const requestMicAndStart = async () => {
+    setIsCheckingMic(true);
     try {
-      // REQ-077 동의하면 브라우저 마이크 권한을 요청한다. 녹음은 회의 진행 화면에서 시작한다
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
     } catch {
-      setIsStarting(false);
-      setToast({ text: MIC_DENIED_MESSAGE, variant: 'error' });
+      setIsCheckingMic(false);
+      setMicDialog('denied');
       return;
     }
+    setIsCheckingMic(false);
+    setMicDialog(null);
+    setIsStarting(true);
     try {
       await startMeeting(meeting.meetingId);
     } catch (error) {
@@ -221,15 +260,28 @@ export default function MeetingWaitingPage() {
 
       <div className={styles.head}>
         <div className={styles.titleBlock}>
+          {/* REQ-002 회의 대기 화면은 회의명 위에 경로를 보여 준다. 누르면 그 위치로 간다 */}
+          <nav className={styles.breadcrumb} aria-label="현재 위치">
+            <button type="button" className={styles.crumb} onClick={() => navigate(`/folders/${meeting.folderId}`)}>
+              {folderName || '프로젝트 폴더'}
+            </button>
+            <Icon src={separatorIcon} size={SEPARATOR_ICON_SIZE} className={styles.separator} />
+            <span aria-current="page" className={styles.crumbCurrent}>
+              회의 상세
+            </span>
+          </nav>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>{meeting.title}</h1>
             <span className={styles.badge}>{STATUS_LABELS[meeting.status]}</span>
           </div>
           <div className={styles.metaRow}>
-            <span>{formatMeetingSchedule(meeting.date, meeting.startTime, meeting.endTime)}</span>
+            <span className={styles.meta}>
+              <Icon src={scheduleIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+              {formatMeetingSchedule(meeting.date, meeting.startTime, meeting.endTime)}
+            </span>
             {meeting.location && (
-              <span className={styles.location}>
-                <Placeholder size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+              <span className={styles.meta}>
+                <Icon src={locationIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
                 {meeting.location}
               </span>
             )}
@@ -241,7 +293,7 @@ export default function MeetingWaitingPage() {
             className={styles.editInfo}
             onClick={() => navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting } })}
           >
-            <Placeholder size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+            <Icon src={createIcon} size={ICON_SIZE} />
             정보 수정
           </button>
         )}
@@ -249,10 +301,10 @@ export default function MeetingWaitingPage() {
 
       <div className={styles.columns}>
         <div className={styles.main}>
-          <section className={styles.agendaSection}>
-            <div className={styles.agendaHead}>
-              <h2 className={styles.agendaTitle}>회의 안건</h2>
-              <span className={styles.agendaCount}>{meeting.agendas.length}개</span>
+          <section className={`${styles.card} ${styles.agendaSection}`}>
+            <div className={styles.titleGroup}>
+              <h2 className={styles.sectionTitle}>회의 안건</h2>
+              <p className={styles.sectionCaption}>회의에서 논의할 안건 {meeting.agendas.length}개</p>
             </div>
             <AgendaEditor
               agendas={meeting.agendas}
@@ -261,32 +313,21 @@ export default function MeetingWaitingPage() {
             />
           </section>
 
-          <p className={styles.readiness}>
-            <span>회의 준비</span>
-            <span className={styles.divider} aria-hidden="true">
-              <img src={dividerLine} alt="" width={21} height={1} />
-            </span>
-            <span className={styles.readinessState}>
-              {readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer))}
-            </span>
-          </p>
-
           <div className={styles.startBlock}>
-            <Button
-              className={isStarting ? styles.startButtonBusy : undefined}
-              disabled={!isReady || isStarting}
-              onClick={() => setIsConsentOpen(true)}
-            >
+            <p className={[styles.readiness, isReady ? styles.ready : ''].filter(Boolean).join(' ')}>
+              <Icon src={isReady ? checkCircleIcon : infoIcon} size={SMALL_ICON_SIZE} />
+              {readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer))}
+            </p>
+            <Button disabled={!isReady || isStarting} onClick={() => setIsConsentOpen(true)}>
+              <Icon src={playIcon} size={ICON_SIZE} />
               {isStarting ? '회의 준비 중' : '회의 시작하기'}
             </Button>
-            <p className={styles.startNote}>
-              <Placeholder size={SMALL_ICON_SIZE} />
-              회의 시작 시 녹음 및 전사 동의를 확인합니다.
-            </p>
+            <p className={styles.startNote}>회의를 시작하면 참여자에게 녹음, 전사 동의를 받아요</p>
           </div>
         </div>
 
         <aside className={styles.side}>
+          <div className={`${styles.card} ${styles.settingsPanel}`}>
           <section className={styles.attendees}>
             <div className={`${styles.attendeeHead} ${styles.menuAnchor}`}>
               <h2 className={styles.sideTitle}>회의 참여자</h2>
@@ -299,7 +340,7 @@ export default function MeetingWaitingPage() {
                 aria-expanded={openMenu === 'attendee'}
                 onClick={() => toggleMenu('attendee')}
               >
-                <Placeholder size={ICON_SIZE} />
+                <Icon src={groupAddIcon} size={ICON_SIZE} />
               </button>
               {openMenu === 'attendee' && (
                 <DropdownMenu
@@ -319,26 +360,26 @@ export default function MeetingWaitingPage() {
                 />
               )}
             </div>
+            <p className={styles.attendeeCount}>참여자 {meeting.attendees.length}명</p>
             <div className={styles.avatars}>
               {meeting.attendees.map((member) => (
                 <Avatar key={member.userId} member={member} />
               ))}
             </div>
-            <p className={styles.attendeeCount}>참여자 {meeting.attendees.length}명</p>
           </section>
 
-          <img src={dividerSide} alt="" width={333} height={1} className={styles.sideDivider} />
+          <div className={styles.sideDivider} />
 
           <section className={styles.minutesSettings}>
-            <h2 className={styles.sideTitle}>회의록 설정</h2>
+            <div className={styles.sideHead}>
+              <h2 className={styles.sideTitle}>회의록 설정</h2>
+              <button type="button" className={styles.textButton} onClick={() => setTemplateModal({ view: 'gallery' })}>
+                양식 전체보기
+              </button>
+            </div>
             <div className={styles.settingGroup}>
               <div className={styles.settingField}>
-                <div className={styles.settingLabelRow}>
-                  <span>회의록 양식</span>
-                  <button type="button" className={styles.textButton} onClick={() => setTemplateModal({ view: 'gallery' })}>
-                    전체보기
-                  </button>
-                </div>
+                <span className={styles.settingLabelRow}>회의록 양식</span>
                 <div className={styles.menuAnchor}>
                   <button
                     ref={templateAnchorRef}
@@ -348,8 +389,10 @@ export default function MeetingWaitingPage() {
                     aria-expanded={openMenu === 'template'}
                     onClick={() => toggleMenu('template')}
                   >
-                    {selectedTemplate?.name ?? '양식 선택하기'}
-                    <Placeholder size={ICON_SIZE} />
+                    <span className={selectedTemplate ? styles.selectValue : styles.selectPlaceholder}>
+                      {selectedTemplate?.name ?? '양식을 선택해 주세요'}
+                    </span>
+                    <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.mutedIcon} />
                   </button>
                   {openMenu === 'template' && (
                     <DropdownMenu
@@ -371,7 +414,7 @@ export default function MeetingWaitingPage() {
                     />
                   )}
                 </div>
-                <p className={styles.settingCaption}>즐겨찾기한 회의록에서 선택 가능합니다.</p>
+                <p className={styles.settingCaption}>즐겨찾기한 양식 중에서 고를 수 있어요</p>
               </div>
               <div className={styles.settingField}>
                 <span className={styles.settingLabelRow}>회의록 작성자</span>
@@ -384,8 +427,10 @@ export default function MeetingWaitingPage() {
                     aria-expanded={openMenu === 'writer'}
                     onClick={() => toggleMenu('writer')}
                   >
-                    {meeting.writer?.name ?? '작성자 선택하기'}
-                    <Placeholder size={ICON_SIZE} />
+                    <span className={meeting.writer ? styles.selectValue : styles.selectPlaceholder}>
+                      {meeting.writer?.name ?? '작성자를 선택해 주세요'}
+                    </span>
+                    <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.mutedIcon} />
                   </button>
                   {openMenu === 'writer' && (
                     <DropdownMenu
@@ -405,17 +450,17 @@ export default function MeetingWaitingPage() {
                     />
                   )}
                 </div>
-                <p className={styles.settingCaption}>회의 참여자 중 한 명을 선택합니다.</p>
+                <p className={styles.settingCaption}>회의 참여자 중 한 명을 골라요</p>
               </div>
             </div>
           </section>
 
-          <img src={dividerSide} alt="" width={333} height={1} className={styles.sideDivider} />
+          <div className={styles.sideDivider} />
 
           <section className={styles.materials}>
-            <div className={styles.materialsHead}>
-              <h2 className={styles.materialsTitle}>사전 자료</h2>
-              <p className={styles.materialsCaption}>회의 전 필요한 자료들을 공유해요.</p>
+            <div className={styles.titleGroup}>
+              <h2 className={styles.sideTitle}>사전 자료</h2>
+              <p className={styles.sectionCaption}>회의 전에 필요한 자료를 공유해요</p>
             </div>
             {meeting.materials.length > 0 && (
               <ul className={styles.materialList}>
@@ -425,16 +470,23 @@ export default function MeetingWaitingPage() {
               </ul>
             )}
             <button type="button" className={styles.addMaterial} onClick={() => fileInputRef.current?.click()}>
-              <Placeholder size={MATERIAL_ICON_SIZE} />
-              자료 추가하기
+              <Icon src={uploadIcon} size={MATERIAL_ICON_SIZE} className={styles.mutedIcon} />
+              <span className={styles.addMaterialLabel}>자료 추가하기</span>
+              <span className={styles.settingCaption}>눌러서 파일을 올려요</span>
             </button>
             <input ref={fileInputRef} type="file" multiple hidden onChange={addMaterials} />
+            {materialError && (
+              <p className={styles.materialError} role="alert">
+                {materialError}
+              </p>
+            )}
           </section>
+          </div>
 
           {isScheduled && (
-            <button type="button" className={styles.cancelMeeting} onClick={() => setIsCancelDialogOpen(true)}>
+            <Button variant="danger" size="md" block onClick={() => setIsCancelDialogOpen(true)}>
               회의 취소하기
-            </button>
+            </Button>
           )}
         </aside>
       </div>
@@ -463,6 +515,14 @@ export default function MeetingWaitingPage() {
       )}
       {isConsentOpen && <ConsentModal onCancel={() => setIsConsentOpen(false)} onAgree={start} />}
       {isStarting && <StartingModal />}
+      {micDialog && (
+        <MicPermissionDialog
+          state={micDialog}
+          isChecking={isCheckingMic}
+          onAllow={() => void requestMicAndStart()}
+          onClose={() => setMicDialog(null)}
+        />
+      )}
       {isCancelDialogOpen && (
         <ConfirmDialog
           title="회의를 취소할까요?"

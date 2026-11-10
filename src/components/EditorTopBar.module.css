@@ -1,0 +1,81 @@
+.bar {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--layout-header-height);
+  padding: var(--spacing-2) var(--layout-page-margin);
+  background: var(--bg-surface-raised);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-14);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.iconButton {
+  display: flex;
+  color: var(--neutral-default);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+}
+
+/* 디자인 Button sm 120px (임시저장, 작성 완료) */
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-inline);
+  min-width: 120px;
+  height: var(--button-sm-height);
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-sm);
+  font-size: var(--button-sm-font-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  white-space: nowrap;
+}
+
+.secondary {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+}
+
+.secondary:hover {
+  background: var(--secondary-hover);
+}
+
+.primary {
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+}
+
+.primary:hover {
+  background: var(--primary-hover);
+}
+
+.action:disabled {
+  background: var(--primary-disabled);
+  color: var(--text-disabled);
+}
+
+/* 가운데 칸은 양쪽 너비와 관계없이 바 한가운데 둔다 */
+.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

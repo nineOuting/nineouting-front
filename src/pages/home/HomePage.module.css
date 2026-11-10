@@ -1,42 +1,36 @@
-/* 디자인 23:697: 메뉴 오른쪽 18px, 상단 바 아래 29px부터. 캘린더 863px + 18px + 오른쪽 열 283px */
+/* 디자인 HomePage Body: 좌우 32px, 위아래 32px. 왼쪽 캘린더 + 오른쪽 열 368px */
 .page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 29px 18px 21px;
+  gap: var(--gap-content);
+  padding: var(--spacing-8) var(--layout-page-margin);
 }
 
 .greeting {
-  margin: 0;
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: #000;
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  color: var(--text-primary);
 }
 
 .top {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 283px;
-  gap: 18px;
-  margin-bottom: 2px;
+  grid-template-columns: minmax(0, 1fr) 368px;
+  align-items: start;
+  gap: var(--layout-gutter);
 }
 
 .side {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--gap-content);
 }
 
-/* 인사말과 새 워크스페이스 만들기 버튼 (임시 배치) */
-.head {
+.skeletonRow {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: var(--gap-content);
 }
 
-.create {
-  flex-shrink: 0;
-  width: auto;
-  padding: 10px 20px;
+.newUser {
+  padding-top: 160px;
 }

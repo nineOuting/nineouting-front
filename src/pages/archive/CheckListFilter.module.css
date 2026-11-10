@@ -110,7 +110,7 @@
 }
 
 .apply {
-  background: var(--blue-100);
+  background: var(--primary-default);
   border: none;
   color: var(--color-white);
 }

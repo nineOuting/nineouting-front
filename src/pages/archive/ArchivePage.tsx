@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
   listMinutesLocations,
@@ -12,7 +12,22 @@ import {
 import { getWorkspace, listMyWorkspaces, listWorkspaceMembers, type WorkspaceDetail } from '../../api/workspace';
 import AppLayout from '../../components/AppLayout';
 import DropdownMenu from '../../components/DropdownMenu';
-import Placeholder from '../../components/Placeholder';
+import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
+import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
+import minutesIcon from '../../assets/icons/minutes-doc.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
+import searchIcon from '../../assets/icons/search.svg';
+import Icon from '../../components/Icon';
+import { restoreMeeting, trashMeeting } from '../../api/meeting';
+import copyIcon from '../../assets/icons/copy.svg';
+import deleteIcon from '../../assets/icons/delete-sm.svg';
+import downloadIcon from '../../assets/icons/download-sm.svg';
+import moveIcon from '../../assets/icons/folder-sm.svg';
+import MoveMeetingModal from '../../components/MoveMeetingModal';
+import Button from '../../components/Button';
+import EmptyState from '../../components/EmptyState';
+import Skeleton from '../../components/Skeleton';
+import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
 import Popover from '../../components/Popover';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
@@ -24,11 +39,11 @@ import CheckListFilter from './CheckListFilter';
 import PeriodPicker, { type Period } from './PeriodPicker';
 import styles from './ArchivePage.module.css';
 
-const ICON_SIZE = 20;
+const ICON_SIZE = 16;
+const SEARCH_ICON_SIZE = 20;
 const SORT_ICON_SIZE = 16;
-const VIEWED_ICON_SIZE = 40;
+const VIEWED_ICON_SIZE = 20;
 const VIEWED_SIZE = 5;
-const CREATE_WORKSPACE_PENDING_MESSAGE = '새 워크스페이스 만들기 화면은 디자인이 나오면 연결돼요.';
 const SORT_LABELS = { LATEST: '최신순', OLDEST: '오래된순' } as const;
 
 type FilterKey = 'period' | 'location' | 'attendee';
@@ -38,6 +53,32 @@ interface Filters {
   locations: string[];
   attendeeIds: number[];
 }
+
+const LOADING_ROWS = 4;
+// 주소에 여러 값을 담을 때 나누는 글자 (장소 이름에는 잘 쓰지 않는다)
+const LIST_SEPARATOR = '|';
+
+function setOrDelete(params: URLSearchParams, key: string, value: string) {
+  if (value) {
+    params.set(key, value);
+  } else {
+    params.delete(key);
+  }
+}
+
+/** 주소의 from, to, locations, attendees를 필터로 읽는다 */
+function filtersOf(params: URLSearchParams): Filters {
+  const from = params.get('from');
+  const to = params.get('to');
+  const locations = params.get('locations');
+  const attendees = params.get('attendees');
+  return {
+    period: from && to ? { from, to } : null,
+    locations: locations ? locations.split(LIST_SEPARATOR) : [],
+    attendeeIds: attendees ? attendees.split(LIST_SEPARATOR).map(Number).filter(Number.isFinite) : [],
+  };
+}
+const ROW_HEIGHT = 56;
 
 const EMPTY_FILTERS: Filters = { period: null, locations: [], attendeeIds: [] };
 
@@ -61,11 +102,11 @@ function FilterChip({ label, isApplied, isOpen, onToggle, onClear, children }: F
         </button>
         {isApplied ? (
           <button type="button" className={styles.iconButton} aria-label={`${label} 필터 지우기`} onClick={onClear}>
-            <Placeholder size={ICON_SIZE} />
+            <Icon src={chipRemoveIcon} size={ICON_SIZE} />
           </button>
         ) : (
           <button type="button" className={styles.iconButton} aria-hidden="true" tabIndex={-1} onClick={onToggle}>
-            <Placeholder size={ICON_SIZE} />
+            <Icon src={chevronIcon} size={ICON_SIZE} className={isOpen ? undefined : styles.flipped} />
           </button>
         )}
       </div>
@@ -88,17 +129,20 @@ export default function ArchivePage() {
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [viewed, setViewed] = useState<ViewedMinutes[]>([]);
-  const [keyword, setKeyword] = useState('');
-  const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [sort, setSort] = useState<ArchiveQuery['sort']>('LATEST');
+  const [keyword, setKeyword] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '');
+  const [moving, setMoving] = useState<ArchiveMinutes | null>(null);
+  // 되돌리기, 이동 뒤 같은 조건으로 다시 받는다
+  const [reloadToken, setReloadToken] = useState(0);
   const [items, setItems] = useState<ArchiveMinutes[]>([]);
+  // 마지막으로 받은 요청. 지금 조건과 다르면 불러오는 중이다
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const switcherRef = useRef<HTMLButtonElement>(null);
   const sortRef = useRef<HTMLButtonElement>(null);
@@ -106,6 +150,31 @@ export default function ArchivePage() {
   const closeSwitcher = useCallback(() => setIsSwitcherOpen(false), []);
   const closeSort = useCallback(() => setIsSortOpen(false), []);
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
+  // REQ-180 검색어, 필터, 정렬은 주소에 둬서 회의록을 보고 뒤로 와도 그대로다
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramsKey = searchParams.toString();
+  const query = searchParams.get('q') ?? '';
+  const sort: ArchiveQuery['sort'] = searchParams.get('sort') === 'OLDEST' ? 'OLDEST' : 'LATEST';
+  const filters = useMemo(() => filtersOf(new URLSearchParams(paramsKey)), [paramsKey]);
+  const updateParams = (patch: { q?: string; sort?: ArchiveQuery['sort']; filters?: Filters }) => {
+    const next = new URLSearchParams(searchParams);
+    if (patch.q !== undefined) {
+      setOrDelete(next, 'q', patch.q);
+    }
+    if (patch.sort !== undefined) {
+      setOrDelete(next, 'sort', patch.sort === 'LATEST' ? '' : patch.sort);
+    }
+    if (patch.filters) {
+      setOrDelete(next, 'from', patch.filters.period?.from ?? '');
+      setOrDelete(next, 'to', patch.filters.period?.to ?? '');
+      setOrDelete(next, 'locations', patch.filters.locations.join(LIST_SEPARATOR));
+      setOrDelete(next, 'attendees', patch.filters.attendeeIds.join(LIST_SEPARATOR));
+    }
+    setSearchParams(next, { replace: true });
+  };
+  const applyQuery = (q: string) => updateParams({ q });
+  const applyFilters = (next: Filters) => updateParams({ filters: next });
+  const applySort = (next: ArchiveQuery['sort']) => updateParams({ sort: next });
 
   useEffect(() => {
     let isCurrent = true;
@@ -127,6 +196,9 @@ export default function ArchivePage() {
     };
   }, [id, showError]);
 
+  const requestKey = JSON.stringify([id, query, filters, sort, page, reloadToken]);
+  const isLoading = loadedKey !== requestKey;
+
   // 검색어·필터·정렬이 바뀌면 첫 쪽부터 다시 받는다
   useEffect(() => {
     let isCurrent = true;
@@ -141,29 +213,68 @@ export default function ArchivePage() {
     listWorkspaceMinutes(id, archiveQuery, page)
       .then((result) => {
         if (isCurrent) {
+          setLoadedKey(requestKey);
           setItems((prev) => (page === 0 ? result.items : [...prev, ...result.items]));
           setTotalCount(result.totalCount);
           setHasNext(result.hasNext);
         }
       })
-      .catch(showError);
+      .catch((error: unknown) => {
+        if (isCurrent) {
+          setLoadedKey(requestKey);
+          showError(error);
+        }
+      });
     return () => {
       isCurrent = false;
     };
-  }, [id, query, filters, sort, page, showError]);
+  }, [id, query, filters, sort, page, requestKey, showError]);
 
   const changeFilters = (next: Filters) => {
-    setFilters(next);
+    applyFilters(next);
     setPage(0);
     setOpenFilter(null);
   };
   const search = (event: FormEvent) => {
     event.preventDefault();
-    setQuery(keyword);
+    applyQuery(keyword);
     setPage(0);
   };
   const toggleFilter = (key: FilterKey) => setOpenFilter((open) => (open === key ? null : key));
   const openMinutes = (meetingId: number) => navigate(`/meetings/${meetingId}/minutes`);
+
+  // REQ-160 링크 복사 (MSG-064)
+  const copyLink = async (item: ArchiveMinutes) => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/meetings/${item.meetingId}/minutes`);
+      setToast({ text: '링크를 복사했어요.', variant: 'success' });
+    } catch {
+      setToast({ text: '링크를 복사하지 못했어요. 다시 시도해 주세요.', variant: 'error' });
+    }
+  };
+
+  // REQ-160 회의록 삭제: 회의와 함께 삭제 목록으로 (REQ-143). [되돌리기] 5초
+  const removeMinutes = async (item: ArchiveMinutes) => {
+    try {
+      await trashMeeting(item.meetingId);
+      setItems((prev) => prev.filter(({ minutesId }) => minutesId !== item.minutesId));
+      setTotalCount((count) => Math.max(0, count - 1));
+      setToast({
+        text: `'${item.title}'을 삭제했어요.`,
+        variant: 'info',
+        action: {
+          label: '되돌리기',
+          onClick: () => {
+            restoreMeeting(item.meetingId)
+              .then(() => setReloadToken((value) => value + 1))
+              .catch(showError);
+          },
+        },
+      });
+    } catch (error) {
+      showError(error);
+    }
+  };
 
   const memberName = (userId: number) => members.find((member) => member.userId === userId)?.name ?? '알 수 없는 사용자';
   const periodLabel = !filters.period
@@ -192,7 +303,7 @@ export default function ArchivePage() {
                   onClick={() => setIsSwitcherOpen((open) => !open)}
                 >
                   {workspace?.name}
-                  <Placeholder size={ICON_SIZE} />
+                  <Icon src={chevronIcon} size={ICON_SIZE} className={isSwitcherOpen ? undefined : styles.flipped} />
                 </button>
                 {isSwitcherOpen && (
                   <WorkspaceSwitcher
@@ -201,26 +312,26 @@ export default function ArchivePage() {
                     anchorRef={switcherRef}
                     onSelect={(selectedId) => {
                       closeSwitcher();
-                      setFilters(EMPTY_FILTERS);
+                      applyFilters(EMPTY_FILTERS);
                       setPage(0);
                       navigate(`/workspaces/${selectedId}/archive`);
                     }}
                     onCreate={() => {
                       closeSwitcher();
-                      setToast({ text: CREATE_WORKSPACE_PENDING_MESSAGE, variant: 'info' });
+                      setIsCreatingWorkspace(true);
                     }}
                     onClose={closeSwitcher}
                   />
                 )}
               </span>
             </div>
-            <p className={styles.description}>지난 회의록을 검색하고 필요한 기록을 빠르게 찾아보세요.</p>
+            <p className={styles.description}>지난 회의록을 검색하고 필요한 기록을 빠르게 찾아봐요</p>
           </div>
 
           <div className={styles.searchCard}>
             <form className={styles.searchRow} role="search" onSubmit={search}>
               <label className={styles.searchField}>
-                <Placeholder size={ICON_SIZE} />
+                <Icon src={searchIcon} size={SEARCH_ICON_SIZE} className={styles.mutedIcon} />
                 <input
                   className={styles.searchInput}
                   placeholder="회의명, 내용으로 검색"
@@ -283,7 +394,7 @@ export default function ArchivePage() {
                 disabled={!hasFilters}
                 onClick={() => changeFilters(EMPTY_FILTERS)}
               >
-                <Placeholder size={ICON_SIZE} />
+                <Icon src={refreshIcon} size={ICON_SIZE} />
                 필터 초기화
               </button>
             </div>
@@ -299,7 +410,9 @@ export default function ArchivePage() {
             {viewed.map((item) => (
               <li key={item.minutesId}>
                 <button type="button" className={styles.viewedItem} onClick={() => openMinutes(item.meetingId)}>
-                  <Placeholder size={VIEWED_ICON_SIZE} />
+                  <span className={styles.viewedIcon}>
+                    <Icon src={minutesIcon} size={VIEWED_ICON_SIZE} />
+                  </span>
                   <span className={styles.viewedText}>
                     <span className={styles.viewedTitle}>{item.title}</span>
                     <span className={styles.viewedDate}>{formatDateTime(item.meetingStartAt)}</span>
@@ -326,7 +439,7 @@ export default function ArchivePage() {
               onClick={() => setIsSortOpen((open) => !open)}
             >
               {SORT_LABELS[sort]}
-              <Placeholder size={SORT_ICON_SIZE} />
+              <Icon src={chevronIcon} size={SORT_ICON_SIZE} className={isSortOpen ? undefined : styles.flipped} />
             </button>
             {isSortOpen && (
               <DropdownMenu
@@ -340,7 +453,7 @@ export default function ArchivePage() {
                   isSelected: sort === option,
                 }))}
                 onSelect={(option) => {
-                  setSort(option as ArchiveQuery['sort']);
+                  applySort(option as ArchiveQuery['sort']);
                   setPage(0);
                   closeSort();
                 }}
@@ -349,17 +462,74 @@ export default function ArchivePage() {
             )}
           </span>
         </div>
+        {/* 디자인 ArchiveLoadingPage: 첫 쪽을 받는 동안 회색 줄 */}
+        {isLoading && page === 0 ? (
+          <div className={styles.loadingRows}>
+            {Array.from({ length: LOADING_ROWS }, (_, index) => (
+              <Skeleton key={index} height={ROW_HEIGHT} />
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          // 디자인 ArchiveEmptyResultPage
+          query || hasFilters ? (
+            <EmptyState
+              title="검색 결과가 없어요"
+              description="다른 검색어를 입력하거나 필터를 줄여 보세요"
+              action={
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => {
+                    setKeyword('');
+                    applyQuery('');
+                    changeFilters(EMPTY_FILTERS);
+                  }}
+                >
+                  필터 초기화
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState title="아직 확정된 회의록이 없어요" description="회의록을 확정하면 이곳에서 찾아볼 수 있어요" />
+          )
+        ) : (
         <ArchiveTable
           items={items}
           onOpen={(item) => openMinutes(item.meetingId)}
-          onDownload={(item) => navigate(`/meetings/${item.meetingId}/minutes?download=1`)}
+          rowMenu={(item) => [
+            { label: '회의록 보기', icon: minutesIcon, onSelect: () => openMinutes(item.meetingId) },
+            {
+              label: '다운로드',
+              icon: downloadIcon,
+              onSelect: () => navigate(`/meetings/${item.meetingId}/minutes?download=1`),
+            },
+            { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
+            { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
+            { label: '회의록 삭제', icon: deleteIcon, isDanger: true, onSelect: () => void removeMinutes(item) },
+          ]}
         />
+        )}
         {hasNext && (
           <button type="button" className={styles.more} onClick={() => setPage((value) => value + 1)}>
             더 보기
           </button>
         )}
       </section>
+      {isCreatingWorkspace && <CreateWorkspaceModal onClose={() => setIsCreatingWorkspace(false)} />}
+      {moving && (
+        <MoveMeetingModal
+          meetingId={moving.meetingId}
+          title={moving.title}
+          workspaceId={id}
+          currentFolderId={moving.folderId}
+          onMoved={(folderName) => {
+            setToast({ text: `'${moving.title}'을 ${folderName} 폴더로 옮겼어요.`, variant: 'success' });
+            setMoving(null);
+            setReloadToken((value) => value + 1);
+          }}
+          onClose={() => setMoving(null)}
+        />
+      )}
     </AppLayout>
   );
 }

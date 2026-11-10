@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
+import Button from '../../components/Button';
 import DropdownMenu from '../../components/DropdownMenu';
-import Placeholder from '../../components/Placeholder';
+import createIcon from '../../assets/icons/create.svg';
+import historyIcon from '../../assets/icons/refresh.svg';
+import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
 import { cleanDecisionPoints } from '../../constants/meeting';
 import type { Agenda, PendingAgenda } from '../../types/meeting';
@@ -58,14 +61,14 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
   return (
     <div className={styles.card}>
       <div className={styles.head}>
-        <Placeholder size={ICON_SIZE} />
+        <Icon src={createIcon} size={ICON_SIZE} className={styles.headIcon} />
         <p className={styles.headTitle}>{isEdit ? '안건 수정' : '새 안건 작성'}</p>
       </div>
       <div className={styles.menuAnchor}>
         <TextField
-          label="안건 제목 *"
-          className={styles.field}
-          placeholder="예 : 핵심 기능 우선순위 결정"
+          label="안건 제목"
+          required
+          placeholder="예: 핵심 기능 우선순위 결정"
           maxLength={TITLE_MAX_LENGTH}
           value={title}
           onChange={(event) => {
@@ -82,7 +85,7 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
               aria-expanded={isPendingMenuOpen}
               onClick={() => setIsPendingMenuOpen((value) => !value)}
             >
-              <Placeholder size={ICON_SIZE} />
+              <Icon src={historyIcon} size={ICON_SIZE} />
             </button>
           }
         />
@@ -110,26 +113,21 @@ export default function AgendaForm({ initialAgenda, pendingAgendas, onCancel, on
         )}
       </div>
       <div className={styles.decisionGroup}>
-        <DecisionPointFields values={decisionPoints} onChange={setDecisionPoints} fieldClassName={styles.field} />
-        <p className={styles.hint}>예 : 1차 개발에 포함할 기능 3개를 확정한다.</p>
+        <DecisionPointFields values={decisionPoints} onChange={setDecisionPoints} />
+        <p className={styles.hint}>예: 1차 개발에 포함할 기능 3개를 확정한다.</p>
       </div>
       <div className={styles.actions}>
-        <button type="button" className={`${styles.pill} ${styles.cancel}`} onClick={onCancel}>
+        <Button variant="text" onClick={onCancel}>
           취소
-        </button>
+        </Button>
         {!isEdit && (
-          <button
-            type="button"
-            className={`${styles.pill} ${styles.next}`}
-            disabled={!canSave}
-            onClick={() => save(true)}
-          >
+          <Button variant="secondary" size="md" disabled={!canSave} onClick={() => save(true)}>
             저장 후 다음 안건
-          </button>
+          </Button>
         )}
-        <button type="button" className={`${styles.pill} ${styles.save}`} disabled={!canSave} onClick={() => save(false)}>
+        <Button size="md" disabled={!canSave} onClick={() => save(false)}>
           안건 저장
-        </button>
+        </Button>
       </div>
     </div>
   );

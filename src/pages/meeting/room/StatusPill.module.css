@@ -1,43 +1,42 @@
+/* 디자인 StatusBadge: 둥근 알약, 상태 색 (status 토큰) */
 .pill {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 4px;
-  padding: 2px 12px;
-  border-radius: 1000px;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-full);
   font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
   white-space: nowrap;
 }
 
 .discussing {
-  background: var(--blue-20);
-  color: var(--blue-100);
+  background: var(--status-discussing-subtle);
+  color: var(--status-discussing);
 }
 
 .discussing.soft {
-  background: var(--blue-10);
+  background: var(--primary-subtle);
 }
 
 .decided {
-  background: var(--green-10);
-  color: var(--green-success);
+  background: var(--status-decided-subtle);
+  color: var(--status-decided);
 }
 
 .notStarted {
-  background: var(--grey-10);
-  color: var(--grey-70);
+  background: var(--status-pending-subtle);
+  color: var(--status-pending);
 }
 
 .undecided {
-  background: var(--red-10);
-  color: var(--red-100);
+  background: var(--status-undecided-subtle);
+  color: var(--status-undecided);
 }
 
 .decisionCheck {
-  /* 디자인 없음: 논의 중과 구분되게 회색 바탕에 파란 글자 */
-  background: var(--grey-10);
-  color: var(--blue-100);
+  background: var(--info-subtle);
+  color: var(--info-default);
 }

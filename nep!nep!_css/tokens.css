@@ -1,0 +1,454 @@
+/* ==========================================================================
+   nep!nep! Design Tokens — tokens.css
+   Generated from Figma variables (실무통합_1팀) · 2026-11-05
+
+   - Light/Dark : <html data-theme="light|dark"> (없으면 OS 설정을 따름)
+   - Desktop/Mobile : 767px 이하에서 Mobile 값으로 전환
+   - 화면·컴포넌트에서는 Color / Size / Base 토큰만 사용하고 Palette는 직접 쓰지 않습니다.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Palette (Primitive) — 직접 사용 금지
+   -------------------------------------------------------------------------- */
+:root {
+  --brand-10: #FBFBFF;
+  --brand-20: #F1F1FF;
+  --brand-50: #EBE8FB;
+  --brand-100: #D7D1F7;
+  --brand-200: #C3BAF2;
+  --brand-300: #AFA3EE;
+  --brand-400: #8676E6;
+  --brand-500: #5E48DD;
+  --brand-600: #361AD5;
+  --brand-700: #2B15AA;
+  --brand-800: #211084;
+  --brand-900: #180C5F;
+  --brand-950: #140F33;
+
+  --gray-0: #FFFFFF;
+  --gray-50: #F8F9FA;
+  --gray-100: #F1F3F5;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  --gray-950: #0B0F17;
+  --gray-1000: #000000;
+
+  --red-50: #FDF1F1;
+  --red-100: #FADCDC;
+  --red-300: #F4B2B3;
+  --red-400: #F19D9E;
+  --red-500: #EA7474;
+  --red-600: #E44A4B;
+  --red-700: #DE2021;
+  --red-800: #B41A1B;
+  --red-900: #8F1213;
+  --red-950: #4B0B0B;
+
+  --green-50: #E8F7EA;
+  --green-100: #D3EFD6;
+  --green-300: #BDE7C2;
+  --green-400: #A8DFAE;
+  --green-500: #52BE5E;
+  --green-600: #27AE36;
+  --green-700: #1F8B2B;
+  --green-800: #197123;
+  --green-900: #176820;
+  --green-950: #112714;
+
+  --blue-50: #F0F4FF;
+  --blue-100: #E4EAFF;
+  --blue-300: #D7E0FE;
+  --blue-400: #C4D1FD;
+  --blue-500: #B0C1FD;
+  --blue-600: #88A3FC;
+  --blue-700: #6184FB;
+  --blue-800: #3965FA;
+  --blue-900: #263366;
+  --blue-950: #161C31;
+}
+
+/* --------------------------------------------------------------------------
+   2. Color (Semantic) — Light
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme="light"] {
+  --bg-page: var(--brand-10);
+  --bg-surface: var(--gray-0);
+  --bg-surface-muted: var(--gray-100);
+  --bg-surface-raised: var(--gray-0);
+  --bg-overlay: rgb(0 0 0 / 50%);
+
+  --text-primary: var(--gray-950);
+  --text-secondary: var(--gray-700);
+  --text-disabled: var(--gray-400);
+  --text-on-primary: var(--gray-0);
+  --text-on-secondary: var(--blue-900);
+  --text-link: var(--brand-600);
+  --text-link-hover: var(--brand-700);
+  --text-link-pressed: var(--brand-800);
+
+  --border-default: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --border-focus: var(--brand-600);
+  --border-error: var(--red-600);
+
+  --primary-default: var(--brand-600);
+  --primary-hover: var(--brand-700);
+  --primary-pressed: var(--brand-800);
+  --primary-disabled: var(--gray-200);
+  --primary-subtle: var(--brand-50);
+  --primary-ghost-hover: var(--brand-20);
+
+  --secondary-default: var(--blue-100);
+  --secondary-hover: var(--blue-300);
+  --secondary-pressed: var(--blue-400);
+  --secondary-disabled: var(--gray-200);
+  --secondary-subtle: var(--blue-100);
+  --secondary-ghost-hover: var(--blue-50);
+  --secondary-strong: var(--blue-800);
+
+  --neutral-default: var(--gray-600);
+  --neutral-hover: var(--gray-700);
+  --neutral-pressed: var(--gray-800);
+  --neutral-disabled: var(--gray-200);
+  --neutral-subtle: var(--gray-100);
+  --neutral-ghost-hover: var(--gray-50);
+
+  --danger-default: var(--red-700);
+  --danger-hover: var(--red-800);
+  --danger-pressed: var(--red-900);
+  --danger-subtle: var(--red-50);
+
+  --success-default: var(--green-800);
+  --success-subtle: var(--green-50);
+
+  --info-default: var(--blue-800);
+  --info-subtle: var(--blue-50);
+
+  --status-decided: var(--green-800);
+  --status-decided-subtle: var(--green-50);
+  --status-undecided: var(--red-700);
+  --status-undecided-subtle: var(--red-50);
+  --status-discussing: var(--brand-600);
+  --status-discussing-subtle: var(--brand-100);
+  --status-pending: var(--gray-600);
+  --status-pending-subtle: var(--gray-100);
+
+  --control-knob: var(--gray-0);
+  --control-track-on: var(--brand-600);
+  --control-track-on-secondary: var(--blue-700);
+  --control-track-off: var(--gray-400);
+
+  --interactive-default: var(--gray-0);
+  --interactive-hover: var(--gray-50);
+  --interactive-pressed: var(--blue-50);
+  --interactive-selected: var(--blue-50);
+  --interactive-selected-border: var(--blue-800);
+}
+
+/* --------------------------------------------------------------------------
+   3. Color (Semantic) — Dark
+   -------------------------------------------------------------------------- */
+[data-theme="dark"] {
+  --bg-page: var(--gray-1000);
+  --bg-surface: var(--gray-950);
+  --bg-surface-muted: var(--gray-900);
+  --bg-surface-raised: var(--gray-800);
+  --bg-overlay: rgb(0 0 0 / 70%);
+
+  --text-primary: var(--gray-50);
+  --text-secondary: var(--gray-400);
+  --text-disabled: var(--gray-600);
+  --text-on-primary: var(--gray-950);
+  --text-on-secondary: var(--blue-500);
+  --text-link: var(--brand-300);
+  --text-link-hover: var(--brand-200);
+  --text-link-pressed: var(--brand-100);
+
+  --border-default: var(--gray-800);
+  --border-strong: var(--gray-700);
+  --border-focus: var(--brand-400);
+  --border-error: var(--red-500);
+
+  --primary-default: var(--brand-400);
+  --primary-hover: var(--brand-300);
+  --primary-pressed: var(--brand-200);
+  --primary-disabled: var(--gray-800);
+  --primary-subtle: var(--brand-900);
+  --primary-ghost-hover: var(--brand-950);
+
+  --secondary-default: var(--blue-950);
+  --secondary-hover: var(--blue-900);
+  --secondary-pressed: var(--blue-900);
+  --secondary-disabled: var(--gray-800);
+  --secondary-subtle: var(--blue-950);
+  --secondary-ghost-hover: var(--gray-900);
+  --secondary-strong: var(--blue-600);
+
+  --neutral-default: var(--gray-400);
+  --neutral-hover: var(--gray-300);
+  --neutral-pressed: var(--gray-200);
+  --neutral-disabled: var(--gray-700);
+  --neutral-subtle: var(--gray-800);
+  --neutral-ghost-hover: var(--gray-900);
+
+  --danger-default: var(--red-500);
+  --danger-hover: var(--red-400);
+  --danger-pressed: var(--red-300);
+  --danger-subtle: var(--red-950);
+
+  --success-default: var(--green-500);
+  --success-subtle: var(--green-950);
+
+  --info-default: var(--blue-600);
+  --info-subtle: var(--blue-950);
+
+  --status-decided: var(--green-400);
+  --status-decided-subtle: var(--green-950);
+  --status-undecided: var(--red-400);
+  --status-undecided-subtle: var(--red-950);
+  --status-discussing: var(--brand-300);
+  --status-discussing-subtle: var(--brand-800);
+  --status-pending: var(--gray-400);
+  --status-pending-subtle: var(--gray-800);
+
+  --control-knob: var(--gray-0);
+  --control-track-on: var(--brand-400);
+  --control-track-on-secondary: var(--blue-600);
+  --control-track-off: var(--gray-700);
+
+  --interactive-default: var(--gray-950);
+  --interactive-hover: var(--gray-900);
+  --interactive-pressed: var(--blue-950);
+  --interactive-selected: var(--blue-950);
+  --interactive-selected-border: var(--blue-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: var(--gray-1000);
+    --bg-surface: var(--gray-950);
+    --bg-surface-muted: var(--gray-900);
+    --bg-surface-raised: var(--gray-800);
+    --bg-overlay: rgb(0 0 0 / 70%);
+
+    --text-primary: var(--gray-50);
+    --text-secondary: var(--gray-400);
+    --text-disabled: var(--gray-600);
+    --text-on-primary: var(--gray-950);
+    --text-on-secondary: var(--blue-500);
+    --text-link: var(--brand-300);
+    --text-link-hover: var(--brand-200);
+    --text-link-pressed: var(--brand-100);
+
+    --border-default: var(--gray-800);
+    --border-strong: var(--gray-700);
+    --border-focus: var(--brand-400);
+    --border-error: var(--red-500);
+
+    --primary-default: var(--brand-400);
+    --primary-hover: var(--brand-300);
+    --primary-pressed: var(--brand-200);
+    --primary-disabled: var(--gray-800);
+    --primary-subtle: var(--brand-900);
+    --primary-ghost-hover: var(--brand-950);
+
+    --secondary-default: var(--blue-950);
+    --secondary-hover: var(--blue-900);
+    --secondary-pressed: var(--blue-900);
+    --secondary-disabled: var(--gray-800);
+    --secondary-subtle: var(--blue-950);
+    --secondary-ghost-hover: var(--gray-900);
+    --secondary-strong: var(--blue-600);
+
+    --neutral-default: var(--gray-400);
+    --neutral-hover: var(--gray-300);
+    --neutral-pressed: var(--gray-200);
+    --neutral-disabled: var(--gray-700);
+    --neutral-subtle: var(--gray-800);
+    --neutral-ghost-hover: var(--gray-900);
+
+    --danger-default: var(--red-500);
+    --danger-hover: var(--red-400);
+    --danger-pressed: var(--red-300);
+    --danger-subtle: var(--red-950);
+
+    --success-default: var(--green-500);
+    --success-subtle: var(--green-950);
+
+    --info-default: var(--blue-600);
+    --info-subtle: var(--blue-950);
+
+    --status-decided: var(--green-400);
+    --status-decided-subtle: var(--green-950);
+    --status-undecided: var(--red-400);
+    --status-undecided-subtle: var(--red-950);
+    --status-discussing: var(--brand-300);
+    --status-discussing-subtle: var(--brand-800);
+    --status-pending: var(--gray-400);
+    --status-pending-subtle: var(--gray-800);
+
+    --control-knob: var(--gray-0);
+    --control-track-on: var(--brand-400);
+    --control-track-on-secondary: var(--blue-600);
+    --control-track-off: var(--gray-700);
+
+    --interactive-default: var(--gray-950);
+    --interactive-hover: var(--gray-900);
+    --interactive-pressed: var(--blue-950);
+    --interactive-selected: var(--blue-950);
+    --interactive-selected-border: var(--blue-600);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Base — 모든 화면 공통
+   -------------------------------------------------------------------------- */
+:root {
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-14: 56px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+
+  --profile-sm: 24px;
+  --profile-md: 32px;
+  --profile-lg: 40px;
+
+  --border-width-default: 1px;
+  --border-width-focus: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   5. Size — Desktop (기본)
+   -------------------------------------------------------------------------- */
+:root {
+  --font-size-heading-xl: 32px;
+  --font-size-heading-lg: 24px;
+  --font-size-heading-md: 20px;
+  --font-size-heading-sm: 18px;
+  --font-size-body-lg: 16px;
+  --font-size-body-md: 14px;
+  --font-size-caption: 12px;
+
+  --line-height-heading-xl: 40px;
+  --line-height-heading-lg: 32px;
+  --line-height-heading-md: 28px;
+  --line-height-heading-sm: 26px;
+  --line-height-body-lg: 24px;
+  --line-height-body-md: 20px;
+  --line-height-caption: 16px;
+
+  --button-lg-height: 48px;
+  --button-lg-padding-x: var(--spacing-5);
+  --button-lg-font-size: var(--font-size-body-lg);
+  --button-md-height: 40px;
+  --button-md-padding-x: var(--spacing-4);
+  --button-md-font-size: var(--font-size-body-md);
+  --button-sm-height: 32px;
+  --button-sm-padding-x: var(--spacing-3);
+  --button-sm-font-size: var(--font-size-caption);
+
+  --input-md-height: var(--spacing-10);
+  --input-md-padding-x: var(--spacing-3);
+  --input-md-font-size: var(--font-size-body-md);
+  --input-sm-height: var(--spacing-8);
+  --input-sm-padding-x: var(--spacing-2);
+  --input-sm-font-size: var(--font-size-body-md);
+
+  --icon-button-lg-height: 32px;
+  --icon-button-lg-padding-x: var(--spacing-1);
+  --icon-button-lg-icon-size: var(--icon-lg);
+  --icon-button-md-height: 28px;
+  --icon-button-md-padding-x: var(--spacing-1);
+  --icon-button-md-icon-size: var(--icon-md);
+  --icon-button-sm-height: 24px;
+  --icon-button-sm-padding-x: var(--spacing-1);
+  --icon-button-sm-icon-size: var(--icon-sm);
+
+  --gap-title-subtitle: var(--spacing-1);
+  --gap-label-field: var(--spacing-2);
+  --gap-inline: var(--spacing-2);
+  --gap-list: var(--spacing-2);
+  --gap-content: var(--spacing-4);
+  --gap-section: var(--spacing-8);
+
+  --padding-card: var(--spacing-6);
+  --padding-modal: var(--spacing-6);
+
+  --layout-page-margin: 32px;
+  --layout-gutter: 24px;
+  --layout-content-max-width: 1200px;
+  --layout-sidebar-width: 240px;
+  --layout-header-height: 56px;
+  --layout-modal-width-sm: 400px;
+  --layout-modal-width-md: 560px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Size — Mobile (767px 이하, Desktop과 다른 값만)
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  :root {
+    --font-size-heading-xl: 24px;
+    --font-size-heading-lg: 20px;
+    --font-size-heading-md: 18px;
+
+    --line-height-heading-xl: 32px;
+    --line-height-heading-lg: 28px;
+    --line-height-heading-md: 26px;
+
+    --button-lg-height: 56px;
+    --button-md-height: 44px;
+
+    --input-md-height: var(--spacing-12);
+    --input-md-font-size: var(--font-size-body-lg);
+    --input-sm-height: var(--spacing-10);
+    --input-sm-padding-x: var(--spacing-3);
+    --input-sm-font-size: var(--font-size-body-lg);
+
+    --icon-button-lg-height: 40px;
+    --icon-button-md-height: 32px;
+    --icon-button-sm-height: 28px;
+
+    --gap-content: var(--spacing-3);
+    --gap-section: var(--spacing-6);
+
+    --padding-card: var(--spacing-4);
+    --padding-modal: var(--spacing-5);
+
+    --layout-page-margin: 16px;
+    --layout-gutter: 16px;
+    --layout-sidebar-width: 280px;
+    --layout-modal-width-sm: 343px;
+    --layout-modal-width-md: 343px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Shadow (Effect style)
+   -------------------------------------------------------------------------- */
+:root {
+  --shadow-sm: 1px 1px 2px 0 rgb(0 0 0 / 10%);  /* dropshadow : 카드 */
+  --shadow-md: 0 4px 8px 0 rgb(0 0 0 / 10%);    /* Dropshadow 2 : 드롭다운, 모달, 토스트 */
+}
