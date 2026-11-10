@@ -1,50 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { MinutesDetail, MinutesSection } from '../../api/minutes';
-import DropdownMenu from '../../components/DropdownMenu';
-import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
+import zoomInIcon from '../../assets/icons/zoom-in.svg';
+import zoomOutIcon from '../../assets/icons/zoom-out.svg';
 import Icon from '../../components/Icon';
 import SectionContent from '../../components/SectionContent';
 import type { MinutesTemplate } from '../../types/template';
 import { DEFAULT_LAYOUT, PAPER_FONT_SCALE, PX_PER_MM, withItemDefaults } from '../../utils/templateSettings';
 import styles from './MinutesDocument.module.css';
 
-const NAV_ICON_SIZE = 18;
-const TOOL_ICON_SIZE = 16;
-// A4 한 장 (디자인 23:626: 456×675)
-const PAGE_HEIGHT = 675;
-const ZOOMS = [50, 75, 100, 125, 150];
+const ICON_SIZE = 16;
+// 디자인 DocumentPage 560×792 (A4 비율)
+const PAGE_HEIGHT = 792;
+const MIN_ZOOM = 50;
+const MAX_ZOOM = 150;
+const ZOOM_STEP = 10;
+
+/** 회의 기본 정보 한 줄 (디자인 DocInfoList: 일시, 장소, 참석자) */
+export interface DocInfo {
+  label: string;
+  value: string;
+}
 
 interface MinutesDocumentProps {
   minutes: MinutesDetail;
   sections: MinutesSection[];
-  meta: string[];
+  info: DocInfo[];
   canEdit: boolean;
-  canChangeTemplate: boolean;
   templates: MinutesTemplate[];
+  /** 문서 위에 띄울 안내 (AI 초안 만드는 중 등) */
+  notice?: ReactNode;
   onChangeSection: (index: number, content: string) => void;
-  onChangeTemplate: (templateId: number) => void;
 }
 
-/** REQ-132 선택한 양식에 맞춘 회의록을 문서(A4) 모양으로 편집한다. 쪽 이동, 확대·축소, 양식 변경 (REQ-140) */
+/** REQ-132 선택한 양식에 맞춘 회의록을 문서(A4) 모양으로 편집한다. 쪽 이동, 확대·축소 (디자인 CanvasArea) */
 export default function MinutesDocument({
   minutes,
   sections,
-  meta,
+  info,
   canEdit,
-  canChangeTemplate,
   templates,
+  notice,
   onChangeSection,
-  onChangeTemplate,
 }: MinutesDocumentProps) {
   const [zoom, setZoom] = useState(100);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
-  const [isTemplateOpen, setIsTemplateOpen] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
-  const templateRef = useRef<HTMLButtonElement>(null);
   const pageHeight = (PAGE_HEIGHT * zoom) / 100;
   // 양식의 레이아웃·항목 설정을 문서에 그대로 쓴다 (양식이 지워졌으면 기본값)
   const template = templates.find(({ templateId }) => templateId === minutes.templateId);
@@ -70,131 +74,119 @@ export default function MinutesDocument({
   };
 
   return (
-    <section className={styles.panel} aria-label="회의록 문서">
-      <div className={styles.pager}>
-        <button type="button" className={styles.iconButton} aria-label="이전 쪽" disabled={page <= 1} onClick={() => goTo(page - 1)}>
-          <Icon src={chevronLeftIcon} size={NAV_ICON_SIZE} />
-        </button>
-        <span className={styles.pageLabel}>
-          {page}/{pageCount}
-        </span>
-        <button
-          type="button"
-          className={styles.iconButton}
-          aria-label="다음 쪽"
-          disabled={page >= pageCount}
-          onClick={() => goTo(page + 1)}
-        >
-          <Icon src={chevronRightIcon} size={NAV_ICON_SIZE} />
-        </button>
-      </div>
-      <div className={styles.toolbar} role="toolbar" aria-label="편집 도구">
-        <label className={styles.tool}>
-          <select
-            className={styles.zoom}
-            aria-label="확대·축소"
-            value={zoom}
-            onChange={(event) => setZoom(Number(event.target.value))}
-          >
-            {ZOOMS.map((value) => (
-              <option key={value} value={value}>
-                {value}%
-              </option>
-            ))}
-          </select>
-          <Icon src={chevronUpIcon} size={TOOL_ICON_SIZE} className={styles.flipped} />
-        </label>
-        <span className={styles.anchor}>
-          <button
-            ref={templateRef}
-            type="button"
-            className={styles.tool}
-            disabled={!canChangeTemplate}
-            title={canChangeTemplate ? undefined : '작성 중인 회의록의 작성자만 양식을 바꿀 수 있어요'}
-            aria-haspopup="listbox"
-            aria-expanded={isTemplateOpen}
-            onClick={() => setIsTemplateOpen((open) => !open)}
-          >
-            회의록 양식 변경
-            <Icon src={chevronUpIcon} size={TOOL_ICON_SIZE} className={isTemplateOpen ? undefined : styles.flipped} />
-          </button>
-          {isTemplateOpen && (
-            <DropdownMenu
-              label="회의록 양식"
-              emptyText="양식이 없어요"
-              anchorRef={templateRef}
-              className={styles.templateMenu}
-              items={templates.map((template) => ({
-                id: String(template.templateId),
-                label: template.name,
-                description: template.items.map(({ title }) => title).join(' · '),
-                isSelected: template.templateId === minutes.templateId,
-              }))}
-              onSelect={(id) => {
-                setIsTemplateOpen(false);
-                onChangeTemplate(Number(id));
-              }}
-              onClose={() => setIsTemplateOpen(false)}
-            />
-          )}
-        </span>
-      </div>
+    <section className={styles.canvas} aria-label="회의록 문서">
+      {notice}
       <div
         ref={viewportRef}
         className={styles.viewport}
         onScroll={(event) => setPage(Math.min(pageCount, Math.floor(event.currentTarget.scrollTop / pageHeight + 0.5) + 1))}
       >
-        <div
-          ref={paperRef}
-          className={styles.paper}
-          // 다크 모드에서도 문서 종이는 인쇄물처럼 밝게 보인다
-          data-theme="light"
-          style={{
-            zoom: zoom / 100,
-            gap: layout.sectionGap,
-            padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
-          }}
-        >
-          {layout.header.enabled && layout.header.text && <p className={styles.edge}>{layout.header.text}</p>}
-          <h2 className={styles.docTitle} style={{ textAlign: layout.align.toLowerCase() as 'left' | 'center' | 'right' }}>
-            {minutes.title}
-          </h2>
-          {layout.showMeetingInfo && (
-            <ul className={styles.meta}>
-              {meta.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          )}
-          {sections.map((section, index) => {
-            const settings = settingsOf(section.title);
-            return (
-              <div
-                key={section.sectionId ?? `new-${index}`}
-                className={styles.section}
-                style={{ marginTop: settings.margin / 2 }}
-              >
-                <h3
-                  className={styles.sectionTitle}
-                  style={{ fontSize: settings.titleSize * PAPER_FONT_SCALE, color: settings.color }}
-                >
-                  {section.title}
-                </h3>
-                <SectionContent
-                  settings={settings}
-                  content={section.content}
-                  label={section.title}
-                  editable={canEdit}
-                  placeholder={canEdit ? '내용을 입력해 주세요' : '내용이 없어요.'}
-                  onChange={(content) => onChangeSection(index, content)}
-                />
+        <div className={styles.pageBlock}>
+          {/* 디자인 PageLabel: 1 페이지 회의명 */}
+          <p className={styles.pageLabel}>
+            <span className={styles.pageNumber}>{page} 페이지</span>
+            <span className={styles.pageTitle}>{minutes.title}</span>
+          </p>
+          <div
+            ref={paperRef}
+            className={styles.paper}
+            // 다크 모드에서도 문서 종이는 인쇄물처럼 밝게 보인다
+            data-theme="light"
+            style={{
+              zoom: zoom / 100,
+              gap: layout.sectionGap,
+              padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
+            }}
+          >
+            {layout.header.enabled && layout.header.text && <p className={styles.edge}>{layout.header.text}</p>}
+            <h2 className={styles.docTitle} style={{ textAlign: layout.align.toLowerCase() as 'left' | 'center' | 'right' }}>
+              {minutes.title}
+            </h2>
+            {layout.showMeetingInfo && (
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>회의 기본 정보</h3>
+                <dl className={styles.infoList}>
+                  {info.map(({ label, value }) => (
+                    <div key={label} className={styles.infoRow}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
-            );
-          })}
-          {layout.footer.enabled && layout.footer.text && (
-            <p className={`${styles.edge} ${styles.footer}`}>{layout.footer.text}</p>
-          )}
+            )}
+            {sections.map((section, index) => {
+              const settings = settingsOf(section.title);
+              return (
+                <div
+                  key={section.sectionId ?? `new-${index}`}
+                  className={styles.section}
+                  style={{ marginTop: settings.margin / 2 }}
+                >
+                  <h3
+                    className={styles.sectionTitle}
+                    style={{ fontSize: settings.titleSize * PAPER_FONT_SCALE, color: settings.color }}
+                  >
+                    {section.title}
+                  </h3>
+                  <SectionContent
+                    settings={settings}
+                    content={section.content}
+                    label={section.title}
+                    editable={canEdit}
+                    placeholder={canEdit ? '내용을 입력해 주세요' : '내용이 없어요.'}
+                    onChange={(content) => onChangeSection(index, content)}
+                  />
+                </div>
+              );
+            })}
+            {layout.footer.enabled && layout.footer.text && (
+              <p className={`${styles.edge} ${styles.footer}`}>{layout.footer.text}</p>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* 디자인 CanvasBottomBar: 쪽 이동(왼쪽), ZoomControl(오른쪽) */}
+      <div className={styles.bottomBar}>
+        <span className={styles.pager}>
+          <button type="button" className={styles.iconButton} aria-label="이전 쪽" disabled={page <= 1} onClick={() => goTo(page - 1)}>
+            <Icon src={chevronLeftIcon} size={ICON_SIZE} />
+          </button>
+          <span className={styles.barLabel}>
+            {page} / {pageCount}
+          </span>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="다음 쪽"
+            disabled={page >= pageCount}
+            onClick={() => goTo(page + 1)}
+          >
+            <Icon src={chevronRightIcon} size={ICON_SIZE} />
+          </button>
+        </span>
+        <span className={styles.zoom}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="축소"
+            disabled={zoom <= MIN_ZOOM}
+            onClick={() => setZoom((value) => value - ZOOM_STEP)}
+          >
+            <Icon src={zoomOutIcon} size={ICON_SIZE} />
+          </button>
+          <span className={styles.zoomValue}>{zoom}%</span>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="확대"
+            disabled={zoom >= MAX_ZOOM}
+            onClick={() => setZoom((value) => value + ZOOM_STEP)}
+          >
+            <Icon src={zoomInIcon} size={ICON_SIZE} />
+          </button>
+        </span>
       </div>
     </section>
   );

@@ -1,14 +1,41 @@
-/* 디자인 MinutesEditorPage: 위 편집 바 56px + 회의 정보 줄 + 문서(왼쪽) / 요약, 전사(오른쪽) */
+/* 디자인 MinutesEditorPage: 위 편집 바 56px + 회의 정보 줄 48px + 문서(왼쪽) / 요약, 전사(오른쪽 400px). 화면 높이에 맞춘다 */
 .page {
   display: flex;
   flex-direction: column;
   min-width: 1200px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--bg-page);
+}
+
+/* 디자인 History: 되돌리기, 다시 실행 32px */
+.history {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+}
+
+.historyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.historyButton:hover:not(:disabled) {
+  background: var(--bg-surface-muted);
+}
+
+.historyButton:disabled {
+  opacity: 0.4;
 }
 
 .headBar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: var(--gap-content);
   height: 48px;
@@ -62,6 +89,33 @@
   color: var(--success-default);
 }
 
+/* 디자인 ChangeTemplateButton: 글자 버튼 */
+.anchor {
+  position: relative;
+}
+
+.changeTemplate {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  height: 32px;
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
+  white-space: nowrap;
+}
+
+.changeTemplate:hover {
+  background: var(--primary-ghost-hover);
+}
+
+.templateMenu {
+  min-width: 260px;
+}
+
 .download {
   display: flex;
   flex-shrink: 0;
@@ -95,11 +149,23 @@
   color: var(--text-on-secondary);
 }
 
-.content {
+.workspace {
   display: flex;
   flex: 1;
-  gap: var(--layout-gutter);
-  padding: var(--spacing-6) var(--layout-page-margin);
+  min-height: 0;
+}
+
+/* 문서 위 안내 (AI 초안, 작성자 정리 중). 없으면 자리를 차지하지 않는다 */
+.notices {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4) var(--layout-page-margin) 0;
+}
+
+.notices:empty {
+  display: none;
 }
 
 .message {
@@ -117,7 +183,6 @@
   display: flex;
   align-items: center;
   gap: var(--gap-inline);
-  margin: var(--spacing-4) var(--layout-page-margin) 0;
   padding: var(--spacing-3) var(--spacing-4);
   background: var(--info-subtle);
   border: var(--border-width-default) solid var(--info-default);
@@ -144,5 +209,6 @@
 
 /* REQ-172 AI 결과 안내 */
 .aiNotice {
-  margin: var(--spacing-3) var(--layout-page-margin) 0;
+  display: flex;
+  flex-direction: column;
 }
