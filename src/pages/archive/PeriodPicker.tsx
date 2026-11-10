@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import dividerPeriod from '../../assets/divider-period.svg';
-import Placeholder from '../../components/Placeholder';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import chevronRightIcon from '../../assets/icons/chevron-right.svg';
+import Icon from '../../components/Icon';
 import { addDays, formatPeriodDate, fromIsoDate, toIsoDate } from '../../utils/calendar';
 import styles from './PeriodPicker.module.css';
 
@@ -86,7 +88,7 @@ export default function PeriodPicker({ value, onChange }: PeriodPickerProps) {
             aria-label="이전 달"
             onClick={() => setMonth((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))}
           >
-            <Placeholder size={NAV_ICON_SIZE} />
+            <Icon src={chevronLeftIcon} size={NAV_ICON_SIZE} />
           </button>
           <button
             type="button"
@@ -94,7 +96,7 @@ export default function PeriodPicker({ value, onChange }: PeriodPickerProps) {
             aria-label="다음 달"
             onClick={() => setMonth((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))}
           >
-            <Placeholder size={NAV_ICON_SIZE} />
+            <Icon src={chevronRightIcon} size={NAV_ICON_SIZE} />
           </button>
         </span>
       </div>

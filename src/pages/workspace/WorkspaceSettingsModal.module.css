@@ -1,0 +1,70 @@
+/* 디자인 DangerZone */
+.zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+  padding: var(--spacing-4);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.zoneRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-content);
+}
+
+.texts {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
+}
+
+.zoneTitle {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.zoneDescription {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-default);
+}
+
+/* 디자인 Button sm 150px */
+.zoneButton {
+  flex-shrink: 0;
+  width: 150px;
+  height: var(--button-sm-height);
+  border-radius: var(--radius-sm);
+  font-size: var(--button-sm-font-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+}
+
+.leave {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+}
+
+.leave:hover {
+  background: var(--secondary-hover);
+}
+
+.delete {
+  background: var(--danger-default);
+  color: var(--text-on-primary);
+}
+
+.delete:hover {
+  background: var(--danger-hover);
+}

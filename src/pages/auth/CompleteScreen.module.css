@@ -1,25 +1,20 @@
-.page {
-  padding-top: 186px;
+.card {
+  align-items: center;
+  gap: var(--spacing-6);
 }
 
-.title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
+.iconCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--success-subtle);
+  border-radius: var(--radius-full);
+  color: var(--success-default);
+}
+
+.texts {
+  align-items: center;
   text-align: center;
-  color: var(--color-black);
-}
-
-.message {
-  text-align: center;
-  color: var(--color-black);
-}
-
-.illustration {
-  margin-top: 31px;
-}
-
-.action {
-  width: 431px;
-  margin-top: 31px;
 }

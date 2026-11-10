@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import { createMinutesTemplate, listMinutesTemplates, updateMinutesTemplate } from '../../api/minutes';
 import Checkbox from '../../components/Checkbox';
-import Placeholder from '../../components/Placeholder';
+import addIcon from '../../assets/icons/add-plain.svg';
+import ballotIcon from '../../assets/icons/rail-ballot.svg';
+import layoutIcon from '../../assets/icons/rail-layout.svg';
+import tableIcon from '../../assets/icons/rail-table.svg';
+import textIcon from '../../assets/icons/rail-text.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
+import templateIcon from '../../assets/icons/template-sm.svg';
+import EditorTopBar from '../../components/EditorTopBar';
+import editorBar from '../../components/EditorTopBar.module.css';
+import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate, TemplateItem, TemplateLayout } from '../../types/template';
 import {
@@ -14,10 +23,10 @@ import {
   presetItem,
 } from '../../utils/templateSettings';
 import TemplatePreview from './TemplatePreview';
-import TemplateSettingsPanel from './TemplateSettingsPanel';
+import TemplateSettingsPanel, { type SettingsView } from './TemplateSettingsPanel';
 import styles from './TemplateEditorPage.module.css';
 
-const ITEM_ICON_SIZE = 40;
+const RAIL_ICON_SIZE = 24;
 const ADD_ICON_SIZE = 20;
 const BUTTON_ICON_SIZE = 16;
 const MAX_NAME_LENGTH = 50;
@@ -31,6 +40,16 @@ interface Draft {
   items: TemplateItem[];
   layout: TemplateLayout;
 }
+
+type RailView = 'items' | SettingsView;
+
+// 디자인 SideRail: 항목 구성, 표, 글자, 레이아웃
+const RAIL: { value: RailView; label: string; icon: string }[] = [
+  { value: 'items', label: '항목 구성', icon: ballotIcon },
+  { value: 'table', label: '표', icon: tableIcon },
+  { value: 'text', label: '글자', icon: textIcon },
+  { value: 'layout', label: '레이아웃', icon: layoutIcon },
+];
 
 const EMPTY_DRAFT: Draft = { name: '', description: '', items: [], layout: DEFAULT_LAYOUT };
 
@@ -65,6 +84,7 @@ export default function TemplateEditorPage() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [view, setView] = useState<RailView>('items');
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
 
@@ -171,134 +191,159 @@ export default function TemplateEditorPage() {
     }
   };
 
-  const selected = selectedIndex !== null ? (draft.items[selectedIndex] ?? null) : null;
+  const usedCount = draft.items.length + (draft.layout.showMeetingInfo ? 1 : 0);
 
   return (
     <div className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
-      <header className={styles.topBar}>
-        <Link to="/home" className={styles.logo}>
-          sync
-        </Link>
-      </header>
-      <div className={styles.headBar}>
-        <div className={styles.info}>
-          <h1 className={styles.title}>회의록 양식 편집</h1>
-          <p className={styles.description}>필요한 항목을 선택하고 순서를 바꿔 나만의 회의록 양식을 만들어보세요.</p>
-        </div>
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.secondary}
-            disabled={!isLoaded}
-            onClick={() => {
-              setDraft((prev) => fromDefault(templates, prev.name, prev.description));
-              setSelectedIndex(0);
-            }}
-          >
-            <Placeholder size={BUTTON_ICON_SIZE} />
-            기본 양식으로 초기화
-          </button>
-          <button type="button" className={styles.primary} disabled={!isLoaded || isSaving} onClick={save}>
-            {isSaving ? '저장 중' : '저장하기'}
-          </button>
-        </div>
-      </div>
+      <EditorTopBar
+        center={
+          <label className={styles.nameField}>
+            <Icon src={templateIcon} size={BUTTON_ICON_SIZE} className={styles.nameIcon} />
+            <input
+              className={styles.nameInput}
+              aria-label="양식 이름"
+              maxLength={MAX_NAME_LENGTH}
+              placeholder="양식 이름을 입력해 주세요"
+              value={draft.name}
+              disabled={!isLoaded}
+              onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
+            />
+          </label>
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              className={`${editorBar.action} ${editorBar.secondary}`}
+              disabled={!isLoaded}
+              onClick={() => {
+                setDraft((prev) => fromDefault(templates, prev.name, prev.description));
+                setSelectedIndex(0);
+              }}
+            >
+              <Icon src={refreshIcon} size={BUTTON_ICON_SIZE} />
+              초기화
+            </button>
+            <button
+              type="button"
+              className={`${editorBar.action} ${editorBar.primary}`}
+              disabled={!isLoaded || isSaving}
+              onClick={save}
+            >
+              {isSaving ? '저장 중' : '저장하기'}
+            </button>
+          </>
+        }
+      />
 
       {/* 양식을 다 받기 전에 입력하면 받은 내용이 덮어쓰므로 받은 뒤에 그린다 */}
       {!isLoaded && <p className={styles.loading}>양식을 불러오는 중이에요.</p>}
       {isLoaded && (
-        <div className={styles.content}>
-          <section className={styles.left} aria-label="양식 구성">
-            <div className={styles.block}>
-              <h2 className={styles.blockTitle}>양식 기본 정보</h2>
-              <label className={styles.field}>
-                <span className={styles.label}>양식 이름</span>
-                <input
-                  className={styles.input}
-                  maxLength={MAX_NAME_LENGTH}
-                  placeholder="양식 이름을 입력해 주세요"
-                  value={draft.name}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
-                />
-              </label>
-              <label className={styles.field}>
-                <span className={styles.label}>
-                  설명 <span className={styles.optional}>(선택)</span>
-                </span>
-                <span className={styles.textareaBox}>
-                  <textarea
-                    className={styles.textarea}
-                    maxLength={MAX_DESCRIPTION_LENGTH}
-                    rows={1}
-                    placeholder="어떤 회의에 쓰는 양식인지 적어 주세요"
-                    value={draft.description}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
-                  />
-                  <span className={styles.counter}>
-                    {draft.description.length} / {MAX_DESCRIPTION_LENGTH}
-                  </span>
-                </span>
-              </label>
-            </div>
+        <div className={styles.workspace}>
+          <nav className={styles.rail} aria-label="양식 편집 메뉴">
+            {RAIL.map((entry) => (
+              <button
+                key={entry.value}
+                type="button"
+                className={[styles.railItem, view === entry.value ? styles.railItemOn : ''].filter(Boolean).join(' ')}
+                aria-pressed={view === entry.value}
+                onClick={() => setView(entry.value)}
+              >
+                <Icon src={entry.icon} size={RAIL_ICON_SIZE} />
+                {entry.label}
+              </button>
+            ))}
+          </nav>
 
-            <div className={styles.block}>
-              <h2 className={styles.blockTitle}>회의록 항목 구성</h2>
-              <div className={styles.items}>
-                <Checkbox
-                  className={styles.item}
-                  checked={draft.layout.showMeetingInfo}
-                  onChange={(event) =>
-                    setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: event.target.checked } }))
-                  }
-                >
-                  <span className={styles.itemBody}>
-                    <Placeholder size={ITEM_ICON_SIZE} />
+          <div className={styles.side}>
+            {view === 'items' ? (
+              <section className={styles.itemsPanel} aria-label="항목 구성">
+                <div className={styles.titleGroup}>
+                  <h2 className={styles.panelTitle}>항목 구성</h2>
+                  <p className={styles.panelDescription}>회의록에 넣을 항목을 고르고 순서를 정해요.</p>
+                </div>
+                <label className={styles.field}>
+                  <span className={styles.label}>
+                    양식 설명 <span className={styles.optional}>(선택)</span>
+                  </span>
+                  <span className={styles.textareaBox}>
+                    <textarea
+                      className={styles.textarea}
+                      maxLength={MAX_DESCRIPTION_LENGTH}
+                      rows={2}
+                      placeholder="어떤 회의에 쓰는 양식인지 적어 주세요"
+                      value={draft.description}
+                      onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
+                    />
+                    <span className={styles.counter}>
+                      {draft.description.length} / {MAX_DESCRIPTION_LENGTH}
+                    </span>
+                  </span>
+                </label>
+                <div className={styles.listHead}>
+                  <h3 className={styles.listTitle}>회의록 항목</h3>
+                  <span className={styles.listCount}>{usedCount}개 사용 중</span>
+                </div>
+                <div className={styles.items}>
+                  <Checkbox
+                    className={styles.item}
+                    checked={draft.layout.showMeetingInfo}
+                    onChange={(event) =>
+                      setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: event.target.checked } }))
+                    }
+                  >
                     <span className={styles.itemText}>
                       <span className={styles.itemTitle}>{MEETING_INFO_PRESET.title}</span>
                       <span className={styles.itemDescription}>{MEETING_INFO_PRESET.description}</span>
                     </span>
-                  </span>
-                </Checkbox>
-                {PRESET_ITEMS.map((preset) => (
+                  </Checkbox>
+                  {PRESET_ITEMS.map((preset) => (
                   <Checkbox
                     key={preset.title}
                     className={styles.item}
                     checked={indexOf(preset.title) >= 0}
                     onChange={() => togglePreset(preset)}
                   >
-                    <span className={styles.itemBody}>
-                      <Placeholder size={ITEM_ICON_SIZE} />
-                      <span className={styles.itemText}>
-                        <span className={styles.itemTitle}>{preset.title}</span>
-                        <span className={styles.itemDescription}>{preset.description}</span>
-                      </span>
+                    <span className={styles.itemText}>
+                      <span className={styles.itemTitle}>{preset.title}</span>
+                      <span className={styles.itemDescription}>{preset.description}</span>
                     </span>
                   </Checkbox>
-                ))}
-                {customItems.map((item) => (
+                  ))}
+                  {customItems.map((item) => (
                   <Checkbox
                     key={item.title}
                     className={styles.item}
-                    checked
+                    checked={true}
                     onChange={() => removeItem(indexOf(item.title))}
                   >
-                    <span className={styles.itemBody}>
-                      <Placeholder size={ITEM_ICON_SIZE} />
-                      <span className={styles.itemText}>
-                        <span className={styles.itemTitle}>{item.title}</span>
-                        <span className={styles.itemDescription}>{item.description}</span>
-                      </span>
+                    <span className={styles.itemText}>
+                      <span className={styles.itemTitle}>{item.title}</span>
+                      <span className={styles.itemDescription}>{item.description}</span>
                     </span>
                   </Checkbox>
-                ))}
-              </div>
-              <button type="button" className={styles.addCustom} onClick={addCustom}>
-                <Placeholder size={ADD_ICON_SIZE} />
-                커스텀 항목 추가
-              </button>
-            </div>
-          </section>
+                  ))}
+                </div>
+                <button type="button" className={styles.addCustom} onClick={addCustom}>
+                  <Icon src={addIcon} size={ADD_ICON_SIZE} />
+                  커스텀 항목 추가
+                </button>
+              </section>
+            ) : (
+              <TemplateSettingsPanel
+                view={view}
+                items={draft.items}
+                selectedIndex={selectedIndex}
+                onSelect={setSelectedIndex}
+                layout={draft.layout}
+                onChangeItem={(item) =>
+                  selectedIndex !== null && setItems(draft.items.map((current, index) => (index === selectedIndex ? item : current)))
+                }
+                onChangeLayout={(layout) => setDraft((prev) => ({ ...prev, layout }))}
+              />
+            )}
+          </div>
 
           <TemplatePreview
             name={draft.name}
@@ -311,17 +356,6 @@ export default function TemplateEditorPage() {
             onAdd={addCustom}
             onDuplicate={duplicateItem}
             onRemove={removeItem}
-          />
-
-          <TemplateSettingsPanel
-            item={selected}
-            layout={draft.layout}
-            canRemoveItem={draft.items.length > 1}
-            onChangeItem={(item) =>
-              selectedIndex !== null && setItems(draft.items.map((current, index) => (index === selectedIndex ? item : current)))
-            }
-            onRemoveItem={() => selectedIndex !== null && removeItem(selectedIndex)}
-            onChangeLayout={(layout) => setDraft((prev) => ({ ...prev, layout }))}
           />
         </div>
       )}

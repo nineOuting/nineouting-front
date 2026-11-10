@@ -1,134 +1,137 @@
+/* 오른쪽 실시간 전사, 결정 근거 패널 (디자인 EvidencePanel) */
 .head {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: 80px;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
 }
 
 .headWithClose {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  width: 421px;
+  gap: var(--gap-inline);
 }
 
-.headWithClose > .head {
+.headWithClose .head {
   flex: 1;
 }
 
 .divider {
-  margin: 6px 0 24px;
+  flex-shrink: 0;
+  height: 1px;
+  margin: var(--spacing-5) 0;
+  background: var(--border-default);
 }
 
-.lines {
+.lines,
+.evidenceLines {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 16px;
-  margin: 0;
-  padding: 0 0 32px;
-  list-style: none;
+  gap: var(--spacing-1);
+  min-height: 0;
+  overflow-y: auto;
 }
 
+/* 디자인 TranscriptItem: 지금 말하는 줄은 보라 바탕 */
 .line {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 4px 14px;
-  border-radius: 4px;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
 }
 
-/* 회의록 작성자가 고치는 줄과 마우스를 올린 줄은 옅은 보라로 표시한다 */
-.editable:hover,
+.editable:hover {
+  background: var(--interactive-hover);
+}
+
 .lineActive {
-  background: var(--blue-10);
+  background: var(--primary-subtle);
+}
+
+.lineMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
 .time {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .text {
-  white-space: pre-line;
-  color: var(--grey-80);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  white-space: pre-wrap;
 }
 
-.edit {
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  opacity: 0;
+.agendaTag {
+  padding: 0 var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--neutral-default);
 }
 
-.editable:hover .edit,
-.edit:focus-visible {
-  opacity: 1;
+.agendaSelect {
+  height: 24px;
+  padding: 0 var(--spacing-1);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
 }
 
 .textarea {
   width: 100%;
-  padding: 4px 8px;
-  resize: vertical;
-  background: var(--color-white);
-  border: 1px solid var(--blue-70);
-  border-radius: 4px;
+  min-height: 60px;
+  padding: var(--spacing-2);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-focus);
+  border-radius: var(--radius-sm);
   outline: none;
-  line-height: 1.5;
-  color: var(--grey-80);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
+
+
 
 .evidence {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-3);
+  min-height: 0;
 }
 
 .evidenceSummary {
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--grey-90);
-}
-
-.evidenceLines {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  padding: var(--spacing-3);
+  background: var(--info-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--info-default);
 }
 
 .evidenceLines li {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-md);
 }
 
-/* REQ-089 줄의 안건 (임시 디자인) */
-.lineMeta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.agendaTag,
-.agendaSelect {
-  max-width: 180px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-70);
-  background: var(--grey-10);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agendaSelect {
-  border: 1px solid var(--grey-20);
-  cursor: pointer;
+/* REQ-083 회의록 작성자는 발언을 눌러서 바로 고친다 */
+.clickable {
+  cursor: text;
 }

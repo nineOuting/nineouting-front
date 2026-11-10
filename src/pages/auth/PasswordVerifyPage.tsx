@@ -4,7 +4,9 @@ import { requestPasswordReset, verifyPasswordReset } from '../../api/auth';
 import { errorMessage, isApiError } from '../../api/client';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
-import Placeholder from '../../components/Placeholder';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import Icon from '../../components/Icon';
+import timerIcon from '../../assets/icons/timer.svg';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import {
   AUTH_ERROR_CODES,
@@ -19,7 +21,7 @@ import auth from './auth.module.css';
 import styles from './PasswordVerifyPage.module.css';
 
 const BACK_ICON_SIZE = 24;
-const TIMER_ICON_SIZE = 20;
+const TIMER_ICON_SIZE = 16;
 const EMPTY_CODE = Array<string>(VERIFICATION_CODE_LENGTH).fill('');
 const CODE_SENT_TOAST: ToastMessage = { text: MESSAGES.resetCodeSent, variant: 'info' };
 
@@ -135,7 +137,7 @@ export default function PasswordVerifyPage() {
         <div className={`${auth.cardBody} ${styles.body}`}>
           <div className={auth.intro}>
             <button type="button" className={auth.backButton} aria-label="뒤로 가기" onClick={() => navigate(-1)}>
-              <Placeholder size={BACK_ICON_SIZE} />
+              <Icon src={chevronLeftIcon} size={BACK_ICON_SIZE} />
             </button>
             <div className={auth.titleGroup}>
               <h1 className={auth.displayTitle}>인증 번호 입력</h1>
@@ -170,7 +172,7 @@ export default function PasswordVerifyPage() {
               </p>
             )}
             <div className={styles.timer} aria-live="polite">
-              <Placeholder size={TIMER_ICON_SIZE} />
+              <Icon src={timerIcon} size={TIMER_ICON_SIZE} />
               <span>{formatSeconds(countdown.remaining, true)}</span>
             </div>
           </div>
@@ -179,8 +181,12 @@ export default function PasswordVerifyPage() {
               확인
             </Button>
             {/* 막힌 동안에는 서버가 인증 번호를 보내지 않으므로 다시 받기도 끈다 */}
-            <Button variant="underline" disabled={isSubmitting || codeLock.isLocked} onClick={resendCode}>
+            <Button variant="text" disabled={isSubmitting || codeLock.isLocked} onClick={resendCode}>
               인증 번호 다시 받기
+            </Button>
+            {/* REQ-009 이메일을 잘못 넣었으면 다시 입력한다 */}
+            <Button variant="text" onClick={() => navigate('/password/find', { replace: true, state: { email } })}>
+              이메일 다시 입력하기
             </Button>
           </div>
         </div>

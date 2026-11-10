@@ -1,52 +1,160 @@
+/* 디자인: 왼쪽 메뉴 240px + 오른쪽(상단 바 56px + 본문) */
 .layout {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  grid-template-rows: 64px 1fr;
-  min-height: 100vh;
-  min-width: 1440px;
-}
-
-.header {
-  grid-column: 1 / -1;
   display: flex;
-  justify-content: center;
-  padding-top: 16px;
-  background: var(--layout-placeholder);
-}
-
-.logo {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+  min-width: 1200px;
+  min-height: 100vh;
+  background: var(--bg-page);
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
-  background: var(--layout-placeholder);
+  width: var(--layout-sidebar-width);
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border-right: var(--border-width-default) solid var(--border-default);
 }
 
-.sidebarFooter {
-  margin-top: auto;
-  padding: 0 0 21px 41px;
-}
-
-.main {
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   min-width: 0;
 }
 
-/* 회의 중 화면: 접힌 메뉴(72px)와 옅은 회색 상단 바 */
-.compact {
-  grid-template-columns: 72px 1fr;
-  background: var(--grey-10);
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--layout-header-height);
+  padding: var(--spacing-2) var(--layout-page-margin);
+  background: var(--bg-surface-raised);
+  border-bottom: var(--border-width-default) solid var(--border-default);
 }
 
-.compact .header,
-.compact .sidebar {
-  background: var(--grey-10);
+.brand,
+.actions {
+  display: flex;
+  align-items: center;
 }
 
-.menuIcon {
-  margin: 28px 0 0 24px;
+.brand {
+  gap: var(--spacing-4);
+}
+
+.actions {
+  gap: var(--gap-inline);
+}
+
+.anchor {
+  position: relative;
+  display: flex;
+}
+
+.iconButton {
+  position: relative;
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--danger-default);
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  line-height: 16px;
+  color: var(--text-on-primary);
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+}
+
+.profile:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.avatar {
+  display: block;
+  flex-shrink: 0;
+  width: var(--profile-md);
+  height: var(--profile-md);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-muted);
+  object-fit: cover;
+}
+
+.name {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+/* 디자인 프로필 Menu */
+.profileMenu {
+  right: 0;
+  width: 240px;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+}
+
+.profileTexts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profileName {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.profileEmail {
+  overflow: hidden;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* REQ-001 접힌 사이드바 */
+.rail {
+  width: 64px;
 }

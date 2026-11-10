@@ -1,116 +1,104 @@
-/* REQ-093~098 회의 끝내기 창 (임시 디자인) */
-.card {
+/* REQ-093~098 회의 끝내기 창 (디자인 MeetingEndConfirmPage Overlay) */
+.body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 640px;
-  max-height: 80vh;
-  padding: 24px;
-  border-radius: 12px;
+  gap: var(--gap-content);
+  max-height: 56vh;
   overflow-y: auto;
-}
-
-.title {
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--grey-100);
-}
-
-.caption {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
 }
 
 .waiting {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 24px 0;
-  font-size: var(--font-size-b2);
-  color: var(--grey-70);
+  gap: var(--spacing-3);
+  padding: var(--spacing-6) var(--spacing-4);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
-.spinner {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--grey-30);
-  border-top-color: var(--blue-100);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
+/* 디자인 회색 정보 상자 */
 .agendaList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--spacing-2);
 }
 
 .agenda {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-md);
 }
 
 .agendaHead {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .agendaTitle {
-  font-size: var(--font-size-b1);
-  font-weight: 600;
-  color: var(--grey-100);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
-.agendaSummary {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-80);
+.agendaSummary,
+.bullets {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-1);
 }
 
 .label {
   font-size: var(--font-size-caption);
-  font-weight: 500;
-  color: var(--grey-50);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
 }
 
 .bullets {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding-left: 18px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-80);
+  gap: var(--spacing-1);
+  padding-left: var(--spacing-4);
+  list-style: disc;
 }
 
 .carried {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--grey-10);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
-  color: var(--grey-70);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 디자인 InlineAlert info */
+.note {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--info-subtle);
+  border: var(--border-width-default) solid var(--info-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--info-default);
 }

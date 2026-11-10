@@ -1,12 +1,13 @@
-/* 홈 오른쪽·아래 카드 공통 (디자인 23:793, 23:842, 23:878) */
+/* 홈 카드 공통 (nep!nep! 디자인 홈: 흰 카드, 둥근 12px, 안쪽 24px) */
 .card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  gap: var(--gap-content);
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .head {
@@ -15,57 +16,83 @@
   justify-content: space-between;
 }
 
-.title {
+.titleGroup {
   display: flex;
-  align-items: center;
-  gap: 11px;
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: #000;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+}
+
+.title {
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+}
+
+.subtitle {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .divider {
-  display: block;
-  width: 100%;
-  max-width: none;
+  height: 1px;
+  background: var(--border-default);
 }
 
 .iconButton {
   display: flex;
-  padding: 0;
-  background: none;
-  border: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+/* 배지: 빨강(D-day 등 급한 것) / 회색 */
+.badge,
+.badgeNeutral {
+  flex-shrink: 0;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  white-space: nowrap;
 }
 
 .badge {
-  flex-shrink: 0;
-  padding: 2px 4px;
-  background: var(--red-10);
-  border-radius: 4px;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--red-100);
-  text-align: center;
+  background: var(--danger-subtle);
+  color: var(--danger-default);
 }
 
-.body {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--color-black);
-}
-
-.caption {
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+.badgeNeutral {
+  background: var(--neutral-subtle);
+  color: var(--neutral-default);
 }
 
 .withIcon {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-1);
   min-width: 0;
+}
+
+.secondary {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .empty {
@@ -74,19 +101,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 11px;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4) 0;
   text-align: center;
 }
 
 .emptyTitle {
-  font-size: var(--font-size-b1);
-  line-height: 1.5;
-  color: #000;
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
 }
 
 .emptyCaption {
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-60);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
   white-space: pre-line;
 }

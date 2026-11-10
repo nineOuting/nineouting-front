@@ -1,5 +1,6 @@
 import { useState, type ComponentProps } from 'react';
-import Placeholder from './Placeholder';
+import visibilityIcon from '../assets/icons/visibility.svg';
+import Icon from './Icon';
 import TextField from './TextField';
 import styles from './PasswordField.module.css';
 
@@ -23,7 +24,7 @@ export default function PasswordField(props: PasswordFieldProps) {
           aria-pressed={isVisible}
           onClick={() => setIsVisible((value) => !value)}
         >
-          <Placeholder size={TOGGLE_ICON_SIZE} />
+          <Icon src={visibilityIcon} size={TOGGLE_ICON_SIZE} />
         </button>
       }
     />

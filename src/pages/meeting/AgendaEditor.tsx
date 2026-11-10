@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import Placeholder from '../../components/Placeholder';
+import addIcon from '../../assets/icons/add-dark.svg';
+import Icon from '../../components/Icon';
 import type { Agenda, PendingAgenda } from '../../types/meeting';
 import AgendaCard from './AgendaCard';
 import AgendaForm from './AgendaForm';
@@ -71,6 +72,7 @@ export default function AgendaEditor({ agendas, pendingAgendas, onChange }: Agen
               isExpanded={expandedAgendaId === agenda.id}
               onToggle={() => setExpandedAgendaId((current) => (current === agenda.id ? undefined : agenda.id))}
               onEdit={() => setAgendaForm({ mode: 'edit', agendaId: agenda.id })}
+              onDelete={agendas.length > 1 ? () => onChange(agendas.filter(({ id }) => id !== agenda.id)) : undefined}
               onDragStart={() => {
                 dragIndexRef.current = index;
               }}
@@ -85,7 +87,7 @@ export default function AgendaEditor({ agendas, pendingAgendas, onChange }: Agen
         )}
       </ul>
       <button type="button" className={styles.addAgenda} onClick={() => setAgendaForm({ mode: 'new' })}>
-        <Placeholder size={ICON_SIZE} />
+        <Icon src={addIcon} size={ICON_SIZE} />
         안건 추가하기
       </button>
     </>

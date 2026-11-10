@@ -1,126 +1,158 @@
+/* 디자인 MeetingLiveTranscriptPage: 위 56px 회의 바 + 왼쪽 요약, 안건 / 오른쪽 전사 415px */
 .page {
   display: flex;
   flex-direction: column;
-  background: var(--grey-10);
+  min-width: 1200px;
+  height: 100vh;
+  background: var(--bg-page);
 }
 
 .meetingHeader {
   display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  height: 96px;
-  padding: 24px 56px;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--grey-20);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--layout-header-height);
+  padding: 0 var(--layout-page-margin);
+  background: var(--bg-surface);
+  border-bottom: var(--border-width-default) solid var(--border-default);
 }
 
 .headerInfo {
   display: flex;
-  flex: 1;
-  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-6);
   min-width: 0;
 }
 
+.backButton {
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.backButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
 .title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+  overflow: hidden;
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-md);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metaRow {
   display: flex;
   align-items: center;
-  gap: 32px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
+  gap: var(--spacing-8);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
 }
 
 .recording {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .recordingState,
 .pausedState {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-1);
+  font-weight: var(--font-weight-semibold);
 }
 
 .recordingState {
-  color: var(--red-100);
+  color: var(--danger-default);
 }
 
-/* 멈춤 표시는 디자인에 없어 회색 점으로 표시했다 (REQ-081) */
 .pausedState {
-  color: var(--grey-70);
+  color: var(--text-secondary);
 }
 
 .elapsed,
 .attendees {
-  color: var(--grey-50);
+  color: var(--text-secondary);
 }
 
 .headerActions {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  width: 381px;
+  gap: var(--gap-inline);
 }
 
+/* 디자인 Button sm 120px */
 .pauseButton,
 .endButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 44px;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
+  gap: var(--gap-inline);
+  width: 120px;
+  height: var(--button-sm-height);
+  padding: 0 var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--button-sm-font-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
   white-space: nowrap;
 }
 
 .pauseButton {
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  color: var(--color-black);
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+}
+
+.pauseButton:hover {
+  background: var(--secondary-hover);
 }
 
 .endButton {
-  background: var(--blue-100);
-  border: none;
-  color: var(--color-white);
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+}
+
+.endButton:hover {
+  background: var(--primary-hover);
+}
+
+.endButton:disabled {
+  background: var(--primary-disabled);
+  color: var(--text-disabled);
 }
 
 .body {
   display: flex;
   flex: 1;
-  align-items: flex-start;
+  gap: var(--layout-gutter);
+  min-height: 0;
+  padding: var(--layout-page-margin);
 }
 
 .board {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 18px;
-  width: 790px;
-  margin: 30px 0 40px 25px;
+  gap: var(--spacing-6);
+  min-width: 0;
+  min-height: 0;
 }
 
-/* 오른쪽 패널은 헤더 아래선과 겹쳐 붙고 화면 끝까지 이어진다 */
+/* 디자인 EvidencePanel / 전사 패널 */
 .sidePanel {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
-  align-self: stretch;
-  width: 499px;
-  min-height: calc(100vh - 159px);
-  margin: -1px 0 0 auto;
-  padding: 31px 32px 0 38px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 20px 0 0;
+  width: 415px;
+  min-height: 0;
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }

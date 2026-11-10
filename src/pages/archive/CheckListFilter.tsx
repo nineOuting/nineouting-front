@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Checkbox from '../../components/Checkbox';
-import Placeholder from '../../components/Placeholder';
+import searchIcon from '../../assets/icons/search.svg';
+import Icon from '../../components/Icon';
 import type { Member } from '../../types/meeting';
 import styles from './CheckListFilter.module.css';
 
@@ -51,7 +52,7 @@ export default function CheckListFilter({
   return (
     <div className={styles.filter}>
       <label className={styles.search}>
-        <Placeholder size={SEARCH_ICON_SIZE} />
+        <Icon src={searchIcon} size={SEARCH_ICON_SIZE} className={styles.searchIcon} />
         <input
           className={styles.searchInput}
           placeholder={searchPlaceholder}

@@ -1,0 +1,325 @@
+/* ==========================================================================
+   nep!nep! Global Styles — global.css
+   2026-11-05
+
+   앱 진입점에서 이 파일 하나만 불러오면 됩니다.
+   - tokens.css      : 색 · 간격 · 크기 변수 (Light/Dark, Desktop/Mobile)
+   - typography.css  : 글꼴 변수와 텍스트 스타일 클래스
+   - 이 파일         : 기본 스타일 초기화, 공통 요소 스타일, 레이아웃 도우미
+
+   테마 : <html data-theme="light|dark">  (속성이 없으면 OS 설정을 따름)
+   폰트 : Min Sans 웹폰트는 프로젝트에서 따로 불러와 주세요.
+          (예: @font-face로 Regular 400 / SemiBold 600 / Bold 700 등록)
+   ========================================================================== */
+
+@import url("./tokens.css");
+@import url("./typography.css");
+
+
+/* --------------------------------------------------------------------------
+   1. Reset — 브라우저 기본 스타일 정리
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  word-break: keep-all;          /* 한글이 단어 중간에서 줄바꿈되지 않게 */
+  overflow-wrap: break-word;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+::placeholder {
+  color: var(--text-disabled);
+  opacity: 1;
+}
+
+
+/* --------------------------------------------------------------------------
+   2. 공통 요소
+   -------------------------------------------------------------------------- */
+
+/* 링크 — 버튼 variant="text"와 같은 색 */
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--text-link-hover);
+  text-decoration: underline;
+}
+
+a:active {
+  color: var(--text-link-pressed);
+}
+
+/* 키보드 포커스 — 마우스 클릭에는 나오지 않고 Tab 이동 때만 표시 */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--border-width-focus) solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* 드래그로 선택한 글자 */
+::selection {
+  background-color: var(--primary-subtle);
+  color: var(--text-primary);
+}
+
+/* 구분선 */
+hr {
+  border: none;
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+/* 스크롤바 — 피그마 ScrollBar 컴포넌트 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-disabled);
+}
+
+
+/* --------------------------------------------------------------------------
+   3. 레이아웃 도우미 — design.md 7. 화면 구조
+   -------------------------------------------------------------------------- */
+
+/* Screen: Sidebar + Main */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+}
+
+.app-sidebar {
+  flex-shrink: 0;
+  width: var(--layout-sidebar-width);
+  background-color: var(--bg-surface);
+  border-right: var(--border-width-default) solid var(--border-default);
+}
+
+/* 데스크탑에서 사이드바 닫기: Main이 남은 너비를 채움 */
+.app-sidebar[hidden] {
+  display: none;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-topbar {
+  flex-shrink: 0;
+  height: var(--layout-header-height);
+  background-color: var(--bg-surface);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+/* 본문 영역: 좌우 여백 + 최대 너비 */
+.app-content {
+  width: 100%;
+  max-width: calc(var(--layout-content-max-width) + var(--layout-page-margin) * 2);
+  margin-inline: auto;
+  padding: var(--layout-page-margin);
+}
+
+/* 모바일: 사이드바는 내용을 밀지 않고 위에 덮는 드로어 */
+@media (max-width: 767px) {
+  .app-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 200;
+    box-shadow: var(--shadow-md);
+  }
+
+  .app-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background-color: var(--bg-overlay);
+  }
+}
+
+/* 카드 · 모달 공통 표면 */
+.surface-card {
+  background-color: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--padding-card);
+}
+
+.surface-modal {
+  width: min(var(--layout-modal-width-md), calc(100vw - var(--layout-page-margin) * 2));
+  background-color: var(--bg-surface-raised);
+  border-radius: var(--radius-lg);
+  padding: var(--padding-modal);
+  box-shadow: var(--shadow-md);
+}
+
+.surface-modal--sm {
+  width: min(var(--layout-modal-width-sm), calc(100vw - var(--layout-page-margin) * 2));
+}
+
+/* 용도별 간격 — 세로로 쌓는 묶음 */
+.stack-title    { display: flex; flex-direction: column; gap: var(--gap-title-subtitle); }
+.stack-field    { display: flex; flex-direction: column; gap: var(--gap-label-field); }
+.stack-list     { display: flex; flex-direction: column; gap: var(--gap-list); }
+.stack-content  { display: flex; flex-direction: column; gap: var(--gap-content); }
+.stack-section  { display: flex; flex-direction: column; gap: var(--gap-section); }
+
+/* 가로로 나란히 (버튼 묶음, 칩 묶음) */
+.inline         { display: flex; align-items: center; gap: var(--gap-inline); }
+
+
+/* --------------------------------------------------------------------------
+   4. 접근성 도우미
+   -------------------------------------------------------------------------- */
+
+/* 화면에는 안 보이고 스크린 리더만 읽는 글자 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 모바일 sm 버튼: 보이는 높이는 32, 누르는 영역은 44 */
+@media (max-width: 767px) {
+  .touch-target {
+    position: relative;
+  }
+
+  .touch-target::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    min-height: 44px;
+    transform: translateY(-50%);
+  }
+}
+
+/* 움직임 줄이기 설정을 켠 사용자 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

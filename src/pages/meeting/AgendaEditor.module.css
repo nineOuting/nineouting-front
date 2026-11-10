@@ -1,27 +1,30 @@
 .agendaList {
   display: flex;
   flex-direction: column;
-  gap: 17px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--gap-list);
 }
 
 .agendaList:empty {
   display: none;
 }
 
+/* 디자인 AddAgendaButton: secondary md, 한 줄 */
 .addAgenda {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--gap-inline);
   width: 100%;
-  height: 56px;
-  padding: 16px;
-  background: var(--grey-10);
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  color: var(--grey-60);
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  background: var(--secondary-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-on-secondary);
+}
+
+.addAgenda:hover {
+  background: var(--secondary-hover);
 }

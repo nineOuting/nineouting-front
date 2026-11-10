@@ -6,6 +6,7 @@ interface MyProfileResponse {
   userId: number;
   email: string;
   name: string;
+  affiliation: string | null;
   profileImageUrl: string | null;
 }
 
@@ -91,4 +92,64 @@ export async function uploadWorkspaceProfileImage(workspaceId: number, file: Fil
 /** 이 워크스페이스의 사진을 지워 계정 사진으로 돌아간다 */
 export async function deleteWorkspaceProfileImage(workspaceId: number) {
   return toWorkspaceProfile(await request<WorkspaceProfileResponse>('DELETE', `${workspaceProfilePath(workspaceId)}/image`));
+}
+
+export interface MyProfile {
+  email: string;
+  name: string;
+  affiliation: string;
+  profileImageUrl?: string;
+}
+
+const toMyProfile = ({ email, name, affiliation, profileImageUrl }: MyProfileResponse): MyProfile => ({
+  email,
+  name,
+  affiliation: affiliation ?? '',
+  profileImageUrl: profileImageUrl ?? undefined,
+});
+
+/** 계정 프로필이 바뀌면 상단 바 등이 새 값을 받도록 getMe 캐시를 비운다 */
+function forgetMe() {
+  cached = null;
+}
+
+/** REQ-114~118 계정 프로필 (설정 > 프로필) */
+export async function getMyProfile() {
+  return toMyProfile(await request<MyProfileResponse>('GET', '/api/users/me'));
+}
+
+/** REQ-114 이름, REQ-118 소속. 보낸 칸만 바꾼다 */
+export async function updateMyProfile(changes: { name?: string; affiliation?: string }) {
+  const updated = toMyProfile(await request<MyProfileResponse>('PATCH', '/api/users/me', changes));
+  forgetMe();
+  return updated;
+}
+
+/** REQ-116 비밀번호 변경 */
+export function changePassword(currentPassword: string, newPassword: string) {
+  return request('PUT', '/api/users/me/password', { currentPassword, newPassword });
+}
+
+/** REQ-115 계정 사진을 S3에 직접 올린 뒤 등록한다 */
+export async function uploadMyProfileImage(file: File) {
+  const { uploadUrl, imageKey } = await request<{ uploadUrl: string; imageKey: string }>(
+    'POST',
+    '/api/users/me/profile-image/upload-url',
+    { contentType: file.type },
+  );
+  const uploaded = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+  if (!uploaded.ok) {
+    throw new Error(`profile image upload failed: ${uploaded.status}`);
+  }
+  const { profileImageUrl } = await request<{ profileImageUrl: string }>('PUT', '/api/users/me/profile-image', {
+    imageKey,
+  });
+  forgetMe();
+  return profileImageUrl;
+}
+
+/** REQ-115 계정 사진 지우기 */
+export async function deleteMyProfileImage() {
+  await request('DELETE', '/api/users/me/profile-image');
+  forgetMe();
 }

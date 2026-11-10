@@ -1,9 +1,13 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import Placeholder from '../../components/Placeholder';
+import addIcon from '../../assets/icons/menu-add.svg';
+import settingsIcon from '../../assets/icons/menu-settings.svg';
+import workspaceIcon from '../../assets/icons/menu-workspace.svg';
+import Icon from '../../components/Icon';
+import menu from '../../components/Menu.module.css';
 import type { WorkspaceSummary } from '../../types/workspace';
 import styles from './WorkspaceSwitcher.module.css';
 
-const ICON_SIZE = 16;
+const ICON_SIZE = 20;
 
 interface WorkspaceSwitcherProps {
   workspaces: WorkspaceSummary[];
@@ -11,16 +15,19 @@ interface WorkspaceSwitcherProps {
   anchorRef: RefObject<HTMLElement | null>;
   onSelect: (workspaceId: number) => void;
   onCreate: () => void;
+  /** 워크스페이스 설정 (소유자만. 없으면 메뉴를 숨긴다) */
+  onSettings?: () => void;
   onClose: () => void;
 }
 
-/** REQ-029~031 워크스페이스 이름 옆 버튼을 누르면 참여 중인 워크스페이스 목록. 지금 워크스페이스는 강조 */
+/** REQ-029~031 워크스페이스 이름 옆 버튼을 누르면 참여 중인 워크스페이스 목록 (디자인 WorkspaceMenu). 지금 워크스페이스는 강조 */
 export default function WorkspaceSwitcher({
   workspaces,
   currentId,
   anchorRef,
   onSelect,
   onCreate,
+  onSettings,
   onClose,
 }: WorkspaceSwitcherProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -46,7 +53,7 @@ export default function WorkspaceSwitcher({
   }, [anchorRef, onClose]);
 
   return (
-    <div ref={panelRef} className={styles.panel}>
+    <div ref={panelRef} className={`${menu.menu} ${styles.panel}`}>
       <ul className={styles.list} aria-label="참여 중인 워크스페이스">
         {workspaces.map((workspace) => {
           const isCurrent = workspace.workspaceId === currentId;
@@ -54,19 +61,26 @@ export default function WorkspaceSwitcher({
             <li key={workspace.workspaceId}>
               <button
                 type="button"
-                className={[styles.item, isCurrent ? styles.current : ''].filter(Boolean).join(' ')}
+                className={[menu.item, isCurrent ? menu.selected : ''].filter(Boolean).join(' ')}
                 aria-current={isCurrent ? 'true' : undefined}
                 onClick={() => onSelect(workspace.workspaceId)}
               >
-                <Placeholder size={ICON_SIZE} />
+                <Icon src={workspaceIcon} size={ICON_SIZE} className={menu.itemIcon} />
                 {workspace.name}
               </button>
             </li>
           );
         })}
       </ul>
-      <button type="button" className={styles.create} onClick={onCreate}>
-        <Placeholder size={ICON_SIZE} />새 워크스페이스 만들기
+      <div className={menu.divider} />
+      {onSettings && (
+        <button type="button" className={menu.item} onClick={onSettings}>
+          <Icon src={settingsIcon} size={ICON_SIZE} className={menu.itemIcon} />
+          워크스페이스 설정
+        </button>
+      )}
+      <button type="button" className={menu.item} onClick={onCreate}>
+        <Icon src={addIcon} size={ICON_SIZE} className={menu.itemIcon} />새 워크스페이스 만들기
       </button>
     </div>
   );

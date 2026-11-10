@@ -1,0 +1,105 @@
+/* 디자인 SettingsPage Body */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+  padding: var(--spacing-6) var(--layout-page-margin) var(--spacing-8);
+}
+
+.pageTitle {
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  color: var(--text-primary);
+}
+
+.columns {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--layout-gutter);
+}
+
+.nav {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 220px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+  height: 40px;
+  padding: 0 var(--spacing-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.navItem:hover {
+  color: var(--text-primary);
+  text-decoration: none;
+  background: var(--interactive-hover);
+}
+
+.icon {
+  color: var(--neutral-default);
+}
+
+.selected,
+.selected:hover {
+  color: var(--primary-default);
+  background: var(--interactive-selected);
+}
+
+.selected .icon {
+  color: var(--primary-default);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--gap-content);
+  min-width: 0;
+}
+
+.sectionTitle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+}
+
+.title {
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-md);
+  color: var(--text-primary);
+}
+
+.description {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+/* 설정 화면 공통 카드 */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.cardTitle {
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
+}

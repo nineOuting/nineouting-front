@@ -1,95 +1,143 @@
-/* 디자인 23:906: 240px, 좌우 15px, 위는 상단 바(64px) 아래 5px, 아래 64px */
+/* 디자인 Sidebar: 240px, 안쪽 16px, 메뉴 한 줄 40px */
 .sidebar {
   display: flex;
   flex: 1;
   flex-direction: column;
   justify-content: space-between;
-  padding: 5px 15px 64px;
-  background: var(--grey-20);
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
 }
 
-.menu,
-.bottom,
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-2);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-list);
+  width: 100%;
+}
+
 .group {
   display: flex;
   flex-direction: column;
-  gap: 11px;
 }
 
-.bottom {
-  gap: 10px;
-}
-
-.divider {
-  display: block;
-  width: 100%;
-  max-width: none;
-}
-
-.row {
+.item,
+.subItem {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: var(--gap-inline);
   width: 100%;
-  padding: 0;
-  background: none;
-  border: none;
-  color: var(--color-black);
-  text-decoration: none;
-  text-align: left;
-}
-
-.label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   min-width: 0;
-  color: inherit;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  text-align: left;
   text-decoration: none;
 }
 
-.wideGap {
-  gap: 11px;
+.item {
+  height: 40px;
+  padding: 0 var(--spacing-3);
 }
 
-.text,
-.workspaceName {
+.subItem {
+  height: 36px;
+  padding: 0 var(--spacing-3);
+}
+
+.item:hover,
+.subItem:hover {
+  color: var(--text-primary);
+  text-decoration: none;
+  background: var(--interactive-hover);
+}
+
+.selected,
+.selected:hover {
+  color: var(--primary-default);
+  background: var(--interactive-selected);
+}
+
+.secondary {
+  color: var(--text-secondary);
+}
+
+.subItem:disabled {
+  color: var(--text-disabled);
+  background: none;
+}
+
+.icon {
+  color: var(--neutral-default);
+}
+
+.selected .icon {
+  color: var(--primary-default);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.workspaceName {
-  font-size: var(--font-size-b1);
-}
-
-/* 폴더는 워크스페이스 이름 아래로 37px 들여 쓴다 */
-.folder {
+.workspaceRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding-left: 37px;
-  color: var(--color-black);
-  text-decoration: none;
 }
 
-.iconButton {
-  display: flex;
-  padding: 0;
-  background: none;
-  border: none;
+.workspaceRow .item {
+  flex: 1;
 }
 
-.me {
+.collapse,
+.expand {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
 }
 
-.row:disabled {
-  color: var(--color-black);
+.collapse {
+  width: 28px;
+  height: 28px;
+}
+
+.expand {
+  width: 32px;
+  height: 32px;
+}
+
+.collapse:hover,
+.expand:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+/* 폴더: 왼쪽 32px 들여 쓴다 */
+.subList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: 0 var(--spacing-3) 0 var(--spacing-8);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.subItem:disabled .icon {
+  color: var(--text-disabled);
 }

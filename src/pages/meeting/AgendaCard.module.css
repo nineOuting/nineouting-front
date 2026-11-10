@@ -1,21 +1,27 @@
+/* 디자인 AgendaItem: 둥근 8px, 안쪽 16px. 펼치면 테두리를 진하게 */
 .card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.expanded {
+  border-color: var(--border-strong);
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--gap-inline);
 }
 
 .handle {
   display: flex;
+  color: var(--text-disabled);
   cursor: grab;
 }
 
@@ -23,66 +29,75 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--gap-title-subtitle);
   min-width: 0;
 }
 
-.date,
-.sub {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+.date {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .title {
-  font-weight: 500;
-  color: var(--grey-100);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
+}
+
+.sub {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .actions {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: var(--spacing-1);
 }
 
 .iconButton {
   display: flex;
-  padding: 0;
-  border: none;
-  background: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
 }
 
-.divider {
-  display: block;
-  max-width: none;
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
 }
 
-.decisionWrap {
-  padding-left: 16px;
-}
-
+/* 디자인 DecisionBox */
 .decision {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  background: var(--grey-10);
-  border-radius: 4px;
-  font-weight: 500;
+  gap: var(--gap-title-subtitle);
+  padding: var(--spacing-4);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-md);
 }
 
 .decisionLabel {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .decisionList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding-left: 20px;
+  gap: var(--spacing-1);
 }
 
 .decisionValue {
-  color: var(--grey-100);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }

@@ -4,12 +4,14 @@ import { errorMessage } from '../../api/client';
 import { deleteMinutesTemplate, listMinutesTemplates } from '../../api/minutes';
 import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import Placeholder from '../../components/Placeholder';
+import addIcon from '../../assets/icons/add-sm.svg';
+import templateIcon from '../../assets/icons/template.svg';
+import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate } from '../../types/template';
 import styles from './TemplateListPage.module.css';
 
-const ICON_SIZE = 40;
+const CARD_GLYPH_SIZE = 24;
 const BUTTON_ICON_SIZE = 16;
 const SAVED_MESSAGE = '양식을 저장했어요.';
 
@@ -58,14 +60,15 @@ export default function TemplateListPage() {
           <p className={styles.description}>회의록에 쓸 양식을 만들고 관리해요. 이미 만든 회의록은 양식을 고쳐도 그대로예요.</p>
         </div>
         <button type="button" className={styles.primary} onClick={() => navigate('/templates/new')}>
-          <Placeholder size={BUTTON_ICON_SIZE} />새 양식 만들기
+          <Icon src={addIcon} size={BUTTON_ICON_SIZE} />
+          새 양식 만들기
         </button>
       </div>
       <ul className={styles.grid}>
         {templates.map((template) => (
           <li key={template.templateId} className={styles.card}>
             <div className={styles.cardHead}>
-              <Placeholder size={ICON_SIZE} />
+              <span className={styles.cardIcon}><Icon src={templateIcon} size={CARD_GLYPH_SIZE} /></span>
               <div className={styles.names}>
                 <p className={styles.name}>
                   {template.name}

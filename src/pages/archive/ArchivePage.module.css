@@ -1,270 +1,283 @@
-/* 디자인 23:1264: 메뉴 오른쪽 34px, 상단 바 아래 28px. 왼쪽 817px + 32px + 최근 본 회의록 258px */
+/* 디자인 ArchivePage Body: 위 24px, 좌우 32px, 묶음 사이 32px */
 .page {
   display: flex;
   flex-direction: column;
-  width: 1141px;
-  padding: 28px 0 40px 34px;
+  gap: var(--spacing-2);
+  padding: var(--spacing-6) var(--layout-page-margin) var(--spacing-8);
 }
 
 .breadcrumb {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-60);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .columns {
-  display: grid;
-  grid-template-columns: 817px 258px;
-  gap: 32px;
-  margin-top: 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--layout-gutter);
 }
 
 .main {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 22px;
+  gap: var(--gap-section);
+  min-width: 0;
 }
 
 .titleBlock {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-2);
 }
 
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-3);
 }
 
 .title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
-}
-
-.anchor {
-  position: relative;
-}
-
-.workspaceButton {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  background: none;
-  border: none;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-60);
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  color: var(--text-primary);
 }
 
 .description {
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--grey-50);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
-/* 디자인 23:1299 */
+.anchor,
+.chipAnchor {
+  position: relative;
+  display: flex;
+}
+
+/* 디자인 Select (테두리 32px): 워크스페이스, 필터, 정렬 */
+.workspaceButton,
+.sort,
+.chip {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.chip {
+  gap: var(--spacing-1);
+  padding-right: var(--spacing-2);
+}
+
+.chipApplied {
+  background: var(--interactive-selected);
+  border-color: var(--interactive-selected-border);
+  color: var(--secondary-strong);
+}
+
+.chipLabel {
+  max-width: 200px;
+  overflow: hidden;
+  color: inherit;
+  text-overflow: ellipsis;
+}
+
+.iconButton {
+  display: flex;
+  color: inherit;
+}
+
+.flipped {
+  transform: rotate(180deg);
+}
+
+.mutedIcon {
+  color: var(--neutral-default);
+}
+
+/* 디자인 SearchCard */
 .searchCard {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid var(--grey-20);
-  border-radius: 16px;
+  gap: var(--gap-content);
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .searchRow {
   display: flex;
-  gap: 16px;
+  gap: var(--gap-inline);
 }
 
 .searchField {
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 8px;
-  padding: 16px;
-  background: var(--grey-10);
-  border: 1px solid var(--grey-30);
-  border-radius: 8px;
+  gap: var(--spacing-2);
+  height: var(--input-md-height);
+  padding: 0 var(--input-md-padding-x);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.searchField:focus-within {
+  border-color: var(--border-focus);
 }
 
 .searchInput {
   flex: 1;
   min-width: 0;
-  padding: 0;
-  background: none;
   border: none;
   outline: none;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-}
-
-.searchInput::placeholder {
-  color: var(--grey-50);
+  background: transparent;
+  font-size: var(--input-md-font-size);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .searchButton {
-  padding: 12px 36px;
-  background: var(--blue-100);
-  border: none;
-  border-radius: 8px;
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--color-white);
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  background: var(--primary-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-on-primary);
 }
 
-.filters {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+.searchButton:hover {
+  background: var(--primary-hover);
 }
 
+.filters,
 .chips {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
-}
-
-.chipAnchor {
-  position: relative;
-}
-
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--grey-10);
-  border: 1px solid transparent;
-  border-radius: 8px;
-}
-
-.chipLabel {
-  max-width: 220px;
-  overflow: hidden;
-  padding: 0;
-  background: none;
-  border: none;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-70);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 디자인 23:1533: 적용된 필터 */
-.chipApplied {
-  background: var(--blue-10);
-  border-color: var(--blue-100);
-}
-
-.chipApplied .chipLabel {
-  color: var(--blue-100);
-}
-
-.iconButton {
-  display: flex;
-  padding: 0;
-  background: none;
-  border: none;
+  gap: var(--spacing-2);
 }
 
 .reset {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: none;
-  border: none;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-50);
+  gap: var(--gap-inline);
+  height: 32px;
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
 }
 
-/* 디자인 23:1268·23:1270 */
+.reset:disabled {
+  color: var(--text-disabled);
+}
+
+/* 디자인 RecentMinutesCard 368px */
 .side {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
-  gap: 16px;
-  padding-top: 34px;
+  gap: var(--spacing-2);
+  width: 368px;
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .sideTitle {
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
 }
 
 .viewed {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 16px;
-  list-style: none;
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+}
+
+.viewedEmpty {
+  padding: var(--spacing-2);
+  font-size: var(--font-size-body-md);
+  color: var(--text-secondary);
 }
 
 .viewedItem {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-3);
   width: 100%;
-  padding: 12px 0;
-  background: none;
-  border: none;
-  border-radius: 8px;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
   text-align: left;
+}
+
+.viewedItem:hover {
+  background: var(--interactive-hover);
+}
+
+.viewedIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-md);
+  color: var(--neutral-default);
 }
 
 .viewedText {
   display: flex;
-  flex: 1;
   flex-direction: column;
+  gap: var(--gap-title-subtitle);
   min-width: 0;
 }
 
 .viewedTitle {
   overflow: hidden;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .viewedDate {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
-.viewedEmpty {
-  padding: 12px 0;
-  font-size: var(--font-size-b2);
-  color: var(--grey-60);
-}
-
-/* 디자인 23:1329 */
 .list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 40px;
+  gap: var(--gap-content);
+  margin-top: calc(var(--gap-section) - var(--spacing-2));
 }
 
 .listHead {
@@ -274,39 +287,31 @@
 }
 
 .count {
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-90);
-}
-
-.sort {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--grey-10);
-  border: none;
-  border-radius: 8px;
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--grey-70);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
 }
 
 .sortMenu {
   right: 0;
   left: auto;
-  min-width: 120px;
+  min-width: 140px;
 }
 
 .more {
   align-self: center;
-  padding: 8px 16px;
-  background: var(--grey-10);
-  border: none;
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  color: var(--grey-70);
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  background: var(--secondary-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-on-secondary);
+}
+
+.loadingRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
 }

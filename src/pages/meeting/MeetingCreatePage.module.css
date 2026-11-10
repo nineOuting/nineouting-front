@@ -1,82 +1,89 @@
+/* 디자인 CreateMeetingPage: 가운데 560px 카드, 안쪽 24px, 묶음 사이 32px */
 .page {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: var(--spacing-8) var(--layout-page-margin);
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 43px;
-  width: 592px;
-  padding: 64px 48px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 28px;
+  gap: var(--gap-section);
+  width: var(--layout-modal-width-md);
+  padding: var(--padding-modal);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .header {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  margin-bottom: calc(var(--gap-content) - var(--gap-section));
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
 }
 
 .title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-md);
+  color: var(--text-primary);
+}
+
+.subtitle {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .iconButton {
   display: flex;
-  padding: 0;
-  border: none;
-  background: none;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
 }
 
-.loadPrevious {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  color: var(--grey-50);
-}
-
-.boxLead {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 21px;
+  gap: var(--gap-content);
 }
 
 .sectionTitle {
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+  display: flex;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+}
+
+.required {
+  margin-left: var(--spacing-1);
+  color: var(--danger-default);
 }
 
 .fields {
   display: flex;
   flex-direction: column;
-  gap: 23px;
+  gap: var(--gap-content);
 }
 
 .row {
   display: flex;
   align-items: flex-start;
-  gap: 26px;
+  gap: var(--spacing-4);
 }
 
 .row > * {
@@ -87,45 +94,63 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--gap-label-field);
 }
 
-/* TextField의 기본 라벨(18px)보다 작은 회의 생성 화면 라벨 */
-.field > label,
 .label {
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-70);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
+/* TextField와 같은 칸 모양 (시간, 참석자, 작성자 선택) */
 .box {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-2);
   width: 100%;
-  height: 57px;
-  padding: 0 16px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  height: var(--input-md-height);
+  padding: 0 var(--input-md-padding-x);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--input-md-font-size);
+  line-height: var(--line-height-body-md);
+}
+
+.box:hover {
+  border-color: var(--border-strong);
 }
 
 .box:focus-within {
-  border-color: var(--blue-70);
+  border-color: var(--border-focus);
 }
 
 .boxError,
 .boxError:focus-within {
-  border-color: var(--red-90);
+  border-color: var(--border-error);
 }
 
 .boxButton {
   text-align: left;
 }
 
+.leadingIcon,
+.trailingIcon {
+  color: var(--neutral-default);
+}
+
+.trailingIcon {
+  margin-left: auto;
+}
+
 .placeholderText {
-  color: var(--grey-50);
+  color: var(--text-disabled);
+}
+
+.value {
+  color: var(--text-primary);
 }
 
 .timeInput {
@@ -135,21 +160,17 @@
   border: none;
   outline: none;
   background: transparent;
-  font-weight: 500;
-  color: var(--grey-100);
+  color: var(--text-primary);
 }
 
 .timeSeparator {
-  color: var(--grey-50);
+  color: var(--text-secondary);
 }
 
 .error {
-  padding: 0 8px;
   font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--red-80);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
 }
 
 .menuAnchor {
@@ -157,8 +178,20 @@
 }
 
 .caption {
-  padding: 0 8px;
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-label-field);
+}
+
+/* REQ-169 프로젝트 폴더 선택 */
+.folderSelect {
+  color: var(--text-primary);
+  cursor: pointer;
 }

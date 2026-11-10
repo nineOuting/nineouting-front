@@ -1,0 +1,93 @@
+/* 디자인 ProfileCard */
+.profileCard {
+  gap: var(--gap-section);
+}
+
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-muted);
+  object-fit: cover;
+}
+
+.avatarText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.label {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.inline {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+}
+
+.fileInput {
+  display: none;
+}
+
+/* 디자인 Button secondary sm */
+.smallButton {
+  flex-shrink: 0;
+  height: var(--button-sm-height);
+  padding: 0 var(--button-md-padding-x);
+  background: var(--secondary-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--button-sm-font-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-on-secondary);
+}
+
+.smallButton:hover {
+  background: var(--secondary-hover);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-default);
+}

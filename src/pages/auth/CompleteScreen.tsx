@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
-import Placeholder from '../../components/Placeholder';
+import successIcon from '../../assets/icons/success.svg';
+import Icon from '../../components/Icon';
+import auth from './auth.module.css';
 import styles from './CompleteScreen.module.css';
 
-const ILLUSTRATION_SIZE = 360;
+const ICON_SIZE = 32;
 
 interface CompleteScreenProps {
   title: string;
@@ -16,13 +18,19 @@ export default function CompleteScreen({ title, message }: CompleteScreenProps) 
   const navigate = useNavigate();
 
   return (
-    <AuthLayout className={styles.page}>
-      <h1 className={styles.title}>{title}</h1>
-      <p className={styles.message}>{message}</p>
-      <Placeholder size={ILLUSTRATION_SIZE} variant="image" className={styles.illustration} />
-      <div className={styles.action}>
+    <AuthLayout>
+      <section className={`${auth.card} ${styles.card}`} aria-labelledby="complete-title">
+        <span className={styles.iconCircle}>
+          <Icon src={successIcon} size={ICON_SIZE} />
+        </span>
+        <div className={`${auth.titleGroup} ${styles.texts}`}>
+          <h1 id="complete-title" className={auth.displayTitle}>
+            {title}
+          </h1>
+          <p className={auth.subtitle}>{message}</p>
+        </div>
         <Button onClick={() => navigate('/login')}>로그인하기</Button>
-      </div>
+      </section>
     </AuthLayout>
   );
 }

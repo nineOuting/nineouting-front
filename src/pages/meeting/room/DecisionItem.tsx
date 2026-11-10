@@ -2,7 +2,8 @@ import { useState, type KeyboardEvent } from 'react';
 import dotDecided from '../../../assets/dot-decided.svg';
 import dotNotDiscussed from '../../../assets/dot-not-discussed.svg';
 import dotUndecided from '../../../assets/dot-undecided.svg';
-import Placeholder from '../../../components/Placeholder';
+import editIcon from '../../../assets/icons/create.svg';
+import Icon from '../../../components/Icon';
 import type { DecisionPoint, DecisionStatus } from '../../../types/meetingRoom';
 import room from './room.module.css';
 import styles from './DecisionItem.module.css';
@@ -92,7 +93,7 @@ export default function DecisionItem({ decision, isSelected, canEdit, onSelect, 
           aria-label={`${decision.title} 결정 내용 수정`}
           onClick={() => setDraft(decision.summary ?? '')}
         >
-          <Placeholder size={EDIT_ICON_SIZE} />
+          <Icon src={editIcon} size={EDIT_ICON_SIZE} />
         </button>
       )}
     </li>

@@ -1,25 +1,24 @@
 .group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
-/* 디자인에 없는 버튼이라 안건 카드의 보조 버튼 모양을 따랐다 */
+/* 디자인 Button text */
 .add {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-1);
   align-self: flex-start;
-  padding: 4px 8px;
-  border: none;
-  border-radius: 4px;
-  background: none;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-60);
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
 }
 
 .add:hover {
-  background: var(--grey-10);
+  background: var(--primary-ghost-hover);
 }

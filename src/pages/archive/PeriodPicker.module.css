@@ -90,7 +90,7 @@
 }
 
 .edge {
-  background: var(--blue-100);
+  background: var(--primary-default);
   color: var(--color-white);
 }
 
@@ -137,7 +137,7 @@
 }
 
 .switchInput:checked + .switch {
-  background: var(--blue-100);
+  background: var(--primary-default);
 }
 
 .switchInput:checked + .switch::after {

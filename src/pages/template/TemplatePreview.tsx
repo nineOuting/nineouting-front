@@ -1,6 +1,19 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import dividerTemplateMeta from '../../assets/divider-template-meta.svg';
-import Placeholder from '../../components/Placeholder';
+import addIcon from '../../assets/icons/add-plain.svg';
+import arrowDownIcon from '../../assets/icons/arrow-down.svg';
+import arrowUpIcon from '../../assets/icons/arrow-up.svg';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import chevronRightIcon from '../../assets/icons/chevron-right.svg';
+import copyIcon from '../../assets/icons/copy.svg';
+import deleteIcon from '../../assets/icons/delete-sm.svg';
+import dragIcon from '../../assets/icons/drag.svg';
+import editIcon from '../../assets/icons/create-sm.svg';
+import personIcon from '../../assets/icons/person-sm.svg';
+import summaryIcon from '../../assets/icons/summary.svg';
+import zoomInIcon from '../../assets/icons/zoom-in.svg';
+import zoomOutIcon from '../../assets/icons/zoom-out.svg';
+import Icon from '../../components/Icon';
 import SectionContent from '../../components/SectionContent';
 import type { TemplateItem, TemplateLayout } from '../../types/template';
 import { CELL_SEPARATOR, PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
@@ -9,6 +22,8 @@ import styles from './TemplatePreview.module.css';
 const ICON_SIZE = 16;
 const AI_ICON_SIZE = 12;
 const PAGE_HEIGHT = 675;
+// 캔버스가 넓어져 문서를 조금 키워 보여 준다 (디자인 종이 너비 560px 정도)
+const DEFAULT_ZOOM = 120;
 const ZOOM_STEP = 10;
 const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;
@@ -62,7 +77,7 @@ export default function TemplatePreview({
   onDuplicate,
   onRemove,
 }: TemplatePreviewProps) {
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -110,45 +125,6 @@ export default function TemplatePreview({
 
   return (
     <section className={styles.panel} aria-label="양식 미리보기">
-      <div className={styles.toolbar}>
-        <span className={styles.zoom}>
-          <button
-            type="button"
-            className={styles.iconButton}
-            aria-label="축소"
-            disabled={zoom <= MIN_ZOOM}
-            onClick={() => setZoom((value) => value - ZOOM_STEP)}
-          >
-            <Placeholder size={ICON_SIZE} />
-          </button>
-          <span className={styles.zoomLabel}>{zoom}%</span>
-          <button
-            type="button"
-            className={styles.iconButton}
-            aria-label="확대"
-            disabled={zoom >= MAX_ZOOM}
-            onClick={() => setZoom((value) => value + ZOOM_STEP)}
-          >
-            <Placeholder size={ICON_SIZE} />
-          </button>
-        </span>
-        <button type="button" className={styles.iconButton} aria-label="섹션 추가" onClick={onAdd}>
-          <Placeholder size={ICON_SIZE} />
-        </button>
-        <button type="button" className={styles.iconButton} aria-label="고른 섹션 복제" disabled={!hasSelection} onClick={onDuplicate}>
-          <Placeholder size={ICON_SIZE} />
-        </button>
-        <button
-          type="button"
-          className={styles.iconButton}
-          aria-label="고른 섹션 삭제"
-          disabled={!hasSelection || items.length <= 1}
-          onClick={() => selectedIndex !== null && onRemove(selectedIndex)}
-        >
-          <Placeholder size={ICON_SIZE} />
-        </button>
-      </div>
-
       <div
         ref={viewportRef}
         className={styles.viewport}
@@ -157,6 +133,8 @@ export default function TemplatePreview({
         <div
           ref={paperRef}
           className={styles.paper}
+          // 다크 모드에서도 문서 종이는 인쇄물처럼 밝게 보인다
+          data-theme="light"
           style={{
             zoom: zoom / 100,
             padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
@@ -175,7 +153,7 @@ export default function TemplatePreview({
                   <p>일시 : 2026. 10. 19 (월) 14:00 - 15:00</p>
                   <p>장소 : 회의실 A</p>
                   <p className={styles.attendees}>
-                    <Placeholder size={ICON_SIZE} />
+                    <Icon src={personIcon} size={ICON_SIZE} />
                     참석자 이름 (총 5명)
                   </p>
                 </div>
@@ -214,7 +192,7 @@ export default function TemplatePreview({
                       }
                     }}
                   >
-                    <Placeholder size={ICON_SIZE} />
+                    <Icon src={dragIcon} size={ICON_SIZE} />
                   </span>
                   <div
                     ref={isSelected ? selectedCardRef : undefined}
@@ -225,7 +203,7 @@ export default function TemplatePreview({
                     <div className={styles.cardHead}>
                       {isSelected ? (
                         <span className={styles.cardTitle} style={titleStyle}>
-                          <Placeholder size={ICON_SIZE} />
+                          <Icon src={editIcon} size={ICON_SIZE} />
                           <input
                             data-edit="title"
                             className={styles.titleInput}
@@ -245,7 +223,7 @@ export default function TemplatePreview({
                             focusFieldRef.current = 'title';
                           }}
                         >
-                          <Placeholder size={ICON_SIZE} />
+                          <Icon src={editIcon} size={ICON_SIZE} />
                           {item.title}
                         </button>
                       )}
@@ -261,7 +239,7 @@ export default function TemplatePreview({
                               onMove(index, index - 1);
                             }}
                           >
-                            <Placeholder size={ICON_SIZE} />
+                            <Icon src={arrowUpIcon} size={ICON_SIZE} />
                           </button>
                           <button
                             type="button"
@@ -273,11 +251,11 @@ export default function TemplatePreview({
                               onMove(index, index + 1);
                             }}
                           >
-                            <Placeholder size={ICON_SIZE} />
+                            <Icon src={arrowDownIcon} size={ICON_SIZE} />
                           </button>
                           {/* REQ-101 AI 초안이 생기면 연결한다 (docs/backlog.md) */}
                           <button type="button" className={styles.ai} disabled title="AI 정리는 준비 중이에요">
-                            <Placeholder size={AI_ICON_SIZE} />
+                            <Icon src={summaryIcon} size={AI_ICON_SIZE} />
                             AI 정리
                           </button>
                         </span>
@@ -292,7 +270,7 @@ export default function TemplatePreview({
                             onRemove(index);
                           }}
                         >
-                          <Placeholder size={ICON_SIZE} />
+                          <Icon src={deleteIcon} size={ICON_SIZE} />
                         </button>
                       )}
                     </div>
@@ -321,22 +299,63 @@ export default function TemplatePreview({
         </div>
       </div>
 
-      <div className={styles.pager}>
-        <button type="button" className={styles.iconButton} aria-label="이전 쪽" disabled={page <= 1} onClick={() => goTo(page - 1)}>
-          <Placeholder size={ICON_SIZE} />
-        </button>
-        <span className={styles.pageLabel}>
-          {page}/{pageCount}
+      {/* 디자인 CanvasArea 아래 바: 섹션 도구, 쪽 이동, ZoomControl */}
+      <div className={styles.bottomBar}>
+        <span className={styles.tools}>
+          <button type="button" className={styles.iconButton} aria-label="섹션 추가" onClick={onAdd}>
+            <Icon src={addIcon} size={ICON_SIZE} />
+          </button>
+          <button type="button" className={styles.iconButton} aria-label="고른 섹션 복제" disabled={!hasSelection} onClick={onDuplicate}>
+            <Icon src={copyIcon} size={ICON_SIZE} />
+          </button>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="고른 섹션 삭제"
+            disabled={!hasSelection || items.length <= 1}
+            onClick={() => selectedIndex !== null && onRemove(selectedIndex)}
+          >
+            <Icon src={deleteIcon} size={ICON_SIZE} />
+          </button>
         </span>
-        <button
-          type="button"
-          className={styles.iconButton}
-          aria-label="다음 쪽"
-          disabled={page >= pageCount}
-          onClick={() => goTo(page + 1)}
-        >
-          <Placeholder size={ICON_SIZE} />
-        </button>
+        <span className={styles.pager}>
+          <button type="button" className={styles.iconButton} aria-label="이전 쪽" disabled={page <= 1} onClick={() => goTo(page - 1)}>
+            <Icon src={chevronLeftIcon} size={ICON_SIZE} />
+          </button>
+          <span className={styles.pageLabel}>
+            {page}/{pageCount}
+          </span>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="다음 쪽"
+            disabled={page >= pageCount}
+            onClick={() => goTo(page + 1)}
+          >
+            <Icon src={chevronRightIcon} size={ICON_SIZE} />
+          </button>
+        </span>
+        <span className={styles.zoom}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="축소"
+            disabled={zoom <= MIN_ZOOM}
+            onClick={() => setZoom((value) => value - ZOOM_STEP)}
+          >
+            <Icon src={zoomOutIcon} size={ICON_SIZE} />
+          </button>
+          <span className={styles.zoomLabel}>{zoom}%</span>
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="확대"
+            disabled={zoom >= MAX_ZOOM}
+            onClick={() => setZoom((value) => value + ZOOM_STEP)}
+          >
+            <Icon src={zoomInIcon} size={ICON_SIZE} />
+          </button>
+        </span>
       </div>
     </section>
   );

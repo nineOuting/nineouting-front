@@ -2,20 +2,22 @@
 .panels {
   display: flex;
   flex-direction: column;
-  width: 504px;
-  height: 818px;
+  width: 360px;
+  height: calc(100vh - 160px);
+  min-height: 560px;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--gap-content);
   min-height: 0;
-  padding: 24px;
+  padding: var(--padding-card);
   overflow: hidden;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 /* 디자인의 두 카드 사이 16px을 끌 수 있는 손잡이로 쓴다 */
@@ -33,18 +35,21 @@
 .head {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--gap-title-subtitle);
 }
 
 .title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+  gap: var(--gap-inline);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+}
+
+.titleIcon {
+  color: var(--primary-default);
 }
 
 .caption {
@@ -54,10 +59,9 @@
 }
 
 .divider {
-  display: block;
   flex-shrink: 0;
-  width: 100%;
-  max-width: none;
+  height: 1px;
+  background: var(--border-default);
 }
 
 .body {

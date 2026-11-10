@@ -1,12 +1,11 @@
 import { useCallback, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { confirmEmailVerification, sendEmailVerification, signup } from '../../api/auth';
 import { errorMessage, isApiError } from '../../api/client';
 import Button from '../../components/Button';
 import AuthLayout from '../../components/AuthLayout';
 import Checkbox from '../../components/Checkbox';
 import PasswordField from '../../components/PasswordField';
-import Placeholder from '../../components/Placeholder';
 import TermsModal from '../../components/TermsModal';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
@@ -47,7 +46,6 @@ const AGREEMENT_ITEMS: AgreementItem[] = [
 ];
 
 const INITIAL_AGREEMENTS: Agreements = { service: false, privacy: false, age: false, marketing: false };
-const RESEND_ICON_SIZE = 20;
 
 /** REQ-010~014 회원가입 */
 export default function SignupPage() {
@@ -166,6 +164,10 @@ export default function SignupPage() {
     <AuthLayout className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
       <form className={`${auth.card} ${styles.card}`} onSubmit={handleSubmit} noValidate>
+        <div className={auth.titleGroup}>
+          <h1 className={auth.displayTitle}>회원가입</h1>
+          <p className={auth.subtitle}>이메일 인증 후 계정을 만들어요</p>
+        </div>
         <div className={styles.emailGroup}>
           <TextField
             label="이메일"
@@ -184,7 +186,7 @@ export default function SignupPage() {
             }}
           />
           {verificationStep === 'idle' && (
-            <Button variant="secondary" disabled={isSubmitting} onClick={sendVerificationCode}>
+            <Button variant="secondary" size="md" block disabled={isSubmitting} onClick={sendVerificationCode}>
               이메일 인증
             </Button>
           )}
@@ -208,17 +210,28 @@ export default function SignupPage() {
                 setCodeError(undefined);
               }}
             />
+            {/* REQ-011 인증 번호를 보낸 뒤에도 이메일을 고칠 수 있다 */}
+            <button
+              type="button"
+              className={styles.changeEmail}
+              onClick={() => {
+                setVerificationStep('idle');
+                setCode('');
+                setCodeError(undefined);
+              }}
+            >
+              이메일 바꾸기
+            </button>
             <div className={styles.codeActions}>
               <Button
-                variant="muted"
+                variant="neutral"
                 disabled={isSubmitting || codeLock.isLocked || resendCountdown.remaining > 0}
                 onClick={sendVerificationCode}
               >
-                <Placeholder size={RESEND_ICON_SIZE} />
                 <span>이메일 재전송</span>
                 {resendCountdown.remaining > 0 && <span>{formatSeconds(resendCountdown.remaining)}</span>}
               </Button>
-              <Button variant="secondary" disabled={isSubmitting || codeLock.isLocked} onClick={confirmVerificationCode}>
+              <Button variant="secondary" size="md" block disabled={isSubmitting || codeLock.isLocked} onClick={confirmVerificationCode}>
                 인증 확인
               </Button>
             </div>
@@ -290,8 +303,14 @@ export default function SignupPage() {
         </fieldset>
 
         <Button type="submit" disabled={!canSubmit || isSubmitting}>
-          회원가입
+          가입하기
         </Button>
+        <nav className={auth.footer}>
+          이미 계정이 있나요?
+          <Link to="/login" className={auth.footerLink}>
+            로그인
+          </Link>
+        </nav>
       </form>
       {openTerms && <TermsModal terms={TERMS[openTerms]} onClose={() => setOpenTerms(null)} />}
     </AuthLayout>

@@ -1,26 +1,31 @@
-/* 회의 중 화면의 카드들이 함께 쓰는 제목·안내·빈 화면 스타일 */
+/* 회의 중 화면의 카드들이 함께 쓰는 제목, 안내, 빈 화면 스타일 */
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--gap-inline);
+}
+
+.titleIcon {
+  color: var(--primary-default);
 }
 
 .title {
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
 }
 
 .caption {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .divider {
-  display: block;
-  max-width: none;
+  flex-shrink: 0;
+  height: 1px;
+  background: var(--border-default);
 }
 
 .empty {
@@ -29,61 +34,107 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 11px;
+  gap: var(--spacing-2);
+  padding: var(--spacing-6) 0;
   text-align: center;
 }
 
+.emptyIcon {
+  color: var(--text-disabled);
+}
+
 .emptyTitle {
-  color: var(--color-black);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
 }
 
 .emptyCaption {
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-60);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .iconButton {
   display: flex;
-  padding: 0;
-  border: none;
-  background: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
 }
 
 .fieldError {
   font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--red-80);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
 }
 
-/* 알림 창·안건 추가 창의 둥근 버튼. 이 화면 디자인은 주 버튼에 blue-50을 쓴다 */
+/* 알림 창, 안건 추가 창의 버튼 (디자인 Button md) */
 .pill {
-  width: 124px;
-  height: 41px;
-  padding: 10px 23px;
-  border-radius: 100px;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
+  height: var(--button-md-height);
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
   white-space: nowrap;
 }
 
 .pillOutline {
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  color: var(--grey-70);
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
 }
 
 .pillPrimary {
-  background: var(--blue-50);
-  border: none;
-  color: var(--color-white);
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+}
+
+.pillPrimary:disabled {
+  background: var(--primary-disabled);
+  color: var(--text-disabled);
 }
 
 .pillRow {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: var(--gap-inline);
+}
+
+/* 실시간 요약 오른쪽 위 소리 막대 (디자인 SoundWaveIcon) */
+.soundWave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  padding: 0 8px;
+}
+
+.soundWave span {
+  width: 4px;
+  height: 6px;
+  background: linear-gradient(var(--info-default), var(--primary-default));
+  border-radius: 10px;
+  animation: wave 1s ease-in-out infinite;
+}
+
+.soundWave span:nth-child(2) {
+  height: 10px;
+  animation-delay: 0.2s;
+}
+
+.soundWave span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes wave {
+  50% {
+    transform: scaleY(1.6);
+  }
 }

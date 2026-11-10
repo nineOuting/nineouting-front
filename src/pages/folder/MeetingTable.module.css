@@ -1,182 +1,213 @@
+/* 디자인 MeetingTableCard: 머리글은 회색 줄, 행 40px */
 .card {
-  min-height: 347px;
-  padding: 24px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .table {
   width: 100%;
-  border-collapse: collapse;
   table-layout: fixed;
 }
 
-/* 열 너비는 디자인의 머리글 위치(8, 215, 336, 459, 608px)에 맞췄다 */
-.title {
-  width: 215px;
-}
-
-.date {
-  width: 121px;
-}
-
-.status {
-  width: 123px;
-}
-
-.writer {
-  width: 149px;
-}
-
-.attendees {
-  width: auto;
-}
-
-.headRow {
-  height: 37px;
-  background: var(--grey-20);
-}
-
 .headRow th {
-  padding: 0;
+  height: 40px;
+  padding: var(--spacing-2) 0;
+  background: var(--bg-surface-muted);
   text-align: left;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-50);
 }
 
 .headRow th:first-child {
-  padding-left: 8px;
+  padding-left: var(--spacing-4);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 
-/* 머리글과 첫 줄 사이 24px */
-.headRow + tr td,
-tbody tr:first-child td {
-  padding-top: 24px;
+.headRow th:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .sortButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  color: inherit;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.headRow th.attendees {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.flipped {
+  transform: rotate(180deg);
+}
+
+.date {
+  width: 112px;
+}
+
+.status,
+.writer,
+.attendees {
+  width: 128px;
 }
 
 .row {
-  height: 34px;
   cursor: pointer;
 }
 
 .row td {
-  padding: 0;
-  vertical-align: middle;
+  height: 40px;
+  padding: var(--spacing-2) 0;
+  border-bottom: var(--border-width-default) solid var(--border-default);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
 }
 
-.row:hover {
-  background: var(--grey-10);
+.row td:first-child {
+  padding-left: var(--spacing-4);
+}
+
+.row:hover td {
+  background: var(--interactive-hover);
 }
 
 .titleButton {
   display: block;
-  width: 200px;
-  padding: 0;
+  width: 100%;
   overflow: hidden;
-  border: none;
-  background: none;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
   text-align: left;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--color-black);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.date {
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--grey-90);
+.row td.date {
+  color: var(--text-secondary);
 }
 
-.dividerCell {
-  padding: 16px 0 !important;
-}
-
-.divider {
-  display: block;
-  width: 100%;
-  max-width: none;
-}
-
-.pill {
+/* 디자인 StatusBadge: 예정 회색, 진행 중 보라, 작성 중 파랑, 확정 초록 */
+.badge {
   display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 12px;
-  border-radius: 1000px;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
   white-space: nowrap;
 }
 
 .scheduled {
-  background: var(--grey-10);
-  color: var(--grey-70);
+  background: var(--neutral-subtle);
+  color: var(--neutral-default);
 }
 
 .inProgress {
-  background: var(--blue-20);
-  color: var(--blue-100);
+  background: var(--primary-subtle);
+  color: var(--primary-default);
 }
 
 .writing,
 .reviewing {
-  background: var(--red-10);
-  color: var(--red-100);
+  background: var(--info-subtle);
+  color: var(--info-default);
 }
 
 .confirmed {
-  background: var(--green-10);
-  color: var(--green-success);
+  background: var(--success-subtle);
+  color: var(--success-default);
 }
 
 .writerCell {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 140px;
+  gap: var(--spacing-2);
+  min-width: 0;
 }
 
 .face {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--layout-placeholder);
+  width: var(--profile-sm);
+  height: var(--profile-sm);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-muted);
 }
 
 .writerName {
   overflow: hidden;
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--color-black);
+  color: var(--text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.empty {
-  padding: 80px 0 !important;
-  text-align: center;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-60);
+/* REQ-166 줄마다 ⋮ 메뉴 */
+.more {
+  width: 48px;
+  text-align: right;
+}
+
+.menuAnchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.moreButton {
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.moreButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.menu {
+  right: 0;
+  left: auto;
+}
+
+/* REQ-168 페이지 번호 */
+.pager {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-3);
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.pageButton {
+  min-width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body-md);
+  color: var(--text-secondary);
+}
+
+.pageButton:hover {
+  background: var(--interactive-hover);
+}
+
+.pageCurrent,
+.pageCurrent:hover {
+  background: var(--interactive-selected);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }

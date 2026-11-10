@@ -1,172 +1,87 @@
-/* 디자인 23:72(섹션 설정)·23:278(레이아웃 설정): 354px */
+/* 디자인 TemplateEditorPage 왼쪽 SidePanel 300px: 제목, 설명, 묶음 사이 24px. 오른쪽 입력칸은 110px, 높이 32px */
 .panel {
   display: flex;
   flex-direction: column;
-  max-height: 792px;
-  overflow: hidden;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  gap: var(--spacing-6);
+  padding: var(--spacing-6) var(--spacing-5);
 }
 
-.tabs {
-  display: flex;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--grey-20);
-}
-
-.tab {
-  padding: 16px 24px;
-  background: none;
-  border: none;
-  border-bottom: 1px solid transparent;
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
-}
-
-.tabOn {
-  border-bottom-color: var(--blue-100);
-}
-
-.body {
+.titleGroup {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 16px;
-  overflow-y: auto;
+  gap: var(--gap-title-subtitle);
 }
 
-.layoutBody {
-  padding: 20px;
+.title {
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
 }
 
-.empty {
-  padding: 24px 16px;
-  font-size: var(--font-size-b2);
-  color: var(--grey-60);
+.description,
+.hint {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
-.group,
 .section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-}
-
-.section {
-  gap: 16px;
-}
-
-.subGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tableGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-3);
 }
 
 .heading {
-  margin: 0;
-  font-size: var(--font-size-h3);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-black);
-}
-
-.subHeading {
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-100);
-}
-
-.hint {
-  margin-top: -16px;
-  font-size: var(--font-size-caption);
-  color: var(--grey-60);
-}
-
-.divider {
-  width: 100%;
-  margin: 0;
-  border: none;
-  border-top: 1px solid var(--grey-20);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .row {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--spacing-3);
+  min-height: 32px;
 }
 
 .rowLabel {
   flex: 1;
   min-width: 0;
-  font-size: var(--font-size-b1);
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .row > :last-child {
   flex-shrink: 0;
 }
 
-/* 디자인 23:81 */
-.nameBox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 57px;
-  padding: 16px;
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-}
-
-.nameInput {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: var(--font-size-b1);
-  line-height: 1.5;
-  color: var(--grey-100);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.fieldLabel {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-50);
-}
-
 .selectBox {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 157px;
-  padding: 8px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  gap: var(--spacing-1);
+  width: 110px;
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-sm);
 }
 
-.field .selectBox {
+.selectBox:focus-within {
+  border-color: var(--border-focus);
+}
+
+/* 선택한 섹션: 패널 너비를 다 쓴다 */
+.pickerBox {
+  gap: var(--spacing-2);
   width: 100%;
+  height: var(--input-md-height);
+  padding: 0 var(--spacing-3);
+  border-radius: var(--radius-md);
 }
 
 .select {
@@ -177,34 +92,45 @@
   border: none;
   outline: none;
   font: inherit;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
   appearance: none;
   cursor: pointer;
 }
 
 .select:disabled {
-  color: var(--grey-40);
+  color: var(--text-disabled);
   cursor: default;
+}
+
+.select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.selectIcon {
+  flex-shrink: 0;
+  color: var(--neutral-default);
+  pointer-events: none;
 }
 
 .swatches {
   display: flex;
-  gap: 16px;
-  width: 157px;
+  justify-content: space-between;
+  width: 110px;
 }
 
 .swatch {
   width: 16px;
   height: 16px;
   padding: 0;
-  border: 1px solid var(--grey-50);
-  border-radius: 4px;
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-full);
 }
 
 .swatchOn {
-  outline: 2px solid var(--blue-100);
+  outline: 2px solid var(--primary-default);
   outline-offset: 2px;
 }
 
@@ -212,10 +138,11 @@
   opacity: 0.4;
 }
 
+/* 디자인 SegmentedControl: 옅은 바탕 위에 고른 칸만 흰색 */
 .segments {
   display: flex;
-  gap: 4px;
-  width: 157px;
+  gap: var(--spacing-1);
+  width: 110px;
 }
 
 .segment {
@@ -223,23 +150,26 @@
   flex: 1;
   align-items: center;
   justify-content: center;
-  padding: 8px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.segment:hover:not(:disabled) {
+  background: var(--neutral-ghost-hover);
 }
 
 .textSegment {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
-/* 디자인 23:143: 고른 칸은 연한 파랑 바탕에 파란 테두리 */
-.segmentOn {
-  background: #f7f7ff;
-  border-color: var(--blue-100);
-  color: var(--blue-100);
+.segmentOn,
+.segmentOn:hover:not(:disabled) {
+  background: var(--interactive-selected);
+  color: var(--primary-default);
 }
 
 .segment:disabled {
@@ -248,30 +178,29 @@
 
 .pair {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 157px;
-}
-
-.slash {
-  font-size: var(--font-size-b2);
-  color: var(--grey-50);
+  gap: var(--spacing-2);
+  width: 150px;
 }
 
 .numberBox {
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-1);
   min-width: 0;
-  padding: 8px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.numberBox:focus-within {
+  border-color: var(--border-focus);
 }
 
 .row > .numberBox {
-  flex: 0 0 157px;
+  flex: 0 0 110px;
 }
 
 .number {
@@ -282,26 +211,26 @@
   background: none;
   border: none;
   outline: none;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .number:disabled {
-  color: var(--grey-40);
+  color: var(--text-disabled);
 }
 
 .unit {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .iconButton {
   display: flex;
-  padding: 0;
-  background: none;
-  border: none;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
 }
 
 .iconButton:disabled {
@@ -311,7 +240,7 @@
 .edge {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .edgeHead {
@@ -321,16 +250,21 @@
 }
 
 .edgeInput {
-  height: 30px;
-  padding: 8px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-100);
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.edgeInput:focus {
+  border-color: var(--border-focus);
+  outline: none;
 }
 
 .edgeInput::placeholder {
-  color: var(--grey-60);
+  color: var(--text-disabled);
 }

@@ -275,6 +275,52 @@ export function cancelMeeting(meetingId: number) {
   return request('POST', `/api/meetings/${meetingId}/cancel`);
 }
 
+/** REQ-166 다른 폴더로 이동 (회의를 만든 사람). 회의록도 따라간다 */
+export function moveMeeting(meetingId: number, folderId: number) {
+  return request('PUT', `/api/meetings/${meetingId}/folder`, { folderId });
+}
+
+/** REQ-166 회의 삭제: 쓰레기통으로 (회의를 만든 사람, 진행 중이면 안 된다). 회의록도 숨는다 */
+export function trashMeeting(meetingId: number) {
+  return request('DELETE', `/api/meetings/${meetingId}`);
+}
+
+/** REQ-143 복구, REQ-166 [되돌리기] */
+export function restoreMeeting(meetingId: number) {
+  return request('POST', `/api/meetings/${meetingId}/restore`);
+}
+
+/** REQ-143 영구 삭제 */
+export function purgeMeeting(meetingId: number) {
+  return request('DELETE', `/api/meetings/${meetingId}/purge`);
+}
+
+export interface TrashMeeting {
+  meetingId: number;
+  title: string;
+  folderId: number;
+  folderName: string;
+  startAt: string;
+  /** 회의가 끝나 회의록이 있는지 */
+  hasMinutes: boolean;
+  deletedBy: PersonResponse;
+  deletedAt: string;
+  purgeAt: string;
+}
+
+/** REQ-143 쓰레기통의 회의 (내가 지웠거나 내가 만든 회의) */
+export function listTrashMeetings(workspaceId: number) {
+  return request<TrashMeeting[]>('GET', `/api/meetings/trash?workspaceId=${workspaceId}`);
+}
+
+export type AiFeedbackTarget = 'LIVE_SUMMARY' | 'DECISION_EVIDENCE' | 'MINUTES_DRAFT';
+export type AiFeedbackRating = 'ACCURATE' | 'NEEDS_FIX';
+
+/** REQ-172 [정확해요], [고칠 부분 있어요]. 같은 자리에 다시 누르면 바뀐다 */
+export function sendAiFeedback(meetingId: number, target: AiFeedbackTarget, rating: AiFeedbackRating) {
+  return request('PUT', `/api/meetings/${meetingId}/ai-feedback`, { target, rating });
+}
+
 /** REQ-063 같은 폴더의 지난 회의 (시작 시각 최신순, 취소된 회의 제외) */
 export async function listFolderMeetings(folderId: number, size: number) {
   const page = await request<MeetingPageResponse>('GET', `/api/folders/${folderId}/meetings?page=0&size=${size}`);
@@ -359,6 +405,16 @@ export function resumeMeeting(meetingId: number) {
 }
 
 /** REQ-090 회의 도중 안건 추가 (회의록 작성자). 결정할 사항은 1개 이상 */
+/** REQ-173 회의 중 안건 이름 고치기 (회의록 작성자) */
+export function renameMeetingAgenda(meetingId: number, agendaId: number, title: string) {
+  return request<AgendaResponse>('PUT', `/api/meetings/${meetingId}/agendas/${agendaId}`, { title });
+}
+
+/** REQ-173 회의 중 안건 삭제 (회의록 작성자, 1개는 남긴다) */
+export function deleteMeetingAgenda(meetingId: number, agendaId: number) {
+  return request('DELETE', `/api/meetings/${meetingId}/agendas/${agendaId}`);
+}
+
 export function addMeetingAgenda(meetingId: number, title: string, decisionPoints: string[]) {
   return request<AgendaResponse>('POST', `/api/meetings/${meetingId}/agendas`, { title, decisionPoints });
 }

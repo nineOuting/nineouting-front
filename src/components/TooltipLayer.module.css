@@ -1,0 +1,16 @@
+/* 디자인 Tooltip: 어두운 바탕 작은 글자, 버튼 아래 가운데 */
+.tooltip {
+  position: fixed;
+  z-index: 400;
+  max-width: 240px;
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--gray-900);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--gray-0);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}

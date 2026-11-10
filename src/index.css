@@ -1,88 +1,60 @@
-/* Figma 변수(프론트 디자인 파일)와 같은 이름으로 맞춘다 */
-:root {
-  --color-white: #fff;
-  --color-black: #222;
-  --grey-10: #f4f4f4;
-  --grey-20: #e9e9e9;
-  --grey-30: #d3d3d3;
-  --grey-40: #bdbdbd;
-  --grey-50: #a7a7a7;
-  --grey-60: #909090;
-  --grey-70: #7a7a7a;
-  --grey-80: #4e4e4e;
-  --grey-90: #4e4e4e;
-  --grey-100: #383838;
-  --blue-10: #e9e8f2;
-  --blue-20: #d4d1e5;
-  --blue-50: #938bbe;
-  --blue-70: #685da4;
-  --blue-90: #3d2f8a;
-  --blue-100: #27187d;
-  --milkblue-10: #fcfcff;
-  --red-10: #fce9e9;
-  --red-20: #f8d2d3;
-  --red-50: #ef8f90;
-  --red-80: #e54d4d;
-  --red-90: #e13637;
-  --red-100: #de2021;
-  --green-10: #ebffeb;
-  --green-success: #00b503;
-  /* 왼쪽 메뉴·상단 바 디자인이 나오기 전까지 자리만 잡는 회색 */
-  --layout-placeholder: #d9d9d9;
+/* 디자인 시스템(nep!nep!) 토큰, 글꼴, 기본 스타일. nep!nep!_css 폴더는 디자인 담당이 피그마 변수에서 뽑아 준 파일이라 손대지 않는다 */
+@import url('../nep!nep!_css/global.css');
 
-  --font-size-display: 32px;
-  --font-size-h1: 24px;
-  --font-size-h2: 20px;
-  --font-size-h3: 18px;
-  --font-size-b1: 16px;
-  --font-size-b2: 14px;
-  --font-size-caption: 12px;
+/*
+ * 예전 피그마 변수 이름. 화면 CSS가 아직 이 이름을 쓰므로 새 토큰으로 이어 둔다. 다크 모드에서도 바뀌도록 되도록 의미 토큰(--text-*, --border-*)으로 잇는다.
+ * 화면을 새 디자인으로 고칠 때 새 토큰 이름(--text-primary 등)으로 바꾸고, 다 바뀌면 지운다
+ * [data-theme]에도 다시 정의해야 문서 종이처럼 한 부분만 테마를 바꾼 곳에서 새 값으로 풀린다
+ */
+:root,
+[data-theme] {
+  --color-white: var(--bg-surface);
+  --color-black: var(--text-primary);
+  --grey-10: var(--bg-surface-muted);
+  --grey-20: var(--border-default);
+  --grey-30: var(--border-strong);
+  --grey-40: var(--text-disabled);
+  --grey-50: var(--text-secondary);
+  --grey-60: var(--text-secondary);
+  --grey-70: var(--text-secondary);
+  --grey-80: var(--text-secondary);
+  --grey-90: var(--text-secondary);
+  --grey-100: var(--text-primary);
+  --blue-10: var(--primary-subtle);
+  --blue-20: var(--interactive-selected-border);
+  --blue-70: var(--primary-default);
+  --blue-90: var(--primary-hover);
+  --milkblue-10: var(--bg-page);
+  --red-10: var(--danger-subtle);
+  --red-20: var(--red-100);
+  --red-80: var(--danger-hover);
+  --red-90: var(--danger-default);
+  --green-10: var(--success-subtle);
+  --green-success: var(--success-default);
+  --layout-placeholder: var(--border-strong);
 
-  /* Figma letterSpacing 3% */
-  --letter-spacing: 0.03em;
+  --font-size-display: var(--font-size-heading-xl);
+  --font-size-h1: var(--font-size-heading-lg);
+  --font-size-h2: var(--font-size-heading-md);
+  --font-size-h3: var(--font-size-heading-sm);
+  --font-size-b1: var(--font-size-body-lg);
+  --font-size-b2: var(--font-size-body-md);
 
-  font-family: 'MinSans', system-ui, sans-serif;
-  font-size: var(--font-size-b1);
-  line-height: 1.5;
-  letter-spacing: var(--letter-spacing);
-  color: var(--color-black);
-  background: var(--color-white);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+  --letter-spacing: var(--letter-spacing-base);
 }
 
 body {
-  margin: 0;
+  /* 아직 데스크톱 화면만 있다. 모바일 화면은 디자인을 따라 따로 만든다 */
   min-width: 600px;
-  /* 한글이 "주세 / 요"처럼 단어 중간에서 줄바꿈되지 않게 한다 */
-  word-break: keep-all;
 }
 
-h1,
-h2,
-p {
-  margin: 0;
+/* 로고 파일은 진한 보라 한 가지라 어두운 테마에서는 밝게 바꿔 보인다 */
+[data-theme='dark'] .nepnep-logo {
+  filter: brightness(0) invert(1);
 }
 
-button,
-input {
-  font: inherit;
-  letter-spacing: inherit;
-  color: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: default;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .nepnep-logo {
+    filter: brightness(0) invert(1);
+  }
 }

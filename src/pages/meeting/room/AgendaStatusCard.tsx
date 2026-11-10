@@ -1,15 +1,18 @@
-import { Fragment } from 'react';
-import dividerAgendaList from '../../../assets/divider-agenda-list.svg';
-import dividerSummary from '../../../assets/divider-summary.svg';
-import Placeholder from '../../../components/Placeholder';
+import { Fragment, useRef, useState } from 'react';
+import addIcon from '../../../assets/icons/add-plain.svg';
+import agendaIcon from '../../../assets/icons/agenda-status.svg';
+import createIcon from '../../../assets/icons/create-sm.svg';
+import deleteIcon from '../../../assets/icons/delete-sm.svg';
+import moreIcon from '../../../assets/icons/more-vert.svg';
+import Icon from '../../../components/Icon';
 import type { RoomAgenda } from '../../../types/meetingRoom';
+import ActionMenu from '../../workspace/ActionMenu';
 import DecisionItem from './DecisionItem';
 import room from './room.module.css';
 import StatusPill from './StatusPill';
 import styles from './AgendaStatusCard.module.css';
 
 const TITLE_ICON_SIZE = 24;
-const AGENDA_ICON_SIZE = 24;
 
 interface AgendaStatusCardProps {
   agendas: RoomAgenda[];
@@ -20,6 +23,9 @@ interface AgendaStatusCardProps {
   onSelectDecision: (decisionId: string) => void;
   onSaveDecision: (decisionId: string, summary: string) => void;
   onAddAgenda: () => void;
+  /** REQ-173 회의록 작성자의 안건 수정하기, 안건 삭제 */
+  onRenameAgenda: (agendaId: string) => void;
+  onDeleteAgenda: (agendaId: string) => void;
 }
 
 /** REQ-086, 124, 090 안건 현황. 왼쪽은 안건과 상태, 오른쪽은 고른 안건의 결정할 사항 */
@@ -32,36 +38,35 @@ export default function AgendaStatusCard({
   onSelectDecision,
   onSaveDecision,
   onAddAgenda,
+  onRenameAgenda,
+  onDeleteAgenda,
 }: AgendaStatusCardProps) {
   const selectedAgenda = agendas.find(({ id }) => id === selectedAgendaId);
+  const [menuAgendaId, setMenuAgendaId] = useState<string | null>(null);
+  const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
 
   return (
     <section className={styles.card} aria-labelledby="agenda-status-title">
       <div className={styles.head}>
         <div className={room.titleRow}>
-          <Placeholder size={TITLE_ICON_SIZE} />
+          <Icon src={agendaIcon} size={TITLE_ICON_SIZE} className={room.titleIcon} />
           <h2 id="agenda-status-title" className={room.title}>
             안건 현황
           </h2>
         </div>
         {canEdit && (
           <button type="button" className={room.iconButton} aria-label="안건 추가" onClick={onAddAgenda}>
-            <Placeholder size={TITLE_ICON_SIZE} />
+            <Icon src={addIcon} size={20} />
           </button>
         )}
       </div>
-      <img src={dividerSummary} alt="" width={740} height={1} className={room.divider} />
+      <div className={room.divider} />
 
       <div className={styles.body}>
         <ul className={styles.agendaList}>
-          {agendas.map((agenda, index) => (
+          {agendas.map((agenda) => (
             <Fragment key={agenda.id}>
-              {index > 0 && (
-                <li aria-hidden="true" className={styles.separator}>
-                  <img src={dividerAgendaList} alt="" width={292} height={1} className={room.divider} />
-                </li>
-              )}
-              <li>
+              <li className={styles.agendaRow}>
                 <button
                   type="button"
                   aria-pressed={agenda.id === selectedAgendaId}
@@ -71,11 +76,45 @@ export default function AgendaStatusCard({
                   onClick={() => onSelectAgenda(agenda.id)}
                 >
                   <span className={styles.agendaTitle}>
-                    <Placeholder size={AGENDA_ICON_SIZE} />
                     {agenda.title}
                   </span>
                   <StatusPill status={agenda.status} />
                 </button>
+                {canEdit && (
+                  <span className={styles.menuAnchor}>
+                    <button
+                      ref={menuAgendaId === agenda.id ? menuAnchorRef : undefined}
+                      type="button"
+                      className={room.iconButton}
+                      aria-label={`${agenda.title} 메뉴`}
+                      aria-haspopup="menu"
+                      aria-expanded={menuAgendaId === agenda.id}
+                      onClick={() => setMenuAgendaId((current) => (current === agenda.id ? null : agenda.id))}
+                    >
+                      <Icon src={moreIcon} size={20} />
+                    </button>
+                    {menuAgendaId === agenda.id && (
+                      <ActionMenu
+                        label={`${agenda.title} 메뉴`}
+                        anchorRef={menuAnchorRef}
+                        className={styles.agendaMenu}
+                        items={[
+                          { label: '안건 수정하기', icon: createIcon, onSelect: () => onRenameAgenda(agenda.id) },
+                          ...(agendas.length > 1
+                            ? [{ label: '안건 삭제', icon: deleteIcon, isDanger: true, onSelect: () => onDeleteAgenda(agenda.id) }]
+                            : []),
+                        ].map((item) => ({
+                          ...item,
+                          onSelect: () => {
+                            setMenuAgendaId(null);
+                            item.onSelect();
+                          },
+                        }))}
+                        onClose={() => setMenuAgendaId(null)}
+                      />
+                    )}
+                  </span>
+                )}
               </li>
             </Fragment>
           ))}
