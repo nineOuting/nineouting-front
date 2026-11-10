@@ -14,6 +14,7 @@ import {
   listFolderMemberDetails,
   listWorkspaceMembers,
   removeFolderMember,
+  transferFolderOwnership,
   type FolderInfo,
 } from '../../api/workspace';
 import addIcon from '../../assets/icons/add-sm.svg';
@@ -152,6 +153,16 @@ export default function FolderPage() {
   };
 
   const reloadMembers = async () => setMembers(await listFolderMemberDetails(id));
+
+  /** REQ-043 넘기면 나는 폴더 멤버로 남는다. 이제 폴더에서 나갈 수 있다 */
+  const transferOwnership = async (userId: number) => {
+    await transferFolderOwnership(id, userId);
+    setFolder((prev) => prev && { ...prev, isOwner: false });
+    closeDialog();
+    const newOwner = members.find((member) => member.userId === userId);
+    notice(`${newOwner?.name ?? '선택한 멤버'}님에게 폴더 소유권을 넘겼어요.`);
+    await reloadMembers().catch(() => undefined);
+  };
   const reloadMeetings = async () => setMeetings(await listFolderMeetingRows(id));
 
   const changeView = (next: { sort?: MeetingSort; page?: number }) => {
@@ -474,8 +485,10 @@ export default function FolderPage() {
           workspaceMembers={workspaceMembers}
           workspaceMembersError={workspaceMembersError}
           canManage={isWorkspaceOwner}
+          canTransfer={folder.isOwner}
           onAdd={addMembers}
           onRemove={removeMembers}
+          onTransfer={transferOwnership}
           onNotice={notice}
           onClose={closeDialog}
         />

@@ -16,11 +16,11 @@ import { EMAIL_REGEX, MESSAGES } from '../../constants/auth';
 import type { FolderAccess, WorkspaceMember } from '../../types/workspace';
 import ActionMenu from './ActionMenu';
 import MembersModal, { MemberIdentity } from './MembersModal';
+import TransferOwnerDialog from './TransferOwnerDialog';
 import styles from './MembersModal.module.css';
 
 const ICON_SIZE = 16;
 const MORE_ICON_SIZE = 20;
-const TRANSFER_PENDING_MESSAGE = '소유권 양도 화면은 디자인이 나오면 연결돼요.';
 
 const ACCESS_LABELS: Record<FolderAccess, string> = {
   all: '모든 폴더 접근 가능',
@@ -37,6 +37,8 @@ interface WorkspaceMembersModalProps {
   onCopyInviteLink: () => void;
   onAccessChange: (userId: number, access: FolderAccess) => void;
   onRemove: (userId: number) => void;
+  /** REQ-129 소유권 양도. 실패하면 던진다 */
+  onTransfer: (userId: number) => Promise<void>;
   onNotice: (text: string) => void;
   onClose: () => void;
 }
@@ -50,9 +52,11 @@ export default function WorkspaceMembersModal({
   onCopyInviteLink,
   onAccessChange,
   onRemove,
+  onTransfer,
   onNotice,
   onClose,
 }: WorkspaceMembersModalProps) {
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>();
   const [isInviting, setIsInviting] = useState(false);
@@ -136,7 +140,7 @@ export default function WorkspaceMembersModal({
       onAdd={invite}
       canManage={canManage}
       ownershipLabel="워크스페이스 소유권 관리"
-      onTransferOwnership={() => onNotice(TRANSFER_PENDING_MESSAGE)}
+      onTransferOwnership={() => setIsTransferOpen(true)}
       onClose={onClose}
     >
       {canManage && (
@@ -211,6 +215,17 @@ export default function WorkspaceMembersModal({
             ))}
           </ul>
         </section>
+      )}
+      {isTransferOpen && (
+        <TransferOwnerDialog
+          target="워크스페이스"
+          candidates={members.filter(({ isOwner }) => !isOwner)}
+          onTransfer={async (userId) => {
+            await onTransfer(userId);
+            setIsTransferOpen(false);
+          }}
+          onClose={() => setIsTransferOpen(false)}
+        />
       )}
     </MembersModal>
   );
