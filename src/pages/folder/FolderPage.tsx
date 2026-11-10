@@ -25,6 +25,7 @@ import FavoriteButton from '../../components/FavoriteButton';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
 import Icon from '../../components/Icon';
+import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderMeeting, FolderMember, FolderPendingAgenda, WorkspaceMember } from '../../types/workspace';
 import copyIcon from '../../assets/icons/copy.svg';
@@ -264,8 +265,15 @@ export default function FolderPage() {
     }
   };
 
+  // REQ-178 불러오는 동안 회색 자리
   if (!folder) {
-    return <AppLayout className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</AppLayout>;
+    return (
+      <AppLayout className={styles.page}>
+        {toast && <Toast message={toast} onClose={closeToast} />}
+        <Skeleton width={280} height={32} />
+        <Skeleton height={240} />
+      </AppLayout>
+    );
   }
 
   return (

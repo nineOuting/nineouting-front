@@ -186,7 +186,7 @@ export default function SignupPage() {
             }}
           />
           {verificationStep === 'idle' && (
-            <Button variant="secondary" size="md" block disabled={isSubmitting} onClick={sendVerificationCode}>
+            <Button isLoading={isSubmitting} variant="secondary" size="md" block disabled={isSubmitting} onClick={sendVerificationCode}>
               이메일 인증
             </Button>
           )}
@@ -224,6 +224,7 @@ export default function SignupPage() {
             </button>
             <div className={styles.codeActions}>
               <Button
+                isLoading={isSubmitting}
                 variant="neutral"
                 disabled={isSubmitting || codeLock.isLocked || resendCountdown.remaining > 0}
                 onClick={sendVerificationCode}
@@ -231,7 +232,7 @@ export default function SignupPage() {
                 <span>이메일 재전송</span>
                 {resendCountdown.remaining > 0 && <span>{formatSeconds(resendCountdown.remaining)}</span>}
               </Button>
-              <Button variant="secondary" size="md" block disabled={isSubmitting || codeLock.isLocked} onClick={confirmVerificationCode}>
+              <Button isLoading={isSubmitting} variant="secondary" size="md" block disabled={isSubmitting || codeLock.isLocked} onClick={confirmVerificationCode}>
                 인증 확인
               </Button>
             </div>
@@ -302,7 +303,7 @@ export default function SignupPage() {
           </ul>
         </fieldset>
 
-        <Button type="submit" disabled={!canSubmit || isSubmitting}>
+        <Button isLoading={isSubmitting} type="submit" disabled={!canSubmit || isSubmitting}>
           가입하기
         </Button>
         <nav className={auth.footer}>

@@ -117,7 +117,7 @@ export default function CreateWorkspaceModal({ onClose }: CreateWorkspaceModalPr
             <Button variant="secondary" size="md" onClick={onClose}>
               취소
             </Button>
-            <Button type="submit" size="md" disabled={!name.trim() || isBusy}>
+            <Button isLoading={isBusy} type="submit" size="md" disabled={!name.trim() || isBusy}>
               다음
             </Button>
           </>
@@ -150,7 +150,7 @@ export default function CreateWorkspaceModal({ onClose }: CreateWorkspaceModalPr
           <Button variant="secondary" size="md" onClick={() => goToWorkspace(created)}>
             건너뛰기
           </Button>
-          <Button type="submit" size="md" disabled={emails.length === 0 || isBusy}>
+          <Button isLoading={isBusy} type="submit" size="md" disabled={emails.length === 0 || isBusy}>
             초대하기
           </Button>
         </>

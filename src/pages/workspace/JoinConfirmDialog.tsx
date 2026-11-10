@@ -25,7 +25,7 @@ export default function JoinConfirmDialog({ workspaceName, inviterName, error, i
           <Button variant="secondary" size="md" disabled={isBusy} onClick={onReject}>
             거절하기
           </Button>
-          <Button variant="primary" size="md" disabled={isBusy} onClick={onJoin}>
+          <Button isLoading={isBusy} variant="primary" size="md" disabled={isBusy} onClick={onJoin}>
             {isBusy ? '참여하는 중' : '참여하기'}
           </Button>
         </>

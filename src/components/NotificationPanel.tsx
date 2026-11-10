@@ -11,6 +11,7 @@ import meetingIcon from '../assets/icons/noti-meeting.svg';
 import memberIcon from '../assets/icons/noti-member.svg';
 import minutesIcon from '../assets/icons/noti-minutes.svg';
 import Icon from './Icon';
+import Skeleton from './Skeleton';
 import styles from './NotificationPanel.module.css';
 
 const ICON_SIZE = 24;
@@ -127,6 +128,13 @@ export default function NotificationPanel({ anchorRef, onUnreadChange, onClose }
       </div>
       <ul className={styles.list}>
         {error && <li className={styles.empty}>알림을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</li>}
+        {/* REQ-178 불러오는 동안 회색 자리 */}
+        {!items && !error && (
+          <li className={styles.loading}>
+            <Skeleton height={56} />
+            <Skeleton height={56} />
+          </li>
+        )}
         {items?.length === 0 && <li className={styles.empty}>새 알림이 없어요</li>}
         {items?.map((item) => (
           <li key={item.notificationId}>

@@ -31,6 +31,7 @@ import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import FavoriteButton from '../../components/FavoriteButton';
 import Icon from '../../components/Icon';
+import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderAccess, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
 import deleteIcon from '../../assets/icons/delete.svg';
@@ -121,8 +122,17 @@ export default function WorkspacePage() {
     };
   }, [id, showError]);
 
+  // REQ-178 불러오는 동안 회색 자리
   if (!workspace) {
-    return <AppLayout className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</AppLayout>;
+    return (
+      <AppLayout className={styles.page}>
+        {toast && <Toast message={toast} onClose={closeToast} />}
+        <Skeleton width={280} height={32} />
+        <Skeleton height={56} />
+        <Skeleton height={56} />
+        <Skeleton height={56} />
+      </AppLayout>
+    );
   }
 
   const addFolder = async (name: string) => {

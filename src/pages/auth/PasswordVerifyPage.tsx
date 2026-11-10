@@ -181,7 +181,7 @@ export default function PasswordVerifyPage() {
               확인
             </Button>
             {/* 막힌 동안에는 서버가 인증 번호를 보내지 않으므로 다시 받기도 끈다 */}
-            <Button variant="text" disabled={isSubmitting || codeLock.isLocked} onClick={resendCode}>
+            <Button isLoading={isSubmitting} variant="text" disabled={isSubmitting || codeLock.isLocked} onClick={resendCode}>
               인증 번호 다시 받기
             </Button>
             {/* REQ-009 이메일을 잘못 넣었으면 다시 입력한다 */}

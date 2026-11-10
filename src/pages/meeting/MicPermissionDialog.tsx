@@ -23,7 +23,7 @@ export default function MicPermissionDialog({ state, isChecking, onAllow, onClos
             <Button variant="secondary" size="md" onClick={onClose}>
               나중에 하기
             </Button>
-            <Button variant="primary" size="md" disabled={isChecking} onClick={onAllow}>
+            <Button isLoading={isChecking} variant="primary" size="md" disabled={isChecking} onClick={onAllow}>
               마이크 허용하기
             </Button>
           </>
@@ -42,7 +42,7 @@ export default function MicPermissionDialog({ state, isChecking, onAllow, onClos
           <Button variant="secondary" size="md" onClick={onClose}>
             닫기
           </Button>
-          <Button variant="primary" size="md" disabled={isChecking} onClick={onAllow}>
+          <Button isLoading={isChecking} variant="primary" size="md" disabled={isChecking} onClick={onAllow}>
             {isChecking ? '확인하는 중' : '다시 확인하기'}
           </Button>
         </>
