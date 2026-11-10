@@ -5,9 +5,9 @@ import Icon from '../../components/Icon';
 import type { TranscriptLine } from '../../types/meetingRoom';
 import styles from './MinutesSidePanels.module.css';
 
-const TITLE_ICON_SIZE = 24;
-// 요약본 410px : 전사 392px (디자인). 끌어서 바꿀 수 있는 범위
-const DEFAULT_RATIO = 410 / 802;
+const TITLE_ICON_SIZE = 20;
+// 디자인은 요약본과 전사가 반씩. 끌어서 바꿀 수 있는 범위
+const DEFAULT_RATIO = 0.5;
 const MIN_RATIO = 0.2;
 const MAX_RATIO = 0.8;
 
@@ -23,7 +23,7 @@ interface MinutesSidePanelsProps {
   lines: TranscriptLine[];
 }
 
-/** REQ-133~134 회의 요약본(안건별)과 전사. 둘 사이 경계를 끌어 높이 비율을 바꾼다 */
+/** REQ-133~134 회의 요약본(안건별)과 전사 (디자인 SummaryTranscriptPanel). 가운데 SplitBar를 끌어 높이 비율을 바꾼다 */
 export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsProps) {
   const summarized = agendas.filter(({ summary }) => summary.length > 0);
   const [ratio, setRatio] = useState(DEFAULT_RATIO);
@@ -48,9 +48,7 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
             <Icon src={archiveIcon} size={TITLE_ICON_SIZE} className={styles.titleIcon} />
             회의 요약본
           </h2>
-          <p className={styles.caption}>회의 중 정리된 요약을 보며 회의록을 작성해 보세요</p>
         </div>
-        <div className={styles.divider} />
         <div className={styles.body}>
           {summarized.length === 0 ? (
             <p className={styles.empty}>정리된 요약이 없어요.</p>
@@ -82,16 +80,19 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
             setRatio((value) => Math.min(MAX_RATIO, Math.max(MIN_RATIO, value + step)));
           }
         }}
-      />
+      >
+        {/* 디자인 SplitBar: 양쪽 선 + 가운데 손잡이 */}
+        <span className={styles.handleLine} />
+        <span className={styles.handleGrip} />
+        <span className={styles.handleLine} />
+      </div>
       <section className={styles.card} style={{ flexBasis: `${(1 - ratio) * 100}%` }} aria-labelledby="minutes-transcript-title">
         <div className={styles.head}>
           <h2 id="minutes-transcript-title" className={styles.title}>
             <Icon src={transcriptIcon} size={TITLE_ICON_SIZE} className={styles.titleIcon} />
             전사 기록
           </h2>
-          <p className={styles.caption}>회의 중 받아쓴 발언을 시간 순서대로 볼 수 있어요</p>
         </div>
-        <div className={styles.divider} />
         <div className={styles.body}>
           {lines.length === 0 ? (
             <p className={styles.empty}>받아쓴 발언이 없어요.</p>

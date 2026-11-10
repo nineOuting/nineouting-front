@@ -1,161 +1,191 @@
-/* 디자인 23:612: 776×818, 쪽 이동 · 편집 도구(파란 띠) · A4 종이 */
-.panel {
+/* 디자인 CanvasArea: 회색 바탕 위 종이, 아래 쪽 이동과 확대 바 */
+.canvas {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   flex: 1;
-  gap: var(--spacing-3);
+  flex-direction: column;
   min-width: 0;
-  height: calc(100vh - 160px);
-  min-height: 560px;
-  padding: var(--spacing-4) 0;
+  min-height: 0;
   overflow: hidden;
   background: var(--bg-surface-muted);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-lg);
-}
-
-.pager {
-  display: flex;
-  align-items: center;
-  gap: 17px;
-  height: 29px;
-}
-
-.pageLabel {
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--text-secondary);
-}
-
-.iconButton {
-  display: flex;
-  padding: var(--spacing-1);
-  border-radius: var(--radius-sm);
-  color: var(--neutral-default);
-}
-
-.iconButton:disabled {
-  opacity: 0.4;
-}
-
-.toolbar {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-2);
-  width: 100%;
-  height: 40px;
-  background: var(--bg-surface);
-  border-top: var(--border-width-default) solid var(--border-default);
-  border-bottom: var(--border-width-default) solid var(--border-default);
-}
-
-.tool {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-1);
-  height: 28px;
-  padding: 0 var(--spacing-2);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-caption);
-  color: var(--text-secondary);
-}
-
-.tool:disabled {
-  opacity: 0.5;
-}
-
-.zoom {
-  width: 54px;
-  padding: 0;
-  background: none;
-  border: none;
-  font: inherit;
-  color: inherit;
-  appearance: none;
-  text-align: center;
-  cursor: pointer;
-}
-
-.anchor {
-  position: relative;
-}
-
-.templateMenu {
-  min-width: 260px;
 }
 
 .viewport {
   flex: 1;
-  width: 100%;
   min-height: 0;
+  padding: var(--layout-page-margin) var(--spacing-4);
   overflow: auto;
 }
 
-.paper {
+/* 디자인 PageBlock: 쪽 이름 + 종이 */
+.pageBlock {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: 456px;
-  min-height: 675px;
+  gap: var(--gap-label-field);
+  width: fit-content;
   margin: 0 auto;
-  padding: 40px 36px;
-  background: var(--grey-10);
+}
+
+.pageLabel {
+  display: flex;
+  gap: var(--gap-inline);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+}
+
+.pageNumber {
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
-.docTitle {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--color-black);
+.pageTitle {
+  color: var(--text-secondary);
 }
 
-.meta {
+/* 디자인 DocumentPage 560×792, Dropshadow 2 */
+.paper {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--gap-content);
+  width: 560px;
+  min-height: 792px;
+  padding: var(--layout-page-margin);
+  background: var(--bg-surface);
+  box-shadow: 0 var(--spacing-1) var(--spacing-2) rgb(0 0 0 / 10%);
+  color: var(--text-primary);
+}
+
+/* 디자인 DocHeader: 제목 아래 굵은 선 */
+.docTitle {
   margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 10px;
-  line-height: 1.5;
-  color: var(--grey-70);
+  padding-bottom: var(--spacing-3);
+  border-bottom: var(--border-width-default) solid var(--border-strong);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--gap-label-field);
 }
 
 .sectionTitle {
   margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--color-black);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+/* 디자인 DocInfoList: 항목명 56px + 값 */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-list);
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.infoRow {
+  display: flex;
+  gap: var(--gap-inline);
+}
+
+.infoRow dt {
+  flex-shrink: 0;
+  width: 56px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.infoRow dd {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+/* 종이 위 입력 칸은 글처럼 보이고, 마우스를 올리거나 쓸 때만 테두리가 보인다 */
+.paper textarea {
+  border-color: transparent;
+}
+
+.paper textarea:hover {
+  border-color: var(--border-default);
+}
+
+.paper textarea:focus {
+  border-color: var(--primary-default);
 }
 
 /* 양식의 머릿글·바닥글 */
 .edge {
-  font-size: 9px;
-  line-height: 1.4;
-  color: var(--grey-60);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .footer {
   margin-top: auto;
 }
 
-.flipped {
-  transform: rotate(180deg);
+/* 디자인 CanvasBottomBar 48px */
+.bottomBar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 var(--layout-page-margin);
+  background: var(--bg-surface);
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.pager,
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--bg-surface-muted);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+}
+
+.barLabel {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+}
+
+/* 디자인 ZoomValue 56×32 */
+.zoomValue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 32px;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
 }

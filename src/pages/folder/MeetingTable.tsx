@@ -137,7 +137,11 @@ export default function MeetingTable({
               </td>
               <td className={styles.writer}>
                 <span className={styles.writerCell}>
-                  <span className={styles.face} aria-hidden="true" />
+                  {meeting.writer.profileImageUrl ? (
+                    <img src={meeting.writer.profileImageUrl} alt="" className={styles.face} />
+                  ) : (
+                    <span className={styles.face} aria-hidden="true" />
+                  )}
                   <span className={styles.writerName} title={meeting.writer.affiliation ?? undefined}>
                     {meeting.writer.name}
                   </span>

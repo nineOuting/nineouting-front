@@ -1,12 +1,16 @@
-/* 디자인 23:627: 504px, 위 요약본(410) · 아래 전사(392) */
+/* 디자인 SummaryTranscriptPanel: 400px, 위 요약본 카드 · SplitBar · 아래 전사 카드 */
 .panels {
   display: flex;
   flex-direction: column;
-  width: 360px;
-  height: calc(100vh - 160px);
-  min-height: 560px;
+  flex-shrink: 0;
+  width: 400px;
+  min-height: 0;
+  padding: var(--spacing-4);
+  background: var(--bg-page);
+  border-left: var(--border-width-default) solid var(--border-default);
 }
 
+/* 디자인 SummaryCard, TranscriptCard */
 .card {
   display: flex;
   flex-direction: column;
@@ -17,25 +21,40 @@
   background: var(--bg-surface);
   border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 var(--spacing-1) var(--spacing-2) rgb(0 0 0 / 10%);
 }
 
-/* 디자인의 두 카드 사이 16px을 끌 수 있는 손잡이로 쓴다 */
+/* 디자인 SplitBar 24px: 양쪽 선 + 가운데 손잡이. 끌어서 두 카드 높이를 바꾼다 */
 .handle {
-  flex: 0 0 16px;
+  display: flex;
+  flex: 0 0 24px;
+  align-items: center;
+  gap: var(--spacing-4);
   cursor: row-resize;
   touch-action: none;
 }
 
 .handle:focus-visible {
-  outline: 2px solid var(--blue-70);
-  outline-offset: -6px;
+  outline: 2px solid var(--primary-default);
+  outline-offset: -4px;
+}
+
+.handleLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-default);
+}
+
+.handleGrip {
+  width: 32px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
 }
 
 .head {
   display: flex;
-  flex-direction: column;
-  gap: var(--gap-title-subtitle);
+  align-items: center;
 }
 
 .title {
@@ -52,76 +71,67 @@
   color: var(--primary-default);
 }
 
-.caption {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
-}
-
-.divider {
-  flex-shrink: 0;
-  height: 1px;
-  background: var(--border-default);
-}
-
 .body {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--gap-section);
   min-height: 0;
   overflow-y: auto;
 }
 
+/* 디자인 SummaryBlock */
 .block {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--gap-label-field);
 }
 
 .label {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-50);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .summary {
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-100);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
 }
 
 .empty {
-  font-size: var(--font-size-b2);
-  color: var(--grey-60);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .lines {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--gap-title-subtitle);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* 디자인 TranscriptItem: 시각 + 발언 (화자는 기록하지 않는다) */
 .line {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 4px 14px;
+  gap: var(--gap-title-subtitle);
+  padding: var(--spacing-2);
+  border-radius: var(--radius-sm);
 }
 
 .time {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .text {
-  font-size: var(--font-size-b1);
-  line-height: 1.5;
-  color: var(--grey-80);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
   white-space: pre-wrap;
 }

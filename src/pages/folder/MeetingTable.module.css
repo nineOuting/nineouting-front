@@ -140,6 +140,7 @@
   border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-full);
   background: var(--bg-surface-muted);
+  object-fit: cover;
 }
 
 .writerName {

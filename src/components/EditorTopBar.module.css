@@ -27,10 +27,44 @@
   color: var(--neutral-default);
 }
 
+.logoLink {
+  display: flex;
+}
+
+/* 디자인 Right: 알림, 프로필 24px 뒤에 버튼들 */
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-6);
+}
+
 .actions {
   display: flex;
   align-items: center;
   gap: var(--gap-inline);
+}
+
+/* 메뉴 버튼으로 여는 왼쪽 메뉴 (앱 화면의 Sidebar와 같은 너비) */
+.dim {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgb(0 0 0 / 20%);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 151;
+  display: flex;
+  flex-direction: column;
+  width: var(--layout-sidebar-width);
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border-right: var(--border-width-default) solid var(--border-default);
+  box-shadow: var(--shadow-md);
 }
 
 /* 디자인 Button sm 120px (임시저장, 작성 완료) */
