@@ -1,6 +1,6 @@
 import type { Agenda, Meeting, MeetingStatus, Member, PendingAgenda } from '../types/meeting';
 import type { FolderMeeting, FolderMeetingStatus, FolderPendingAgenda } from '../types/workspace';
-import { request } from './client';
+import { putToStorage, request } from './client';
 
 // meeting-service API (docs/services/meeting-service.md). 시각은 한국 시간 LocalDateTime 문자열(2026-10-20T14:00:00)
 
@@ -273,6 +273,42 @@ export async function updateMeeting(meeting: Meeting) {
 /** REQ-073 회의 취소 */
 export function cancelMeeting(meetingId: number) {
   return request('POST', `/api/meetings/${meetingId}/cancel`);
+}
+
+export interface MeetingMaterial {
+  materialId: number;
+  fileName: string;
+  contentType: string;
+  size: number;
+  uploadedBy: PersonResponse;
+  uploadedAt: string;
+  /** 1시간 동안 쓸 수 있는 내려받기 주소 */
+  downloadUrl: string;
+}
+
+/** REQ-067 사전 자료 목록 (다 올라간 것만) */
+export function listMaterials(meetingId: number) {
+  return request<MeetingMaterial[]>('GET', `/api/meetings/${meetingId}/materials`);
+}
+
+/**
+ * REQ-067 사전 자료 올리기: 업로드 주소 받기 → 브라우저가 저장소(S3)에 바로 올리기 → 다 올렸다고 알리기.
+ * 서버가 실제 크기를 다시 확인한다 (50MB 이하)
+ */
+export async function uploadMaterial(meetingId: number, file: File) {
+  const contentType = file.type || 'application/octet-stream';
+  const { materialId, uploadUrl } = await request<{ materialId: number; uploadUrl: string }>(
+    'POST',
+    `/api/meetings/${meetingId}/materials`,
+    { fileName: file.name, contentType, size: file.size },
+  );
+  await putToStorage(uploadUrl, file, contentType);
+  return request<MeetingMaterial>('POST', `/api/meetings/${meetingId}/materials/${materialId}/complete`);
+}
+
+/** REQ-067 사전 자료 지우기 (올린 사람, 회의를 만든 사람) */
+export function deleteMaterial(meetingId: number, materialId: number) {
+  return request('DELETE', `/api/meetings/${meetingId}/materials/${materialId}`);
 }
 
 /** REQ-166 다른 폴더로 이동 (회의를 만든 사람). 회의록도 따라간다 */

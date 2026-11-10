@@ -1,7 +1,7 @@
 import type { Member } from '../types/meeting';
 import type { ItemSettings, MinutesTemplate, TemplateLayout } from '../types/template';
 import { withItemDefaults, withLayoutDefaults } from '../utils/templateSettings';
-import { downloadFile, request } from './client';
+import { downloadFile, putToStorage, request } from './client';
 import { toMember } from './meeting';
 
 // minutes-service API (docs/services/minutes-service.md). 시각은 한국 시간 LocalDateTime 문자열
@@ -233,6 +233,19 @@ export async function updateMinutesTemplate(templateId: number, template: Templa
 }
 
 /** REQ-121 양식 삭제 (이미 만든 회의록의 칸은 그대로) */
+/**
+ * REQ-157 양식 배경 이미지 올리기 (PNG, JPEG, WebP, 5MB 이하). 돌려준 imageKey를 layout.backgroundImageKey에 넣고 양식을 저장한다
+ */
+export async function uploadTemplateBackground(file: File) {
+  const { imageKey, uploadUrl, contentType } = await request<{ imageKey: string; uploadUrl: string; contentType: string }>(
+    'POST',
+    '/api/minutes-templates/background-upload-url',
+    { contentType: file.type, size: file.size },
+  );
+  await putToStorage(uploadUrl, file, contentType);
+  return imageKey;
+}
+
 export function deleteMinutesTemplate(templateId: number) {
   return request('DELETE', `/api/minutes-templates/${templateId}`);
 }

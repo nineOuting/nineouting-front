@@ -38,6 +38,10 @@ export interface TemplateLayout {
   pageNumber: boolean;
   header: { enabled: boolean; text: string };
   footer: { enabled: boolean; text: string };
+  /** REQ-157 배경 이미지 위치 (저장소 키). 없으면 배경 없음 */
+  backgroundImageKey?: string;
+  /** 서버가 붙여 주는 1시간짜리 주소, 막 올린 이미지는 브라우저 안 미리보기 주소. 저장할 때 서버가 버린다 */
+  backgroundImageUrl?: string;
 }
 
 export interface TemplateItem {
