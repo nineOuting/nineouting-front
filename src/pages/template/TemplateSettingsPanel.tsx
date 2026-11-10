@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
+import { errorMessage } from '../../api/client';
+import { uploadTemplateBackground } from '../../api/minutes';
 import alignCenterIcon from '../../assets/icons/align-center.svg';
 import alignLeftIcon from '../../assets/icons/align-left.svg';
 import alignRightIcon from '../../assets/icons/align-right.svg';
@@ -6,11 +8,15 @@ import chevronDownIcon from '../../assets/icons/chevron-down.svg';
 import ballotIcon from '../../assets/icons/rail-ballot.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
 import Icon from '../../components/Icon';
+import Spinner from '../../components/Spinner';
 import Switch from '../../components/Switch';
 import type { Align, ItemSettings, RecordType, TableBorder, TemplateItem, TemplateLayout } from '../../types/template';
 import styles from './TemplateSettingsPanel.module.css';
 
 const SMALL_ICON_SIZE = 16;
+// REQ-157 배경 사진 (서버도 다시 확인한다)
+const BACKGROUND_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
 const MAX_EDGE_LENGTH = 50;
 const MAX_MARGIN_MM = 50;
 const MAX_ROWS = 20;
@@ -239,6 +245,31 @@ export default function TemplateSettingsPanel({
   const setTable = (patch: Partial<ItemSettings['table']>) =>
     item && setSettings({ table: { ...item.settings.table, ...patch } });
   const isTable = item?.settings.recordType === 'TABLE';
+  // REQ-157 배경 사진: 저장소에 바로 올리고, 양식을 저장할 때 위치(키)를 함께 저장한다
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingBackground, setIsUploadingBackground] = useState(false);
+  const [backgroundError, setBackgroundError] = useState<string>();
+  const uploadBackground = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) {
+      return;
+    }
+    if (!BACKGROUND_TYPES.includes(file.type) || file.size > MAX_BACKGROUND_BYTES) {
+      setBackgroundError('배경 사진은 5MB 이하의 PNG, JPEG, WebP만 올릴 수 있어요.');
+      return;
+    }
+    setBackgroundError(undefined);
+    setIsUploadingBackground(true);
+    try {
+      const imageKey = await uploadTemplateBackground(file);
+      onChangeLayout({ ...layout, backgroundImageKey: imageKey, backgroundImageUrl: URL.createObjectURL(file) });
+    } catch (error) {
+      setBackgroundError(errorMessage(error));
+    } finally {
+      setIsUploadingBackground(false);
+    }
+  };
   const texts = VIEW_TEXTS[view];
 
   const sectionPicker = (
@@ -404,11 +435,36 @@ export default function TemplateSettingsPanel({
           <div className={styles.section}>
             <h3 className={styles.heading}>배경 설정</h3>
             <Row label="사진 업로드">
-              {/* 파일 저장소(S3) 연결이 필요해 아직 막아 둔다 (docs/backlog.md) */}
-              <button type="button" className={styles.iconButton} aria-label="배경 사진 업로드" disabled title="배경 사진은 준비 중이에요">
-                <Icon src={uploadIcon} size={SMALL_ICON_SIZE} />
+              <button
+                type="button"
+                className={styles.iconButton}
+                aria-label="배경 사진 업로드"
+                disabled={isUploadingBackground}
+                onClick={() => backgroundInputRef.current?.click()}
+              >
+                {isUploadingBackground ? <Spinner size={SMALL_ICON_SIZE} /> : <Icon src={uploadIcon} size={SMALL_ICON_SIZE} />}
               </button>
+              <input
+                ref={backgroundInputRef}
+                type="file"
+                accept={BACKGROUND_TYPES.join(',')}
+                hidden
+                onChange={(event) => void uploadBackground(event)}
+              />
             </Row>
+            {layout.backgroundImageUrl && (
+              <div className={styles.backgroundPreview}>
+                <img src={layout.backgroundImageUrl} alt="배경 사진 미리보기" className={styles.backgroundImage} />
+                <button
+                  type="button"
+                  className={styles.textButton}
+                  onClick={() => onChangeLayout({ ...layout, backgroundImageKey: undefined, backgroundImageUrl: undefined })}
+                >
+                  배경 사진 빼기
+                </button>
+              </div>
+            )}
+            {backgroundError && <p className={styles.error}>{backgroundError}</p>}
           </div>
           <div className={styles.section}>
             <h3 className={styles.heading}>머릿글/바닥글</h3>

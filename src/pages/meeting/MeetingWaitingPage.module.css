@@ -376,3 +376,52 @@
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
+
+/* REQ-067 사전 자료 줄 */
+.materialItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+}
+
+.materialItem:hover {
+  background: var(--interactive-hover);
+}
+
+.materialLink {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+  color: var(--text-primary);
+}
+
+.materialName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.materialMeta {
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.materialDelete {
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.materialUploading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}

@@ -138,6 +138,10 @@ export default function TemplatePreview({
           style={{
             zoom: zoom / 100,
             padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
+            // REQ-157 배경 사진은 종이 전체를 덮는다
+            ...(layout.backgroundImageUrl
+              ? { backgroundImage: `url("${layout.backgroundImageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : {}),
           }}
         >
           {layout.header.enabled && layout.header.text && <p className={styles.edge}>{layout.header.text}</p>}

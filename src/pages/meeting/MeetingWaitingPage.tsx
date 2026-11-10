@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
@@ -20,7 +20,6 @@ import locationIcon from '../../assets/icons/location.svg';
 import playIcon from '../../assets/icons/play.svg';
 import scheduleIcon from '../../assets/icons/schedule.svg';
 import separatorIcon from '../../assets/icons/breadcrumb-sep.svg';
-import uploadIcon from '../../assets/icons/upload-file.svg';
 import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -33,6 +32,7 @@ import { formatMeetingSchedule } from '../../utils/meetingFormat';
 import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
 import AgendaEditor from './AgendaEditor';
 import ConsentModal from './ConsentModal';
+import MeetingMaterials from './MeetingMaterials';
 import MicPermissionDialog from './MicPermissionDialog';
 import StartingModal from './StartingModal';
 import TemplateDetailModal from './TemplateDetailModal';
@@ -42,10 +42,7 @@ import styles from './MeetingWaitingPage.module.css';
 const SEPARATOR_ICON_SIZE = 16;
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
-const MATERIAL_ICON_SIZE = 24;
 const START_FAILED_MESSAGE = '회의를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.';
-// REQ-067 50MB 이하 파일만 (MSG-067)
-const MAX_MATERIAL_BYTES = 50 * 1024 * 1024;
 const NEW_TEMPLATE_PENDING_MESSAGE = '새 양식 만들기는 설정의 회의록 양식 관리 화면이 나오면 연결돼요.';
 
 type TemplateModalState = { view: 'gallery' } | { view: 'detail'; index: number };
@@ -96,7 +93,6 @@ export default function MeetingWaitingPage() {
   // REQ-078 마이크 권한 안내 창 (MSG-065, MSG-066)
   const [micDialog, setMicDialog] = useState<'request' | 'denied' | null>(null);
   const [isCheckingMic, setIsCheckingMic] = useState(false);
-  const [materialError, setMaterialError] = useState<string>();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -104,7 +100,6 @@ export default function MeetingWaitingPage() {
   const attendeeAnchorRef = useRef<HTMLButtonElement>(null);
   const templateAnchorRef = useRef<HTMLButtonElement>(null);
   const writerAnchorRef = useRef<HTMLButtonElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -190,17 +185,6 @@ export default function MeetingWaitingPage() {
         template.templateId === templateId ? { ...template, isFavorite: !template.isFavorite } : template,
       ),
     );
-  };
-
-  const addMaterials = (event: ChangeEvent<HTMLInputElement>) => {
-    // TODO(API 연동): 사전 자료 업로드 (REQ-067, S3)
-    const files = Array.from(event.target.files ?? []);
-    const tooLarge = files.find((file) => file.size > MAX_MATERIAL_BYTES);
-    // MSG-067
-    setMaterialError(tooLarge ? `'${tooLarge.name}'을 올리지 못했어요. 50MB 이하 파일만 올릴 수 있어요.` : undefined);
-    const names = files.filter((file) => file.size <= MAX_MATERIAL_BYTES).map((file) => file.name);
-    updateLocal({ materials: [...meeting.materials, ...names] });
-    event.target.value = '';
   };
 
   /** REQ-077 동의하면 마이크 권한을 확인한다. 처음이면 먼저 안내하고(MSG-065), 꺼져 있으면 켜는 방법을 알려 준다(MSG-066) */
@@ -462,24 +446,7 @@ export default function MeetingWaitingPage() {
               <h2 className={styles.sideTitle}>사전 자료</h2>
               <p className={styles.sectionCaption}>회의 전에 필요한 자료를 공유해요</p>
             </div>
-            {meeting.materials.length > 0 && (
-              <ul className={styles.materialList}>
-                {meeting.materials.map((name, index) => (
-                  <li key={`${name}-${index}`}>{name}</li>
-                ))}
-              </ul>
-            )}
-            <button type="button" className={styles.addMaterial} onClick={() => fileInputRef.current?.click()}>
-              <Icon src={uploadIcon} size={MATERIAL_ICON_SIZE} className={styles.mutedIcon} />
-              <span className={styles.addMaterialLabel}>자료 추가하기</span>
-              <span className={styles.settingCaption}>눌러서 파일을 올려요</span>
-            </button>
-            <input ref={fileInputRef} type="file" multiple hidden onChange={addMaterials} />
-            {materialError && (
-              <p className={styles.materialError} role="alert">
-                {materialError}
-              </p>
-            )}
+            <MeetingMaterials meetingId={meeting.meetingId} attendeeIds={meeting.attendees.map(({ userId }) => userId)} />
           </section>
           </div>
 
