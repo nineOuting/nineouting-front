@@ -25,9 +25,12 @@ export function signup(email: string, password: string, name: string) {
   return request<{ userId: number }>('POST', '/api/auth/signup', { email, password, name });
 }
 
-/** REQ-005~007 로그인. refresh 토큰은 HttpOnly 쿠키로 따로 온다 */
-export async function login(email: string, password: string) {
-  const { accessToken } = await request<TokenResponse>('POST', '/api/auth/login', { email, password });
+/**
+ * REQ-005~007 로그인. refresh 토큰은 HttpOnly 쿠키로 따로 온다.
+ * REQ-184 로그인 상태 유지: 켜면 14일, 끄면 1시간 (브라우저를 닫아도 그 시간 안이면 유지, 쓰는 동안 연장)
+ */
+export async function login(email: string, password: string, keepLoggedIn: boolean) {
+  const { accessToken } = await request<TokenResponse>('POST', '/api/auth/login', { email, password, keepLoggedIn });
   setAccessToken(accessToken);
 }
 
@@ -48,12 +51,31 @@ export function refresh() {
 
 setTokenRefresher(refresh);
 
-/** 로그아웃. refresh 쿠키를 지우고 메모리의 access 토큰도 버린다 */
+// 같은 브라우저의 다른 탭에 로그아웃을 알린다. 탭마다 access 토큰을 메모리에 따로 들고 있어서,
+// 알리지 않으면 다른 탭은 그 토큰이 만료될 때(최대 30분)까지 계속 쓸 수 있다
+const AUTH_CHANNEL = 'nepnep-auth';
+const LOGGED_OUT = 'logged-out';
+// 로그인하지 않아도 보는 화면에서는 다시 보낼 곳이 없다
+const PUBLIC_PATHS = ['/login', '/signup', '/password'];
+const authChannel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(AUTH_CHANNEL);
+
+authChannel?.addEventListener('message', (event: MessageEvent) => {
+  if (event.data !== LOGGED_OUT) {
+    return;
+  }
+  setAccessToken(null);
+  if (!PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) {
+    window.location.replace('/login');
+  }
+});
+
+/** 로그아웃. refresh 쿠키를 지우고 메모리의 access 토큰도 버리고, 다른 탭도 로그아웃시킨다 */
 export async function logout() {
   try {
     await request('POST', '/api/auth/logout');
   } finally {
     setAccessToken(null);
+    authChannel?.postMessage(LOGGED_OUT);
   }
 }
 
