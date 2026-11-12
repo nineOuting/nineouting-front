@@ -116,6 +116,11 @@ export default function MinutesEditorPage() {
   const [minutes, setMinutes] = useState<MinutesDetail | null>(null);
   const [sections, setSections] = useState<MinutesSection[]>([]);
   const [isDirty, setIsDirty] = useState(false);
+  // 초안을 기다리는 동안 저장하지 않은 수정이 있는지 (기다리는 타이머 안에서 읽는다)
+  const isDirtyRef = useRef(isDirty);
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
   const [meeting, setMeeting] = useState<MeetingDetailResponse | null>(null);
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   const [myId, setMyId] = useState<number>();
@@ -188,7 +193,8 @@ export default function MinutesEditorPage() {
   useEffect(() => load(), [load]);
 
   // REQ-101 AI 초안이 만들어지는 동안 다시 받아, 서버가 채운 칸을 화면에 넣는다.
-  // 서버는 비어 있던 칸만 채우므로 화면에서도 비어 있는 칸만 바꾸고, 그사이 쓴 글은 그대로 둔다
+  // 저장하지 않은 수정이 없으면 서버 칸 그대로 (REQ-140 양식을 바꾼 뒤의 다시 배치는 서버가 모든 칸을 바꾼다).
+  // 수정이 있으면 서버가 비어 있던 칸만 채우므로 화면에서도 비어 있는 칸만 바꾸고, 그사이 쓴 글은 그대로 둔다
   const isDrafting = DRAFTING_STATUSES.includes(minutes?.draftStatus ?? null);
   useEffect(() => {
     if (!isDrafting) {
@@ -207,14 +213,18 @@ export default function MinutesEditorPage() {
             return;
           }
           window.clearInterval(timerId);
-          // 다음 저장이 거절되지 않게 version은 서버 값으로 맞춘다
-          setMinutes(latest);
-          const filled = new Map(latest.sections.map((section) => [section.sectionId, section.content]));
-          setSections((prev) =>
-            prev.map((section) =>
-              section.content.trim() ? section : { ...section, content: filled.get(section.sectionId) ?? section.content },
-            ),
-          );
+          if (!isDirtyRef.current) {
+            apply(latest);
+          } else {
+            // 다음 저장이 거절되지 않게 version은 서버 값으로 맞춘다
+            setMinutes(latest);
+            const filled = new Map(latest.sections.map((section) => [section.sectionId, section.content]));
+            setSections((prev) =>
+              prev.map((section) =>
+                section.content.trim() ? section : { ...section, content: filled.get(section.sectionId) ?? section.content },
+              ),
+            );
+          }
           if (latest.draftStatus === 'SUCCEEDED' && latest.sections.some(({ content }) => content.trim())) {
             setToast({ text: DRAFT_FILLED_MESSAGE, variant: 'info' });
           }
@@ -222,7 +232,7 @@ export default function MinutesEditorPage() {
         .catch(() => undefined);
     }, DRAFT_POLL_MS);
     return () => window.clearInterval(timerId);
-  }, [id, isDrafting]);
+  }, [id, isDrafting, apply]);
 
   useEffect(() => {
     let isCurrent = true;
