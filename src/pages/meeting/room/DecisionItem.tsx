@@ -3,8 +3,10 @@ import dotDecided from '../../../assets/dot-decided.svg';
 import dotNotDiscussed from '../../../assets/dot-not-discussed.svg';
 import dotUndecided from '../../../assets/dot-undecided.svg';
 import editIcon from '../../../assets/icons/create.svg';
+import type { DecisionStatusEdit } from '../../../api/meeting';
 import Icon from '../../../components/Icon';
 import type { DecisionPoint, DecisionStatus } from '../../../types/meetingRoom';
+import DecisionStatusButtons from './DecisionStatusButtons';
 import room from './room.module.css';
 import styles from './DecisionItem.module.css';
 
@@ -27,13 +29,15 @@ interface DecisionItemProps {
   canEdit: boolean;
   onSelect: () => void;
   onSave: (summary: string) => void;
+  /** 넘기면 회의록 작성자가 상태를 정한다 (결정, 미결, AI 판정으로) */
+  onChangeStatus?: (status: DecisionStatusEdit) => void;
 }
 
 /**
  * REQ-124~126 결정할 사항. 누르면 오른쪽에 결정 근거를 보여 주고,
  * 회의록 작성자는 마우스를 올리면 나오는 연필 아이콘으로 결정 내용을 바로 고친다.
  */
-export default function DecisionItem({ decision, isSelected, canEdit, onSelect, onSave }: DecisionItemProps) {
+export default function DecisionItem({ decision, isSelected, canEdit, onSelect, onSave, onChangeStatus }: DecisionItemProps) {
   const [draft, setDraft] = useState<string | null>(null);
   const [error, setError] = useState<string>();
   const isEditing = draft !== null;
@@ -68,7 +72,9 @@ export default function DecisionItem({ decision, isSelected, canEdit, onSelect, 
           <span className={styles.title}>{decision.title}</span>
         </span>
         {decision.summary && !isEditing && <span className={styles.summary}>{decision.summary}</span>}
+        {decision.needsCheck && !isEditing && <span className={styles.check}>확인 필요</span>}
       </button>
+      {canEdit && onChangeStatus && !isEditing && <DecisionStatusButtons decision={decision} onChange={onChangeStatus} />}
       {isEditing && (
         <div className={styles.editor}>
           <input
@@ -86,7 +92,7 @@ export default function DecisionItem({ decision, isSelected, canEdit, onSelect, 
           {error && <p className={room.fieldError}>{error}</p>}
         </div>
       )}
-      {canEdit && decision.summary && !isEditing && (
+      {canEdit && (decision.summary || decision.statusEdited) && !isEditing && (
         <button
           type="button"
           className={`${room.iconButton} ${styles.edit}`}

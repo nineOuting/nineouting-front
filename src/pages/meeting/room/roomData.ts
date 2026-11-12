@@ -48,6 +48,7 @@ export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
       evidenceSeqs: [],
     })),
     summary: [],
+    summaryItems: [],
     todos: [],
     opinions: [],
     openIssues: [],
@@ -56,11 +57,14 @@ export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
 
 /** REQ-097 보드의 할 일을 화면 모양으로 */
 export function toRoomTodos(todos: BoardTodo[] | undefined): RoomTodo[] {
-  return (todos ?? []).map(({ id, task, assigneeName, dueText }) => ({
+  return (todos ?? []).map(({ id, task, assigneeName, dueText, assigneeStatus, assigneeUserId, evidenceSeqs }) => ({
     id,
     task,
     assignee: assigneeName ?? undefined,
     due: dueText ?? undefined,
+    assigneeStatus: assigneeStatus ?? null,
+    assigneeUserId,
+    evidenceSeqs: evidenceSeqs ?? [],
   }));
 }
 
@@ -91,10 +95,13 @@ export function applyBoard(agendas: RoomAgenda[], board: AgendaBoard): RoomAgend
           status,
           // 논의 전의 문구("아직 논의되지 않았어요")는 보여 주지 않는다
           summary: status === 'notDiscussed' ? undefined : point.decisionText,
-          evidenceSeqs: point.evidenceSeqs,
+          evidenceSeqs: point.evidenceSeqs ?? [],
+          statusEdited: point.statusEdited ?? false,
+          needsCheck: point.needsCheck,
         };
       }),
       summary: (boardAgenda.summary ?? []).map(({ text }) => text),
+      summaryItems: (boardAgenda.summary ?? []).map(({ id, text, evidenceSeqs }) => ({ id, text, evidenceSeqs: evidenceSeqs ?? [] })),
       todos: toRoomTodos(boardAgenda.todos),
       opinions: opinions.filter(({ kind }) => !OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
       openIssues: opinions.filter(({ kind }) => OPEN_ISSUE_KINDS.has(kind)).map(({ text }) => text),
@@ -109,6 +116,18 @@ export function snapshotAgendas(agendas: RoomAgenda[], snapshot: BoardEndSnapsho
     agendas.filter(({ id }) => ids.has(id)),
     { version: 0, currentAgendaId: null, agendas: snapshot.agendas, offTopic: null },
   );
+}
+
+/**
+ * REQ-097 오늘 회의 요약 화면: 요약에 든 안건을 지금 보드 값으로 보여 준다. ai-service의 요약은 끝내기를 누른 때의
+ * 복사본이라 그 뒤 고친 것(결정 내용, 상태, 요약 문장, 할 일)이 없다. 보드는 고친 것을 반영해 계속 온다.
+ * 회의가 끝난 것으로 보고 정리하므로 논의 중은 미결로 보인다 (ai-service도 같은 규칙)
+ */
+export function summaryAgendas(agendas: RoomAgenda[], snapshot: BoardEndSnapshot): RoomAgenda[] {
+  const ids = new Set(snapshot.agendas.map(({ agendaId }) => String(agendaId)));
+  return agendas
+    .filter(({ id }) => ids.has(id))
+    .map((agenda) => (agenda.status === 'discussing' ? { ...agenda, status: 'undecided' as const } : agenda));
 }
 
 /** 2026-10-23T14:00:00 (한국 시간, 시간대 없음) → 브라우저 시각 */

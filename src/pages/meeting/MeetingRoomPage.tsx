@@ -10,6 +10,7 @@ import {
   carryOverAgendas,
   correctLineAgenda,
   dismissOffTopic,
+  editAgendaItem,
   editDecision,
   editTranscript,
   getAgendaBoard,
@@ -18,6 +19,9 @@ import {
   listTranscripts,
   pauseMeeting,
   requestMeetingEnd,
+  setAgendaDecisionStatus,
+  setDecisionStatus,
+  type DecisionStatusEdit,
   resumeMeeting,
   type AgendaBoard,
   type BoardEndSnapshot,
@@ -42,15 +46,17 @@ import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
 import { SttStream } from '../../meeting/SttStream';
 import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
-import type { RoomAgenda, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
+import type { DecisionPoint, RoomAgenda, RoomSummaryItem, RoomTodo, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
 import AddAgendaModal from './room/AddAgendaModal';
 import AgendaStatusCard from './room/AgendaStatusCard';
 import EndMeetingModal, { type EndStep } from './room/EndMeetingModal';
+import type { TodoChange } from './room/TodoList';
 import EvidencePanel from './room/EvidencePanel';
 import LiveSummaryCard from './room/LiveSummaryCard';
 import { AgendaSuggestion, OffTopicNotice } from './room/RoomNotices';
 import {
   applyBoard,
+  summaryAgendas,
   elapsedSecondsOf,
   formatElapsed,
   mergeTranscript,
@@ -103,6 +109,8 @@ export default function MeetingRoomPage() {
   const [todaySummary, setTodaySummary] = useState<BoardEndSnapshot | null>(null);
   const [carriedIds, setCarriedIds] = useState<string[]>([]);
   const [isEndBusy, setIsEndBusy] = useState(false);
+  // REQ-097 작성자가 아닌 참석자가 오늘 회의 요약 창을 닫았는지 (요약이 다시 오면 다시 연다)
+  const [isViewerSummaryClosed, setIsViewerSummaryClosed] = useState(false);
   // REQ-089 줄마다 안건 (seq → 안건 id). 작성자가 고친 줄은 자동 분류로 덮지 않는다
   const [lineAgendas, setLineAgendas] = useState<Record<number, string | null>>({});
   const correctedSeqsRef = useRef(new Set<number>());
@@ -195,6 +203,9 @@ export default function MeetingRoomPage() {
     setIsOffTopicOpen(offTopic?.stage === 'LONG' && !isClosed);
     setLeftover(board.leftover ?? null);
     setTodaySummary(board.todaySummary ?? null);
+    if (!board.leftover && !board.todaySummary) {
+      setIsViewerSummaryClosed(false);
+    }
   }, []);
 
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
@@ -381,6 +392,9 @@ export default function MeetingRoomPage() {
   // REQ-093·096 끝내기 요청 뒤 남은 안건 목록이 오면: 비었으면 바로 오늘 회의 요약, 아니면 목록
   const shownEndStep: EndStep | null =
     endStep === 'waiting' && leftover ? (leftover.agendas.length === 0 ? 'summary' : 'leftover') : endStep;
+  // REQ-097 다른 참석자도 작성자가 끝내기를 누르면 같은 요약을 본다 (읽기만)
+  const viewerEndStep: EndStep | null =
+    !isWriter && isLive && (leftover || todaySummary) ? (todaySummary ? 'summary' : 'leftover') : null;
   const currentAgenda =
     agendas.find(({ id }) => id === currentAgendaId) ?? agendas.find(({ status }) => status === 'discussing');
   const selectedDecision = agendas
@@ -418,6 +432,100 @@ export default function MeetingRoomPage() {
     } catch (error) {
       showError(error);
       replaceDecision(decision);
+    }
+  };
+
+  /** 안건의 결정할 사항을 바꾼다 (낙관적 반영과 되돌리기에 쓴다) */
+  const updateDecisions = (agendaId: string, update: (point: DecisionPoint) => DecisionPoint) =>
+    setAgendas((prev) =>
+      prev.map((agenda) => (agenda.id === agendaId ? { ...agenda, decisionPoints: agenda.decisionPoints.map(update) } : agenda)),
+    );
+
+  /** 정한 상태를 바로 화면에 보인다. AI 판정으로 되돌리면 상태는 다음 보드가 정한다 */
+  const editedPoint = (point: DecisionPoint, status: DecisionStatusEdit): DecisionPoint =>
+    status === 'AUTO'
+      ? { ...point, statusEdited: false }
+      : { ...point, status: status === 'DECIDED' ? 'decided' : 'undecided', statusEdited: true };
+
+  /** 결정할 사항 상태 정하기. 사용자가 정하면 AI가 전사로 바꾸지 않는다 (ai-service status-edits) */
+  const changeDecisionStatus = async (agendaId: string, decisionId: string, status: DecisionStatusEdit) => {
+    const before = agendas.find(({ id }) => id === agendaId)?.decisionPoints.find(({ id }) => id === decisionId);
+    if (!before) {
+      return;
+    }
+    updateDecisions(agendaId, (point) => (point.id === decisionId ? editedPoint(point, status) : point));
+    try {
+      await setDecisionStatus(meetingIdNumber, Number(agendaId), Number(decisionId), status);
+    } catch (error) {
+      showError(error);
+      updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
+    }
+  };
+
+  /** 안건 전체를 결정으로, 미결로, AI 판정으로 */
+  const changeAgendaStatus = async (agendaId: string, status: DecisionStatusEdit) => {
+    const before = agendas.find(({ id }) => id === agendaId)?.decisionPoints;
+    if (!before) {
+      return;
+    }
+    updateDecisions(agendaId, (point) => editedPoint(point, status));
+    try {
+      await setAgendaDecisionStatus(meetingIdNumber, Number(agendaId), status);
+    } catch (error) {
+      showError(error);
+      setAgendas((prev) => prev.map((agenda) => (agenda.id === agendaId ? { ...agenda, decisionPoints: before } : agenda)));
+    }
+  };
+
+  /** REQ-097 요약 문장 고치기. 고친 보드가 회의방으로 다시 온다 */
+  const saveSummaryItem = async (agendaId: string, item: RoomSummaryItem, text: string) => {
+    const before = agendas.find(({ id }) => id === agendaId);
+    if (!before) {
+      return;
+    }
+    const replace = (items: RoomSummaryItem[]) =>
+      setAgendas((prev) =>
+        prev.map((agenda) => (agenda.id === agendaId ? { ...agenda, summaryItems: items, summary: items.map((one) => one.text) } : agenda)),
+      );
+    replace((before.summaryItems ?? []).map((one) => (one.id === item.id ? { ...one, text } : one)));
+    try {
+      await editAgendaItem(meetingIdNumber, 'summary', item.id, { agendaId: Number(agendaId), text, evidenceSeqs: item.evidenceSeqs });
+    } catch (error) {
+      showError(error);
+      replace(before.summaryItems ?? []);
+    }
+  };
+
+  /** REQ-097 할 일, 담당자, 기한 고치기. 담당자 이름을 바꾸면 명단과 다시 맞추게 사용자 번호는 비운다 */
+  const saveTodo = async (agendaId: string, todo: RoomTodo, change: TodoChange) => {
+    const before = agendas.find(({ id }) => id === agendaId);
+    if (!before) {
+      return;
+    }
+    const sameAssignee = (todo.assignee ?? '') === change.assignee;
+    const next: RoomTodo = {
+      ...todo,
+      task: change.task,
+      assignee: change.assignee || undefined,
+      due: change.due || undefined,
+      assigneeStatus: change.assignee ? (sameAssignee ? todo.assigneeStatus : null) : 'UNASSIGNED',
+      assigneeUserId: sameAssignee ? todo.assigneeUserId : null,
+    };
+    const replace = (todos: RoomTodo[]) =>
+      setAgendas((prev) => prev.map((agenda) => (agenda.id === agendaId ? { ...agenda, todos } : agenda)));
+    replace(before.todos.map((one) => (one.id === todo.id ? next : one)));
+    try {
+      await editAgendaItem(meetingIdNumber, 'todos', todo.id, {
+        agendaId: Number(agendaId),
+        task: change.task,
+        assigneeName: change.assignee || null,
+        assigneeUserId: next.assigneeUserId ?? null,
+        dueText: change.due || null,
+        evidenceSeqs: todo.evidenceSeqs ?? [],
+      });
+    } catch (error) {
+      showError(error);
+      replace(before.todos);
     }
   };
 
@@ -571,6 +679,11 @@ export default function MeetingRoomPage() {
               {isPaused ? '다시 시작' : '일시정지'}
             </button>
           )}
+          {viewerEndStep && isViewerSummaryClosed && (
+            <button type="button" className={styles.pauseButton} onClick={() => setIsViewerSummaryClosed(false)}>
+              오늘 회의 요약 보기
+            </button>
+          )}
           {/* REQ-098 회의록 작성자만 마무리한다. 회의 끝내기 단계(REQ-093~097)는 디자인이 없어 건너뛰고 바로 회의록으로 간다 */}
           {isWriter && isLive && (
             <button type="button" className={styles.endButton} disabled={isEnding || endStep !== null} onClick={() => void startEnd()}>
@@ -598,6 +711,8 @@ export default function MeetingRoomPage() {
             }}
             onSelectDecision={setSelectedDecisionId}
             onSaveDecision={(decisionId, decisionSummary) => void saveDecision(decisionId, decisionSummary)}
+            onChangeDecisionStatus={(agendaId, decisionId, status) => void changeDecisionStatus(agendaId, decisionId, status)}
+            onChangeAgendaStatus={(agendaId, status) => void changeAgendaStatus(agendaId, status)}
             onAddAgenda={() => setAddAgendaTitle('')}
             onRenameAgenda={(agendaId) =>
               setRenaming({ agendaId, title: agendas.find(({ id }) => id === agendaId)?.title ?? '' })
@@ -729,12 +844,31 @@ export default function MeetingRoomPage() {
           key={shownEndStep}
           step={shownEndStep}
           leftover={leftover ? snapshotAgendas(agendas, leftover) : []}
-          summary={todaySummary ? snapshotAgendas(agendas, todaySummary) : null}
+          summary={todaySummary ? summaryAgendas(agendas, todaySummary) : null}
           carriedIds={carriedIds}
           isBusy={isEndBusy || isEnding}
           onContinue={() => void continueMeeting()}
           onCarryOver={(agendaIds) => void carryOver(agendaIds)}
           onFinish={() => void endMeeting()}
+          onChangeDecisionStatus={(agendaId, decisionId, status) => void changeDecisionStatus(agendaId, decisionId, status)}
+          onSaveDecision={(decisionId, text) => void saveDecision(decisionId, text)}
+          onSaveSummary={(agendaId, item, text) => void saveSummaryItem(agendaId, item, text)}
+          onSaveTodo={(agendaId, todo, change) => void saveTodo(agendaId, todo, change)}
+        />
+      )}
+      {viewerEndStep && !isViewerSummaryClosed && (
+        <EndMeetingModal
+          key={`viewer-${viewerEndStep}`}
+          isViewer
+          step={viewerEndStep}
+          leftover={[]}
+          summary={todaySummary ? summaryAgendas(agendas, todaySummary) : null}
+          carriedIds={[]}
+          isBusy={false}
+          onContinue={() => undefined}
+          onCarryOver={() => undefined}
+          onFinish={() => undefined}
+          onClose={() => setIsViewerSummaryClosed(true)}
         />
       )}
     </div>

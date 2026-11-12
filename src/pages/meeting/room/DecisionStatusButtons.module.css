@@ -1,0 +1,48 @@
+/* 결정할 사항 상태 정하기 (임시 디자인: 작은 테두리 버튼) */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.button {
+  padding: 2px 10px;
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.button:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.active,
+.active:hover {
+  border-color: var(--primary-default);
+  background: var(--primary-subtle);
+  color: var(--primary-default);
+  font-weight: var(--font-weight-semibold);
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--blue-10);
+  font-size: var(--font-size-caption);
+  color: var(--primary-default);
+}
+
+.auto {
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+.hint {
+  font-size: var(--font-size-caption);
+  color: var(--text-tertiary, var(--text-secondary));
+}

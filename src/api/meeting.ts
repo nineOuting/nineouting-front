@@ -121,6 +121,8 @@ export interface BoardDecisionPoint {
   evidenceSeqs: number[];
   edited: boolean;
   needsCheck: boolean;
+  /** 사용자가 상태를 직접 정함 (agenda-status-contract.md v0.3 7.5). 예전 ai-service는 보내지 않는다 */
+  statusEdited?: boolean;
 }
 
 export interface BoardOpinion {
@@ -142,7 +144,7 @@ export interface BoardTodo {
   id: string;
   task: string;
   assigneeName: string | null;
-  assigneeStatus: 'MATCHED' | 'UNASSIGNED' | string;
+  assigneeStatus: 'MATCHED' | 'UNASSIGNED' | 'NOT_IN_ROSTER' | 'AMBIGUOUS' | null;
   assigneeUserId: number | null;
   dueText: string | null;
   evidenceSeqs: number[];
@@ -483,6 +485,37 @@ export function editDecision(meetingId: number, agendaId: number, decisionPointI
   evidenceSeqs: number[]) {
   return request('PUT', `/api/meetings/${meetingId}/agendas/${agendaId}/decision-points/${decisionPointId}/decision`,
     { decisionText, evidenceSeqs });
+}
+
+/** 사용자가 정하는 결정할 사항 상태. AUTO는 사용자가 정한 상태를 풀고 AI 판정으로 돌아간다 */
+export type DecisionStatusEdit = 'DECIDED' | 'UNDECIDED' | 'AUTO';
+
+/** 결정할 사항 상태 정하기 (회의록 작성자, 진행 중). 정한 상태는 AI가 전사로 바꾸지 않는다 */
+export function setDecisionStatus(meetingId: number, agendaId: number, decisionPointId: number, status: DecisionStatusEdit) {
+  return request('PUT', `/api/meetings/${meetingId}/agendas/${agendaId}/decision-points/${decisionPointId}/status`, { status });
+}
+
+/** 안건 전체를 결정으로, 미결로 (그 안건의 결정할 사항마다 정한다) */
+export function setAgendaDecisionStatus(meetingId: number, agendaId: number, status: DecisionStatusEdit) {
+  return request('PUT', `/api/meetings/${meetingId}/agendas/${agendaId}/decision-status`, { status });
+}
+
+/** REQ-085 요약 문장, REQ-097 할 일 고치기 (회의록 작성자, 진행 중). 근거는 보드에서 받은 그대로 */
+export function editAgendaItem(
+  meetingId: number,
+  target: 'summary' | 'todos',
+  itemId: string,
+  body: {
+    agendaId: number;
+    evidenceSeqs: number[];
+    text?: string;
+    task?: string;
+    assigneeName?: string | null;
+    assigneeUserId?: number | null;
+    dueText?: string | null;
+  },
+) {
+  return request('PUT', `/api/meetings/${meetingId}/agenda-board/${target}/${encodeURIComponent(itemId)}`, body);
 }
 
 /** REQ-093 [회의 끝내기] (회의록 작성자). 결론 나지 않은 안건 목록·오늘 회의 요약이 보드로 온다. 녹음은 마무리까지 이어진다 */

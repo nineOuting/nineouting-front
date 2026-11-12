@@ -102,3 +102,73 @@
   line-height: var(--line-height-caption);
   color: var(--info-default);
 }
+
+/* REQ-097 결정할 사항 (상태별 묶음, 임시 디자인) */
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.decision {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--spacing-2);
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.decisionTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.badge,
+.check {
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular, 400);
+}
+
+.badge {
+  background: var(--blue-10);
+  color: var(--primary-default);
+}
+
+.check {
+  background: var(--danger-subtle);
+  color: var(--danger-default);
+}
+
+.noEvidence {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* 고칠 수 있는 글 한 줄 */
+.line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lineInput {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-focus);
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+}
