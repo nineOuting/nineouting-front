@@ -1,5 +1,5 @@
 import { setAccessToken } from '../auth/tokenStore';
-import { request, setTokenRefresher } from './client';
+import { request, setSessionExpiredHandler, setTokenRefresher } from './client';
 
 interface TokenResponse {
   accessToken: string;
@@ -78,6 +78,26 @@ export async function logout() {
     authChannel?.postMessage(LOGGED_OUT);
   }
 }
+
+let isExpiring = false;
+
+/**
+ * 쓰던 중 로그인이 만료됐다 (refresh 쿠키도 만료되거나 다른 곳에서 로그아웃함).
+ * 안내문 대신 로그아웃시키고(다른 탭도) 로그인 화면으로 보낸다. 여러 요청이 동시에 실패해도 한 번만 한다
+ */
+setSessionExpiredHandler(() => {
+  if (isExpiring) {
+    return;
+  }
+  isExpiring = true;
+  void logout()
+    .catch(() => undefined)
+    .finally(() => {
+      if (!PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) {
+        window.location.replace('/login');
+      }
+    });
+});
 
 /** REQ-009 비밀번호 찾기 인증 번호 발송 */
 export function requestPasswordReset(email: string) {
