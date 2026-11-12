@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import transcriptIcon from '../../../assets/icons/transcript.svg';
 import Icon from '../../../components/Icon';
 import type { TranscriptLine } from '../../../types/meetingRoom';
@@ -9,6 +9,9 @@ const TITLE_ICON_SIZE = 24;
 const EMPTY_ICON_SIZE = 48;
 
 const NO_AGENDA = '';
+
+/** 맨 아래에서 이만큼(px) 안쪽이면 맨 아래를 보고 있는 것으로 본다 */
+const STICK_THRESHOLD = 40;
 
 interface TranscriptPanelProps {
   lines: TranscriptLine[];
@@ -33,6 +36,24 @@ export default function TranscriptPanel({
   const titleOf = (agendaId: string | null | undefined) =>
     agendaOptions.find(({ id }) => id === agendaId)?.title;
   const [editing, setEditing] = useState<{ seq: number; text: string } | null>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+  // 위로 올려 예전 줄을 읽는 중이면 자동으로 내리지 않는다
+  const stickToBottomRef = useRef(true);
+
+  const handleScroll = () => {
+    const el = listRef.current;
+    if (el) {
+      stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight <= STICK_THRESHOLD;
+    }
+  };
+
+  // 새 전사 줄이 오면 맨 아래로 내린다 (고치는 중에는 그대로 둔다)
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    if (el && stickToBottomRef.current && !editing) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [lines, editing]);
 
   const finishEditing = () => {
     if (editing && editing.text.trim()) {
@@ -70,7 +91,7 @@ export default function TranscriptPanel({
           <p className={room.emptyCaption}>발언이 시작되면 이곳에 전사됩니다.</p>
         </div>
       ) : (
-        <ol className={styles.lines} aria-live="polite">
+        <ol ref={listRef} className={styles.lines} aria-live="polite" onScroll={handleScroll}>
           {lines.map((line) => {
             const isEditing = editing?.seq === line.seq;
             const className = [styles.line, canEdit ? styles.editable : '', isEditing ? styles.lineActive : '']
