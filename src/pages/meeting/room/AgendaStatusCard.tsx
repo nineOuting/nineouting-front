@@ -4,6 +4,7 @@ import agendaIcon from '../../../assets/icons/agenda-status.svg';
 import createIcon from '../../../assets/icons/create-sm.svg';
 import deleteIcon from '../../../assets/icons/delete-sm.svg';
 import moreIcon from '../../../assets/icons/more-vert.svg';
+import type { DecisionStatusEdit } from '../../../api/meeting';
 import Icon from '../../../components/Icon';
 import type { RoomAgenda } from '../../../types/meetingRoom';
 import ActionMenu from '../../workspace/ActionMenu';
@@ -22,6 +23,10 @@ interface AgendaStatusCardProps {
   onSelectAgenda: (agendaId: string) => void;
   onSelectDecision: (decisionId: string) => void;
   onSaveDecision: (decisionId: string, summary: string) => void;
+  /** 결정할 사항 상태 정하기 (회의록 작성자) */
+  onChangeDecisionStatus: (agendaId: string, decisionId: string, status: DecisionStatusEdit) => void;
+  /** 안건 전체를 결정으로, 미결로 */
+  onChangeAgendaStatus: (agendaId: string, status: DecisionStatusEdit) => void;
   onAddAgenda: () => void;
   /** REQ-173 회의록 작성자의 안건 수정하기, 안건 삭제 */
   onRenameAgenda: (agendaId: string) => void;
@@ -37,6 +42,8 @@ export default function AgendaStatusCard({
   onSelectAgenda,
   onSelectDecision,
   onSaveDecision,
+  onChangeDecisionStatus,
+  onChangeAgendaStatus,
   onAddAgenda,
   onRenameAgenda,
   onDeleteAgenda,
@@ -100,6 +107,11 @@ export default function AgendaStatusCard({
                         className={styles.agendaMenu}
                         items={[
                           { label: '안건 수정하기', icon: createIcon, onSelect: () => onRenameAgenda(agenda.id) },
+                          { label: '이 안건 전체를 결정으로', icon: createIcon, onSelect: () => onChangeAgendaStatus(agenda.id, 'DECIDED') },
+                          { label: '이 안건 전체를 미결로', icon: createIcon, onSelect: () => onChangeAgendaStatus(agenda.id, 'UNDECIDED') },
+                          ...(agenda.decisionPoints.some(({ statusEdited }) => statusEdited)
+                            ? [{ label: '이 안건 AI 판정으로 되돌리기', icon: createIcon, onSelect: () => onChangeAgendaStatus(agenda.id, 'AUTO') }]
+                            : []),
                           ...(agendas.length > 1
                             ? [{ label: '안건 삭제', icon: deleteIcon, isDanger: true, onSelect: () => onDeleteAgenda(agenda.id) }]
                             : []),
@@ -134,6 +146,7 @@ export default function AgendaStatusCard({
                     canEdit={canEdit}
                     onSelect={() => onSelectDecision(decision.id)}
                     onSave={(summary) => onSaveDecision(decision.id, summary)}
+                    onChangeStatus={(status) => onChangeDecisionStatus(selectedAgenda.id, decision.id, status)}
                   />
                 ))}
               </ul>

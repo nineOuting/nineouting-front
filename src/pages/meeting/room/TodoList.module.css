@@ -42,3 +42,55 @@
   background: var(--grey-10);
   color: var(--grey-70);
 }
+
+/* 담당자가 참석자가 아니거나 동명이인: 확인이 필요해 빨간 계열로 */
+.assigneeWarning {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--font-size-caption);
+  background: var(--danger-subtle);
+  color: var(--danger-default);
+}
+
+.editRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.input {
+  flex: 1 1 160px;
+  min-width: 0;
+  padding: 4px 8px;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-focus);
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-size: var(--font-size-caption);
+  color: var(--text-primary);
+}
+
+.short {
+  flex: 0 1 110px;
+}
+
+.save,
+.cancel {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+}
+
+.save {
+  background: var(--primary-default);
+  color: #fff;
+}
+
+.cancel {
+  color: var(--text-secondary);
+}
+
+.cancel:hover {
+  background: var(--neutral-ghost-hover);
+}

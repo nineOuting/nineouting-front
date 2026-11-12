@@ -73,3 +73,13 @@
   line-height: var(--line-height-caption);
   color: var(--text-primary);
 }
+
+/* 확인 필요 (근거가 달라졌거나 결정 내용이 아직 없음) */
+.check {
+  align-self: flex-start;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--danger-subtle);
+  font-size: var(--font-size-caption);
+  color: var(--danger-default);
+}
