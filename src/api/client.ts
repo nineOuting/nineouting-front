@@ -41,10 +41,28 @@ export function errorMessage(error: unknown) {
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 let refreshAccessToken: (() => Promise<void>) | null = null;
+let expireSession: (() => void) | null = null;
 
 /** access 토큰이 만료(401)되면 refresh 쿠키로 다시 받고 한 번 더 부른다. auth.ts가 등록한다 (서로 import하지 않도록) */
 export function setTokenRefresher(refresher: () => Promise<void>) {
   refreshAccessToken = refresher;
+}
+
+/** 다시 받기도 실패하면(로그인 만료) 부른다. auth.ts가 로그아웃시키고 로그인 화면으로 보낸다 */
+export function setSessionExpiredHandler(handler: () => void) {
+  expireSession = handler;
+}
+
+/** 쓰던 중 로그인이 만료됐다: 안내문을 띄우지 않고 로그아웃시켜 로그인 화면으로 보낸다 */
+async function refreshOrExpire() {
+  try {
+    await refreshAccessToken?.();
+  } catch (error) {
+    if (isApiError(error) && (error.status === 401 || error.status === 403)) {
+      expireSession?.();
+    }
+    throw error;
+  }
 }
 
 /** user-service 등 백엔드 API 호출. 응답 형식은 { success, data, message, code } (docs/coding-conventions.md 4장) */
@@ -57,7 +75,7 @@ export async function request<T = void>(method: Method, path: string, body?: unk
     if (!canRetry || !refreshAccessToken) {
       throw error;
     }
-    await refreshAccessToken();
+    await refreshOrExpire();
     return send<T>(method, path, body);
   }
 }
@@ -106,7 +124,7 @@ export async function downloadFile(path: string): Promise<{ blob: Blob; fileName
   try {
     response = await fetchFile();
     if (response.status === 401 && getAccessToken() && refreshAccessToken) {
-      await refreshAccessToken();
+      await refreshOrExpire();
       response = await fetchFile();
     }
   } catch {
