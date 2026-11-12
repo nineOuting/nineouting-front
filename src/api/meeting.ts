@@ -294,7 +294,11 @@ export interface MeetingMaterial {
   uploadedAt: string;
   /** 1시간 동안 쓸 수 있는 내려받기 주소 */
   downloadUrl: string;
+  /** REQ-187 챗봇 검색 상태. 챗봇이 꺼져 있으면 null */
+  searchStatus: MaterialSearchStatus | null;
 }
+
+export type MaterialSearchStatus = 'PREPARING' | 'READY' | 'UNREADABLE' | 'TOO_LARGE' | 'FAILED';
 
 /** REQ-067 사전 자료 목록 (다 올라간 것만) */
 export function listMaterials(meetingId: number) {

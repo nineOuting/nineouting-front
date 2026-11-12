@@ -430,3 +430,27 @@
   font-size: var(--font-size-caption);
   color: var(--text-secondary);
 }
+
+/* REQ-187 사전 자료의 챗봇 검색 상태 (임시 디자인) */
+.searchStatus {
+  flex-shrink: 0;
+  padding: 0 var(--spacing-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.searchStatus_muted {
+  background: var(--neutral-subtle);
+  color: var(--text-secondary);
+}
+
+.searchStatus_ok {
+  background: var(--success-subtle);
+  color: var(--success-default);
+}
+
+.searchStatus_warning {
+  background: var(--danger-subtle);
+  color: var(--danger-default);
+}

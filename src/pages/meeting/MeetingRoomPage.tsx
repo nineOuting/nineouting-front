@@ -49,6 +49,8 @@ import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
 import type { DecisionPoint, RoomAgenda, RoomSummaryItem, RoomTodo, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
 import AddAgendaModal from './room/AddAgendaModal';
 import AgendaStatusCard from './room/AgendaStatusCard';
+import ChatPanel from './room/ChatPanel';
+import chatStyles from './room/ChatPanel.module.css';
 import EndMeetingModal, { type EndStep } from './room/EndMeetingModal';
 import type { TodoChange } from './room/TodoList';
 import EvidencePanel from './room/EvidencePanel';
@@ -118,6 +120,8 @@ export default function MeetingRoomPage() {
   const [isAiAvailable, setIsAiAvailable] = useState(true);
   const [selectedAgendaId, setSelectedAgendaId] = useState('');
   const [selectedDecisionId, setSelectedDecisionId] = useState<string>();
+  // REQ-185 오른쪽 패널: 실시간 전사 / 챗봇 (임시 디자인)
+  const [sideTab, setSideTab] = useState<'transcript' | 'chat'>('transcript');
   // 안건 추가 창. 새 안건 제안에서 열면 제안된 제목을 채운다
   const [addAgendaTitle, setAddAgendaTitle] = useState<string | null>(null);
   const [suggestion, setSuggestion] = useState<SuggestedAgenda | null>(demo === 'suggestion' ? ROOM_SUGGESTION : null);
@@ -721,7 +725,27 @@ export default function MeetingRoomPage() {
           />
         </div>
 
-        <aside id="room-side-panel" className={styles.sidePanel} aria-label={selectedDecision ? '결정 근거' : '실시간 전사'}>
+        <aside
+          id="room-side-panel"
+          className={styles.sidePanel}
+          aria-label={selectedDecision ? '결정 근거' : sideTab === 'chat' ? '챗봇' : '실시간 전사'}
+        >
+          {!selectedDecision && (
+            <div className={chatStyles.tabs} role="tablist">
+              {(['transcript', 'chat'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={sideTab === tab}
+                  className={`${chatStyles.tab} ${sideTab === tab ? chatStyles.tabActive : ''}`}
+                  onClick={() => setSideTab(tab)}
+                >
+                  {tab === 'chat' ? '챗봇' : '실시간 전사'}
+                </button>
+              ))}
+            </div>
+          )}
           {selectedDecision ? (
             <EvidencePanel
               decision={selectedDecision}
@@ -729,6 +753,8 @@ export default function MeetingRoomPage() {
               onClose={() => setSelectedDecisionId(undefined)}
               notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" />}
             />
+          ) : sideTab === 'chat' ? (
+            <ChatPanel meetingId={meetingIdNumber} canAsk={isLive} />
           ) : (
             <TranscriptPanel
               lines={transcript}

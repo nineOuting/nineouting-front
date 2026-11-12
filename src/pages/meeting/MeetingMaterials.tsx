@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { errorMessage } from '../../api/client';
-import { deleteMaterial, listMaterials, uploadMaterial, type MeetingMaterial } from '../../api/meeting';
+import {
+  deleteMaterial,
+  listMaterials,
+  uploadMaterial,
+  type MaterialSearchStatus,
+  type MeetingMaterial,
+} from '../../api/meeting';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
@@ -12,6 +18,16 @@ const ICON_SIZE = 16;
 const UPLOAD_ICON_SIZE = 24;
 // REQ-067 50MB 이하 파일만 (MSG-067). 서버도 다시 확인한다
 const MAX_MATERIAL_BYTES = 50 * 1024 * 1024;
+const SEARCH_STATUS_POLL_MS = 5000;
+
+/** REQ-187 챗봇 검색 상태 (MSG-078~080). 안 되는 것은 이유를 보여 준다 */
+const SEARCH_STATUS: Record<MaterialSearchStatus, { label: string; title?: string; tone: 'muted' | 'ok' | 'warning' }> = {
+  PREPARING: { label: '검색 준비 중', tone: 'muted' },
+  READY: { label: '챗봇 검색 가능', tone: 'ok' },
+  UNREADABLE: { label: '챗봇이 읽을 수 없는 파일', title: '챗봇이 읽을 수 없는 파일이에요. 파일은 그대로 볼 수 있어요.', tone: 'warning' },
+  TOO_LARGE: { label: '챗봇 검색에서 빠짐', title: '파일이 너무 커서 챗봇 검색에서 빠졌어요.', tone: 'warning' },
+  FAILED: { label: '검색 준비 실패', title: '챗봇 검색 준비에 실패했어요. 파일을 지우고 다시 올려 주세요.', tone: 'warning' },
+};
 
 function formatSize(bytes: number) {
   if (bytes < 1024 * 1024) {
@@ -47,6 +63,20 @@ export default function MeetingMaterials({ meetingId, canUpload }: MeetingMateri
       isCurrent = false;
     };
   }, [meetingId]);
+
+  // REQ-187 검색 준비 중인 자료가 있으면 상태가 정해질 때까지 가끔 다시 본다
+  const isPreparing = materials?.some(({ searchStatus }) => searchStatus === 'PREPARING') ?? false;
+  useEffect(() => {
+    if (!isPreparing) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      listMaterials(meetingId)
+        .then(setMaterials)
+        .catch(() => undefined);
+    }, SEARCH_STATUS_POLL_MS);
+    return () => window.clearInterval(timer);
+  }, [meetingId, isPreparing]);
 
   const upload = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
@@ -93,6 +123,14 @@ export default function MeetingMaterials({ meetingId, canUpload }: MeetingMateri
               <span className={styles.materialMeta}>
                 {formatSize(material.size)} · {material.uploadedBy.name ?? '알 수 없음'}
               </span>
+              {material.searchStatus && (
+                <span
+                  className={`${styles.searchStatus} ${styles[`searchStatus_${SEARCH_STATUS[material.searchStatus].tone}`]}`}
+                  title={SEARCH_STATUS[material.searchStatus].title}
+                >
+                  {SEARCH_STATUS[material.searchStatus].label}
+                </span>
+              )}
               <button
                 type="button"
                 className={styles.materialDelete}
