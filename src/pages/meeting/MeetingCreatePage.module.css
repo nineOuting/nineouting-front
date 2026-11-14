@@ -1,89 +1,80 @@
-/* 디자인 CreateMeetingPage: 가운데 560px 카드, 안쪽 24px, 묶음 사이 32px */
-.page {
-  display: flex;
-  justify-content: center;
-  padding: var(--spacing-8) var(--layout-page-margin);
+/* 디자인 Version02 CreateMeetingModal: 폴더 화면 위에 뜨는 560px 창, 안쪽 28px, 둥근 16px, 묶음 사이 24px */
+.modal {
+  width: min(var(--layout-modal-width-md, 560px), calc(100vw - 48px));
+  border-radius: 16px;
 }
 
-.card {
+.form {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-section);
-  width: var(--layout-modal-width-md);
-  padding: var(--padding-modal);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  gap: 24px;
+  min-height: 0;
+  padding: 28px;
 }
 
-.header {
+/* 칸이 많아 화면보다 길어지면 버튼 줄은 남기고 위쪽만 스크롤한다 */
+.scroll {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: var(--spacing-2);
-  margin-bottom: calc(var(--gap-content) - var(--gap-section));
+  gap: 24px;
+  min-height: 0;
+  margin: -4px;
+  padding: 4px;
+  overflow-y: auto;
 }
 
 .titleGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-title-subtitle);
+  gap: var(--spacing-1);
 }
 
 .title {
   font-size: var(--font-size-heading-md);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-heading-md);
+  letter-spacing: var(--letter-spacing-base);
   color: var(--text-primary);
 }
 
 .subtitle {
   font-size: var(--font-size-body-md);
   line-height: var(--line-height-body-md);
+  letter-spacing: var(--letter-spacing-base);
   color: var(--text-secondary);
 }
 
-.iconButton {
-  display: flex;
-  padding: var(--spacing-1);
+/* 디자인 LoadPreviousButton: 글자 버튼(보라), 높이 32px */
+.loadPrevious {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-inline);
+  height: 32px;
+  padding: 0 var(--button-md-padding-x);
   border-radius: var(--radius-sm);
-  color: var(--neutral-default);
-}
-
-.iconButton:hover {
-  background: var(--neutral-ghost-hover);
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-content);
-}
-
-.sectionTitle {
-  display: flex;
-  gap: var(--spacing-1);
-  font-size: var(--font-size-heading-sm);
+  font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-heading-sm);
-  color: var(--text-primary);
+  line-height: var(--line-height-caption);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--primary-default);
 }
 
-.required {
-  margin-left: var(--spacing-1);
-  color: var(--danger-default);
+.loadPrevious:hover {
+  background: var(--primary-ghost-hover);
 }
 
 .fields {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-content);
+  gap: 20px;
+  width: 100%;
 }
 
 .row {
   display: flex;
   align-items: flex-start;
-  gap: var(--spacing-4);
+  gap: 12px;
 }
 
 .row > * {
@@ -101,11 +92,26 @@
   font-size: var(--font-size-body-md);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-body-md);
+  letter-spacing: var(--letter-spacing-base);
   color: var(--text-primary);
 }
 
-/* TextField와 같은 칸 모양 (시간, 참석자, 작성자 선택) */
-.box {
+.helper {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-secondary);
+}
+
+.error {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
+}
+
+/* TextField와 같은 칸 모양 (폴더, 시간, 참석자 선택) */
+.box,
+.selectBox {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
@@ -117,27 +123,53 @@
   border-radius: var(--radius-md);
   font-size: var(--input-md-font-size);
   line-height: var(--line-height-body-md);
+  text-align: left;
 }
 
-.box:hover {
+.box:hover,
+.selectBox:hover {
   border-color: var(--border-strong);
 }
 
-.box:focus-within {
+.box:focus-visible,
+.selectBox:focus-within,
+.boxOpen,
+.boxOpen:hover {
   border-color: var(--border-focus);
 }
 
 .boxError,
-.boxError:focus-within {
+.boxError:hover,
+.boxError:focus-visible {
   border-color: var(--border-error);
 }
 
-.boxButton {
-  text-align: left;
+/* 폴더 선택: 브라우저 기본 화살표를 숨기고 디자인 아이콘을 쓴다 */
+.selectBox {
+  position: relative;
+}
+
+.select {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  appearance: none;
+}
+
+.selectBox .trailingIcon {
+  pointer-events: none;
 }
 
 .leadingIcon,
 .trailingIcon {
+  flex-shrink: 0;
   color: var(--neutral-default);
 }
 
@@ -153,45 +185,80 @@
   color: var(--text-primary);
 }
 
-.timeInput {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--text-primary);
-}
-
-.timeSeparator {
-  color: var(--text-secondary);
-}
-
-.error {
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
-  color: var(--danger-default);
-}
-
 .menuAnchor {
   position: relative;
 }
 
-.caption {
+/* 시간 목록: 칸 너비, 다섯 줄 정도 보이게 */
+.timeMenu {
+  top: calc(var(--line-height-body-md) + var(--gap-label-field) + var(--input-md-height) + 8px);
+  right: 0;
+  left: 0;
+  max-height: 208px;
+}
+
+.endMenu {
+  top: calc(var(--line-height-body-md) + var(--gap-label-field) + var(--input-md-height) + 4px);
+  left: 0;
+  width: 324px;
+}
+
+/* 디자인 DurationField: 작은 제목, 칩 사이 8px */
+.durationField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: -8px;
+}
+
+.durationLabel {
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-primary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 디자인 FilterChip: 높이 32px, 테두리, 고르면 옅은 파랑 */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  letter-spacing: var(--letter-spacing-base);
   color: var(--text-secondary);
 }
 
-.footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--gap-label-field);
+.chip:hover {
+  background: var(--interactive-hover);
 }
 
-/* REQ-169 프로젝트 폴더 선택 */
-.folderSelect {
-  color: var(--text-primary);
-  cursor: pointer;
+.chipSelected,
+.chipSelected:hover {
+  background: var(--secondary-default);
+  border-color: var(--interactive-selected-border);
+  color: var(--text-on-secondary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.folderMenu {
+  top: calc(var(--line-height-body-md) + var(--gap-label-field) + var(--input-md-height) + 4px);
+  right: 0;
+  left: 0;
 }

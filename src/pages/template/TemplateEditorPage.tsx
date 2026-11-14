@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import { createMinutesTemplate, listMinutesTemplates, updateMinutesTemplate } from '../../api/minutes';
-import Checkbox from '../../components/Checkbox';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import addIcon from '../../assets/icons/add-plain.svg';
+import checkIcon from '../../assets/icons/check.svg';
 import ballotIcon from '../../assets/icons/rail-ballot.svg';
 import layoutIcon from '../../assets/icons/rail-layout.svg';
 import tableIcon from '../../assets/icons/rail-table.svg';
@@ -74,6 +74,32 @@ function uniqueTitle(items: TemplateItem[], title: string) {
 }
 
 /** REQ-120~121 회의록 양식 만들기·편집 (Figma 23-2 회의록 양식 커스텀). ?from=양식ID 이면 그 양식을 복사해 시작한다 */
+interface ItemRowProps {
+  title: string;
+  description: string;
+  isOn: boolean;
+  onToggle: () => void;
+}
+
+/** 디자인 Version02 항목 줄: [+]를 누르면 문서에 넣고, 넣은 항목은 체크·회색 바탕으로 보이며 다시 누르면 뺀다 */
+function ItemRow({ title, description, isOn, onToggle }: ItemRowProps) {
+  return (
+    <button
+      type="button"
+      className={[styles.item, isOn ? styles.itemOn : ''].filter(Boolean).join(' ')}
+      aria-pressed={isOn}
+      aria-label={`${title} ${isOn ? '빼기' : '추가'}`}
+      onClick={onToggle}
+    >
+      <Icon src={isOn ? checkIcon : addIcon} size={ADD_ICON_SIZE} className={styles.itemIcon} />
+      <span className={styles.itemText}>
+        <span className={styles.itemTitle}>{title}</span>
+        <span className={styles.itemDescription}>{description}</span>
+      </span>
+    </button>
+  );
+}
+
 export default function TemplateEditorPage() {
   const navigate = useNavigate();
   const { templateId } = useParams();
@@ -277,10 +303,6 @@ export default function TemplateEditorPage() {
           <div className={styles.side}>
             {view === 'items' ? (
               <section className={styles.itemsPanel} aria-label="항목 구성">
-                <div className={styles.titleGroup}>
-                  <h2 className={styles.panelTitle}>항목 구성</h2>
-                  <p className={styles.panelDescription}>회의록에 넣을 항목을 고르고 순서를 정해요.</p>
-                </div>
                 <label className={styles.field}>
                   <span className={styles.label}>
                     양식 설명 <span className={styles.optional}>(선택)</span>
@@ -303,44 +325,33 @@ export default function TemplateEditorPage() {
                   <h3 className={styles.listTitle}>회의록 항목</h3>
                   <span className={styles.listCount}>{usedCount}개 사용 중</span>
                 </div>
+                <p className={styles.panelDescription}>필요한 항목을 추가해 회의록 양식을 구성해 보세요.</p>
                 <div className={styles.items}>
-                  <Checkbox
-                    className={styles.item}
-                    checked={draft.layout.showMeetingInfo}
-                    onChange={(event) =>
-                      setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: event.target.checked } }))
+                  <ItemRow
+                    title={MEETING_INFO_PRESET.title}
+                    description={MEETING_INFO_PRESET.description}
+                    isOn={draft.layout.showMeetingInfo}
+                    onToggle={() =>
+                      setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: !prev.layout.showMeetingInfo } }))
                     }
-                  >
-                    <span className={styles.itemText}>
-                      <span className={styles.itemTitle}>{MEETING_INFO_PRESET.title}</span>
-                      <span className={styles.itemDescription}>{MEETING_INFO_PRESET.description}</span>
-                    </span>
-                  </Checkbox>
+                  />
                   {PRESET_ITEMS.map((preset) => (
-                  <Checkbox
-                    key={preset.title}
-                    className={styles.item}
-                    checked={indexOf(preset.title) >= 0}
-                    onChange={() => togglePreset(preset)}
-                  >
-                    <span className={styles.itemText}>
-                      <span className={styles.itemTitle}>{preset.title}</span>
-                      <span className={styles.itemDescription}>{preset.description}</span>
-                    </span>
-                  </Checkbox>
+                    <ItemRow
+                      key={preset.title}
+                      title={preset.title}
+                      description={preset.description}
+                      isOn={indexOf(preset.title) >= 0}
+                      onToggle={() => togglePreset(preset)}
+                    />
                   ))}
                   {customItems.map((item) => (
-                  <Checkbox
-                    key={item.title}
-                    className={styles.item}
-                    checked={true}
-                    onChange={() => removeItem(indexOf(item.title))}
-                  >
-                    <span className={styles.itemText}>
-                      <span className={styles.itemTitle}>{item.title}</span>
-                      <span className={styles.itemDescription}>{item.description}</span>
-                    </span>
-                  </Checkbox>
+                    <ItemRow
+                      key={item.title}
+                      title={item.title}
+                      description={item.description}
+                      isOn
+                      onToggle={() => removeItem(indexOf(item.title))}
+                    />
                   ))}
                 </div>
                 <button type="button" className={styles.addCustom} onClick={addCustom}>

@@ -2,18 +2,14 @@ import { useState, type FormEvent } from 'react';
 import Button from '../../../components/Button';
 import Dialog from '../../../components/Dialog';
 import TextField from '../../../components/TextField';
-import { cleanDecisionPoints } from '../../../constants/meeting';
-import DecisionPointFields from '../DecisionPointFields';
-import room from './room.module.css';
-import styles from './AddAgendaModal.module.css';
 import useCloseGuard from '../../../components/useCloseGuard';
 
 // meeting-service AddAgendaRequest 길이 제한과 같다
 const TITLE_MAX_LENGTH = 100;
 // MSG-029
 const EMPTY_TITLE_MESSAGE = '안건 제목을 입력해 주세요.';
-// meeting-service AddAgendaRequest 검증 문구와 같다
-const EMPTY_DECISION_MESSAGE = '결정할 사항을 1개 이상 입력해 주세요';
+const PLACEHOLDER_DECISION = '결정할 사항';
+const DECISION_MAX_LENGTH = 200;
 
 interface AddAgendaModalProps {
   /** 새 안건 제안(REQ-091)에서 열면 제안된 제목을 채워 둔다 */
@@ -25,29 +21,28 @@ interface AddAgendaModalProps {
 /** REQ-090 회의 중 안건 추가. 안건 제목과 결정할 사항 1개 이상이 필수 (2026-10-23 결정) */
 export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: AddAgendaModalProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [decisionPoints, setDecisionPoints] = useState(['']);
+  const [decision, setDecision] = useState('');
   const [titleError, setTitleError] = useState<string>();
-  const [decisionError, setDecisionError] = useState<string>();
   // REQ-179 입력한 내용이 있으면 닫기 전에 묻는다
-  const { requestClose, confirmElement } = useCloseGuard(title.trim() !== initialTitle.trim() || decisionPoints.some((point) => point.trim() !== ''), onCancel);
+  const { requestClose, confirmElement } = useCloseGuard(title.trim() !== initialTitle.trim() || decision.trim() !== '', onCancel);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const cleaned = cleanDecisionPoints(decisionPoints);
     setTitleError(title.trim() ? undefined : EMPTY_TITLE_MESSAGE);
-    setDecisionError(cleaned.length > 0 ? undefined : EMPTY_DECISION_MESSAGE);
-    if (!title.trim() || cleaned.length === 0) {
+    if (!title.trim()) {
       return;
     }
-    onAdd(title.trim(), cleaned);
+    // 디자인은 결정할 내용이 선택이지만 meeting-service는 1개 이상 받는다. 비우면 고칠 자리만 넣는다
+    onAdd(title.trim(), [decision.trim() || PLACEHOLDER_DECISION]);
   };
 
   return (
     <>
       <Dialog
-        title="새 안건 추가"
-        description="회의 중에 논의할 안건을 더해요"
-        width="md"
+        title="안건 추가"
+        description="추가한 안건은 안건 목록 맨 아래에 들어가요."
+        width="sm"
+        onBack={requestClose}
         onClose={requestClose}
         onSubmit={handleSubmit}
         footer={
@@ -56,7 +51,7 @@ export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: A
               취소
             </Button>
             <Button type="submit" size="md">
-              안건 추가
+              추가하기
             </Button>
           </>
         }
@@ -64,7 +59,7 @@ export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: A
         <TextField
           label="안건 제목"
           required
-          placeholder="예: 핵심 기능 우선순위 결정"
+          placeholder="예: 온보딩 튜토리얼 영상 제작"
           maxLength={TITLE_MAX_LENGTH}
           value={title}
           error={titleError}
@@ -74,18 +69,14 @@ export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: A
             setTitleError(undefined);
           }}
         />
-        <div className={styles.decisionGroup}>
-          <DecisionPointFields
-            values={decisionPoints}
-            isRequired
-            onChange={(values) => {
-              setDecisionPoints(values);
-              setDecisionError(undefined);
-            }}
-          />
-          {decisionError && <p className={room.fieldError}>{decisionError}</p>}
-          <p className={styles.hint}>예: 1차 개발에 포함할 기능 3개를 확정한다.</p>
-        </div>
+        <TextField
+          label="결정할 내용 (선택)"
+          placeholder="예: 영상 길이와 담당자 정하기"
+          maxLength={DECISION_MAX_LENGTH}
+          value={decision}
+          helper="결정할 내용을 적으면 AI가 논의 상태를 따라가요"
+          onChange={(event) => setDecision(event.target.value)}
+        />
       </Dialog>
       {confirmElement}
     </>

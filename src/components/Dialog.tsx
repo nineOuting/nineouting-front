@@ -1,4 +1,5 @@
 import { useId, type FormEvent, type ReactNode } from 'react';
+import chevronLeftIcon from '../assets/icons/chevron-left.svg';
 import closeIcon from '../assets/icons/close.svg';
 import Icon from './Icon';
 import Modal from './Modal';
@@ -22,6 +23,8 @@ interface DialogProps {
   /** 바깥을 누르면 닫는다. 입력 창(onSubmit)은 기본으로 닫지 않는다 (REQ-179) */
   closeOnDimClick?: boolean;
   className?: string;
+  /** 넘기면 제목 왼쪽에 뒤로 가기(<)를 둔다 (디자인 Version02 확인 창들) */
+  onBack?: () => void;
 }
 
 /** 디자인 Modal: 제목, 설명, 닫기 + 내용 + 오른쪽 버튼 줄 */
@@ -36,11 +39,17 @@ export default function Dialog({
   hideClose,
   closeOnDimClick,
   className,
+  onBack,
 }: DialogProps) {
   const titleId = useId();
   const content = (
     <>
       <div className={styles.header}>
+        {onBack && (
+          <button type="button" className={styles.back} aria-label="뒤로 가기" onClick={onBack}>
+            <Icon src={chevronLeftIcon} size={CLOSE_ICON_SIZE - 4} />
+          </button>
+        )}
         <div className={styles.titleGroup}>
           <h2 id={titleId} className={styles.title}>
             {title}

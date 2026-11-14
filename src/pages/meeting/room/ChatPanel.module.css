@@ -197,3 +197,102 @@
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
+
+/* 디자인 Version02 내 도우미 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  padding-top: var(--spacing-2);
+}
+
+.privateChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 2px var(--spacing-2);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.introTitle {
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.introText {
+  font-size: var(--font-size-body-md);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.suggestions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  padding-top: var(--spacing-3);
+}
+
+.suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  height: 26px;
+  padding: 0 var(--spacing-3);
+  background: var(--secondary-default);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}
+
+.suggestion:hover:not(:disabled) {
+  background: var(--interactive-selected);
+}
+
+/* 둥근 입력칸 + 동그란 보내기 */
+.form {
+  position: relative;
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+}
+
+.form .input {
+  min-height: 48px;
+  padding: 13px 52px 13px var(--spacing-4);
+  border-color: var(--border-default);
+  border-radius: 24px;
+  resize: none;
+}
+
+.form .send {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-full);
+}
+
+.form .send:disabled {
+  background: var(--border-strong);
+  cursor: default;
+}
+
+.question {
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+}
+
+.answer {
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+}

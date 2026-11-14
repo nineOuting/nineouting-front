@@ -16,10 +16,12 @@ interface AppLayoutProps {
   className?: string;
   /** 지금 보고 있는 워크스페이스 (왼쪽 메뉴에서 펼쳐 둔다) */
   workspaceId?: number;
+  /** 로고·프로필 대신 화면이 직접 채우는 상단 바 (회의 대기 화면의 뒤로 가기, 회의 시작 버튼 등) */
+  header?: ReactNode;
 }
 
 /** 로그인 후 화면 틀 (nep!nep! 디자인 Sidebar + TopBar). 메뉴를 접으면 상단 바 왼쪽에 메뉴 버튼이 생긴다 */
-export default function AppLayout({ children, variant = 'default', className, workspaceId }: AppLayoutProps) {
+export default function AppLayout({ children, variant = 'default', className, workspaceId, header }: AppLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(variant === 'default');
 
   return (
@@ -36,12 +38,16 @@ export default function AppLayout({ children, variant = 'default', className, wo
       )}
       <div className={styles.body}>
         <header className={styles.topBar}>
-          <div className={styles.brand}>
-            <Link to="/home" aria-label="홈으로">
-              <img src={logo} alt="nep!nep!" width={LOGO_WIDTH} height={LOGO_HEIGHT} className="nepnep-logo" />
-            </Link>
-          </div>
-          <TopBarUser />
+          {header ?? (
+            <>
+              <div className={styles.brand}>
+                <Link to="/home" aria-label="홈으로">
+                  <img src={logo} alt="nep!nep!" width={LOGO_WIDTH} height={LOGO_HEIGHT} className="nepnep-logo" />
+                </Link>
+              </div>
+              <TopBarUser />
+            </>
+          )}
         </header>
         <main className={[styles.main, className].filter(Boolean).join(' ')}>{children}</main>
       </div>

@@ -3,9 +3,9 @@ import transcriptIcon from '../../../assets/icons/transcript.svg';
 import Icon from '../../../components/Icon';
 import type { TranscriptLine } from '../../../types/meetingRoom';
 import room from './room.module.css';
+import TermText from './TermText';
 import styles from './SidePanel.module.css';
 
-const TITLE_ICON_SIZE = 24;
 const EMPTY_ICON_SIZE = 48;
 
 const NO_AGENDA = '';
@@ -22,6 +22,10 @@ interface TranscriptPanelProps {
   agendaOptions?: { id: string; title: string }[];
   /** REQ-089 줄의 안건 고치기 (회의록 작성자). null = 해당 없음 */
   onChangeAgenda?: (seq: number, agendaId: string | null) => void;
+  /** 용어 카드의 [더 묻기] → 내 도우미 */
+  onAskTerm?: (term: string) => void;
+  /** 인터넷이 끊겼을 때 맨 아래 안내 */
+  isOffline?: boolean;
 }
 
 /** REQ-079, 083 실시간 전사. 회의록 작성자는 줄에 마우스를 올려 바로 고친다. REQ-089 줄마다 안건을 보여 주고 작성자는 바꿀 수 있다 */
@@ -32,6 +36,8 @@ export default function TranscriptPanel({
   lineAgendas = {},
   agendaOptions = [],
   onChangeAgenda,
+  onAskTerm,
+  isOffline = false,
 }: TranscriptPanelProps) {
   const titleOf = (agendaId: string | null | undefined) =>
     agendaOptions.find(({ id }) => id === agendaId)?.title;
@@ -74,15 +80,7 @@ export default function TranscriptPanel({
 
   return (
     <>
-      <div className={styles.head}>
-        <div className={room.titleRow}>
-          <Icon src={transcriptIcon} size={TITLE_ICON_SIZE} className={room.titleIcon} />
-          <h2 className={room.title}>실시간 전사</h2>
-        </div>
-        <p className={room.caption}>발언을 실시간으로 받아 적고 있어요</p>
-      </div>
-      <div className={styles.divider} />
-
+      {/* 디자인 Version02: 제목은 위 탭(실시간 전사)이 대신한다 */}
       {lines.length === 0 ? (
         // MSG-025
         <div className={room.empty}>
@@ -146,14 +144,17 @@ export default function TranscriptPanel({
                       }
                     }}
                   >
-                    {line.text}
+                    <TermText text={line.text} onAsk={onAskTerm} />
                   </p>
                 ) : (
-                  <p className={styles.text}>{line.text}</p>
+                  <p className={styles.text}>
+                    <TermText text={line.text} onAsk={onAskTerm} />
+                  </p>
                 )}
               </li>
             );
           })}
+          {isOffline && <li className={styles.offlineNote}>연결되면 그동안의 발언이 이어서 올라와요</li>}
         </ol>
       )}
     </>

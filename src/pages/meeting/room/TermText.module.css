@@ -1,0 +1,54 @@
+.term {
+  position: relative;
+  color: var(--text-link);
+  cursor: help;
+}
+
+.card {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  width: 200px;
+  padding: var(--spacing-3);
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  cursor: default;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.cardTitle > :first-child {
+  color: var(--primary-default);
+}
+
+.cardText {
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ask {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}

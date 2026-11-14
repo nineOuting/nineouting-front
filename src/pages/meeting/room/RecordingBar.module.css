@@ -1,0 +1,109 @@
+/* 디자인 Version02 Live RecordingBar: 진한 남색 알약, 화면 아래 가운데 */
+.bar {
+  position: fixed;
+  bottom: var(--spacing-6);
+  left: 50%;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  height: 52px;
+  padding: 0 var(--spacing-2) 0 var(--spacing-5, 20px);
+  background: #0b0f2a;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  color: #fff;
+  transform: translateX(-50%);
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-caption);
+  color: #ff6b6b;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: #ff3b3b;
+}
+
+.paused {
+  color: #c9cbd6;
+}
+
+.paused .dot {
+  background: #8a8fa3;
+}
+
+.time {
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.overtime {
+  color: #ffb44d;
+}
+
+.planned {
+  margin-right: var(--spacing-3);
+  font-size: var(--font-size-caption);
+  color: #6f7389;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: #3a3e55;
+}
+
+.pauseButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  height: 36px;
+  padding: 0 var(--spacing-5, 20px);
+  background: #3a3e55;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: #fff;
+}
+
+.pauseButton:hover {
+  background: #4a4f6a;
+}
+
+.handle {
+  display: flex;
+  margin-left: calc(-1 * var(--spacing-2));
+  color: #6f7389;
+  cursor: grab;
+}
+
+.more {
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-full);
+  color: #c9cbd6;
+}
+
+.more:hover {
+  background: #2a2e45;
+}
+
+.resumeButton {
+  background: var(--primary-default);
+}
+
+.resumeButton:hover {
+  background: var(--primary-hover);
+}
+
+.barPaused .time {
+  color: #c9cbd6;
+}

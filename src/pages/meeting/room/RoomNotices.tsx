@@ -1,11 +1,15 @@
 import { useEffect, useRef } from 'react';
+import addIcon from '../../../assets/icons/add-sm.svg';
+import errorIcon from '../../../assets/icons/error.svg';
+import summaryIcon from '../../../assets/icons/summary.svg';
+import Icon from '../../../components/Icon';
 import { useCountdown } from '../../../hooks/useCountdown';
 import type { SuggestedAgenda } from '../../../types/meetingRoom';
-import room from './room.module.css';
 import styles from './RoomNotices.module.css';
 
 // REQ-091 제안 창은 30초 뒤 저절로 닫힌다
 const SUGGESTION_SECONDS = 30;
+const ICON_SIZE = 16;
 
 interface AgendaSuggestionProps {
   suggestion: SuggestedAgenda;
@@ -15,7 +19,7 @@ interface AgendaSuggestionProps {
   onExpire?: () => void;
 }
 
-/** REQ-091, MSG-026 등록된 안건과 무관한 주제가 이어지면 새 안건 등록을 제안한다 */
+/** REQ-091, MSG-026 디자인 Version02 Live_05: 등록된 안건과 다른 주제가 이어지면 새 안건 등록을 제안한다 */
 export function AgendaSuggestion({ suggestion, onIgnore, onRegister, onExpire = onIgnore }: AgendaSuggestionProps) {
   const { start, remaining } = useCountdown();
   const wasCountingRef = useRef(false);
@@ -38,25 +42,27 @@ export function AgendaSuggestion({ suggestion, onIgnore, onRegister, onExpire = 
 
   return (
     <div role="alertdialog" aria-labelledby="agenda-suggestion-title" className={styles.notice}>
-      <div className={styles.texts}>
-        <div className={styles.titleRow}>
-          <p id="agenda-suggestion-title" className={styles.title}>
-            새로운 안건을 발견했습니다.
-          </p>
-          <span className={styles.remaining}>{remaining}초 후 사라집니다</span>
-        </div>
-        <p className={styles.caption}>회의에서 새로운 논의 주제가 나왔습니다.</p>
+      <div className={styles.titleRow}>
+        <p id="agenda-suggestion-title" className={styles.title}>
+          <Icon src={summaryIcon} size={ICON_SIZE} className={styles.sparkle} />
+          새로운 안건을 발견했어요
+        </p>
+        <span className={styles.remaining}>{remaining}초</span>
       </div>
+      <p className={styles.caption}>등록된 안건과 다른 주제가 1분 넘게 이어지고 있어요.</p>
       <div className={styles.suggestion}>
-        <p className={styles.suggestionLabel}>새 안건</p>
         <p className={styles.suggestionTitle}>{suggestion.title}</p>
         {suggestion.description && <p className={styles.suggestionDescription}>{suggestion.description}</p>}
       </div>
-      <div className={room.pillRow}>
-        <button type="button" className={`${room.pill} ${room.pillOutline}`} onClick={onIgnore}>
+      <div className={styles.progress} aria-hidden="true">
+        <span style={{ width: `${(remaining / SUGGESTION_SECONDS) * 100}%` }} />
+      </div>
+      <div className={styles.actions}>
+        <button type="button" className={styles.textButton} onClick={onIgnore}>
           무시
         </button>
-        <button type="button" className={`${room.pill} ${room.pillPrimary}`} onClick={onRegister}>
+        <button type="button" className={styles.secondaryButton} onClick={onRegister}>
+          <Icon src={addIcon} size={ICON_SIZE} />
           안건 등록
         </button>
       </div>
@@ -64,18 +70,35 @@ export function AgendaSuggestion({ suggestion, onIgnore, onRegister, onExpire = 
   );
 }
 
-/** REQ-092, MSG-027 제안을 무시한 뒤에도 등록되지 않은 주제가 3분 넘게 이어지면 알린다 */
-export function OffTopicNotice({ onConfirm }: { onConfirm: () => void }) {
+interface OffTopicNoticeProps {
+  /** 지금 이어지는 주제 (알 수 있으면) */
+  topic?: string;
+  onConfirm: () => void;
+  /** 넘기면 [새 안건으로 등록]으로 안건 추가 창을 연다 */
+  onRegister?: () => void;
+}
+
+/** REQ-092, MSG-027 디자인 Version02 Live_06: 제안을 무시한 뒤에도 등록되지 않은 주제가 이어지면 알린다 */
+export function OffTopicNotice({ topic, onConfirm, onRegister }: OffTopicNoticeProps) {
   return (
     <div role="alertdialog" aria-labelledby="off-topic-title" className={styles.notice}>
-      <div className={styles.texts}>
-        <p id="off-topic-title" className={styles.title}>
-          등록되지 않은 주제로 논의가 이어지고 있습니다.
-        </p>
-        <p className={styles.caption}>기존 안건으로 돌아가거나 새 안건을 등록해 주세요.</p>
+      <p id="off-topic-title" className={styles.title}>
+        <Icon src={errorIcon} size={ICON_SIZE} className={styles.warningIcon} />
+        등록되지 않은 주제로 논의가 이어지고 있어요
+      </p>
+      <p className={styles.caption}>기존 안건으로 돌아가거나 새 안건으로 등록해 주세요.</p>
+      <div className={`${styles.suggestion} ${styles.warningBox}`}>
+        <p className={styles.suggestionTitle}>지금 주제: {topic || '등록되지 않은 주제'}</p>
+        <p className={styles.suggestionDescription}>새 안건 제안을 무시한 뒤 3분째 이어지고 있어요</p>
       </div>
-      <div className={room.pillRow}>
-        <button type="button" className={`${room.pill} ${room.pillPrimary}`} onClick={onConfirm}>
+      <div className={styles.actions}>
+        {onRegister && (
+          <button type="button" className={styles.textButton} onClick={onRegister}>
+            <Icon src={addIcon} size={ICON_SIZE} />
+            새 안건으로 등록
+          </button>
+        )}
+        <button type="button" className={styles.secondaryButton} onClick={onConfirm}>
           확인
         </button>
       </div>

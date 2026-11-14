@@ -209,14 +209,30 @@
 }
 
 /* 디자인 TemplateSectionItem: 체크박스, 제목, 설명 */
+/* 디자인 Version02 항목 줄: 테두리 없이, 넣은 항목은 회색 바탕 */
 .item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-3);
+  width: 100%;
   padding: var(--spacing-3);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
+  background: transparent;
+  border: none;
   border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.itemOn {
+  background: var(--bg-surface-muted);
+}
+
+.itemIcon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.itemOn .itemIcon {
+  color: var(--primary-default);
 }
 
 .item:hover {

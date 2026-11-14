@@ -1,0 +1,83 @@
+.dropZone,
+.reading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-8) var(--spacing-4);
+  background: var(--bg-surface-muted);
+  border: var(--border-width-default) dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.reading {
+  border-style: solid;
+  border-color: var(--border-default);
+}
+
+.dropZoneActive {
+  background: var(--primary-subtle);
+  border-color: var(--primary-default);
+}
+
+.dropTitle {
+  margin-top: var(--spacing-3);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.dropText {
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.pickButton {
+  width: 150px;
+  height: 32px;
+  margin-top: var(--spacing-3);
+  font-size: var(--font-size-caption);
+}
+
+.failed {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  padding: var(--spacing-5, 20px) var(--spacing-4);
+  background: var(--danger-subtle);
+  border-radius: var(--radius-md);
+}
+
+.failedIcon {
+  flex-shrink: 0;
+  margin-top: 22px;
+  color: var(--danger-default);
+}
+
+.failedTitle {
+  margin-bottom: var(--spacing-1);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.failedText {
+  font-size: var(--font-size-body-md);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.file {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-4);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+}

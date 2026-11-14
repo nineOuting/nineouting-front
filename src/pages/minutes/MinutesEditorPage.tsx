@@ -17,7 +17,10 @@ import {
   type MinutesSection,
 } from '../../api/minutes';
 import { getMe } from '../../api/user';
-import chevronDownIcon from '../../assets/icons/chevron-down.svg';
+import alignCenterIcon from '../../assets/icons/align-center.svg';
+import alignLeftIcon from '../../assets/icons/align-left.svg';
+import alignRightIcon from '../../assets/icons/align-right.svg';
+import bulletIcon from '../../assets/icons/bullet.svg';
 import downloadIcon from '../../assets/icons/download.svg';
 import locationIcon from '../../assets/icons/location.svg';
 import personIcon from '../../assets/icons/person-sm.svg';
@@ -27,6 +30,8 @@ import scheduleIcon from '../../assets/icons/schedule.svg';
 import templateIcon from '../../assets/icons/template-sm.svg';
 import undoIcon from '../../assets/icons/undo.svg';
 import AiNotice from '../../components/AiNotice';
+import Button from '../../components/Button';
+import Dialog from '../../components/Dialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import EditorTopBar from '../../components/EditorTopBar';
 import editorBar from '../../components/EditorTopBar.module.css';
@@ -38,6 +43,7 @@ import type { MinutesTemplate } from '../../types/template';
 import { toTime } from '../../utils/calendar';
 import { formatMeetingDate } from '../../utils/meetingFormat';
 import { toTranscriptLine } from '../meeting/room/roomData';
+import ActionMenu from '../workspace/ActionMenu';
 import DownloadModal from './DownloadModal';
 import MinutesDocument, { type DocInfo } from './MinutesDocument';
 import MinutesSidePanels, { type AgendaSummary } from './MinutesSidePanels';
@@ -69,6 +75,20 @@ const DRAFTING_STATUSES: ReadonlyArray<MinutesDetail['draftStatus']> = ['WAITING
 const NOT_READY_RETRY_MS = 1500;
 const NOT_READY_MAX_RETRIES = 20;
 const STATUS_LABELS = { WRITING: '작성 중', REVIEWING: '검토 중', CONFIRMED: '확정' } as const;
+
+type FormatAction = { label: string; command: string; icon?: string; text?: string; textClass?: string } | 'divider';
+
+const FORMAT_ACTIONS: FormatAction[] = [
+  { label: '굵게', command: 'bold', text: 'B', textClass: styles.formatBold },
+  { label: '기울임', command: 'italic', text: 'I', textClass: styles.formatItalic },
+  { label: '밑줄', command: 'underline', text: 'U', textClass: styles.formatUnderline },
+  'divider',
+  { label: '글머리 기호', command: 'insertUnorderedList', icon: bulletIcon },
+  'divider',
+  { label: '왼쪽 정렬', command: 'justifyLeft', icon: alignLeftIcon },
+  { label: '가운데 정렬', command: 'justifyCenter', icon: alignCenterIcon },
+  { label: '오른쪽 정렬', command: 'justifyRight', icon: alignRightIcon },
+];
 
 type LoadState = { type: 'loading' } | { type: 'notReady' } | { type: 'error'; message: string } | { type: 'ready' };
 
@@ -132,6 +152,10 @@ export default function MinutesEditorPage() {
   const [isRetryingDraft, setIsRetryingDraft] = useState(false);
   const [dialog, setDialog] = useState<'download' | 'share' | null>(searchParams.get('download') ? 'download' : null);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+  // 디자인 Version02: 양식을 고르면 바꾸기 전에 한 번 묻는다 / 다운로드는 상단 바 아래 작은 메뉴
+  const [pendingTemplate, setPendingTemplate] = useState<{ templateId: number; name: string } | null>(null);
+  const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
+  const downloadAnchorRef = useRef<HTMLButtonElement>(null);
   // 디자인 History: 되돌리기, 다시 실행 (작성자, 작성 중)
   const [past, setPast] = useState<MinutesSection[][]>([]);
   const [future, setFuture] = useState<MinutesSection[][]>([]);
@@ -248,10 +272,29 @@ export default function MinutesEditorPage() {
         const boardAgendas = board?.todaySummary?.agendas ?? board?.agendas ?? [];
         const byId = new Map(boardAgendas.map((agenda) => [agenda.agendaId, agenda]));
         setAgendaSummaries(
-          detail.agendas.map(({ agendaId, title }) => ({
+          detail.agendas.map(({ agendaId, title, decisionPoints }) => ({
             id: String(agendaId),
             title,
+            status: byId.get(agendaId)?.status,
+            // 디자인 Version02 결정현황: 안건의 결정할 사항마다 보드의 상태·결정 내용·근거
+            decisions: decisionPoints.map(({ decisionPointId, text }) => {
+              const point = byId.get(agendaId)?.decisionPoints?.find((one) => one.decisionPointId === decisionPointId);
+              return {
+                id: String(decisionPointId),
+                title: text,
+                status: point?.status ?? 'NOT_STARTED',
+                text: point?.decisionText ?? '',
+                evidenceSeqs: point?.evidenceSeqs ?? [],
+              };
+            }),
+            openIssues: (byId.get(agendaId)?.opinions ?? [])
+              .filter(({ kind }) => kind === 'CONCERN' || kind === 'QUESTION')
+              .map(({ text }) => text),
             summary: (byId.get(agendaId)?.summary ?? []).map(({ text }) => text),
+            // 주요 의견: 우려·질문(아직 합의되지 않은 부분)은 빼고 의견·근거만
+            opinions: (byId.get(agendaId)?.opinions ?? [])
+              .filter(({ kind }) => kind !== 'CONCERN' && kind !== 'QUESTION')
+              .map(({ text }) => text),
           })),
         );
       })
@@ -443,6 +486,39 @@ export default function MinutesEditorPage() {
         }
         actions={
           <>
+            {/* 디자인 Version02: 다운로드는 상단 바 오른쪽, 임시저장 앞 */}
+            <span className={styles.anchor}>
+              <button
+                ref={downloadAnchorRef}
+                type="button"
+                className={[editorBar.action, styles.downloadAction, isDownloadMenuOpen ? styles.downloadOpen : ''].filter(Boolean).join(' ')}
+                aria-haspopup="menu"
+                aria-expanded={isDownloadMenuOpen}
+                disabled={isDownloading}
+                onClick={() => setIsDownloadMenuOpen((open) => !open)}
+              >
+                {isDownloading ? <Spinner size={BUTTON_ICON_SIZE} /> : <Icon src={downloadIcon} size={BUTTON_ICON_SIZE} />}
+                다운로드
+              </button>
+              {isDownloadMenuOpen && (
+                <ActionMenu
+                  label="다운로드 형식"
+                  anchorRef={downloadAnchorRef}
+                  className={styles.downloadMenu}
+                  items={[
+                    { label: 'PDF로 다운로드', onSelect: () => void download('PDF') },
+                    { label: 'Word (.docx)로 다운로드', onSelect: () => void download('DOCX') },
+                  ].map((item) => ({
+                    ...item,
+                    onSelect: () => {
+                      setIsDownloadMenuOpen(false);
+                      item.onSelect();
+                    },
+                  }))}
+                  onClose={() => setIsDownloadMenuOpen(false)}
+                />
+              )}
+            </span>
             {isWriter && (
               <button
                 type="button"
@@ -485,8 +561,7 @@ export default function MinutesEditorPage() {
                 aria-expanded={isTemplateMenuOpen}
                 onClick={() => setIsTemplateMenuOpen((open) => !open)}
               >
-                회의록 양식 변경
-                <Icon src={chevronDownIcon} size={BUTTON_ICON_SIZE} />
+                변경
               </button>
               {isTemplateMenuOpen && (
                 <DropdownMenu
@@ -497,12 +572,14 @@ export default function MinutesEditorPage() {
                   items={templates.map((template) => ({
                     id: String(template.templateId),
                     label: template.name,
-                    description: template.items.map(({ title }) => title).join(', '),
                     isSelected: template.templateId === minutes.templateId,
                   }))}
                   onSelect={(templateId) => {
                     setIsTemplateMenuOpen(false);
-                    void changeTemplate(Number(templateId));
+                    const picked = templates.find((template) => template.templateId === Number(templateId));
+                    if (picked && picked.templateId !== minutes.templateId) {
+                      setPendingTemplate({ templateId: picked.templateId, name: picked.name });
+                    }
                   }}
                   onClose={() => setIsTemplateMenuOpen(false)}
                 />
@@ -510,11 +587,31 @@ export default function MinutesEditorPage() {
             </li>
           )}
         </ul>
-        <button type="button" className={styles.download} onClick={() => setDialog('download')}>
-          <Icon src={downloadIcon} size={BUTTON_ICON_SIZE} />
-          다운로드
-        </button>
       </div>
+      {/* 디자인 Version02 서식 도구 막대. 문서 칸 편집기가 아직 서식을 저장하지 않아 고른 글자에 표시만 바꾼다 */}
+      {isEditing && (
+        <div className={styles.formatBar} role="toolbar" aria-label="서식">
+          {FORMAT_ACTIONS.map((action, index) =>
+            action === 'divider' ? (
+              <span key={index} className={styles.formatDivider} aria-hidden="true" />
+            ) : (
+              <button
+                key={action.label}
+                type="button"
+                className={styles.formatButton}
+                aria-label={action.label}
+                onMouseDown={(event) => {
+                  // 누르는 동안 문서 칸의 선택이 풀리지 않게
+                  event.preventDefault();
+                  document.execCommand(action.command);
+                }}
+              >
+                {action.icon ? <Icon src={action.icon} size={BUTTON_ICON_SIZE} /> : <span className={action.textClass}>{action.text}</span>}
+              </button>
+            ),
+          )}
+        </div>
+      )}
       {/* 디자인 Workspace: 문서(CanvasArea) + 요약, 전사(SummaryTranscriptPanel) */}
       <div className={styles.workspace}>
         <MinutesDocument
@@ -563,6 +660,32 @@ export default function MinutesEditorPage() {
         />
         <MinutesSidePanels agendas={agendaSummaries} lines={lines} />
       </div>
+      {pendingTemplate && (
+        <Dialog
+          title={`'${pendingTemplate.name}' 양식으로 바꿀까요?`}
+          description="회의록 내용이 새 양식의 항목에 맞춰 다시 정리돼요. 새 양식에 없는 항목의 내용은 빠질 수 있어요."
+          onBack={() => setPendingTemplate(null)}
+          onClose={() => setPendingTemplate(null)}
+          hideClose
+          footer={
+            <>
+              <Button variant="secondary" size="md" onClick={() => setPendingTemplate(null)}>
+                취소
+              </Button>
+              <Button
+                size="md"
+                onClick={() => {
+                  const { templateId } = pendingTemplate;
+                  setPendingTemplate(null);
+                  void changeTemplate(templateId);
+                }}
+              >
+                양식 변경
+              </Button>
+            </>
+          }
+        />
+      )}
       {dialog === 'download' && <DownloadModal isDownloading={isDownloading} onDownload={download} onClose={closeDialog} />}
       {dialog === 'share' && <ShareConfirmModal isSharing={isSharing} onShare={share} onClose={closeDialog} />}
     </div>

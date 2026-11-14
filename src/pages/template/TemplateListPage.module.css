@@ -1,129 +1,272 @@
-/* 디자인이 없어 아카이브 화면의 여백과 카드 모양을 따랐다 */
+/* 디자인 Version02 TemplateListPage: 머리말 + 개수·정렬 + 기본 양식 / 내 양식 카드 줄 (카드 266px) */
 .page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 28px 34px 40px;
+  gap: var(--spacing-8);
+  padding: var(--spacing-6) var(--layout-page-margin) var(--spacing-12, 48px);
 }
 
 .head {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
 }
 
 .title {
-  margin: 0;
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--color-black);
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-primary);
 }
 
-.description {
-  margin-top: 4px;
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--grey-50);
+.subtitle {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
-.primary {
+.headActions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.primaryButton,
+.secondaryButton {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 16px;
+  gap: var(--gap-inline);
+  height: 40px;
+  padding: 0 var(--button-md-padding-x);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.primaryButton {
   background: var(--primary-default);
-  border: none;
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  color: var(--color-white);
+  color: var(--text-on-primary);
+}
+
+.primaryButton:hover {
+  background: var(--primary-hover);
+}
+
+.secondaryButton {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+}
+
+.secondaryButton:hover {
+  background: var(--secondary-hover, var(--interactive-hover));
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(-1 * var(--spacing-2));
+}
+
+.count {
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+}
+
+.sort {
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  grid-template-columns: repeat(auto-fill, 266px);
+  gap: var(--spacing-6);
 }
 
+.empty {
+  padding: var(--spacing-6);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-body-md);
+  color: var(--text-secondary);
+}
+
+/* 카드 */
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  overflow: visible;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.preview {
+  display: flex;
+  justify-content: center;
+  height: 156px;
+  padding-top: var(--spacing-4);
+  overflow: hidden;
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+/* 종이 모양 미리보기 */
+.paper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 124px;
   padding: 16px;
-  border: 1px solid var(--grey-20);
-  border-radius: 12px;
+  background: var(--bg-surface);
 }
 
-.cardHead {
+.paperTitle {
+  width: 48px;
+  height: 4px;
+  margin-bottom: 4px;
+  background: var(--text-primary);
+}
+
+.paperLine {
+  height: 3px;
+  background: var(--border-default);
+}
+
+.paperLine:nth-child(odd) {
+  width: 70%;
+}
+
+.favorite {
+  position: absolute;
+  top: var(--spacing-3);
+  right: var(--spacing-3);
   display: flex;
-  gap: 12px;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
 }
 
-.names {
+.favorite[aria-pressed='true'] {
+  color: var(--primary-default);
+}
+
+.favorite:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.info {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
 }
 
 .name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--font-size-b1);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--grey-100);
+  overflow: hidden;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.badge {
-  padding: 2px 8px;
-  background: var(--blue-10);
-  border-radius: 1000px;
+.menuAnchor {
+  position: relative;
+}
+
+.iconButton {
+  display: flex;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.cardMenu {
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  width: 200px;
+}
+
+.description {
+  overflow: hidden;
   font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.kind {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
   color: var(--primary-default);
 }
 
-.cardDescription,
-.items {
+.kindDefault {
+  background: var(--neutral-subtle);
+  color: var(--text-secondary);
+}
+
+.meta {
   font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
-}
-
-.cardActions {
-  display: flex;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.secondary {
-  height: 36px;
-  padding: 0 14px;
-  background: var(--color-white);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  color: var(--color-black);
-}
-
-.danger {
-  color: var(--red-90);
-}
-
-.cardIcon {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: var(--interactive-selected);
-  border-radius: var(--radius-md);
-  color: var(--primary-default);
+  color: var(--text-secondary);
 }

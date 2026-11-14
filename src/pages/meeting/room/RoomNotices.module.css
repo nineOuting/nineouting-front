@@ -1,14 +1,14 @@
-/* 화면 상단 가운데에 뜨는 알림 창 (MSG-026, 027) */
+/* 디자인 Version02 Live_05·06: 가운데 위에 뜨는 알림 창 (MSG-026, 027) */
 .notice {
   position: fixed;
-  top: 72px;
-  left: 50%;
+  top: 76px;
+  left: calc(240px + (100vw - 240px - 420px) / 2);
   z-index: 150;
   display: flex;
   flex-direction: column;
-  gap: var(--gap-content);
-  width: var(--layout-modal-width-sm);
-  padding: var(--padding-modal);
+  gap: var(--spacing-3);
+  width: 540px;
+  padding: var(--spacing-5, 20px);
   background: var(--bg-surface-raised);
   border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-lg);
@@ -16,61 +16,106 @@
   transform: translateX(-50%);
 }
 
-.texts {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .titleRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--spacing-3);
 }
 
 .title {
-  font-size: var(--font-size-body-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-body-md);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-body-lg);
   color: var(--text-primary);
 }
 
+.sparkle {
+  color: var(--primary-default);
+}
+
+.warningIcon {
+  color: var(--warning-default, #e8590c);
+}
+
 .remaining {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--danger-default);
-  white-space: nowrap;
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
 }
 
 .caption {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-50);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
 }
 
 .suggestion {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-1);
   padding: var(--spacing-3) var(--spacing-4);
-  background: var(--info-subtle);
-  border: var(--border-width-default) solid var(--info-default);
+  background: var(--bg-surface-muted);
   border-radius: var(--radius-md);
 }
 
-.suggestionLabel {
-  font-size: var(--font-size-caption);
-  line-height: 1.4;
-  color: var(--grey-50);
+.warningBox {
+  background: var(--warning-subtle, #fff4e6);
 }
 
 .suggestionTitle {
-  color: var(--grey-100);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
 }
 
 .suggestionDescription {
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--grey-80);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.progress {
+  height: 3px;
+  overflow: hidden;
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-full);
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  background: var(--primary-default);
+  transition: width 1s linear;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+}
+
+.textButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.textButton {
+  color: var(--primary-default);
+}
+
+.textButton:hover {
+  background: var(--primary-ghost-hover);
+}
+
+.secondaryButton {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
 }

@@ -1,89 +1,207 @@
-/* 디자인 SummaryTranscriptPanel: 400px, 위 요약본 카드 · SplitBar · 아래 전사 카드 */
+/* 디자인 Version02 MinutesEditor 오른쪽 400px: 위 요약본, 아래 전사 기록. 카드 없이 구분선으로 나눈다 */
 .panels {
   display: flex;
-  flex-direction: column;
   flex-shrink: 0;
+  flex-direction: column;
   width: 400px;
   min-height: 0;
-  padding: var(--spacing-4);
-  background: var(--bg-page);
+  background: var(--bg-surface);
   border-left: var(--border-width-default) solid var(--border-default);
 }
 
-/* 디자인 SummaryCard, TranscriptCard */
-.card {
+.summarySection,
+.transcriptSection {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-content);
+  gap: var(--spacing-5, 20px);
   min-height: 0;
-  padding: var(--padding-card);
-  overflow: hidden;
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 var(--spacing-1) var(--spacing-2) rgb(0 0 0 / 10%);
+  padding: var(--spacing-6);
+  overflow-y: auto;
 }
 
-/* 디자인 SplitBar 24px: 양쪽 선 + 가운데 손잡이. 끌어서 두 카드 높이를 바꾼다 */
-.handle {
-  display: flex;
-  flex: 0 0 24px;
-  align-items: center;
-  gap: var(--spacing-4);
-  cursor: row-resize;
-  touch-action: none;
+.summarySection {
+  flex: 0 1 auto;
+  max-height: 55%;
 }
 
-.handle:focus-visible {
-  outline: 2px solid var(--primary-default);
-  outline-offset: -4px;
+.transcriptSection {
+  flex: 0 0 auto;
+  border-top: var(--border-width-default) solid var(--border-default);
 }
 
-.handleLine {
-  flex: 1;
-  height: 1px;
-  background: var(--border-default);
-}
-
-.handleGrip {
-  width: 32px;
-  height: 4px;
-  background: var(--border-strong);
-  border-radius: var(--radius-full);
-}
-
-.head {
-  display: flex;
-  align-items: center;
+.grow {
+  flex: 1 1 0;
+  max-height: none;
 }
 
 .title {
   display: flex;
   align-items: center;
-  gap: var(--gap-inline);
-  font-size: var(--font-size-heading-sm);
+  gap: var(--spacing-2);
+  font-size: var(--font-size-body-lg);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-heading-sm);
+  line-height: var(--line-height-body-lg);
   color: var(--text-primary);
 }
 
 .titleIcon {
-  color: var(--primary-default);
+  color: var(--text-primary);
 }
 
 .body {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-section);
-  min-height: 0;
-  overflow-y: auto;
+  gap: var(--spacing-8);
 }
 
-/* 디자인 SummaryBlock */
+.agendaPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.pickerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.counter {
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.pickerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.selectAnchor {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.selectBox {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 38px;
+  padding: 0 var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.selectBox:hover {
+  border-color: var(--border-strong);
+}
+
+.selectOpen,
+.selectOpen:hover {
+  border-color: var(--border-focus);
+}
+
+.selectValue {
+  flex: 1;
+  overflow: hidden;
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectIcon {
+  flex-shrink: 0;
+  color: var(--neutral-default);
+}
+
+.pickerMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--spacing-1);
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.pickerItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.pickerItem:hover {
+  background: var(--interactive-hover);
+}
+
+.pickerSelected,
+.pickerSelected:hover {
+  background: var(--interactive-selected);
+}
+
+.pickerDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--text-primary);
+  border-radius: var(--radius-full);
+}
+
+.pickerDotFilled {
+  background: var(--text-primary);
+}
+
+.pickerTexts {
+  display: flex;
+  flex-direction: column;
+}
+
+.pickerState {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.pickerTitle {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.navButton {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.navButton:hover:not(:disabled) {
+  background: var(--neutral-ghost-hover);
+}
+
+.navButton:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
 .block {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-label-field);
+  gap: var(--spacing-3);
 }
 
 .label {
@@ -93,45 +211,149 @@
   color: var(--text-primary);
 }
 
-.summary {
+.text {
   font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  color: var(--text-primary);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding-left: var(--spacing-4);
+  font-size: var(--font-size-body-md);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  list-style: disc;
+}
+
+.transcriptHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .empty {
   font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
   color: var(--text-secondary);
 }
 
 .lines {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-title-subtitle);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--spacing-3);
 }
 
-/* 디자인 TranscriptItem: 시각 + 발언 (화자는 기록하지 않는다) */
 .line {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-title-subtitle);
-  padding: var(--spacing-2);
-  border-radius: var(--radius-sm);
+  gap: var(--spacing-1);
 }
 
 .time {
   font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
   color: var(--text-secondary);
 }
 
-.text {
+.lineText {
   font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
+  line-height: 1.5;
   color: var(--text-primary);
-  white-space: pre-wrap;
+}
+
+.blockHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.decision {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+}
+
+.decision:hover {
+  background: var(--secondary-default);
+}
+
+.decisionIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+.decision_DECIDED .decisionIcon {
+  background: var(--success-default);
+  border: none;
+  color: var(--text-on-primary);
+}
+
+.decision_UNDECIDED .decisionIcon {
+  border: 1.5px solid var(--warning-default, #e8590c);
+  color: var(--warning-default, #e8590c);
+}
+
+.decisionTexts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.decisionTitle {
+  font-size: var(--font-size-caption);
+  color: var(--text-primary);
+}
+
+.decision_NOT_STARTED .decisionTitle {
+  color: var(--text-disabled);
+}
+
+.decisionState {
+  margin-left: var(--spacing-1);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.decisionText {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.evidenceLink {
+  font-size: 11px;
+  color: var(--text-link);
+  opacity: 0;
+}
+
+.decision:hover .evidenceLink,
+.evidenceLink:focus-visible {
+  opacity: 1;
+}
+
+.line {
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+}
+
+.lineHighlighted {
+  background: var(--secondary-default);
 }

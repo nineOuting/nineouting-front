@@ -1,5 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import editIcon from '../../../assets/icons/create-sm.svg';
+import personIcon from '../../../assets/icons/person-sm.svg';
+import scheduleIcon from '../../../assets/icons/schedule.svg';
 import Icon from '../../../components/Icon';
 import type { RoomTodo } from '../../../types/meetingRoom';
 import room from './room.module.css';
@@ -24,6 +26,8 @@ interface TodoListProps {
   todos: RoomTodo[];
   /** 넘기면 회의록 작성자가 할 일, 담당자, 기한을 고친다 */
   onSave?: (todo: RoomTodo, change: TodoChange) => void;
+  /** table: 디자인 Version02 회의 중 할 일 표 (체크박스 · 할 일 · 담당자 칩 · 기한 칩) */
+  variant?: 'list' | 'table';
 }
 
 function assigneeLabel(todo: RoomTodo) {
@@ -38,8 +42,12 @@ function assigneeLabel(todo: RoomTodo) {
 }
 
 /** REQ-097 할 일·담당자·기한 (임시 디자인). 담당자가 참석자가 아니거나 동명이인이면 주황 표시 */
-export default function TodoList({ todos, onSave }: TodoListProps) {
+export default function TodoList({ todos, onSave, variant = 'list' }: TodoListProps) {
   const [editing, setEditing] = useState<{ id: string; change: TodoChange } | null>(null);
+  // 표의 체크 표시는 아직 서버에 저장하지 않는다 (이 화면에서만)
+  const [doneIds, setDoneIds] = useState<string[]>([]);
+  const startEditing = (todo: RoomTodo) =>
+    setEditing({ id: todo.id, change: { task: todo.task, assignee: todo.assignee ?? '', due: todo.due ?? '' } });
 
   const finish = (todo: RoomTodo) => {
     if (editing && editing.change.task.trim()) {
@@ -62,7 +70,7 @@ export default function TodoList({ todos, onSave }: TodoListProps) {
   };
 
   return (
-    <ul className={styles.list}>
+    <ul className={variant === 'table' ? styles.table : styles.list}>
       {todos.map((todo) => {
         if (editing?.id === todo.id) {
           const change = editing.change;
@@ -103,6 +111,50 @@ export default function TodoList({ todos, onSave }: TodoListProps) {
           );
         }
         const label = assigneeLabel(todo);
+        if (variant === 'table') {
+          const isDone = doneIds.includes(todo.id);
+          const hasAssignee = Boolean(todo.assignee) && todo.assigneeStatus !== 'UNASSIGNED';
+          return (
+            <li key={todo.id} className={styles.tableRow}>
+              <input
+                type="checkbox"
+                className={styles.check}
+                aria-label={`${todo.task} 완료`}
+                checked={isDone}
+                onChange={() => setDoneIds((prev) => (isDone ? prev.filter((id) => id !== todo.id) : [...prev, todo.id]))}
+              />
+              <span className={[styles.tableTask, isDone ? styles.done : ''].filter(Boolean).join(' ')}>{todo.task}</span>
+              <button
+                type="button"
+                className={[styles.chip, hasAssignee ? '' : styles.chipEmpty, label.className === styles.assigneeWarning ? styles.chipWarning : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                disabled={!onSave}
+                aria-label={`${todo.task} 담당자 ${hasAssignee ? label.text : '선택'}`}
+                onClick={() => startEditing(todo)}
+              >
+                {hasAssignee ? (
+                  <span className={styles.chipAvatar} aria-hidden="true">
+                    {todo.assignee?.slice(0, 1)}
+                  </span>
+                ) : (
+                  <Icon src={personIcon} size={EDIT_ICON_SIZE - 2} />
+                )}
+                {hasAssignee ? label.text : '담당자'}
+              </button>
+              <button
+                type="button"
+                className={[styles.chip, todo.due ? '' : styles.chipEmpty].filter(Boolean).join(' ')}
+                disabled={!onSave}
+                aria-label={`${todo.task} 기한 ${todo.due ?? '선택'}`}
+                onClick={() => startEditing(todo)}
+              >
+                <Icon src={scheduleIcon} size={EDIT_ICON_SIZE - 2} />
+                {todo.due ?? '기한'}
+              </button>
+            </li>
+          );
+        }
         return (
           <li key={todo.id} className={styles.item}>
             <span className={styles.task}>{todo.task}</span>
@@ -113,9 +165,7 @@ export default function TodoList({ todos, onSave }: TodoListProps) {
                 type="button"
                 className={room.iconButton}
                 aria-label={`${todo.task} 고치기`}
-                onClick={() =>
-                  setEditing({ id: todo.id, change: { task: todo.task, assignee: todo.assignee ?? '', due: todo.due ?? '' } })
-                }
+                onClick={() => startEditing(todo)}
               >
                 <Icon src={editIcon} size={EDIT_ICON_SIZE} />
               </button>

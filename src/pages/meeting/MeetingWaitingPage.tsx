@@ -13,41 +13,45 @@ import {
 } from '../../api/meeting';
 import { listMinutesTemplates, setTemplateFavorite } from '../../api/minutes';
 import { getMe } from '../../api/user';
-import { getFolder, listFolderMembers } from '../../api/workspace';
-import checkCircleIcon from '../../assets/icons/check-circle.svg';
-import chevronDownIcon from '../../assets/icons/chevron-down.svg';
-import createIcon from '../../assets/icons/create.svg';
-import groupAddIcon from '../../assets/icons/group-add-sm.svg';
-import infoIcon from '../../assets/icons/info.svg';
+import { getFolder, listFolderMemberDetails, listFolderMembers } from '../../api/workspace';
+import checkIcon from '../../assets/icons/check-sm.svg';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
+import chevronRightIcon from '../../assets/icons/chevron-right-sm.svg';
+import deleteIcon from '../../assets/icons/delete.svg';
+import editIcon from '../../assets/icons/edit.svg';
+import errorIcon from '../../assets/icons/error.svg';
+import groupAddIcon from '../../assets/icons/group-add.svg';
 import locationIcon from '../../assets/icons/location.svg';
+import moreIcon from '../../assets/icons/more-vert.svg';
 import playIcon from '../../assets/icons/play.svg';
 import scheduleIcon from '../../assets/icons/schedule.svg';
-import separatorIcon from '../../assets/icons/breadcrumb-sep.svg';
 import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import DropdownMenu from '../../components/DropdownMenu';
 import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Meeting, MeetingStatus, Member, MinutesTemplate, PendingAgenda } from '../../types/meeting';
 import { formatMeetingSchedule } from '../../utils/meetingFormat';
 import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
-import AgendaEditor from './AgendaEditor';
+import ActionMenu from '../workspace/ActionMenu';
+import AgendaBoard from './AgendaBoard';
 import ConsentModal from './ConsentModal';
 import MeetingMaterials from './MeetingMaterials';
+import MemberPickerMenu from './MemberPickerMenu';
 import MicPermissionDialog from './MicPermissionDialog';
 import StartingModal from './StartingModal';
 import TemplateDetailModal from './TemplateDetailModal';
 import TemplateGalleryModal from './TemplateGalleryModal';
 import styles from './MeetingWaitingPage.module.css';
 
-const SEPARATOR_ICON_SIZE = 16;
 const ICON_SIZE = 20;
+const BACK_ICON_SIZE = 24;
+const HEADER_AVATAR_COUNT = 4;
 const SMALL_ICON_SIZE = 16;
 const START_FAILED_MESSAGE = '회의를 시작하지 못했어요. 잠시 후 다시 시도해 주세요.';
 
 type TemplateModalState = { view: 'gallery' } | { view: 'detail'; index: number };
-type OpenMenu = 'attendee' | 'template' | 'writer';
+type OpenMenu = 'attendee' | 'writer' | 'more';
 
 const STATUS_LABELS: Record<MeetingStatus, string> = {
   SCHEDULED: '회의 예정',
@@ -63,7 +67,12 @@ function readinessMessage(hasAgenda: boolean, hasWriter: boolean) {
   if (!hasAgenda && !hasWriter) {
     return '안건과 회의록 작성자를 정해 주세요';
   }
-  return hasAgenda ? '회의록 작성자를 선택해 주세요' : '안건을 1개 이상 등록해 주세요';
+  return hasAgenda ? '회의록 작성자를 선택해 주세요' : '안건을 추가해 주세요';
+}
+
+function minutesBetween(startTime: string, endTime: string) {
+  const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  return startTime && endTime ? toMinutes(endTime) - toMinutes(startTime) : undefined;
 }
 
 function Avatar({ member }: { member: Member }) {
@@ -84,6 +93,7 @@ export default function MeetingWaitingPage() {
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [myId, setMyId] = useState<number>();
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
+  const [emails, setEmails] = useState<Record<number, string>>({});
   const [pendingAgendas, setPendingAgendas] = useState<PendingAgenda[]>([]);
   // REQ-123 내가 쓸 수 있는 회의록 양식 (기본 양식 + 내 양식)과 즐겨찾기 표시
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
@@ -97,12 +107,14 @@ export default function MeetingWaitingPage() {
   const [micDialog, setMicDialog] = useState<'request' | 'denied' | null>(null);
   const [isCheckingMic, setIsCheckingMic] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [materialCount, setMaterialCount] = useState(0);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
   const closeMenu = useCallback(() => setOpenMenu(null), []);
   const attendeeAnchorRef = useRef<HTMLButtonElement>(null);
-  const templateAnchorRef = useRef<HTMLButtonElement>(null);
   const writerAnchorRef = useRef<HTMLButtonElement>(null);
+  const moreAnchorRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -119,6 +131,10 @@ export default function MeetingWaitingPage() {
         return;
       }
       setFolderName(folder?.name ?? '');
+      // 작성자·참여자 고르기 목록에 이메일을 함께 보여 준다 (없어도 이름으로 고를 수 있다)
+      listFolderMemberDetails(loaded.folderId)
+        .then((details) => isCurrent && setEmails(Object.fromEntries(details.map(({ userId, email }) => [userId, email]))))
+        .catch(() => undefined);
       setMyId(me?.userId);
       const usable = pendingAgendasFor(pending, loaded.meetingId);
       setFolderMembers(members);
@@ -137,7 +153,12 @@ export default function MeetingWaitingPage() {
   }, [meetingId]);
 
   if (!meeting) {
-    return <AppLayout className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</AppLayout>;
+    // 불러오는 동안에도 접힌 메뉴로 그린다 (같은 AppLayout이 이어서 쓰여 메뉴 열림 상태가 남는다)
+    return (
+      <AppLayout className={styles.page} variant="compact">
+        {toast && <Toast message={toast} onClose={closeToast} />}
+      </AppLayout>
+    );
   }
   if (meeting.status === 'IN_PROGRESS') {
     return <Navigate to={`/meetings/${meeting.meetingId}/room`} replace />;
@@ -151,7 +172,7 @@ export default function MeetingWaitingPage() {
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
   /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
-  const saveMeeting = async (patch: Partial<Meeting>) => {
+  const saveMeeting = async (patch: Partial<Meeting>): Promise<boolean> => {
     const before = meeting;
     const next = { ...meeting, ...patch };
     setMeeting(next);
@@ -165,9 +186,11 @@ export default function MeetingWaitingPage() {
             materials: prev.materials,
           },
       );
+      return true;
     } catch (error) {
       setMeeting(before);
       setToast({ text: errorMessage(error), variant: 'error' });
+      return false;
     }
   };
 
@@ -244,7 +267,12 @@ export default function MeetingWaitingPage() {
       // 다른 탭에서 이미 시작했으면 그대로 회의방으로 들어간다
       if (!isApiError(error, MEETING_ERROR_CODES.alreadyStarted)) {
         setIsStarting(false);
-        setToast({ text: isApiError(error) ? errorMessage(error) : START_FAILED_MESSAGE, variant: 'error' });
+        // 디자인 MeetingWaiting_StartFailed: 위쪽 알림 + 다시 시도
+        setToast({
+          text: isApiError(error) ? errorMessage(error) : START_FAILED_MESSAGE,
+          variant: 'error',
+          action: { label: '다시 시도', onClick: () => setIsConsentOpen(true) },
+        });
         return;
       }
     }
@@ -261,87 +289,129 @@ export default function MeetingWaitingPage() {
     }
   };
 
-  return (
-    <AppLayout className={styles.page}>
-      {toast && <Toast message={toast} onClose={closeToast} />}
+  const duration = minutesBetween(meeting.startTime, meeting.endTime);
+  const headerAvatars = meeting.attendees.slice(0, HEADER_AVATAR_COUNT);
+  const moreItems = canEdit
+    ? [
+        {
+          label: '회의 정보 수정',
+          icon: editIcon,
+          onSelect: () => navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting } }),
+        },
+        { label: '회의 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setIsCancelDialogOpen(true) },
+      ]
+    : [];
 
-      <div className={styles.head}>
-        <div className={styles.titleBlock}>
-          {/* REQ-002 회의 대기 화면은 회의명 위에 경로를 보여 준다. 누르면 그 위치로 간다 */}
-          <nav className={styles.breadcrumb} aria-label="현재 위치">
-            <button type="button" className={styles.crumb} onClick={() => navigate(`/folders/${meeting.folderId}`)}>
-              {folderName || '프로젝트 폴더'}
-            </button>
-            <Icon src={separatorIcon} size={SEPARATOR_ICON_SIZE} className={styles.separator} />
-            <span aria-current="page" className={styles.crumbCurrent}>
-              회의 상세
-            </span>
-          </nav>
-          <div className={styles.titleRow}>
-            <h1 className={styles.title}>{meeting.title}</h1>
-            <span className={styles.badge}>{STATUS_LABELS[meeting.status]}</span>
-          </div>
-          <div className={styles.metaRow}>
-            <span className={styles.meta}>
-              <Icon src={scheduleIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
-              {formatMeetingSchedule(meeting.date, meeting.startTime, meeting.endTime)}
-            </span>
-            {meeting.location && (
-              <span className={styles.meta}>
-                <Icon src={locationIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
-                {meeting.location}
-              </span>
-            )}
-          </div>
-        </div>
-        {canEdit && (
-          <button
-            type="button"
-            className={styles.editInfo}
-            onClick={() => navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting } })}
-          >
-            <Icon src={createIcon} size={ICON_SIZE} />
-            정보 수정
-          </button>
-        )}
+  // 디자인 Version02 MeetingWaiting 상단 바: 뒤로 가기, 회의명, 참여자 얼굴 / 준비 상태, 회의 시작하기
+  const header = (
+    <div className={styles.topBar}>
+      <div className={styles.topLeft}>
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label="프로젝트 폴더로 돌아가기"
+          title={folderName || undefined}
+          onClick={() => navigate(`/folders/${meeting.folderId}`)}
+        >
+          <Icon src={chevronLeftIcon} size={BACK_ICON_SIZE} />
+        </button>
+        <span className={styles.topTitle}>{meeting.title}</span>
+        <span className={styles.topAvatars} aria-label={`참여자 ${meeting.attendees.length}명`}>
+          {headerAvatars.map((member) => (
+            <Avatar key={member.userId} member={member} />
+          ))}
+        </span>
       </div>
+      {isScheduled && (
+        <div className={styles.topRight}>
+          <p className={[styles.readiness, isReady ? styles.ready : styles.notReady].join(' ')}>
+            <Icon src={isReady ? checkIcon : errorIcon} size={SMALL_ICON_SIZE} />
+            {readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer))}
+          </p>
+          <Button size="md" disabled={!isReady || isStarting} onClick={() => setIsConsentOpen(true)}>
+            <Icon src={playIcon} size={ICON_SIZE} />
+            {isStarting ? '회의 준비 중' : '회의 시작하기'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <AppLayout className={styles.page} variant="compact" header={header}>
+      {toast && <Toast message={toast} onClose={closeToast} />}
 
       <div className={styles.columns}>
         <div className={styles.main}>
-          <section className={`${styles.card} ${styles.agendaSection}`}>
-            <div className={styles.titleGroup}>
-              <h2 className={styles.sectionTitle}>회의 안건</h2>
-              <p className={styles.sectionCaption}>회의에서 논의할 안건 {meeting.agendas.length}개</p>
+          <div className={styles.head}>
+            <div className={styles.titleBlock}>
+              <div className={styles.titleRow}>
+                <h1 className={styles.title}>오늘 논의할 안건</h1>
+                <span className={styles.badge}>{STATUS_LABELS[meeting.status]}</span>
+              </div>
+              <div className={styles.metaRow}>
+                <span className={styles.meta}>
+                  <Icon src={scheduleIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+                  {formatMeetingSchedule(meeting.date, meeting.startTime, meeting.endTime)}
+                </span>
+                {meeting.location && (
+                  <span className={styles.meta}>
+                    <Icon src={locationIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+                    {meeting.location}
+                  </span>
+                )}
+              </div>
             </div>
-            <AgendaEditor
-              agendas={meeting.agendas}
-              pendingAgendas={pendingAgendas}
-              onChange={(agendas) => void saveMeeting({ agendas })}
-              readOnly={!canEdit}
-            />
-          </section>
-
-          <div className={styles.startBlock}>
-            <p className={[styles.readiness, isReady ? styles.ready : ''].filter(Boolean).join(' ')}>
-              <Icon src={isReady ? checkCircleIcon : infoIcon} size={SMALL_ICON_SIZE} />
-              {/* 취소된 회의는 준비 상태 대신 취소됐다고만 알린다 */}
-              {meeting.status === 'CANCELLED'
-                ? '취소된 회의예요'
-                : readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer))}
-            </p>
-            <Button disabled={!isReady || isStarting} onClick={() => setIsConsentOpen(true)}>
-              <Icon src={playIcon} size={ICON_SIZE} />
-              {isStarting ? '회의 준비 중' : '회의 시작하기'}
-            </Button>
-            <p className={styles.startNote}>회의를 시작하면 참여자에게 녹음, 전사 동의를 받아요</p>
+            {moreItems.length > 0 && (
+              <div className={styles.menuAnchor}>
+                <button
+                  ref={moreAnchorRef}
+                  type="button"
+                  className={[styles.iconButton, openMenu === 'more' ? styles.iconButtonActive : ''].filter(Boolean).join(' ')}
+                  aria-label="회의 더보기"
+                  aria-haspopup="menu"
+                  aria-expanded={openMenu === 'more'}
+                  onClick={() => toggleMenu('more')}
+                >
+                  <Icon src={moreIcon} size={ICON_SIZE} />
+                </button>
+                {openMenu === 'more' && (
+                  <ActionMenu
+                    label="회의 더보기"
+                    anchorRef={moreAnchorRef}
+                    className={styles.moreMenu}
+                    items={moreItems.map((item) => ({
+                      ...item,
+                      onSelect: () => {
+                        closeMenu();
+                        item.onSelect();
+                      },
+                    }))}
+                    onClose={closeMenu}
+                  />
+                )}
+              </div>
+            )}
           </div>
+
+          {meeting.status === 'CANCELLED' && <p className={styles.cancelled}>취소된 회의예요</p>}
+
+          <AgendaBoard
+            agendas={meeting.agendas}
+            pendingAgendas={pendingAgendas}
+            canEdit={canEdit}
+            durationMinutes={duration}
+            onSave={(agendas) => saveMeeting({ agendas })}
+            onCarryOver={(_, undo) =>
+              setToast({ text: '이번 회의 안건에 추가했어요', variant: 'success', action: { label: '되돌리기', onClick: undo } })
+            }
+          />
         </div>
 
         <aside className={styles.side}>
-          <div className={`${styles.card} ${styles.settingsPanel}`}>
-          <section className={styles.attendees}>
-            <div className={`${styles.attendeeHead} ${styles.menuAnchor}`}>
-              <h2 className={styles.sideTitle}>회의 참여자</h2>
+          <section className={styles.sideSection}>
+            <div className={`${styles.sideHead} ${styles.menuAnchor}`}>
+              <h2 className={styles.sideTitle}>참여자 {meeting.attendees.length}명</h2>
               {canEdit && (
                 <button
                   ref={attendeeAnchorRef}
@@ -356,136 +426,101 @@ export default function MeetingWaitingPage() {
                 </button>
               )}
               {openMenu === 'attendee' && (
-                <DropdownMenu
-                  label="참여자 추가"
+                <MemberPickerMenu
+                  title="참여자 추가"
                   emptyText="추가할 폴더 멤버가 없어요"
                   anchorRef={attendeeAnchorRef}
-                  items={folderMembers
-                    .filter(({ userId }) => !meeting.attendees.some((member) => member.userId === userId))
-                    .map((member) => ({ id: String(member.userId), label: member.name }))}
-                  onSelect={(id) => {
-                    const member = folderMembers.find(({ userId }) => String(userId) === id);
-                    if (member) {
-                      addAttendee(member);
-                    }
-                  }}
+                  className={styles.sideMenu}
+                  members={folderMembers.filter(({ userId }) => !meeting.attendees.some((member) => member.userId === userId))}
+                  selectedIds={[]}
+                  emails={emails}
+                  footnote="같은 폴더 멤버만 추가할 수 있어요"
+                  onSelect={addAttendee}
                   onClose={closeMenu}
                 />
               )}
             </div>
-            <p className={styles.attendeeCount}>참여자 {meeting.attendees.length}명</p>
-            <div className={styles.avatars}>
+            <ul className={styles.attendeeList}>
               {meeting.attendees.map((member) => (
-                <Avatar key={member.userId} member={member} />
+                <li key={member.userId} className={styles.attendeeRow}>
+                  <Avatar member={member} />
+                  <span className={styles.attendeeName}>{member.name}</span>
+                  <span className={styles.attendeeRole}>
+                    {member.userId === meeting.writer?.userId ? '회의록 작성자' : '참여자'}
+                  </span>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
 
-          <div className={styles.sideDivider} />
-
-          <section className={styles.minutesSettings}>
-            <div className={styles.sideHead}>
-              <h2 className={styles.sideTitle}>회의록 설정</h2>
-              <button type="button" className={styles.textButton} onClick={() => setTemplateModal({ view: 'gallery' })}>
-                양식 전체보기
+          <section className={styles.sideSection}>
+            <h2 className={styles.sideTitle}>회의록 설정</h2>
+            <div className={styles.settingsCard}>
+              <button
+                type="button"
+                className={styles.settingRow}
+                onClick={() => setTemplateModal({ view: 'gallery' })}
+              >
+                <span className={styles.templateName}>{selectedTemplate?.name ?? '회의록 양식 고르기'}</span>
+                <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
               </button>
-            </div>
-            <div className={styles.settingGroup}>
-              <div className={styles.settingField}>
-                <span className={styles.settingLabelRow}>회의록 양식</span>
-                <div className={styles.menuAnchor}>
-                  <button
-                    ref={templateAnchorRef}
-                    type="button"
-                    className={styles.selectBox}
-                    aria-haspopup="listbox"
-                    aria-expanded={openMenu === 'template'}
-                    disabled={!canEdit}
-                    onClick={() => toggleMenu('template')}
-                  >
-                    <span className={selectedTemplate ? styles.selectValue : styles.selectPlaceholder}>
-                      {selectedTemplate?.name ?? '양식을 선택해 주세요'}
-                    </span>
-                    <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.mutedIcon} />
-                  </button>
-                  {openMenu === 'template' && (
-                    <DropdownMenu
-                      label="즐겨찾기한 회의록 양식"
-                      emptyText="즐겨찾기한 양식이 없어요. 전체보기에서 즐겨찾기해 주세요"
-                      anchorRef={templateAnchorRef}
-                      items={templates
-                        .filter(({ isFavorite }) => isFavorite)
-                        .map((template) => ({
-                          id: String(template.templateId),
-                          label: template.name,
-                          isSelected: template.templateId === meeting.templateId,
-                        }))}
-                      onSelect={(id) => {
-                        void chooseTemplate(Number(id));
-                        closeMenu();
-                      }}
-                      onClose={closeMenu}
-                    />
-                  )}
-                </div>
-                <p className={styles.settingCaption}>즐겨찾기한 양식 중에서 고를 수 있어요</p>
-              </div>
-              <div className={styles.settingField}>
-                <span className={styles.settingLabelRow}>회의록 작성자</span>
-                <div className={styles.menuAnchor}>
-                  <button
-                    ref={writerAnchorRef}
-                    type="button"
-                    className={styles.selectBox}
-                    aria-haspopup="listbox"
-                    aria-expanded={openMenu === 'writer'}
-                    disabled={!canEdit}
-                    onClick={() => toggleMenu('writer')}
-                  >
-                    <span className={meeting.writer ? styles.selectValue : styles.selectPlaceholder}>
-                      {meeting.writer?.name ?? '작성자를 선택해 주세요'}
-                    </span>
-                    <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.mutedIcon} />
-                  </button>
-                  {openMenu === 'writer' && (
-                    <DropdownMenu
-                      label="회의록 작성자"
-                      emptyText="회의 참여자를 먼저 추가해 주세요"
-                      anchorRef={writerAnchorRef}
-                      items={meeting.attendees.map((member) => ({
-                        id: String(member.userId),
-                        label: member.name,
-                        isSelected: member.userId === meeting.writer?.userId,
-                      }))}
-                      onSelect={(id) => {
-                        void saveMeeting({ writer: meeting.attendees.find(({ userId }) => String(userId) === id) });
-                        closeMenu();
-                      }}
-                      onClose={closeMenu}
-                    />
-                  )}
-                </div>
-                <p className={styles.settingCaption}>회의 참여자 중 한 명을 골라요</p>
+              <div className={styles.menuAnchor}>
+                <button
+                  ref={writerAnchorRef}
+                  type="button"
+                  className={styles.settingRow}
+                  aria-haspopup="listbox"
+                  aria-expanded={openMenu === 'writer'}
+                  disabled={!canEdit}
+                  onClick={() => toggleMenu('writer')}
+                >
+                  <span className={styles.settingLabel}>회의록 작성자</span>
+                  <span className={meeting.writer ? styles.settingValue : styles.settingPlaceholder}>
+                    {meeting.writer?.name ?? '선택해 주세요'}
+                  </span>
+                  <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+                </button>
+                {openMenu === 'writer' && (
+                  <MemberPickerMenu
+                    title="회의 참석자"
+                    emptyText="회의 참여자를 먼저 추가해 주세요"
+                    anchorRef={writerAnchorRef}
+                    className={styles.writerMenu}
+                    members={meeting.attendees}
+                    selectedIds={meeting.writer ? [meeting.writer.userId] : []}
+                    emails={emails}
+                    footnote="회의록 작성자는 참석자 중 한 명이에요"
+                    onSelect={(member) => {
+                      void saveMeeting({ writer: member });
+                      closeMenu();
+                    }}
+                    onClose={closeMenu}
+                  />
+                )}
               </div>
             </div>
           </section>
 
-          <div className={styles.sideDivider} />
-
-          <section className={styles.materials}>
-            <div className={styles.titleGroup}>
-              <h2 className={styles.sideTitle}>사전 자료</h2>
-              <p className={styles.sectionCaption}>회의 전에 필요한 자료를 공유해요</p>
+          <section className={styles.sideSection}>
+            <div className={styles.sideHead}>
+              <h2 className={styles.sideTitle}>사전 자료{materialCount > 0 ? ` ${materialCount}` : ''}</h2>
+              {isAttendee && meeting.status !== 'CANCELLED' && (
+                <button type="button" className={styles.linkButton} onClick={() => setIsUploadOpen(true)}>
+                  올리기
+                </button>
+              )}
             </div>
-            <MeetingMaterials meetingId={meeting.meetingId} canUpload={isAttendee && meeting.status !== 'CANCELLED'} />
+            <MeetingMaterials
+              meetingId={meeting.meetingId}
+              canUpload={isAttendee && meeting.status !== 'CANCELLED'}
+              isUploadOpen={isUploadOpen}
+              onUploadClose={() => setIsUploadOpen(false)}
+              onCountChange={setMaterialCount}
+              onUploaded={(count, undo) =>
+                setToast({ text: `자료 ${count}개를 올렸어요`, variant: 'success', action: { label: '되돌리기', onClick: undo } })
+              }
+            />
           </section>
-          </div>
-
-          {canEdit && (
-            <Button variant="danger" size="md" block onClick={() => setIsCancelDialogOpen(true)}>
-              회의 취소하기
-            </Button>
-          )}
         </aside>
       </div>
 
@@ -527,10 +562,11 @@ export default function MeetingWaitingPage() {
       )}
       {isCancelDialogOpen && (
         <ConfirmDialog
-          title="회의를 취소할까요?"
-          message={'취소하면 참석자에게 알림이 가고\n되돌릴 수 없어요.'}
+          title="회의를 삭제할까요?"
+          message={'삭제하면 참석자에게 알림이 가고\n되돌릴 수 없어요.'}
           cancelLabel="돌아가기"
-          confirmLabel="회의 취소"
+          confirmLabel="회의 삭제"
+          isDanger
           onCancel={() => setIsCancelDialogOpen(false)}
           onConfirm={cancel}
         />
