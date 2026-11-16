@@ -119,6 +119,8 @@ export interface MinutesSection {
   sectionId: number | null;
   title: string;
   content: string;
+  /** REQ-194 서식을 담은 HTML (줄글 칸). 없으면 null */
+  richContent: string | null;
 }
 
 /** REQ-131~137 회의록 (작성 화면) */
@@ -144,6 +146,8 @@ export interface MinutesDetail {
    */
   draftStatus: 'WAITING_SOURCE' | 'REQUESTED' | 'SUCCEEDED' | 'FAILED' | null;
   draftError: string | null;
+  /** REQ-194 서식 기능이 켜져 있는지. 서버에서 끄면 예전처럼 서식 없는 입력 칸을 쓴다 */
+  richText: boolean;
 }
 
 type MinutesDetailResponse = Omit<MinutesDetail, 'writer' | 'attendees'> & {
@@ -156,7 +160,13 @@ function toMinutesDetail(response: MinutesDetailResponse): MinutesDetail {
     ...response,
     writer: toMember(response.writer),
     attendees: response.attendees.map(toMember),
-    sections: response.sections.map(({ sectionId, title, content }) => ({ sectionId, title, content })),
+    sections: response.sections.map(({ sectionId, title, content, richContent }) => ({
+      sectionId,
+      title,
+      content,
+      richContent: richContent ?? null,
+    })),
+    richText: response.richText ?? false,
   };
 }
 

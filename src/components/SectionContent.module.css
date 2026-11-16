@@ -67,6 +67,31 @@
   field-sizing: content;
 }
 
+/* REQ-194 서식 칸. 서식 막대의 글머리 기호, 정렬이 그대로 보이게 */
+.rich {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.rich ul,
+.rich ol {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.rich ul {
+  list-style: disc;
+}
+
+.rich ol {
+  list-style: decimal;
+}
+
+.rich:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.6;
+}
+
 .textarea:focus {
   outline: 1px solid var(--blue-70);
 }

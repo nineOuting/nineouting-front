@@ -31,7 +31,7 @@ interface MinutesDocumentProps {
   templates: MinutesTemplate[];
   /** 문서 위에 띄울 안내 (AI 초안 만드는 중 등) */
   notice?: ReactNode;
-  onChangeSection: (index: number, content: string) => void;
+  onChangeSection: (index: number, content: string, richContent: string | null) => void;
 }
 
 /** REQ-132 선택한 양식에 맞춘 회의록을 문서(A4) 모양으로 편집한다. 쪽 이동, 확대·축소 (디자인 CanvasArea) */
@@ -135,7 +135,9 @@ export default function MinutesDocument({
                     label={section.title}
                     editable={canEdit}
                     placeholder={canEdit ? '내용을 입력해 주세요' : '내용이 없어요.'}
-                    onChange={(content) => onChangeSection(index, content)}
+                    richText={minutes.richText}
+                    richContent={section.richContent}
+                    onChange={(content, richContent) => onChangeSection(index, content, richContent)}
                   />
                 </div>
               );
