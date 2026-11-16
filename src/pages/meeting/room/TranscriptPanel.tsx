@@ -85,8 +85,8 @@ export default function TranscriptPanel({
         // MSG-025
         <div className={room.empty}>
           <Icon src={transcriptIcon} size={EMPTY_ICON_SIZE} className={room.emptyIcon} />
-          <p className={room.emptyTitle}>회의 내용을 듣고 있습니다.</p>
-          <p className={room.emptyCaption}>발언이 시작되면 이곳에 전사됩니다.</p>
+          <p className={room.emptyTitle}>회의 내용을 듣고 있어요.</p>
+          <p className={room.emptyCaption}>발언이 시작되면 이곳에 전사돼요.</p>
         </div>
       ) : (
         <ol ref={listRef} className={styles.lines} aria-live="polite" onScroll={handleScroll}>

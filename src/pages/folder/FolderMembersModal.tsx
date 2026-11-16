@@ -9,7 +9,7 @@ import TransferOwnerDialog from '../workspace/TransferOwnerDialog';
 import styles from '../workspace/MembersModal.module.css';
 
 // MSG-032
-const NO_MATCH_MESSAGE = '일치하는 멤버가 없습니다. 이름이나 이메일을 다시 확인해 주세요.';
+const NO_MATCH_MESSAGE = '일치하는 멤버가 없어요. 이름이나 이메일을 다시 확인해 주세요.';
 const DIVIDER_WIDTH = 542;
 
 interface FolderMembersModalProps {
@@ -160,7 +160,7 @@ export default function FolderMembersModal({
         // MSG-033
         <TopConfirm
           title="멤버를 프로젝트에서 제외할까요?"
-          message="제외한 멤버는 프로젝트와 접근 권한이 없는 하위 폴더를 더 이상 확인할 수 없어요."
+          message="제외한 멤버는 프로젝트와 접근 권한이 없는 하위 폴더를 더 이상 볼 수 없어요."
           confirmLabel="제외하기"
           onCancel={() => setIsRemoveConfirmOpen(false)}
           onConfirm={removeSelected}

@@ -81,8 +81,8 @@ export default function LiveSummaryCard({ agenda, notice }: LiveSummaryCardProps
         // MSG-024
         <div className={room.empty}>
           <Icon src={summaryIcon} size={EMPTY_ICON_SIZE} className={room.emptyIcon} />
-          <p className={room.emptyTitle}>아직 논의 내용이 없습니다.</p>
-          <p className={room.emptyCaption}>회의 발언이 시작되면 이곳에서 논의 흐름과 주요 의견을 확인할 수 있습니다.</p>
+          <p className={room.emptyTitle}>아직 논의 내용이 없어요.</p>
+          <p className={room.emptyCaption}>회의 발언이 시작되면 이곳에서 논의 흐름과 주요 의견을 확인할 수 있어요.</p>
         </div>
       )}
     </section>

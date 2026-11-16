@@ -48,7 +48,7 @@ const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
 // MSG-031 (서버 FOLDER_NAME_DUPLICATED)
-const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있습니다. 다른 이름을 입력해 주세요.';
+const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있어요. 다른 이름을 입력해 주세요.';
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -412,10 +412,10 @@ export default function FolderPage() {
             onPageChange={(next) => changeView({ page: next })}
             rowMenu={meetingMenu}
             empty={
-              // MSG-034 (와이어프레임 ProjectEmptyPage 문구)
+              // MSG-034
               <EmptyState
                 title="아직 회의가 없어요"
-                description="첫 회의를 만들고 안건을 정리해 보세요"
+                description="[새 회의]를 눌러 첫 회의를 만들어 보세요."
                 action={
                   <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
                     새 회의 만들기
@@ -451,8 +451,8 @@ export default function FolderPage() {
             </div>
             <div className={styles.pendingCard}>
               {pendingAgendas.length === 0 ? (
-                // MSG-035 (와이어프레임 ProjectEmptyPage 문구)
-                <EmptyState title="남은 안건이 없어요" description="회의에서 결정되지 않은 안건이 여기에 모여요" />
+                // MSG-035
+                <EmptyState title="이전 회의에서 넘어온 안건이 없어요." />
               ) : (
                 <ul className={styles.pendingList}>
                   {pendingAgendas.map((agenda) => (
@@ -528,8 +528,8 @@ export default function FolderPage() {
       {dialog?.type === 'delete' && (
         // MSG-046
         <ConfirmDialog
-          title="폴더를 삭제하시겠습니까?"
-          message={'폴더 안의 회의와 회의록도 함께 삭제 목록으로 이동하며\n3개월 안에 복구할 수 있습니다.'}
+          title="폴더를 삭제할까요?"
+          message={'폴더 안의 회의와 회의록도 함께 삭제 목록으로 이동하며\n3개월 안에 복구할 수 있어요.'}
           cancelLabel="취소"
           confirmLabel="삭제"
           isDanger
@@ -541,7 +541,7 @@ export default function FolderPage() {
         (folder.isOwner ? (
           // MSG-045
           <ConfirmDialog
-            title="소유권을 양도해야 폴더에서 나갈 수 있습니다."
+            title="소유권을 양도해야 폴더에서 나갈 수 있어요."
             message="다른 폴더 멤버에게 소유권을 양도한 후 다시 시도해 주세요."
             cancelLabel="취소"
             confirmLabel="소유권 양도"
@@ -551,8 +551,8 @@ export default function FolderPage() {
         ) : (
           // MSG-044
           <ConfirmDialog
-            title="프로젝트 폴더에서 나가시겠습니까?"
-            message="나가면 이 폴더의 회의와 회의록을 더 이상 볼 수 없습니다."
+            title="프로젝트 폴더에서 나갈까요?"
+            message="나가면 이 폴더의 회의와 회의록을 더 이상 볼 수 없어요."
             cancelLabel="취소"
             confirmLabel="나가기"
             onCancel={closeDialog}

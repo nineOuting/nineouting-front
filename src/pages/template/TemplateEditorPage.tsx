@@ -236,7 +236,7 @@ export default function TemplateEditorPage() {
       {isResetDialogOpen && (
         <ConfirmDialog
           title="기본 양식으로 초기화할까요?"
-          message="지금까지 변경한 항목과 서식 설정이 기본값으로 돌아갑니다."
+          message="지금까지 바꾼 항목과 서식 설정이 기본값으로 돌아가요."
           cancelLabel="취소"
           confirmLabel="초기화"
           onCancel={() => setIsResetDialogOpen(false)}

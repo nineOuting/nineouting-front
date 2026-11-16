@@ -7,7 +7,7 @@ import useCloseGuard from '../../components/useCloseGuard';
 // workspace-service CreateFolderRequest 길이 제한과 같다
 const NAME_MAX_LENGTH = 50;
 // MSG-031
-const DUPLICATE_MESSAGE = '같은 이름의 폴더가 이미 있습니다. 다른 이름을 입력해 주세요.';
+const DUPLICATE_MESSAGE = '같은 이름의 폴더가 이미 있어요. 다른 이름을 입력해 주세요.';
 
 interface FolderNameModalProps {
   title: string;
