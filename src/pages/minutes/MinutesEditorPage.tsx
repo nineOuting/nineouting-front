@@ -245,7 +245,9 @@ export default function MinutesEditorPage() {
             const filled = new Map(latest.sections.map((section) => [section.sectionId, section.content]));
             setSections((prev) =>
               prev.map((section) =>
-                section.content.trim() ? section : { ...section, content: filled.get(section.sectionId) ?? section.content },
+                section.content.trim()
+                  ? section
+                  : { ...section, content: filled.get(section.sectionId) ?? section.content, richContent: null },
               ),
             );
           }
@@ -350,14 +352,16 @@ export default function MinutesEditorPage() {
     },
   ];
 
-  const changeSection = (index: number, content: string) => {
+  const changeSection = (index: number, content: string, richContent: string | null) => {
     const now = Date.now();
     if (now - lastEditAtRef.current > HISTORY_MERGE_MS) {
       setPast((prev) => [...prev, sections].slice(-HISTORY_LIMIT));
       setFuture([]);
     }
     lastEditAtRef.current = now;
-    setSections((prev) => prev.map((section, position) => (position === index ? { ...section, content } : section)));
+    setSections((prev) =>
+      prev.map((section, position) => (position === index ? { ...section, content, richContent } : section)),
+    );
     setIsDirty(true);
   };
 
@@ -588,8 +592,8 @@ export default function MinutesEditorPage() {
           )}
         </ul>
       </div>
-      {/* 디자인 Version02 서식 도구 막대. 문서 칸 편집기가 아직 서식을 저장하지 않아 고른 글자에 표시만 바꾼다 */}
-      {isEditing && (
+      {/* 디자인 Version02 서식 도구 막대 (REQ-194). 줄글 칸에서 고른 글자에 서식을 넣고 저장한다. 서버에서 서식 기능을 끄면 숨긴다 */}
+      {isWriter && minutes.richText && (
         <div className={styles.formatBar} role="toolbar" aria-label="서식">
           {FORMAT_ACTIONS.map((action, index) =>
             action === 'divider' ? (
