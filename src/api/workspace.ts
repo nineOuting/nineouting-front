@@ -129,7 +129,7 @@ export async function listFolders(workspaceId: number): Promise<Omit<FolderSumma
   const nodes = await request<FolderNode[]>('GET', `/api/workspaces/${workspaceId}/folders`);
   return nodes
     .filter(({ accessible }) => accessible)
-    .map(({ folderId, name, isDefault }) => ({ folderId, name, isDefault }));
+    .map(({ folderId, name, isDefault, ownerUserId }) => ({ folderId, name, isDefault, ownerUserId }));
 }
 
 /** REQ-039~040 새 프로젝트 폴더 */

@@ -331,9 +331,8 @@ export default function FolderPage() {
                   anchorRef={folderMenuRef}
                   onClose={() => setIsFolderMenuOpen(false)}
                   items={[
-                    // 이름 바꾸기는 폴더를 만든 사람만 (기본 폴더 이름은 워크스페이스 소유자)
-                    // 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정)
-                    ...(folder.isOwner || (folder.isDefault && isWorkspaceOwner)
+                    // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정, 기본 폴더 이름은 워크스페이스 소유자)
+                    ...(folder.isOwner || isWorkspaceOwner
                       ? [{ label: '폴더 이름 바꾸기', icon: editIcon, onSelect: () => setDialog({ type: 'rename' }) }]
                       : []),
                     { label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() },
