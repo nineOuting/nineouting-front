@@ -412,10 +412,10 @@ export default function FolderPage() {
             onPageChange={(next) => changeView({ page: next })}
             rowMenu={meetingMenu}
             empty={
-              // MSG-034
+              // MSG-034 (와이어프레임 ProjectEmptyPage 문구)
               <EmptyState
                 title="아직 회의가 없어요"
-                description="[새 회의]를 눌러 첫 회의를 만들어 보세요."
+                description="첫 회의를 만들고 안건을 정리해 보세요"
                 action={
                   <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
                     새 회의 만들기
@@ -451,8 +451,8 @@ export default function FolderPage() {
             </div>
             <div className={styles.pendingCard}>
               {pendingAgendas.length === 0 ? (
-                // MSG-035
-                <EmptyState title="이전 회의에서 넘어온 안건이 없어요." />
+                // MSG-035 (와이어프레임 ProjectEmptyPage 문구)
+                <EmptyState title="남은 안건이 없어요" description="회의에서 결정되지 않은 안건이 여기에 모여요" />
               ) : (
                 <ul className={styles.pendingList}>
                   {pendingAgendas.map((agenda) => (
