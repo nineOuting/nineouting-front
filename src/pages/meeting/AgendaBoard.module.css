@@ -1,0 +1,457 @@
+/* 디자인 Version02 MeetingWaiting AgendaCard: 흰 카드, 둥근 12px, 안쪽 24px. 수정 중에는 보라 테두리 */
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--padding-card);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.editing {
+  border-color: var(--interactive-selected-border);
+  box-shadow: 0 0 0 1px var(--interactive-selected-border), var(--shadow-sm);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding-bottom: var(--spacing-5, 20px);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.title {
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-md);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-primary);
+}
+
+.countBadge {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.subtitle {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-secondary);
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+/* 디자인 Button sm: 높이 32px */
+.smallButton {
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  font-size: var(--font-size-caption);
+}
+
+/* 안건이 없을 때 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-6) 0;
+  border-bottom: var(--border-width-default) solid var(--border-default);
+  text-align: center;
+}
+
+.emptyIcon {
+  margin-bottom: var(--spacing-3);
+  color: var(--text-primary);
+}
+
+.emptyTitle {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.emptyText {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 읽기 모드 */
+.viewList {
+  display: flex;
+  flex-direction: column;
+}
+
+.viewItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5, 20px) 0;
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+.viewTitleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.viewTitle {
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-primary);
+}
+
+.carriedChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.decisionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding-left: var(--spacing-8);
+}
+
+.decisionLabel {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+}
+
+.decisionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.decisionItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-height: 40px;
+  padding-left: var(--spacing-3);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+/* 아직 정하지 않은 결정할 사항: 점선 동그라미 */
+.pendingDot {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+.noDecision {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+/* 수정 모드 */
+.editList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding-top: var(--spacing-6);
+}
+
+.editItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4) 0 var(--spacing-6);
+}
+
+.newItem {
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-6) 0;
+  border: var(--border-width-default) dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.editTitleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.handle,
+.smallHandle {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  width: 40px;
+  color: var(--text-primary);
+  cursor: grab;
+}
+
+.smallHandle {
+  width: 24px;
+  color: var(--text-disabled);
+}
+
+.titleInput,
+.decisionInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.titleInput {
+  height: 42px;
+  padding: 0 var(--input-md-padding-x);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.decisionInput {
+  height: 34px;
+  padding: 0 var(--input-md-padding-x);
+  font-size: var(--font-size-body-md);
+}
+
+.titleInput:focus,
+.decisionInput:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.titleInput::placeholder,
+.decisionInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.inputError,
+.inputError:focus {
+  border-color: var(--border-error);
+}
+
+.fieldError {
+  padding-left: 48px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
+}
+
+.carriedNote {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding-left: 48px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.decisionEdit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding-left: 44px;
+}
+
+.decisionEdit > .decisionLabel {
+  margin-top: var(--spacing-2);
+}
+
+.decisionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin-left: -28px;
+}
+
+.iconButton {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.addDecision {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-1) 0;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.addDecision:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.addDecision:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.addAgenda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  height: 52px;
+  margin-top: var(--spacing-3);
+  border: var(--border-width-default) dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.addAgenda:hover {
+  background: var(--primary-ghost-hover);
+}
+
+/* 이전 회의에서 남은 안건 */
+.pending {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding-top: var(--spacing-5, 20px);
+}
+
+.editing .pending {
+  margin-top: var(--spacing-3);
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.pendingHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.pendingTitle {
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
+}
+
+.pendingCount {
+  margin-left: var(--spacing-2);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular, 400);
+  color: var(--text-secondary);
+}
+
+.pendingHint {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.pendingList {
+  overflow: hidden;
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.pendingList > li + li {
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.pendingItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  cursor: pointer;
+}
+
+.pendingItem:hover {
+  background: var(--interactive-hover);
+}
+
+.pendingCheck {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-default);
+  cursor: pointer;
+}
+
+.pendingTexts {
+  display: flex;
+  flex-direction: column;
+}
+
+.pendingName {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+}
+
+.pendingMeta {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.pendingList > li {
+  position: relative;
+}
+
+.pendingItem {
+  padding-right: 48px;
+}
+
+.pendingDelete {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-4);
+  transform: translateY(-50%);
+}

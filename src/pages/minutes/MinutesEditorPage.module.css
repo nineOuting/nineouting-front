@@ -69,14 +69,14 @@
   display: flex;
   align-items: center;
   gap: var(--gap-title-subtitle);
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-disabled);
   white-space: nowrap;
 }
 
 .metaIcon {
-  color: var(--neutral-default);
+  color: var(--text-disabled);
 }
 
 .status {
@@ -99,7 +99,7 @@
   align-items: center;
   gap: var(--spacing-1);
   height: 32px;
-  padding: 0 var(--button-md-padding-x);
+  padding: 0 var(--spacing-2);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
@@ -211,4 +211,72 @@
 .aiNotice {
   display: flex;
   flex-direction: column;
+}
+
+/* 디자인 Version02 상단 바 다운로드: 글자 버튼 */
+.downloadAction {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.downloadAction:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.downloadOpen {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+}
+
+.downloadMenu {
+  top: calc(100% + 4px);
+  right: 0;
+  width: 220px;
+}
+
+/* 디자인 Version02 서식 도구 막대 */
+.formatBar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
+  height: 48px;
+  padding-right: 400px;
+  background: var(--bg-surface);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+.formatButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.formatButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.formatDivider {
+  width: 1px;
+  height: 16px;
+  margin: 0 var(--spacing-1);
+  background: var(--border-default);
+}
+
+.formatBold {
+  font-weight: var(--font-weight-bold);
+}
+
+.formatItalic {
+  font-style: italic;
+  font-family: serif;
+}
+
+.formatUnderline {
+  text-decoration: underline;
 }

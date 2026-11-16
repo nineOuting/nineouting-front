@@ -423,6 +423,15 @@ export async function listFolderPendingAgendas(folderId: number): Promise<Folder
   }));
 }
 
+/** 남은 안건 버리기 (대기 중인 안건만). 버린 직후 restorePendingAgenda로 되돌린다 */
+export function discardPendingAgenda(folderId: number, pendingAgendaId: number) {
+  return request('DELETE', `/api/folders/${folderId}/pending-agendas/${pendingAgendaId}`);
+}
+
+export function restorePendingAgenda(folderId: number, pendingAgendaId: number) {
+  return request('POST', `/api/folders/${folderId}/pending-agendas/${pendingAgendaId}/restore`);
+}
+
 /** REQ-051~052, 068 폴더의 남은 안건 */
 export async function listPendingAgendas(folderId: number): Promise<PendingAgenda[]> {
   const items = await request<PendingAgendaResponse[]>('GET', `/api/folders/${folderId}/pending-agendas`);
@@ -467,6 +476,21 @@ export function deleteMeetingAgenda(meetingId: number, agendaId: number) {
 
 export function addMeetingAgenda(meetingId: number, title: string, decisionPoints: string[]) {
   return request<AgendaResponse>('POST', `/api/meetings/${meetingId}/agendas`, { title, decisionPoints });
+}
+
+/** 회의 중 결정할 사항 하나 더하기 (회의록 작성자, 안건당 5개까지) */
+export function addDecisionPoint(meetingId: number, agendaId: number, content: string) {
+  return request<AgendaResponse>('POST', `/api/meetings/${meetingId}/agendas/${agendaId}/decision-points`, { content });
+}
+
+/** 완료로 체크한 할 일 항목 번호 */
+export function listTodoChecks(meetingId: number) {
+  return request<string[]>('GET', `/api/meetings/${meetingId}/todo-checks`);
+}
+
+/** 할 일 완료 체크, 풀기 (회의록 작성자, 진행 중). 바뀐 뒤의 전체 목록을 돌려준다 */
+export function checkTodo(meetingId: number, itemId: string, done: boolean) {
+  return request<string[]>('PUT', `/api/meetings/${meetingId}/todo-checks/${encodeURIComponent(itemId)}`, { done });
 }
 
 /** REQ-079 지금까지의 전사 텍스트 */

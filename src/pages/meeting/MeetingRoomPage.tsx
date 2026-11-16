@@ -3,7 +3,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
   finishMeeting,
+  addDecisionPoint,
   addMeetingAgenda,
+  checkTodo,
+  listTodoChecks,
   deleteMeetingAgenda,
   renameMeetingAgenda,
   cancelMeetingEnd,
@@ -19,7 +22,6 @@ import {
   listTranscripts,
   pauseMeeting,
   requestMeetingEnd,
-  setAgendaDecisionStatus,
   setDecisionStatus,
   type DecisionStatusEdit,
   resumeMeeting,
@@ -28,12 +30,10 @@ import {
   type MeetingDetailResponse,
 } from '../../api/meeting';
 import { getMe } from '../../api/user';
-import dotNotDiscussed from '../../assets/dot-not-discussed.svg';
-import dotRecording from '../../assets/dot-recording.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
-import pauseIcon from '../../assets/icons/pause.svg';
-import playIcon from '../../assets/icons/play.svg';
 import stopIcon from '../../assets/icons/stop.svg';
+import infoIcon from '../../assets/icons/info.svg';
+import visibilityIcon from '../../assets/icons/visibility.svg';
 import AiNotice from '../../components/AiNotice';
 import Button from '../../components/Button';
 import Coachmark from '../../components/Coachmark';
@@ -41,32 +41,32 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
-import OfflineBanner from '../../components/OfflineBanner';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
 import { SttStream } from '../../meeting/SttStream';
 import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
 import type { DecisionPoint, RoomAgenda, RoomSummaryItem, RoomTodo, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
 import AddAgendaModal from './room/AddAgendaModal';
-import AgendaStatusCard from './room/AgendaStatusCard';
+import AgendaFocus from './room/AgendaFocus';
+import AgendaNav from './room/AgendaNav';
 import ChatPanel from './room/ChatPanel';
-import chatStyles from './room/ChatPanel.module.css';
 import EndMeetingModal, { type EndStep } from './room/EndMeetingModal';
 import type { TodoChange } from './room/TodoList';
 import EvidencePanel from './room/EvidencePanel';
-import LiveSummaryCard from './room/LiveSummaryCard';
 import { AgendaSuggestion, OffTopicNotice } from './room/RoomNotices';
 import {
   applyBoard,
   summaryAgendas,
   elapsedSecondsOf,
-  formatElapsed,
   mergeTranscript,
   removeTranscript,
   snapshotAgendas,
   toRoomAgenda,
   toTranscriptLine,
 } from './room/roomData';
+import RecordingBar from './room/RecordingBar';
+import RoomBanner, { SilenceNotice } from './room/RoomBanner';
+import { askAbout, detectTerms } from './room/termGlossary';
 import TranscriptPanel from './room/TranscriptPanel';
 import styles from './MeetingRoomPage.module.css';
 
@@ -74,10 +74,12 @@ import styles from './MeetingRoomPage.module.css';
 const ONBOARDING_KEY = 'nepnep-room-onboarding';
 const AGENDA_TITLE_MAX_LENGTH = 100;
 const SMALL_ICON_SIZE = 16;
-const BUTTON_ICON_SIZE = 16;
-const DOT_SIZE = 8;
+const BACK_ICON_SIZE = 24;
+const HEADER_AVATAR_COUNT = 4;
 const TICK_MS = 1000;
 const MS_PER_SECOND = 1000;
+// 디자인 Live_15: 녹음 중인데 이만큼 전사가 오지 않으면 마이크를 확인하라고 알린다
+const SILENCE_SECONDS = 20;
 const MIC_FAILED_MESSAGE = '마이크를 쓸 수 없어 녹음하지 못하고 있어요. 브라우저의 마이크 권한을 확인해 주세요.';
 
 /**
@@ -101,6 +103,8 @@ export default function MeetingRoomPage() {
   const [detail, setDetail] = useState<MeetingDetailResponse | null>(null);
   const [isWriter, setIsWriter] = useState(false);
   const [agendas, setAgendas] = useState<RoomAgenda[]>([]);
+  // 완료로 체크한 할 일 항목 번호 (회의록 작성자가 체크하면 회의방 모두에게 온다)
+  const [doneTodoIds, setDoneTodoIds] = useState<string[]>([]);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -122,6 +126,10 @@ export default function MeetingRoomPage() {
   const [selectedDecisionId, setSelectedDecisionId] = useState<string>();
   // REQ-185 오른쪽 패널: 실시간 전사 / 챗봇 (임시 디자인)
   const [sideTab, setSideTab] = useState<'transcript' | 'chat'>('transcript');
+  // 용어 카드 [더 묻기]로 내 도우미를 열 때 채울 질문. 바뀔 때마다 내 도우미를 새로 그린다
+  const [helperQuery, setHelperQuery] = useState<{ text: string; key: number } | null>(null);
+  // 내 도우미 탭을 마지막으로 본 때까지 알려 준 용어 수 (그 뒤로 새로 나온 용어를 탭에 표시)
+  const [seenTermCount, setSeenTermCount] = useState(0);
   // 안건 추가 창. 새 안건 제안에서 열면 제안된 제목을 채운다
   const [addAgendaTitle, setAddAgendaTitle] = useState<string | null>(null);
   const [suggestion, setSuggestion] = useState<SuggestedAgenda | null>(demo === 'suggestion' ? ROOM_SUGGESTION : null);
@@ -130,6 +138,12 @@ export default function MeetingRoomPage() {
   const [currentAgendaId, setCurrentAgendaId] = useState<string>();
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  // 마지막 전사가 온 때 (소리 없음 안내용). 안내를 닫으면 다음 전사가 올 때까지 다시 띄우지 않는다
+  const lastLineAtRef = useRef(0);
+  const [silentSeconds, setSilentSeconds] = useState(0);
+  // 안내를 닫았을 때의 전사 줄 수. 새 줄이 오면 다시 띄울 수 있다
+  const [silenceDismissedAt, setSilenceDismissedAt] = useState<number | null>(null);
   // 안건 보드는 회의방 메시지와 API 두 길로 온다. 늦게 온 옛 버전은 버린다
   const boardVersionRef = useRef(0);
   // 지금 보드의 새 안건 제안·주제 이탈 알림과 사용자가 닫은 알림 (같은 알림이 다음 보드로 또 와도 다시 띄우지 않는다)
@@ -168,6 +182,21 @@ export default function MeetingRoomPage() {
       // 저장하지 못하면 다음에 한 번 더 보일 뿐이다
     }
   }, []);
+
+  // REQ-082 인터넷이 끊기면 가운데 위에 빨간 줄로 알린다 (끊긴 동안의 소리는 SttStream이 모아 두었다가 보낸다)
+  useEffect(() => {
+    const update = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    lastLineAtRef.current = Date.now();
+  }, [transcript]);
 
   // REQ-171 회의 중에 새로고침, 탭 닫기, 브라우저 뒤로 가기로 나가려 하면 확인한다
   useEffect(() => {
@@ -215,11 +244,13 @@ export default function MeetingRoomPage() {
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
   const reloadLive = useCallback(
     async (id: number) => {
-      const [lines, board, classified] = await Promise.all([
+      const [lines, board, classified, todoChecks] = await Promise.all([
         listTranscripts(id),
         getAgendaBoard(id),
         listLineAgendas(id).catch(() => []),
+        listTodoChecks(id).catch(() => []),
       ]);
+      setDoneTodoIds(todoChecks);
       setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
       if (board) {
         showBoard(board);
@@ -282,6 +313,18 @@ export default function MeetingRoomPage() {
     return () => window.clearInterval(timerId);
   }, [isLive, isPaused]);
 
+  useEffect(() => {
+    if (!isWriter || !isLive || isPaused) {
+      return undefined;
+    }
+    lastLineAtRef.current = Date.now();
+    const timerId = window.setInterval(
+      () => setSilentSeconds(Math.floor((Date.now() - lastLineAtRef.current) / MS_PER_SECOND)),
+      TICK_MS,
+    );
+    return () => window.clearInterval(timerId);
+  }, [isWriter, isLive, isPaused]);
+
   // REQ-079~080, 082 회의록 작성자 브라우저가 마이크 소리를 STT로 보낸다
   useEffect(() => {
     if (!isWriter || !isLive || numericMeetingId === undefined) {
@@ -321,6 +364,9 @@ export default function MeetingRoomPage() {
         break;
       case 'agendaBoard':
         showBoard(message.data);
+        break;
+      case 'todoChecks':
+        setDoneTodoIds(message.data);
         break;
       case 'agendaClassification': {
         const changed = message.data.lines.filter(({ seq }) => !correctedSeqsRef.current.has(seq));
@@ -416,6 +462,42 @@ export default function MeetingRoomPage() {
     }
   };
 
+  /** 할 일 완료 체크. 화면을 먼저 바꾸고, 실패하면 되돌린다 */
+  const toggleTodo = async (todoId: string, done: boolean) => {
+    const before = doneTodoIds;
+    setDoneTodoIds((prev) => (done ? [...prev.filter((id) => id !== todoId), todoId] : prev.filter((id) => id !== todoId)));
+    try {
+      setDoneTodoIds(await checkTodo(meetingIdNumber, todoId, done));
+    } catch (error) {
+      setDoneTodoIds(before);
+      showError(error);
+    }
+  };
+
+  /** 회의 중 결정할 사항 더하기. 새 사항만 붙이고 이미 있던 사항의 판정은 그대로 둔다 (ai-service에도 안건 목록이 다시 간다) */
+  const addDecision = async (agendaId: string, content: string) => {
+    try {
+      const saved = toRoomAgenda(await addDecisionPoint(meetingIdNumber, Number(agendaId), content));
+      setAgendas((prev) =>
+        prev.map((agenda) =>
+          agenda.id === agendaId
+            ? {
+                ...agenda,
+                decisionPoints: [
+                  ...agenda.decisionPoints,
+                  ...saved.decisionPoints.filter(({ id }) => !agenda.decisionPoints.some((point) => point.id === id)),
+                ],
+              }
+            : agenda,
+        ),
+      );
+      return true;
+    } catch (error) {
+      showError(error);
+      return false;
+    }
+  };
+
   /** REQ-126 고친 결정 내용은 ai-service로 가고, 고친 표시가 붙은 보드가 회의방으로 다시 온다. 근거 발언은 그대로 둔다 */
   const saveDecision = async (decisionId: string, decisionSummary: string) => {
     const agenda = agendas.find(({ decisionPoints }) => decisionPoints.some(({ id }) => id === decisionId));
@@ -463,21 +545,6 @@ export default function MeetingRoomPage() {
     } catch (error) {
       showError(error);
       updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
-    }
-  };
-
-  /** 안건 전체를 결정으로, 미결로, AI 판정으로 */
-  const changeAgendaStatus = async (agendaId: string, status: DecisionStatusEdit) => {
-    const before = agendas.find(({ id }) => id === agendaId)?.decisionPoints;
-    if (!before) {
-      return;
-    }
-    updateDecisions(agendaId, (point) => editedPoint(point, status));
-    try {
-      await setAgendaDecisionStatus(meetingIdNumber, Number(agendaId), status);
-    } catch (error) {
-      showError(error);
-      setAgendas((prev) => prev.map((agenda) => (agenda.id === agendaId ? { ...agenda, decisionPoints: before } : agenda)));
     }
   };
 
@@ -642,106 +709,193 @@ export default function MeetingRoomPage() {
     }
   };
 
+  const focusedAgenda = agendas.find(({ id }) => id === selectedAgendaId) ?? currentAgenda ?? agendas[0];
+  const plannedMinutes = Math.round((new Date(detail.endAt).getTime() - new Date(detail.startAt).getTime()) / 60000);
+  const writerName = detail.writer.name ?? '알 수 없음';
+  const terms = detectTerms(transcript.map(({ text }) => text));
+  const newTermCount = sideTab === 'chat' ? 0 : Math.max(0, terms.length - seenTermCount);
+  const openHelper = (query?: string) => {
+    setSideTab('chat');
+    setSeenTermCount(terms.length);
+    setSelectedDecisionId(undefined);
+    if (query) {
+      setHelperQuery({ text: query, key: Date.now() });
+    }
+  };
+  const overMinutes = plannedMinutes > 0 ? Math.floor(elapsedSeconds / 60) - plannedMinutes : 0;
+  const leftAgendaCount = agendas.filter(({ status }) => status !== 'decided').length;
+  // 안건을 언제부터 얼마나 이야기했는지: 그 안건으로 나뉜 첫 전사 줄부터 지금(지난 안건은 마지막 줄)까지
+  const agendaLines = focusedAgenda ? transcript.filter(({ seq }) => lineAgendas[seq] === focusedAgenda.id) : [];
+  const startedAtMs = detail.startedAt ? new Date(detail.startedAt).getTime() : undefined;
+  const timing =
+    agendaLines.length > 0 && startedAtMs !== undefined
+      ? {
+          since: new Date(startedAtMs + agendaLines[0].startMs).toTimeString().slice(0, 5),
+          minutes: Math.max(
+            0,
+            Math.floor(
+              ((focusedAgenda?.id === currentAgenda?.id ? elapsedSeconds * MS_PER_SECOND : agendaLines[agendaLines.length - 1].startMs) -
+                agendaLines[0].startMs) /
+                60000,
+            ),
+          ),
+        }
+      : undefined;
+
   return (
     <div className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
-      <OfflineBanner />
 
-      {/* 디자인 MeetingHeader: 회의 중에는 왼쪽 메뉴, 상단 바 없이 회의에만 집중한다 */}
-      <header className={styles.meetingHeader}>
-        <div className={styles.headerInfo}>
+      {/* 디자인 Version02 Live 상단 바: 뒤로 가기, 회의명, 참여자 얼굴 / 회의 끝내기(작성자), 보기 전용(참석자) */}
+      <header className={styles.topBar}>
+        <div className={styles.topLeft}>
           <button
             type="button"
-            className={styles.backButton}
+            className={styles.iconButton}
             aria-label="뒤로 가기"
             onClick={() => (isLive ? setIsLeaveOpen(true) : navigate(-1))}
           >
-            <Icon src={chevronLeftIcon} size={BUTTON_ICON_SIZE} />
+            <Icon src={chevronLeftIcon} size={BACK_ICON_SIZE} />
           </button>
           <h1 className={styles.title}>{detail.title}</h1>
-          <div className={styles.metaRow}>
-            <span className={styles.recording}>
-              {isFinished ? (
-                <span className={styles.pausedState}>회의 종료</span>
+          <span className={styles.avatars} aria-label={`참여자 ${detail.attendees.length}명`}>
+            {detail.attendees.slice(0, HEADER_AVATAR_COUNT).map((person) =>
+              person.profileImageUrl ? (
+                <img key={person.userId} src={person.profileImageUrl} alt={person.name ?? ''} className={styles.avatar} />
               ) : (
-                <span className={isPaused ? styles.pausedState : styles.recordingState}>
-                  <img src={isPaused ? dotNotDiscussed : dotRecording} alt="" width={DOT_SIZE} height={DOT_SIZE} />
-                  {isPaused ? '일시정지 중' : '녹음 중'}
+                <span key={person.userId} className={styles.avatar} role="img" aria-label={person.name ?? ''}>
+                  {(person.name ?? '?').slice(0, 1)}
                 </span>
-              )}
-              <span className={styles.elapsed}>{formatElapsed(elapsedSeconds)}</span>
-            </span>
-            <span className={styles.attendees}>참여자 {detail.attendees.length}명</span>
-            {/* REQ-082 디자인에 없어 글자로만 표시했다 */}
-            {!isAiAvailable && <span className={styles.pausedState}>AI 일시 중단</span>}
-          </div>
+              ),
+            )}
+          </span>
         </div>
-        <div className={styles.headerActions}>
-          {isWriter && isLive && (
-            <button type="button" className={styles.pauseButton} aria-pressed={isPaused} onClick={togglePause}>
-              <Icon src={isPaused ? playIcon : pauseIcon} size={SMALL_ICON_SIZE} />
-              {isPaused ? '다시 시작' : '일시정지'}
-            </button>
-          )}
+        <div className={styles.topRight}>
           {viewerEndStep && isViewerSummaryClosed && (
-            <button type="button" className={styles.pauseButton} onClick={() => setIsViewerSummaryClosed(false)}>
+            <Button variant="secondary" size="md" onClick={() => setIsViewerSummaryClosed(false)}>
               오늘 회의 요약 보기
-            </button>
+            </Button>
           )}
-          {/* REQ-098 회의록 작성자만 마무리한다. 회의 끝내기 단계(REQ-093~097)는 디자인이 없어 건너뛰고 바로 회의록으로 간다 */}
-          {isWriter && isLive && (
-            <button type="button" className={styles.endButton} disabled={isEnding || endStep !== null} onClick={() => void startEnd()}>
+          {isWriter && isLive ? (
+            <Button size="md" disabled={isEnding || endStep !== null} onClick={() => void startEnd()}>
               <Icon src={stopIcon} size={SMALL_ICON_SIZE} />
               회의 끝내기
-            </button>
+            </Button>
+          ) : (
+            <span className={styles.viewerPill}>
+              <Icon src={visibilityIcon} size={SMALL_ICON_SIZE} />
+              보기 전용 · 회의록 작성자 {writerName}
+            </span>
           )}
         </div>
       </header>
 
       <div className={styles.body}>
-        <div className={styles.board}>
-          <LiveSummaryCard
-            agenda={currentAgenda}
-            notice={<AiNotice meetingId={meetingIdNumber} target="LIVE_SUMMARY" />}
-          />
-          <AgendaStatusCard
+        <aside className={styles.agendaNav}>
+          <AgendaNav
             agendas={agendas}
-            selectedAgendaId={selectedAgendaId}
-            selectedDecisionId={selectedDecisionId}
-            canEdit={isWriter && isLive}
-            onSelectAgenda={(agendaId) => {
+            selectedAgendaId={focusedAgenda?.id ?? ''}
+            currentAgendaId={currentAgenda?.id}
+            onSelect={(agendaId) => {
               setSelectedAgendaId(agendaId);
               setSelectedDecisionId(undefined);
             }}
+            {...(isWriter &&
+              isLive && {
+                onAdd: () => setAddAgendaTitle(''),
+                onRename: (agendaId: string) =>
+                  setRenaming({ agendaId, title: agendas.find(({ id }) => id === agendaId)?.title ?? '' }),
+                onDelete: setDeletingAgendaId,
+              })}
+          />
+        </aside>
+
+        <main className={styles.board}>
+          {!isOnline && (
+            <RoomBanner
+              tone="danger"
+              title="인터넷 연결이 끊겼어요. 녹음은 계속되고, 다시 연결되면 자동으로 올려요"
+              action={{ label: '다시 연결', onClick: () => void reloadLive(meetingIdNumber).catch(showError) }}
+            />
+          )}
+          {isOnline && !isAiAvailable && (
+            <RoomBanner
+              tone="info"
+              title="AI가 잠시 멈췄어요"
+              description="녹음과 전사는 계속돼요. 다시 연결되면 밀린 내용을 한꺼번에 정리해요"
+            />
+          )}
+          {isLive && isPaused && (
+            <RoomBanner
+              tone="neutral"
+              title="녹음이 멈춰 있어요. 지금 하는 말은 기록되지 않아요"
+              action={isWriter ? { label: '다시 시작', onClick: () => void togglePause() } : undefined}
+            />
+          )}
+          {isLive && !isPaused && overMinutes > 0 && (
+            <RoomBanner
+              tone="warning"
+              title={`예정 시간을 ${overMinutes}분 넘겼어요`}
+              description={`남은 안건 ${leftAgendaCount}개 · 다음 회의로 넘기거나 이어서 논의할 수 있어요`}
+            />
+          )}
+          {isWriter && isLive && !isPaused && silentSeconds >= SILENCE_SECONDS && silenceDismissedAt !== transcript.length && (
+            <SilenceNotice
+              seconds={silentSeconds}
+              onDismiss={() => setSilenceDismissedAt(transcript.length)}
+              onCheckMic={() => {
+                setSilenceDismissedAt(transcript.length);
+                setToast({ text: '브라우저 주소창의 마이크 아이콘에서 입력 장치와 음소거를 확인해 주세요.', variant: 'info' });
+              }}
+            />
+          )}
+          <div className={styles.boardContent}>
+          <AgendaFocus
+            agenda={focusedAgenda}
+            isCurrent={Boolean(focusedAgenda) && focusedAgenda?.id === currentAgenda?.id}
+            isPaused={isPaused}
+            isAiAvailable={isAiAvailable}
+            timing={timing}
+            onAddDecision={(content) => (focusedAgenda ? addDecision(focusedAgenda.id, content) : Promise.resolve(false))}
+            selectedDecisionId={selectedDecisionId}
+            canEdit={isWriter && isLive}
+            notice={<AiNotice meetingId={meetingIdNumber} target="LIVE_SUMMARY" />}
             onSelectDecision={setSelectedDecisionId}
             onSaveDecision={(decisionId, decisionSummary) => void saveDecision(decisionId, decisionSummary)}
-            onChangeDecisionStatus={(agendaId, decisionId, status) => void changeDecisionStatus(agendaId, decisionId, status)}
-            onChangeAgendaStatus={(agendaId, status) => void changeAgendaStatus(agendaId, status)}
-            onAddAgenda={() => setAddAgendaTitle('')}
-            onRenameAgenda={(agendaId) =>
-              setRenaming({ agendaId, title: agendas.find(({ id }) => id === agendaId)?.title ?? '' })
-            }
-            onDeleteAgenda={setDeletingAgendaId}
+            onChangeDecisionStatus={(decisionId, status) => {
+              if (focusedAgenda) {
+                void changeDecisionStatus(focusedAgenda.id, decisionId, status);
+              }
+            }}
+            onSaveTodo={(todo, change) => {
+              if (focusedAgenda) {
+                void saveTodo(focusedAgenda.id, todo, change);
+              }
+            }}
+            doneTodoIds={doneTodoIds}
+            onToggleTodo={(todo, done) => void toggleTodo(todo.id, done)}
           />
-        </div>
+          </div>
+        </main>
 
         <aside
           id="room-side-panel"
           className={styles.sidePanel}
-          aria-label={selectedDecision ? '결정 근거' : sideTab === 'chat' ? '챗봇' : '실시간 전사'}
+          aria-label={selectedDecision ? '결정 근거' : sideTab === 'chat' ? '내 도우미' : '실시간 전사'}
         >
           {!selectedDecision && (
-            <div className={chatStyles.tabs} role="tablist">
+            <div className={styles.tabs} role="tablist">
               {(['transcript', 'chat'] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   role="tab"
                   aria-selected={sideTab === tab}
-                  className={`${chatStyles.tab} ${sideTab === tab ? chatStyles.tabActive : ''}`}
-                  onClick={() => setSideTab(tab)}
+                  className={[styles.tab, sideTab === tab ? styles.tabActive : ''].filter(Boolean).join(' ')}
+                  onClick={() => (tab === 'chat' ? openHelper() : setSideTab(tab))}
                 >
-                  {tab === 'chat' ? '챗봇' : '실시간 전사'}
+                  {tab === 'chat' ? '내 도우미' : '실시간 전사'}
+                  {tab === 'chat' && newTermCount > 0 && <span className={styles.tabBadge}>용어 {newTermCount}</span>}
                 </button>
               ))}
             </div>
@@ -754,7 +908,13 @@ export default function MeetingRoomPage() {
               notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" />}
             />
           ) : sideTab === 'chat' ? (
-            <ChatPanel meetingId={meetingIdNumber} canAsk={isLive} />
+            <ChatPanel
+              key={helperQuery?.key ?? 'helper'}
+              meetingId={meetingIdNumber}
+              canAsk={isLive}
+              initialQuery={helperQuery?.text}
+              suggestions={['방금 5분 요약해 줘', '지난 회의에서 비슷한 얘기 찾아줘', ...terms.slice(0, 1).map(askAbout)]}
+            />
           ) : (
             <TranscriptPanel
               lines={transcript}
@@ -763,21 +923,46 @@ export default function MeetingRoomPage() {
               lineAgendas={lineAgendas}
               agendaOptions={agendas.map(({ id, title }) => ({ id, title }))}
               onChangeAgenda={(seq, agendaId) => void changeLineAgenda(seq, agendaId)}
+              onAskTerm={(term) => openHelper(askAbout(term))}
+              isOffline={!isOnline}
             />
           )}
         </aside>
       </div>
 
+      <RecordingBar
+        elapsedSeconds={elapsedSeconds}
+        plannedMinutes={plannedMinutes > 0 ? plannedMinutes : undefined}
+        isPaused={isPaused}
+        isFinished={isFinished}
+        onTogglePause={isWriter && isLive ? () => void togglePause() : undefined}
+        onMore={isLive ? () => setIsLeaveOpen(true) : undefined}
+      />
+
       {isLeaveOpen && (
         // MSG-068
-        <ConfirmDialog
+        // 디자인 Version02 Live_16: 뒤로 가기·닫기, 안내 칸, [나가기] [계속 참여하기]
+        <Dialog
           title="회의 화면에서 나갈까요?"
-          message={'나가도 다른 참여자와 녹음, 전사는 계속돼요. 언제든 다시 들어올 수 있어요.\n(회의를 끝내려면 [회의 끝내기]를 눌러 주세요.)'}
-          cancelLabel="계속 참여하기"
-          confirmLabel="나가기"
-          onCancel={() => setIsLeaveOpen(false)}
-          onConfirm={leaveRoom}
-        />
+          description="나가도 다른 참여자와 녹음·전사는 계속돼요. 언제든 다시 들어올 수 있어요."
+          onBack={() => setIsLeaveOpen(false)}
+          onClose={() => setIsLeaveOpen(false)}
+          footer={
+            <>
+              <Button variant="secondary" size="md" onClick={leaveRoom}>
+                나가기
+              </Button>
+              <Button size="md" onClick={() => setIsLeaveOpen(false)}>
+                계속 참여하기
+              </Button>
+            </>
+          }
+        >
+          <p className={styles.leaveNote}>
+            <Icon src={infoIcon} size={SMALL_ICON_SIZE} />
+            {isWriter ? '회의를 끝내려면 오른쪽 위 [회의 끝내기]를 눌러 주세요' : '회의는 회의록 작성자가 끝내요'}
+          </p>
+        </Dialog>
       )}
       {renaming && (
         <Dialog
@@ -863,7 +1048,15 @@ export default function MeetingRoomPage() {
           }}
         />
       )}
-      {isOffTopicOpen && isWriter && isLive && <OffTopicNotice onConfirm={dismissNotice} />}
+      {isOffTopicOpen && isWriter && isLive && (
+        <OffTopicNotice
+          onConfirm={dismissNotice}
+          onRegister={() => {
+            dismissNotice();
+            setAddAgendaTitle('');
+          }}
+        />
+      )}
       {shownEndStep && (
         <EndMeetingModal
           // 단계마다 새로 그려 남은 안건 선택을 그 단계의 목록으로 시작한다

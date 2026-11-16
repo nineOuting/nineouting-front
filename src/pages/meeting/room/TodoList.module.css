@@ -94,3 +94,92 @@
 .cancel:hover {
   background: var(--neutral-ghost-hover);
 }
+
+/* 디자인 Version02 회의 중 할 일 표 */
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.table > li + li {
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.table > .editRow {
+  padding: var(--spacing-3) var(--spacing-4);
+}
+
+.tableRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-height: 48px;
+  padding: var(--spacing-2) var(--spacing-4);
+}
+
+.check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-default);
+  cursor: pointer;
+}
+
+.tableTask {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+}
+
+.done {
+  color: var(--text-disabled);
+  text-decoration: line-through;
+}
+
+.chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-1);
+  height: 26px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-surface-muted);
+  border: var(--border-width-default) solid transparent;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--primary-default);
+}
+
+.chip:disabled {
+  cursor: default;
+}
+
+.chipEmpty {
+  background: transparent;
+  border: var(--border-width-default) dashed var(--border-strong);
+  font-weight: var(--font-weight-regular, 400);
+  color: var(--text-secondary);
+}
+
+.chipWarning {
+  background: var(--warning-subtle, var(--danger-subtle));
+  color: var(--warning-default, var(--danger-default));
+}
+
+.chipAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: var(--primary-subtle);
+  font-size: 9px;
+  color: var(--primary-default);
+}

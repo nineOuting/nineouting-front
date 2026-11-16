@@ -1,0 +1,133 @@
+/* 디자인 Version02 Live AgendaNav: 왼쪽 240px, 회색 바탕, 점과 세로 줄로 이어진 안건 목록 */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  padding: var(--spacing-6) var(--spacing-5, 20px);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.title {
+  flex-shrink: 0;
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
+}
+
+.count {
+  flex: 1;
+  white-space: nowrap;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-5, 20px);
+}
+
+/* 다음 안건까지 이어지는 점선 */
+.item:not(:last-child)::before {
+  position: absolute;
+  top: 18px;
+  bottom: 2px;
+  left: 4px;
+  border-left: 1px dashed var(--border-strong);
+  content: '';
+}
+
+.dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: var(--radius-full);
+  background: var(--border-default);
+}
+
+.decided .dot {
+  background: var(--text-primary);
+}
+
+.discussing .dot {
+  background: var(--secondary-strong, #263366);
+  box-shadow: 0 0 0 3px var(--secondary-default);
+}
+
+.undecided .dot,
+.decisionCheck .dot {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--text-primary);
+}
+
+.button {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+  text-align: left;
+}
+
+.status {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.agendaTitle {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.decided .agendaTitle,
+.selected .agendaTitle {
+  font-weight: var(--font-weight-semibold);
+}
+
+.selected .agendaTitle {
+  color: var(--primary-default);
+}
+
+.button:hover .agendaTitle {
+  text-decoration: underline;
+}
+
+.actions {
+  display: none;
+  flex-shrink: 0;
+}
+
+.item:hover .actions,
+.item:focus-within .actions {
+  display: flex;
+}
+
+.iconButton {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}

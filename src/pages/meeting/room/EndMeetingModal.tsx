@@ -50,7 +50,7 @@ const EDIT_ICON_SIZE = 16;
 
 const TITLES: Record<EndStep, { title: string; description: string }> = {
   waiting: { title: '회의를 정리하고 있어요', description: '방금 나온 말까지 반영해 결론이 나지 않은 안건을 찾고 있어요' },
-  leftover: { title: '결론 나지 않은 안건이 있어요', description: '체크한 안건은 다음 회의로 넘겨요' },
+  leftover: { title: '회의를 끝낼까요?', description: '결론이 나지 않은 안건이 있어요. 다음 회의로 넘길 안건을 골라 주세요.' },
   summary: { title: '회의를 끝내고 회의록을 만들까요?', description: '오늘 회의 요약을 확인하고, 틀린 곳은 고친 뒤 끝내 주세요' },
 };
 
@@ -184,7 +184,7 @@ export default function EndMeetingModal({
 
   const continueButton = (
     <Button type="button" variant="secondary" size="md" disabled={isBusy} onClick={onContinue}>
-      계속 회의하기
+      이어서 논의하기
     </Button>
   );
   const footer: Record<EndStep, ReactNode> = {
@@ -225,7 +225,12 @@ export default function EndMeetingModal({
   return (
     <Dialog
       title={titles[shownStep].title}
-      description={titles[shownStep].description}
+      description={
+        shownStep === 'leftover' && !isViewer
+          ? `결론이 나지 않은 안건이 ${leftover.length}개 있어요. 다음 회의로 넘길 안건을 골라 주세요.`
+          : titles[shownStep].description
+      }
+      onBack={!isViewer && !isBusy ? onContinue : undefined}
       width="md"
       hideClose={!isViewer && isBusy}
       onClose={isViewer ? (onClose ?? (() => undefined)) : isBusy ? () => undefined : onContinue}
@@ -257,7 +262,7 @@ export default function EndMeetingModal({
                 </li>
               ))}
             </ul>
-            <InfoNote>지금 결정하려면 [계속 회의하기]를 눌러 이어서 논의해요</InfoNote>
+            <InfoNote>고른 안건은 폴더의 "남은 안건"에 저장돼요. 회의를 끝내면 녹음이 멈추고 회의록 초안을 만들어요</InfoNote>
           </>
         )}
 

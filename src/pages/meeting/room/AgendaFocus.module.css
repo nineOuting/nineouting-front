@@ -1,0 +1,460 @@
+/* 디자인 Version02 Live 가운데: 고른 안건 제목, 결정할 사항 카드, 이 안건 요약, 할 일 */
+.focus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.stateLive {
+  color: var(--primary-default);
+}
+
+.timing {
+  margin-left: var(--spacing-1);
+  color: var(--text-secondary);
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--primary-default);
+}
+
+.title {
+  font-size: var(--font-size-heading-xl, 32px);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-primary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.sectionTitle {
+  margin-right: auto;
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+}
+
+.summaryTitle {
+  margin-right: 0;
+}
+
+/* 메뉴가 열린 카드는 아래 카드보다 위에 그린다 */
+.decision:has([aria-expanded='true']),
+.decision:focus-within {
+  z-index: 10;
+}
+
+.sectionMeta {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.aiPausedChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 2px var(--spacing-2);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.iconButton {
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+/* 결정할 사항 카드 */
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.decision {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.decision:hover {
+  border-color: var(--border-strong);
+}
+
+.decisionMain {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--spacing-4) 56px var(--spacing-4) var(--spacing-4);
+  text-align: left;
+}
+
+.statusIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+.decisionTexts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.decisionTitle {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-secondary);
+}
+
+.decisionCaption {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.decided {
+  background: var(--success-subtle);
+  border-color: var(--success-default);
+}
+
+.decided:hover {
+  border-color: var(--success-default);
+}
+
+.decided .statusIcon {
+  background: var(--success-default);
+  border: none;
+  color: var(--text-on-primary);
+}
+
+.decided .decisionTitle,
+.undecided .decisionTitle,
+.decisionCheck .decisionTitle,
+.discussing .decisionTitle {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* 지금 이야기하고 있는 결정할 사항 */
+.discussing,
+.discussing:hover {
+  border-color: var(--interactive-selected-border);
+  box-shadow: 0 0 0 1px var(--interactive-selected-border);
+}
+
+.discussing .statusIcon {
+  border: 2px solid var(--primary-default);
+}
+
+.radioDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--primary-default);
+}
+
+.discussing .decisionCaption {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.undecided .statusIcon,
+.decisionCheck .statusIcon {
+  border: 1.5px solid var(--warning-default, #e8590c);
+  color: var(--warning-default, #e8590c);
+}
+
+.undecided .decisionCaption,
+.decisionCheck .decisionCaption {
+  color: var(--warning-default, #e8590c);
+}
+
+.selected,
+.selected:hover {
+  border-color: var(--primary-default);
+  box-shadow: 0 0 0 1px var(--primary-default);
+}
+
+.decisionActions {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-3);
+  display: flex;
+  align-items: center;
+  transform: translateY(-50%);
+}
+
+.moreButton {
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-full);
+  color: var(--neutral-default);
+  opacity: 0;
+}
+
+.decision:hover .moreButton,
+.moreButton:focus-visible,
+.moreButtonActive,
+.selected .moreButton {
+  opacity: 1;
+}
+
+.moreButton:hover,
+.moreButtonActive {
+  background: var(--neutral-ghost-hover);
+}
+
+.cardMenu {
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  width: 200px;
+}
+
+/* 결정 내용 수정 (카드 안) */
+.editingCard {
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+}
+
+.editHeading {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.editLabel {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--spacing-3);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.inputFocus,
+.input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.editFooter {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.editNote {
+  flex: 1;
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.textButton {
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.textButton:hover {
+  background: var(--primary-ghost-hover);
+}
+
+.smallSecondary {
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  background: var(--secondary-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-on-secondary);
+}
+
+.error {
+  font-size: var(--font-size-caption);
+  color: var(--danger-default);
+}
+
+/* 이 안건 요약 */
+.summary {
+  font-size: var(--font-size-body-lg);
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.noSummary {
+  padding: var(--spacing-6);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.opinionColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-4);
+}
+
+.opinionBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-md);
+}
+
+.opinionLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.opinionLabel::before {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  content: '';
+}
+
+.opinionMain::before {
+  background: var(--primary-default);
+}
+
+.opinionOpen::before {
+  background: var(--warning-default, #e8590c);
+}
+
+.opinionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.opinionList > li::before {
+  margin-right: var(--spacing-1);
+  content: '·';
+}
+
+.todoCard {
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.todoHead {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+}
+
+.todoCount {
+  color: var(--text-secondary);
+}
+
+.todoEmpty {
+  padding: var(--spacing-4);
+  font-size: var(--font-size-body-md);
+  color: var(--text-secondary);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-12, 48px) 0;
+  text-align: center;
+}
+
+.emptyTitle {
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.emptyText {
+  font-size: var(--font-size-body-md);
+  color: var(--text-secondary);
+}

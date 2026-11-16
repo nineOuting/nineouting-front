@@ -80,3 +80,17 @@
   justify-content: flex-end;
   gap: var(--gap-inline);
 }
+
+/* 디자인 Version02: 제목 왼쪽 뒤로 가기 */
+.back {
+  display: flex;
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.back:hover {
+  background: var(--neutral-ghost-hover);
+}

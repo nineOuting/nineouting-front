@@ -1,158 +1,186 @@
-/* 디자인 MeetingLiveTranscriptPage: 위 56px 회의 바 + 왼쪽 요약, 안건 / 오른쪽 전사 415px */
+/* 디자인 Version02 Live: 위 64px 회의 바 + 왼쪽 안건 240px | 가운데 고른 안건 | 오른쪽 전사·내 도우미 420px */
 .page {
   display: flex;
   flex-direction: column;
   min-width: 1200px;
   height: 100vh;
-  background: var(--bg-page);
+  background: var(--bg-surface);
 }
 
-.meetingHeader {
+.topBar {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  height: var(--layout-header-height);
-  padding: 0 var(--layout-page-margin);
+  gap: var(--spacing-4);
+  height: 64px;
+  padding: 0 var(--spacing-6) 0 var(--spacing-4);
   background: var(--bg-surface);
   border-bottom: var(--border-width-default) solid var(--border-default);
 }
 
-.headerInfo {
+.topLeft,
+.topRight {
   display: flex;
   align-items: center;
-  gap: var(--spacing-6);
+  gap: var(--spacing-3);
   min-width: 0;
 }
 
-.backButton {
+.iconButton {
   display: flex;
+  flex-shrink: 0;
   padding: var(--spacing-1);
   border-radius: var(--radius-sm);
   color: var(--neutral-default);
 }
 
-.backButton:hover {
+.iconButton:hover {
   background: var(--neutral-ghost-hover);
 }
 
 .title {
   overflow: hidden;
-  font-size: var(--font-size-heading-md);
+  font-size: var(--font-size-body-lg);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-heading-md);
+  line-height: var(--line-height-body-lg);
   color: var(--text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.metaRow {
+.avatars {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-8);
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
+  flex-shrink: 0;
 }
 
-.recording {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
+.avatars > * + * {
+  margin-left: -8px;
 }
 
-.recordingState,
-.pausedState {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  font-weight: var(--font-weight-semibold);
-}
-
-.recordingState {
-  color: var(--danger-default);
-}
-
-.pausedState {
-  color: var(--text-secondary);
-}
-
-.elapsed,
-.attendees {
-  color: var(--text-secondary);
-}
-
-.headerActions {
-  display: flex;
-  gap: var(--gap-inline);
-}
-
-/* 디자인 Button sm 120px */
-.pauseButton,
-.endButton {
+.avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--gap-inline);
-  width: 120px;
-  height: var(--button-sm-height);
-  padding: 0 var(--spacing-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--button-sm-font-size);
+  width: 24px;
+  height: 24px;
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: var(--primary-subtle);
+  font-size: 10px;
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-caption);
-  white-space: nowrap;
+  color: var(--primary-default);
+  object-fit: cover;
 }
 
-.pauseButton {
-  background: var(--secondary-default);
-  color: var(--text-on-secondary);
+.aiPaused {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--warning-subtle, var(--danger-subtle));
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  color: var(--warning-default, var(--danger-default));
 }
 
-.pauseButton:hover {
-  background: var(--secondary-hover);
-}
-
-.endButton {
-  background: var(--primary-default);
-  color: var(--text-on-primary);
-}
-
-.endButton:hover {
-  background: var(--primary-hover);
-}
-
-.endButton:disabled {
-  background: var(--primary-disabled);
-  color: var(--text-disabled);
+/* 참석자: 보기 전용 · 회의록 작성자 */
+.viewerPill {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
 }
 
 .body {
   display: flex;
   flex: 1;
-  gap: var(--layout-gutter);
   min-height: 0;
-  padding: var(--layout-page-margin);
 }
 
+.agendaNav {
+  flex-shrink: 0;
+  width: 240px;
+  overflow-y: auto;
+  background: var(--bg-sidebar, var(--bg-surface-muted));
+}
+
+/* 가운데: 위 알림 줄 + 내용. 아래 녹음 바에 가리지 않게 아래 여백을 넉넉히 */
 .board {
-  display: flex;
+  position: relative;
   flex: 1;
-  flex-direction: column;
-  gap: var(--spacing-6);
   min-width: 0;
-  min-height: 0;
+  overflow-y: auto;
+  border-right: var(--border-width-default) solid var(--border-default);
 }
 
-/* 디자인 EvidencePanel / 전사 패널 */
+.boardContent {
+  padding: var(--spacing-6) var(--spacing-6) 120px;
+}
+
 .sidePanel {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  width: 415px;
+  width: 420px;
   min-height: 0;
-  padding: var(--padding-card);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  padding: var(--spacing-6) var(--spacing-6) 0;
+  overflow: hidden;
+}
+
+/* 디자인 밑줄 탭: 실시간 전사 / 내 도우미 */
+.tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-5, 20px);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+.tab {
+  height: 48px;
+  padding: 0 var(--spacing-3);
+  border-bottom: 2px solid transparent;
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-secondary);
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tabActive {
+  border-bottom-color: var(--primary-default);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.leaveNote {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* 새로 나온 용어 수 */
+.tabBadge {
+  padding: 1px var(--spacing-2);
+  background: var(--primary-default);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-on-primary);
 }

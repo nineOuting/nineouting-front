@@ -1,0 +1,124 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-height: 44px;
+  padding: var(--spacing-2) var(--spacing-6);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.title {
+  font-weight: var(--font-weight-semibold);
+}
+
+.description {
+  color: var(--text-secondary);
+}
+
+.action {
+  margin-left: var(--spacing-3);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}
+
+.action:hover {
+  text-decoration: underline;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.info {
+  background: var(--info-subtle, #f0f4ff);
+  color: var(--text-primary);
+}
+
+.info .icon {
+  color: var(--info-default, #3965fa);
+}
+
+.danger {
+  background: var(--danger-subtle);
+  color: var(--text-primary);
+}
+
+.danger .icon {
+  color: var(--danger-default);
+}
+
+.warning {
+  background: var(--warning-subtle, #fff4e6);
+  color: var(--text-primary);
+}
+
+.warning .icon {
+  color: var(--warning-default, #e8590c);
+}
+
+.neutral {
+  background: var(--bg-surface-muted);
+  color: var(--text-primary);
+}
+
+/* 마이크 소리 없음: 가운데 위에 뜨는 작은 창 */
+.popover {
+  position: absolute;
+  top: var(--spacing-4);
+  left: 50%;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  width: 380px;
+  padding: var(--spacing-4);
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transform: translateX(-50%);
+}
+
+.popoverTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.popoverText {
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.popoverActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+}
+
+.textButton,
+.secondaryButton {
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.textButton {
+  color: var(--primary-default);
+}
+
+.textButton:hover {
+  background: var(--primary-ghost-hover);
+}
+
+.secondaryButton {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+}

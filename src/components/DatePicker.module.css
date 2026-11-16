@@ -1,0 +1,123 @@
+.root {
+  position: relative;
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  height: var(--input-md-height);
+  padding: 0 var(--input-md-padding-x);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--input-md-font-size);
+  text-align: left;
+}
+
+.box:hover {
+  border-color: var(--border-strong);
+}
+
+.open,
+.open:hover,
+.box:focus-visible {
+  border-color: var(--border-focus);
+}
+
+.error,
+.error:hover {
+  border-color: var(--border-error);
+}
+
+.value {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.placeholder {
+  flex: 1;
+  color: var(--text-disabled);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--neutral-default);
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 300;
+  width: 296px;
+  padding: var(--spacing-4);
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-3);
+}
+
+.month {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.nav {
+  display: flex;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.nav:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.weekday {
+  padding: var(--spacing-1) 0;
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.day {
+  height: 34px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
+}
+
+.day:hover {
+  background: var(--interactive-hover);
+}
+
+.outside {
+  color: var(--text-disabled);
+}
+
+.today {
+  font-weight: var(--font-weight-bold);
+  color: var(--primary-default);
+}
+
+.selected,
+.selected:hover {
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+}
