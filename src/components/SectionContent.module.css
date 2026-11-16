@@ -19,6 +19,7 @@
 
 .list {
   padding-left: 18px;
+  list-style: disc;
 }
 
 .checklist {
@@ -30,6 +31,18 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.task {
+  flex: 1;
+  min-width: 0;
+}
+
+.meta {
+  flex-shrink: 0;
+  margin-left: 8px;
+  opacity: 0.7;
+  white-space: nowrap;
 }
 
 /* 디자인 23:486: 12px 회색 네모 */
