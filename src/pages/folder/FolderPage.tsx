@@ -529,7 +529,7 @@ export default function FolderPage() {
         // MSG-046
         <ConfirmDialog
           title="폴더를 삭제할까요?"
-          message={'폴더 안의 회의와 회의록도 함께 삭제 목록으로 이동하며\n3개월 안에 복구할 수 있어요.'}
+          message={'폴더 안의 회의와 회의록도 함께 쓰레기통으로 이동하며\n3개월 안에 복구할 수 있어요.'}
           cancelLabel="취소"
           confirmLabel="삭제"
           isDanger
