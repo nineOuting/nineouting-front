@@ -136,6 +136,9 @@ export default function MeetingRoomPage() {
   const [isOffTopicOpen, setIsOffTopicOpen] = useState(demo === 'offtopic');
   // 안건 보드가 정한 지금 논의 중인 안건
   const [currentAgendaId, setCurrentAgendaId] = useState<string>();
+  // REQ-089 (시안) 사람이 직접 바꾼 현재 안건. 실제로는 ai-service에 알려야 해서 AI팀과 약속이 필요하다
+  const [manualCurrent, setManualCurrent] = useState<{ agendaId: string; by: string }>();
+  const [myName, setMyName] = useState('');
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
@@ -280,6 +283,7 @@ export default function MeetingRoomPage() {
       const roomAgendas = loaded.agendas.map(toRoomAgenda);
       setDetail(loaded);
       setIsWriter(loaded.writer.userId === me.userId);
+      setMyName(me.name);
       setAgendas(roomAgendas);
       setSelectedAgendaId(
         (roomAgendas.find(({ status }) => status === 'discussing') ?? roomAgendas[0])?.id ?? '',
@@ -446,7 +450,22 @@ export default function MeetingRoomPage() {
   const viewerEndStep: EndStep | null =
     !isWriter && isLive && (leftover || todaySummary) ? (todaySummary ? 'summary' : 'leftover') : null;
   const currentAgenda =
-    agendas.find(({ id }) => id === currentAgendaId) ?? agendas.find(({ status }) => status === 'discussing');
+    agendas.find(({ id }) => id === manualCurrent?.agendaId) ??
+    agendas.find(({ id }) => id === currentAgendaId) ??
+    agendas.find(({ status }) => status === 'discussing');
+
+  /** REQ-089 (시안) 고른 안건을 지금 논의 중인 안건으로 바꾼다. [되돌리기]로 원래 안건으로 돌아간다 */
+  const switchCurrent = (agendaId: string) => {
+    const before = manualCurrent;
+    const title = agendas.find(({ id }) => id === agendaId)?.title ?? '';
+    setManualCurrent({ agendaId, by: myName });
+    setSelectedAgendaId('');
+    setToast({
+      text: `'${title}'으로 논의 안건을 바꿨어요. 이제부터 발언은 이 안건으로 정리돼요`,
+      variant: 'info',
+      action: { label: '되돌리기', onClick: () => setManualCurrent(before) },
+    });
+  };
   const selectedDecision = agendas
     .find(({ id }) => id === selectedAgendaId)
     ?.decisionPoints.find(({ id }) => id === selectedDecisionId);
@@ -874,6 +893,8 @@ export default function MeetingRoomPage() {
             }}
             doneTodoIds={doneTodoIds}
             onToggleTodo={(todo, done) => void toggleTodo(todo.id, done)}
+            onSwitchCurrent={isLive && focusedAgenda ? () => switchCurrent(focusedAgenda.id) : undefined}
+            switchedBy={manualCurrent?.agendaId === focusedAgenda?.id ? manualCurrent?.by : undefined}
           />
           </div>
         </main>

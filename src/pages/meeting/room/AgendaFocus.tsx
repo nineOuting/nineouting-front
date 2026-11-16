@@ -279,6 +279,10 @@ interface AgendaFocusProps {
   doneTodoIds?: string[];
   /** 할 일 완료 체크 (회의록 작성자, 진행 중) */
   onToggleTodo?: (todo: RoomTodo, done: boolean) => void;
+  /** REQ-089 (시안) 이 안건을 지금 논의 중인 안건으로 직접 바꾼다 */
+  onSwitchCurrent?: () => void;
+  /** REQ-089 (시안) 사람이 직접 바꾼 안건이면 바꾼 사람 이름 */
+  switchedBy?: string;
 }
 
 /** 디자인 Version02 Live 가운데: 고른 안건의 결정할 사항, 이 안건 요약(주요 의견·합의되지 않은 부분), 할 일 */
@@ -298,6 +302,8 @@ export default function AgendaFocus({
   onSaveTodo,
   doneTodoIds,
   onToggleTodo,
+  onSwitchCurrent,
+  switchedBy,
 }: AgendaFocusProps) {
   // 안건을 바꾸면 열려 있던 추가 칸을 닫는다
   const [addingAgendaId, setAddingAgendaId] = useState<string>();
@@ -327,8 +333,16 @@ export default function AgendaFocus({
               · {timing.since}부터 {timing.minutes}분{isCurrent ? '째' : ' 논의'}
             </span>
           )}
+          {isCurrent && switchedBy && <span className={styles.timing}>· {switchedBy}님이 직접 바꿈</span>}
         </p>
-        <h1 className={styles.title}>{agenda.title}</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>{agenda.title}</h1>
+          {!isCurrent && onSwitchCurrent && (
+            <button type="button" className={styles.switchButton} onClick={onSwitchCurrent}>
+              이 안건으로 논의 전환
+            </button>
+          )}
+        </div>
       </div>
 
       <section className={styles.section}>

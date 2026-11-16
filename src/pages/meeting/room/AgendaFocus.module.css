@@ -458,3 +458,26 @@
   font-size: var(--font-size-body-md);
   color: var(--text-secondary);
 }
+
+/* REQ-089 (시안) 안건 제목 옆 [이 안건으로 논의 전환] */
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.switchButton {
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--secondary-default, var(--primary-subtle));
+  font-size: var(--font-size-body-sm, 14px);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-on-secondary, var(--primary-default));
+}
+
+.switchButton:hover {
+  background: var(--secondary-hover);
+}
