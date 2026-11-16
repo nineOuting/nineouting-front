@@ -3,7 +3,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
   finishMeeting,
+  addDecisionPoint,
   addMeetingAgenda,
+  checkTodo,
+  listTodoChecks,
   deleteMeetingAgenda,
   renameMeetingAgenda,
   cancelMeetingEnd,
@@ -100,6 +103,8 @@ export default function MeetingRoomPage() {
   const [detail, setDetail] = useState<MeetingDetailResponse | null>(null);
   const [isWriter, setIsWriter] = useState(false);
   const [agendas, setAgendas] = useState<RoomAgenda[]>([]);
+  // 완료로 체크한 할 일 항목 번호 (회의록 작성자가 체크하면 회의방 모두에게 온다)
+  const [doneTodoIds, setDoneTodoIds] = useState<string[]>([]);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -239,11 +244,13 @@ export default function MeetingRoomPage() {
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
   const reloadLive = useCallback(
     async (id: number) => {
-      const [lines, board, classified] = await Promise.all([
+      const [lines, board, classified, todoChecks] = await Promise.all([
         listTranscripts(id),
         getAgendaBoard(id),
         listLineAgendas(id).catch(() => []),
+        listTodoChecks(id).catch(() => []),
       ]);
+      setDoneTodoIds(todoChecks);
       setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
       if (board) {
         showBoard(board);
@@ -358,6 +365,9 @@ export default function MeetingRoomPage() {
       case 'agendaBoard':
         showBoard(message.data);
         break;
+      case 'todoChecks':
+        setDoneTodoIds(message.data);
+        break;
       case 'agendaClassification': {
         const changed = message.data.lines.filter(({ seq }) => !correctedSeqsRef.current.has(seq));
         setLineAgendas((prev) => ({
@@ -445,6 +455,42 @@ export default function MeetingRoomPage() {
     try {
       const added = await addMeetingAgenda(meetingIdNumber, title, decisionPoints);
       setAgendas((prev) => [...prev, toRoomAgenda(added)]);
+      return true;
+    } catch (error) {
+      showError(error);
+      return false;
+    }
+  };
+
+  /** 할 일 완료 체크. 화면을 먼저 바꾸고, 실패하면 되돌린다 */
+  const toggleTodo = async (todoId: string, done: boolean) => {
+    const before = doneTodoIds;
+    setDoneTodoIds((prev) => (done ? [...prev.filter((id) => id !== todoId), todoId] : prev.filter((id) => id !== todoId)));
+    try {
+      setDoneTodoIds(await checkTodo(meetingIdNumber, todoId, done));
+    } catch (error) {
+      setDoneTodoIds(before);
+      showError(error);
+    }
+  };
+
+  /** 회의 중 결정할 사항 더하기. 새 사항만 붙이고 이미 있던 사항의 판정은 그대로 둔다 (ai-service에도 안건 목록이 다시 간다) */
+  const addDecision = async (agendaId: string, content: string) => {
+    try {
+      const saved = toRoomAgenda(await addDecisionPoint(meetingIdNumber, Number(agendaId), content));
+      setAgendas((prev) =>
+        prev.map((agenda) =>
+          agenda.id === agendaId
+            ? {
+                ...agenda,
+                decisionPoints: [
+                  ...agenda.decisionPoints,
+                  ...saved.decisionPoints.filter(({ id }) => !agenda.decisionPoints.some((point) => point.id === id)),
+                ],
+              }
+            : agenda,
+        ),
+      );
       return true;
     } catch (error) {
       showError(error);
@@ -810,9 +856,7 @@ export default function MeetingRoomPage() {
             isPaused={isPaused}
             isAiAvailable={isAiAvailable}
             timing={timing}
-            onAddDecision={() =>
-              setToast({ text: '회의 중 결정할 사항 추가는 곧 지원돼요. 지금은 안건을 추가해 주세요.', variant: 'info' })
-            }
+            onAddDecision={(content) => (focusedAgenda ? addDecision(focusedAgenda.id, content) : Promise.resolve(false))}
             selectedDecisionId={selectedDecisionId}
             canEdit={isWriter && isLive}
             notice={<AiNotice meetingId={meetingIdNumber} target="LIVE_SUMMARY" />}
@@ -828,6 +872,8 @@ export default function MeetingRoomPage() {
                 void saveTodo(focusedAgenda.id, todo, change);
               }
             }}
+            doneTodoIds={doneTodoIds}
+            onToggleTodo={(todo, done) => void toggleTodo(todo.id, done)}
           />
           </div>
         </main>

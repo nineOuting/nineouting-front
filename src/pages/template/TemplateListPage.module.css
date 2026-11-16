@@ -82,15 +82,20 @@
 
 .sort {
   height: 32px;
-  padding: 0 var(--spacing-3);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-strong);
+  padding: 0 calc(var(--spacing-3) + 20px) 0 var(--spacing-3);
+  /* 디자인 TemplateListPage: 브라우저 기본 화살표 대신 작은 아래 화살표 */
+  appearance: none;
+  background: var(--bg-surface) url('../../assets/icons/chevron-down.svg') no-repeat right var(--spacing-2) center / 16px;
+  border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-md);
   font: inherit;
   font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   cursor: pointer;
+}
+
+.sort:hover {
+  border-color: var(--border-strong);
 }
 
 .section {

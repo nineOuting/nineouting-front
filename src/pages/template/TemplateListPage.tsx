@@ -35,6 +35,15 @@ interface TemplateCardProps {
   onDelete?: () => void;
 }
 
+/** 디자인 TemplateListPage 카드 "11/10 수정". 수정 시각이 없으면 항목 개수 */
+function modifiedLabel(template: MinutesTemplate) {
+  if (!template.updatedAt) {
+    return `항목 ${template.items.length}개`;
+  }
+  const [, month, day] = template.updatedAt.slice(0, 10).split('-');
+  return `${month}/${day} 수정`;
+}
+
 /** 디자인 Version02 TemplateCard: 위 미리보기(회색 바탕 위 종이) + 즐겨찾기, 아래 이름·설명·구분 + 더보기 메뉴 */
 function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelete }: TemplateCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -112,7 +121,7 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
             {template.isDefault ? '기본 양식' : '내 양식'}
           </span>
           <span className={styles.meta}>
-            {template.isDefault ? '기본 제공' : `항목 ${template.items.length}개`}
+            {template.isDefault ? '기본 제공' : modifiedLabel(template)}
           </span>
         </p>
       </div>
@@ -194,7 +203,9 @@ export default function TemplateListPage() {
   };
 
   const sorted = [...(templates ?? [])].sort((a, b) =>
-    sortOrder === 'name' ? a.name.localeCompare(b.name, 'ko') : b.templateId - a.templateId,
+    sortOrder === 'name'
+      ? a.name.localeCompare(b.name, 'ko')
+      : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || b.templateId - a.templateId,
   );
   const defaults = sorted.filter(({ isDefault }) => isDefault);
   const mine = sorted.filter(({ isDefault }) => !isDefault);

@@ -20,7 +20,9 @@ export type RoomMessage =
   | { type: 'agendaBoard'; data: AgendaBoard }
   // REQ-089 줄별 자동 분류가 바뀜 / 작성자가 줄의 안건을 고침
   | { type: 'agendaClassification'; data: AgendaClassificationMessage }
-  | { type: 'lineAgenda'; data: LineAgendaResponse };
+  | { type: 'lineAgenda'; data: LineAgendaResponse }
+  // 할 일 완료 체크가 바뀜. data = 체크한 할 일 항목 번호 전체
+  | { type: 'todoChecks'; data: string[] };
 
 interface RoomSocketHandlers {
   onMessage: (message: RoomMessage) => void;

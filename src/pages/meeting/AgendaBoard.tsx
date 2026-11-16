@@ -34,6 +34,8 @@ interface AgendaBoardProps {
   onSave: (agendas: Agenda[]) => Promise<boolean>;
   /** 남은 안건을 이번 회의로 가져온 뒤 알림 (되돌리기 포함) */
   onCarryOver: (agenda: Agenda, undo: () => void) => void;
+  /** 남은 안건 휴지통 (폴더의 남은 안건에서 버린다) */
+  onDiscardPending: (pending: PendingAgenda) => void;
 }
 
 function totalDecisionPoints(agendas: Agenda[]) {
@@ -90,21 +92,20 @@ export default function AgendaBoard({
   durationMinutes,
   onSave,
   onCarryOver,
+  onDiscardPending,
 }: AgendaBoardProps) {
   const [draft, setDraft] = useState<Agenda[] | null>(null);
   const [errors, setErrors] = useState<DraftErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [focusId, setFocusId] = useState<string>();
-  // 남은 안건 지우기는 아직 서버 API가 없어 이 화면에서만 숨긴다
-  const [hiddenPendingIds, setHiddenPendingIds] = useState<number[]>([]);
   const dragRef = useRef<DragTarget | null>(null);
   const isEditing = draft !== null;
   const shown = draft ?? agendas;
   const isDirty = isEditing && JSON.stringify(draft) !== JSON.stringify(agendas);
   // 같은 남은 안건을 두 번 불러오지 않게 이미 들어간 것은 뺀다
   const availablePending = pendingAgendas.filter(
-    ({ id }) => !hiddenPendingIds.includes(id) && !shown.some((agenda) => agenda.pendingAgendaId === id),
+    ({ id }) => !shown.some((agenda) => agenda.pendingAgendaId === id),
   );
 
   const updateDraft = (updater: (prev: Agenda[]) => Agenda[]) => setDraft((prev) => (prev ? updater(prev) : prev));
@@ -427,7 +428,7 @@ export default function AgendaBoard({
                   type="button"
                   className={`${styles.iconButton} ${styles.pendingDelete}`}
                   aria-label={`${pending.title} 남은 안건에서 지우기`}
-                  onClick={() => setHiddenPendingIds((prev) => [...prev, pending.id])}
+                  onClick={() => onDiscardPending(pending)}
                 >
                   <Icon src={deleteIcon} size={SMALL_ICON_SIZE} />
                 </button>

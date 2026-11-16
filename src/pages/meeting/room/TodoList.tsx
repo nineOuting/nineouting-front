@@ -28,6 +28,10 @@ interface TodoListProps {
   onSave?: (todo: RoomTodo, change: TodoChange) => void;
   /** table: 디자인 Version02 회의 중 할 일 표 (체크박스 · 할 일 · 담당자 칩 · 기한 칩) */
   variant?: 'list' | 'table';
+  /** 완료로 체크한 할 일 항목 번호 (회의방이 서버와 맞춘다) */
+  doneIds?: string[];
+  /** 넘기면 회의록 작성자가 완료를 체크하고 푼다 */
+  onToggleDone?: (todo: RoomTodo, done: boolean) => void;
 }
 
 function assigneeLabel(todo: RoomTodo) {
@@ -42,10 +46,8 @@ function assigneeLabel(todo: RoomTodo) {
 }
 
 /** REQ-097 할 일·담당자·기한 (임시 디자인). 담당자가 참석자가 아니거나 동명이인이면 주황 표시 */
-export default function TodoList({ todos, onSave, variant = 'list' }: TodoListProps) {
+export default function TodoList({ todos, onSave, variant = 'list', doneIds = [], onToggleDone }: TodoListProps) {
   const [editing, setEditing] = useState<{ id: string; change: TodoChange } | null>(null);
-  // 표의 체크 표시는 아직 서버에 저장하지 않는다 (이 화면에서만)
-  const [doneIds, setDoneIds] = useState<string[]>([]);
   const startEditing = (todo: RoomTodo) =>
     setEditing({ id: todo.id, change: { task: todo.task, assignee: todo.assignee ?? '', due: todo.due ?? '' } });
 
@@ -121,7 +123,8 @@ export default function TodoList({ todos, onSave, variant = 'list' }: TodoListPr
                 className={styles.check}
                 aria-label={`${todo.task} 완료`}
                 checked={isDone}
-                onChange={() => setDoneIds((prev) => (isDone ? prev.filter((id) => id !== todo.id) : [...prev, todo.id]))}
+                disabled={!onToggleDone}
+                onChange={() => onToggleDone?.(todo, !isDone)}
               />
               <span className={[styles.tableTask, isDone ? styles.done : ''].filter(Boolean).join(' ')}>{todo.task}</span>
               <button

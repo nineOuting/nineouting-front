@@ -5,7 +5,9 @@ import {
   cancelMeeting,
   chooseMeetingTemplate,
   getMeetingDetail,
+  discardPendingAgenda,
   listPendingAgendas,
+  restorePendingAgenda,
   MEETING_ERROR_CODES,
   startMeeting,
   toMeeting,
@@ -172,6 +174,27 @@ export default function MeetingWaitingPage() {
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
   /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
+  /** 남은 안건 휴지통. 폴더의 남은 안건에서 버리고, [되돌리기]로 다시 살린다 */
+  const discardPending = async (pending: PendingAgenda) => {
+    const { folderId } = meeting;
+    try {
+      await discardPendingAgenda(folderId, pending.id);
+    } catch (error) {
+      setToast({ text: errorMessage(error), variant: 'error' });
+      return;
+    }
+    setPendingAgendas((prev) => prev.filter(({ id }) => id !== pending.id));
+    const undo = async () => {
+      try {
+        await restorePendingAgenda(folderId, pending.id);
+        setPendingAgendas((prev) => (prev.some(({ id }) => id === pending.id) ? prev : [...prev, pending]));
+      } catch (error) {
+        setToast({ text: errorMessage(error), variant: 'error' });
+      }
+    };
+    setToast({ text: '남은 안건에서 삭제했어요', variant: 'info', action: { label: '되돌리기', onClick: undo } });
+  };
+
   const saveMeeting = async (patch: Partial<Meeting>): Promise<boolean> => {
     const before = meeting;
     const next = { ...meeting, ...patch };
@@ -405,6 +428,7 @@ export default function MeetingWaitingPage() {
             onCarryOver={(_, undo) =>
               setToast({ text: '이번 회의 안건에 추가했어요', variant: 'success', action: { label: '되돌리기', onClick: undo } })
             }
+            onDiscardPending={discardPending}
           />
         </div>
 

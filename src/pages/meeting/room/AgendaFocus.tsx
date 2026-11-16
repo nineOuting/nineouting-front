@@ -194,6 +194,71 @@ function DecisionCard({
   );
 }
 
+const DECISION_MAX_COUNT = 5;
+const DECISION_MAX_LENGTH = 200;
+
+/** 회의 중 결정할 사항 더하기: 목록 끝에 결정 내용 수정과 같은 모양의 카드가 열린다 */
+function NewDecisionCard({ onAdd, onClose }: { onAdd: (content: string) => Promise<boolean>; onClose: () => void }) {
+  const [draft, setDraft] = useState('');
+  const [error, setError] = useState<string>();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const save = async () => {
+    const content = draft.trim();
+    if (!content) {
+      setError('결정할 사항을 입력해 주세요');
+      return;
+    }
+    if (content.length > DECISION_MAX_LENGTH) {
+      setError('결정할 사항은 200자 이하로 입력해 주세요');
+      return;
+    }
+    setIsSaving(true);
+    const isAdded = await onAdd(content);
+    setIsSaving(false);
+    if (isAdded) {
+      onClose();
+    }
+  };
+
+  return (
+    <li className={`${styles.decision} ${styles.discussing} ${styles.editingCard}`}>
+      <p className={styles.editHeading}>결정할 사항 추가</p>
+      <label className={styles.editField}>
+        <span className={styles.editLabel}>결정할 사항</span>
+        <input
+          className={`${styles.input} ${styles.inputFocus}`}
+          value={draft}
+          placeholder="이 안건에서 정해야 할 것을 한 줄로 적어 주세요"
+          maxLength={DECISION_MAX_LENGTH}
+          autoFocus
+          onChange={(event) => {
+            setDraft(event.target.value);
+            setError(undefined);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+              void save();
+            } else if (event.key === 'Escape') {
+              onClose();
+            }
+          }}
+        />
+      </label>
+      {error && <p className={styles.error}>{error}</p>}
+      <div className={styles.editFooter}>
+        <span className={styles.editNote}>추가하면 참석자 화면에 바로 보이고 AI가 함께 정리해요</span>
+        <button type="button" className={styles.textButton} onClick={onClose}>
+          취소
+        </button>
+        <button type="button" className={styles.smallSecondary} disabled={isSaving} onClick={() => void save()}>
+          추가
+        </button>
+      </div>
+    </li>
+  );
+}
+
 interface AgendaFocusProps {
   agenda?: RoomAgenda;
   isCurrent: boolean;
@@ -207,9 +272,13 @@ interface AgendaFocusProps {
   onSelectDecision: (decisionId: string | undefined) => void;
   onSaveDecision: (decisionId: string, summary: string) => void;
   onChangeDecisionStatus: (decisionId: string, status: DecisionStatusEdit) => void;
-  /** 결정할 사항 더하기 (아직 서버 API가 없어 안내만 한다) */
-  onAddDecision?: () => void;
+  /** 결정할 사항 더하기 (안건당 5개까지). 성공하면 true */
+  onAddDecision?: (content: string) => Promise<boolean>;
   onSaveTodo: (todo: RoomTodo, change: TodoChange) => void;
+  /** 완료로 체크한 할 일 항목 번호 */
+  doneTodoIds?: string[];
+  /** 할 일 완료 체크 (회의록 작성자, 진행 중) */
+  onToggleTodo?: (todo: RoomTodo, done: boolean) => void;
 }
 
 /** 디자인 Version02 Live 가운데: 고른 안건의 결정할 사항, 이 안건 요약(주요 의견·합의되지 않은 부분), 할 일 */
@@ -227,7 +296,11 @@ export default function AgendaFocus({
   onChangeDecisionStatus,
   onAddDecision,
   onSaveTodo,
+  doneTodoIds,
+  onToggleTodo,
 }: AgendaFocusProps) {
+  // 안건을 바꾸면 열려 있던 추가 칸을 닫는다
+  const [addingAgendaId, setAddingAgendaId] = useState<string>();
   if (!agenda) {
     return (
       <div className={styles.empty}>
@@ -264,8 +337,13 @@ export default function AgendaFocus({
           <span className={styles.sectionMeta}>
             {agenda.decisionPoints.length}개 중 {decided}개 결정{undecided > 0 ? ` · ${undecided}개 미결` : ''}
           </span>
-          {canEdit && onAddDecision && (
-            <button type="button" className={styles.iconButton} aria-label="결정할 사항 추가" onClick={onAddDecision}>
+          {canEdit && onAddDecision && agenda.decisionPoints.length < DECISION_MAX_COUNT && (
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label="결정할 사항 추가"
+              onClick={() => setAddingAgendaId(agenda.id)}
+            >
               <Icon src={addIcon} size={ICON_SIZE} />
             </button>
           )}
@@ -285,6 +363,9 @@ export default function AgendaFocus({
               onChangeStatus={(status) => onChangeDecisionStatus(decision.id, status)}
             />
           ))}
+          {canEdit && onAddDecision && addingAgendaId === agenda.id && (
+            <NewDecisionCard onAdd={onAddDecision} onClose={() => setAddingAgendaId(undefined)} />
+          )}
         </ul>
       </section>
 
@@ -337,7 +418,13 @@ export default function AgendaFocus({
             할 일 <span className={styles.todoCount}>{agenda.todos.length}</span>
           </p>
           {agenda.todos.length > 0 ? (
-            <TodoList variant="table" todos={agenda.todos} onSave={canEdit ? onSaveTodo : undefined} />
+            <TodoList
+              variant="table"
+              todos={agenda.todos}
+              onSave={canEdit ? onSaveTodo : undefined}
+              doneIds={doneTodoIds}
+              onToggleDone={canEdit ? onToggleTodo : undefined}
+            />
           ) : (
             <p className={styles.todoEmpty}>회의에서 할 일이 나오면 담당자·기한과 함께 여기에 모여요</p>
           )}

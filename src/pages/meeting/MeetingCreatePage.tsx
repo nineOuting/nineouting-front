@@ -43,11 +43,6 @@ const DURATION_OPTIONS: { value: Duration; label: string }[] = [
 /** 직접 입력의 종료 시간 후보: 시작 시간에서 얼마나 뒤인지 */
 const END_OFFSETS = [30, 60, 90, 120, 180];
 const DEFAULT_DURATION = 60 satisfies Duration;
-/**
- * 디자인 Version02는 안건을 대기 화면에서 정하지만 meeting-service는 생성할 때 안건 1개를 꼭 받는다.
- * 그래서 고칠 자리만 만들어 두고, 대기 화면 [안건 수정]에서 바꾼다
- */
-const PLACEHOLDER_AGENDA: Agenda = { id: 'placeholder', title: '논의할 안건', decisionPoints: ['결정할 사항'] };
 
 /** 기본 정보와, 새 회의일 때 함께 정하는 안건·회의록 작성자 (REQ-065~070) */
 interface MeetingForm extends MeetingBasicInfo {
@@ -282,7 +277,8 @@ export default function MeetingCreatePage() {
         ? await updateMeeting({ ...editingMeeting, ...basicInfo })
         : await createMeeting(folderId, {
             ...basicInfo,
-            agendas: form.agendas.length > 0 ? form.agendas : [PLACEHOLDER_AGENDA],
+            // 디자인 Version02: 안건은 대기 화면에서 정한다 (시작할 때 1개 이상 있어야 한다)
+            agendas: form.agendas,
             writer: form.writer ?? me,
             materials: [],
           });

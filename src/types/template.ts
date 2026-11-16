@@ -59,4 +59,6 @@ export interface MinutesTemplate {
   layout: TemplateLayout;
   /** REQ-123 내가 즐겨찾기했는지 */
   favorite: boolean;
+  /** 마지막으로 고친 시각 (양식 목록 카드의 "수정 날짜") */
+  updatedAt?: string;
 }
