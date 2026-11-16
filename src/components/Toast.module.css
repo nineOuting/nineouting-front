@@ -1,61 +1,56 @@
-/* 디자인 Toast: 옅은 바탕, 같은 색 테두리와 글자. REQ-177 화면 아래 */
+/*
+ * 디자인 Version02 Toast: 화면 위쪽 가운데 어두운 알림, 흰 글자, 파란 아이콘과 [되돌리기] (REQ-177)
+ * 라이트, 다크 모드 모두 같은 어두운 바탕이라 의미 토큰 대신 기본 색 토큰을 쓴다
+ */
 .toast {
   position: fixed;
-  bottom: var(--spacing-8);
+  top: var(--spacing-14);
   left: 50%;
   z-index: 300;
   display: flex;
   align-items: center;
-  gap: var(--gap-inline);
-  min-width: 320px;
-  max-width: 560px;
+  gap: var(--spacing-3);
+  max-width: min(560px, calc(100vw - var(--spacing-8)));
   padding: var(--spacing-3) var(--spacing-4);
-  border: var(--border-width-default) solid;
   border-radius: var(--radius-md);
+  background: var(--gray-900);
   box-shadow: var(--shadow-md);
+  color: var(--gray-0);
   transform: translateX(-50%);
 }
 
-.info {
-  background: var(--info-subtle);
-  border-color: var(--info-default);
-  color: var(--info-default);
+.icon {
+  flex-shrink: 0;
 }
 
-.success {
-  background: var(--success-subtle);
-  border-color: var(--success-default);
-  color: var(--success-default);
+.info .icon {
+  color: var(--blue-700);
 }
 
-.error {
-  background: var(--danger-subtle);
-  border-color: var(--danger-default);
-  color: var(--danger-default);
+.success .icon {
+  color: var(--green-500);
+}
+
+.error .icon {
+  color: var(--red-500);
 }
 
 .text {
-  flex: 1;
   font-size: var(--font-size-body-md);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-body-md);
 }
 
 .action {
-  height: 32px;
-  padding: 0 var(--button-md-padding-x);
+  flex-shrink: 0;
+  padding: var(--spacing-1) var(--spacing-2);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-caption);
-  color: var(--text-link);
+  color: var(--blue-600);
 }
 
 .action:hover {
-  background: var(--primary-ghost-hover);
-}
-
-.close {
-  display: flex;
-  color: var(--neutral-default);
+  background: var(--gray-800);
 }
