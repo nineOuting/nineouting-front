@@ -3,6 +3,9 @@ import { CELL_SEPARATOR, PAPER_FONT_SCALE } from '../utils/templateSettings';
 import styles from './SectionContent.module.css';
 
 const MAX_CONTENT_LENGTH = 20000;
+/** 할 일 줄 끝의 "(담당자, 기한)"을 떼어 오른쪽에 따로 보인다 */
+const CHECKLIST_META = /^(.*?)\s*(\([^()]*\))\s*$/;
+const LIST_MARKER = /^\s*[-*•]\s+/;
 
 interface SectionContentProps {
   settings: ItemSettings;
@@ -83,6 +86,8 @@ export default function SectionContent({ settings, content, label, editable = fa
   }
 
   const lines = content.split('\n').filter((line) => line.trim());
+  // AI 초안은 줄 앞에 "- "를 붙이므로 목록, 체크리스트에서는 떼고 보인다
+  const items = lines.map((line) => line.replace(LIST_MARKER, ''));
   if (lines.length === 0) {
     return (
       <p className={styles.empty} style={style}>
@@ -93,7 +98,7 @@ export default function SectionContent({ settings, content, label, editable = fa
   if (settings.recordType === 'LIST') {
     return (
       <ul className={styles.list} style={style}>
-        {lines.map((line, index) => (
+        {items.map((line, index) => (
           <li key={index}>{line}</li>
         ))}
       </ul>
@@ -102,12 +107,16 @@ export default function SectionContent({ settings, content, label, editable = fa
   if (settings.recordType === 'CHECKLIST') {
     return (
       <ul className={styles.checklist} style={style}>
-        {lines.map((line, index) => (
-          <li key={index}>
-            <span className={styles.box} aria-hidden="true" />
-            {line}
-          </li>
-        ))}
+        {items.map((line, index) => {
+          const [, task, meta] = line.match(CHECKLIST_META) ?? [line, line, ''];
+          return (
+            <li key={index}>
+              <span className={styles.box} aria-hidden="true" />
+              <span className={styles.task}>{task}</span>
+              {meta && <span className={styles.meta}>{meta}</span>}
+            </li>
+          );
+        })}
       </ul>
     );
   }
