@@ -460,7 +460,7 @@ export default function MeetingRoomPage() {
     setManualCurrent({ agendaId, by: myName });
     setSelectedAgendaId('');
     setToast({
-      text: `'${title}'으로 논의 안건을 바꿨어요. 이제부터 발언은 이 안건으로 정리돼요`,
+      text: `'${title}'으로 논의 안건을 바꿨어요`,
       variant: 'info',
       action: { label: '되돌리기', onClick: () => setManualCurrent(before) },
     });
@@ -810,7 +810,16 @@ export default function MeetingRoomPage() {
       <div className={styles.body}>
         <aside className={styles.agendaNav}>
           <AgendaNav
-            agendas={agendas}
+            // REQ-089 (시안) 직접 바꾸면 AI가 논의 중으로 둔 이전 안건은 미결로 보여 준다
+            agendas={
+              manualCurrent
+                ? agendas.map((agenda) =>
+                    agenda.id !== manualCurrent.agendaId && agenda.status === 'discussing'
+                      ? { ...agenda, status: 'undecided' as const }
+                      : agenda,
+                  )
+                : agendas
+            }
             selectedAgendaId={focusedAgenda?.id ?? ''}
             currentAgendaId={currentAgenda?.id}
             onSelect={(agendaId) => {
@@ -873,7 +882,7 @@ export default function MeetingRoomPage() {
             isCurrent={Boolean(focusedAgenda) && focusedAgenda?.id === currentAgenda?.id}
             isPaused={isPaused}
             isAiAvailable={isAiAvailable}
-            timing={timing}
+            timing={manualCurrent?.agendaId === focusedAgenda?.id ? undefined : timing}
             onAddDecision={(content) => (focusedAgenda ? addDecision(focusedAgenda.id, content) : Promise.resolve(false))}
             selectedDecisionId={selectedDecisionId}
             canEdit={isWriter && isLive}
