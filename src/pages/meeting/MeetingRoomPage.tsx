@@ -285,9 +285,8 @@ export default function MeetingRoomPage() {
       setIsWriter(loaded.writer.userId === me.userId);
       setMyName(me.name);
       setAgendas(roomAgendas);
-      setSelectedAgendaId(
-        (roomAgendas.find(({ status }) => status === 'discussing') ?? roomAgendas[0])?.id ?? '',
-      );
+      // 처음에는 고르지 않은 상태로 두어 지금 논의 중인 안건을 따라간다 (focusedAgenda)
+      setSelectedAgendaId('');
       setIsPaused(loaded.paused);
       setIsFinished(loaded.status !== 'IN_PROGRESS');
       setElapsedSeconds(elapsedSecondsOf(loaded, Date.now()));
@@ -466,9 +465,9 @@ export default function MeetingRoomPage() {
       action: { label: '되돌리기', onClick: () => setManualCurrent(before) },
     });
   };
-  const selectedDecision = agendas
-    .find(({ id }) => id === selectedAgendaId)
-    ?.decisionPoints.find(({ id }) => id === selectedDecisionId);
+  // 고른 안건이 없으면 지금 논의 중인 안건을 보여 주고, 논의 중인 안건이 바뀌면 함께 바뀐다
+  const focusedAgenda = agendas.find(({ id }) => id === selectedAgendaId) ?? currentAgenda ?? agendas[0];
+  const selectedDecision = focusedAgenda?.decisionPoints.find(({ id }) => id === selectedDecisionId);
 
   const addAgenda = async (title: string, decisionPoints: string[]) => {
     try {
@@ -728,7 +727,6 @@ export default function MeetingRoomPage() {
     }
   };
 
-  const focusedAgenda = agendas.find(({ id }) => id === selectedAgendaId) ?? currentAgenda ?? agendas[0];
   const plannedMinutes = Math.round((new Date(detail.endAt).getTime() - new Date(detail.startAt).getTime()) / 60000);
   const writerName = detail.writer.name ?? '알 수 없음';
   const terms = detectTerms(transcript.map(({ text }) => text));
@@ -816,7 +814,8 @@ export default function MeetingRoomPage() {
             selectedAgendaId={focusedAgenda?.id ?? ''}
             currentAgendaId={currentAgenda?.id}
             onSelect={(agendaId) => {
-              setSelectedAgendaId(agendaId);
+              // 지금 논의 중인 안건을 고르면 다시 따라가기로 돌아간다. 다른 안건을 고르면 그 안건에 머문다
+              setSelectedAgendaId(agendaId === currentAgenda?.id ? '' : agendaId);
               setSelectedDecisionId(undefined);
             }}
             {...(isWriter &&
