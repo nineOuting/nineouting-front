@@ -1,5 +1,7 @@
 /* 디자인 MeetingTableCard: 머리글은 회색 줄, 행 40px */
 .card {
+  /* 표 폭에 따라 열을 숨기려고 카드 폭을 기준으로 쓴다 (아래 @container) */
+  container-type: inline-size;
   padding: var(--padding-card);
   background: var(--bg-surface);
   border: var(--border-width-default) solid var(--border-default);
@@ -15,6 +17,8 @@
 .headRow th {
   height: 40px;
   padding: var(--spacing-2) 0;
+  overflow: hidden;
+  white-space: nowrap;
   background: var(--bg-surface-muted);
   text-align: left;
 }
@@ -43,6 +47,13 @@
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-caption);
   color: var(--text-secondary);
+}
+
+/* 폭이 좁으면(1280px 화면 등) 고정 폭 열이 자리를 다 차지해 회의명이 사라지므로 참여자 열을 숨긴다 */
+@container (max-width: 760px) {
+  .attendees {
+    display: none;
+  }
 }
 
 .flipped {
