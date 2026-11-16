@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import { countFolderMeetings } from '../../api/meeting';
+import { getMe } from '../../api/user';
 import {
   changeFolderAccess,
   createFolder,
@@ -79,6 +80,7 @@ export default function WorkspacePage() {
   const [folders, setFolders] = useState<FolderSummary[]>([]);
   // 멤버는 목록을 보기만 하고, 초대·제외·권한 변경은 워크스페이스 소유자만 한다 (2026-10-26 결정)
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [myUserId, setMyUserId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [menuFolderId, setMenuFolderId] = useState<number | null>(null);
@@ -98,7 +100,12 @@ export default function WorkspacePage() {
   useEffect(() => {
     let isCurrent = true;
     const load = async () => {
-      const [detail, mine, folderList] = await Promise.all([getWorkspace(id), listMyWorkspaces(), listFolders(id)]);
+      const [detail, mine, folderList, me] = await Promise.all([
+        getWorkspace(id),
+        listMyWorkspaces(),
+        listFolders(id),
+        getMe().catch(() => null),
+      ]);
       // REQ-037 폴더 카드의 회의 수는 meeting-service 회의 목록의 전체 개수로 센다
       const counts = await Promise.all(folderList.map(({ folderId }) => countFolderMeetings(folderId).catch(() => 0)));
       // TODO(백엔드): 멤버도 목록을 볼 수 있게 바뀌기 전까지는 소유자가 아니면 403이라 빈 목록으로 둔다
@@ -107,6 +114,7 @@ export default function WorkspacePage() {
         return;
       }
       setWorkspace(detail);
+      setMyUserId(me?.userId ?? null);
       setWorkspaces(mine);
       setFolders(folderList.map((folder, index) => ({ ...folder, meetingCount: counts[index] })));
       setMembers(memberList);
@@ -138,7 +146,7 @@ export default function WorkspacePage() {
 
   const addFolder = async (name: string) => {
     const created = await createFolder(id, name);
-    setFolders((prev) => [...prev, { folderId: created.folderId, name: created.name, isDefault: false, meetingCount: 0 }]);
+    setFolders((prev) => [...prev, { folderId: created.folderId, name: created.name, isDefault: false, meetingCount: 0, ownerUserId: myUserId }]);
     closeDialog();
   };
 
@@ -311,6 +319,8 @@ export default function WorkspacePage() {
                 </button>
                 <FolderMenu
                   folder={folder}
+                  // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정)
+                  canManage={isOwner || (myUserId !== null && folder.ownerUserId === myUserId)}
                   isOpen={menuFolderId === folder.folderId}
                   onToggle={() => setMenuFolderId((current) => (current === folder.folderId ? null : folder.folderId))}
                   onClose={closeFolderMenu}
@@ -474,6 +484,8 @@ export default function WorkspacePage() {
 
 interface FolderMenuProps {
   folder: FolderSummary;
+  /** 이름 바꾸기, 삭제를 할 수 있는지. 없으면 더보기 버튼을 숨긴다 */
+  canManage: boolean;
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
@@ -482,8 +494,11 @@ interface FolderMenuProps {
 }
 
 /** 폴더 카드 오른쪽 위 더보기. 기본 폴더는 지울 수 없다 (REQ-044) */
-function FolderMenu({ folder, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
+function FolderMenu({ folder, canManage, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
+  if (!canManage) {
+    return null;
+  }
   const items = [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }];
   if (!folder.isDefault) {
     items.push({ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true });

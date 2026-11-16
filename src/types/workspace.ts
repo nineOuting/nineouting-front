@@ -20,6 +20,8 @@ export interface FolderSummary {
   name: string;
   isDefault: boolean;
   meetingCount: number;
+  /** 폴더를 만든 사람 (기본 폴더는 없음). 폴더 메뉴를 보여 줄지 가린다 */
+  ownerUserId?: number | null;
 }
 
 export interface FolderMember extends Member {
