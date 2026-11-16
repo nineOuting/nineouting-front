@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import { countFolderMeetings } from '../../api/meeting';
+import { getMe } from '../../api/user';
 import {
   changeFolderAccess,
   createFolder,
@@ -51,7 +52,7 @@ const ARROW_ICON_SIZE = 24;
 // MSG-061
 const INVITED_MESSAGE = '초대 메일을 1명에게 보냈어요.';
 // MSG-031 (서버 FOLDER_NAME_DUPLICATED)
-const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있습니다. 다른 이름을 입력해 주세요.';
+const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있어요. 다른 이름을 입력해 주세요.';
 
 type Dialog =
   | { type: 'newFolder' }
@@ -79,6 +80,7 @@ export default function WorkspacePage() {
   const [folders, setFolders] = useState<FolderSummary[]>([]);
   // 멤버는 목록을 보기만 하고, 초대·제외·권한 변경은 워크스페이스 소유자만 한다 (2026-10-26 결정)
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [myUserId, setMyUserId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [menuFolderId, setMenuFolderId] = useState<number | null>(null);
@@ -98,7 +100,12 @@ export default function WorkspacePage() {
   useEffect(() => {
     let isCurrent = true;
     const load = async () => {
-      const [detail, mine, folderList] = await Promise.all([getWorkspace(id), listMyWorkspaces(), listFolders(id)]);
+      const [detail, mine, folderList, me] = await Promise.all([
+        getWorkspace(id),
+        listMyWorkspaces(),
+        listFolders(id),
+        getMe().catch(() => null),
+      ]);
       // REQ-037 폴더 카드의 회의 수는 meeting-service 회의 목록의 전체 개수로 센다
       const counts = await Promise.all(folderList.map(({ folderId }) => countFolderMeetings(folderId).catch(() => 0)));
       // TODO(백엔드): 멤버도 목록을 볼 수 있게 바뀌기 전까지는 소유자가 아니면 403이라 빈 목록으로 둔다
@@ -107,6 +114,7 @@ export default function WorkspacePage() {
         return;
       }
       setWorkspace(detail);
+      setMyUserId(me?.userId ?? null);
       setWorkspaces(mine);
       setFolders(folderList.map((folder, index) => ({ ...folder, meetingCount: counts[index] })));
       setMembers(memberList);
@@ -138,7 +146,7 @@ export default function WorkspacePage() {
 
   const addFolder = async (name: string) => {
     const created = await createFolder(id, name);
-    setFolders((prev) => [...prev, { folderId: created.folderId, name: created.name, isDefault: false, meetingCount: 0 }]);
+    setFolders((prev) => [...prev, { folderId: created.folderId, name: created.name, isDefault: false, meetingCount: 0, ownerUserId: myUserId }]);
     closeDialog();
   };
 
@@ -311,6 +319,8 @@ export default function WorkspacePage() {
                 </button>
                 <FolderMenu
                   folder={folder}
+                  // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정)
+                  canManage={isOwner || (myUserId !== null && folder.ownerUserId === myUserId)}
                   isOpen={menuFolderId === folder.folderId}
                   onToggle={() => setMenuFolderId((current) => (current === folder.folderId ? null : folder.folderId))}
                   onClose={closeFolderMenu}
@@ -401,8 +411,8 @@ export default function WorkspacePage() {
       {dialog?.type === 'deleteFolder' && (
         // MSG-046
         <ConfirmDialog
-          title="폴더를 삭제하시겠습니까?"
-          message={'폴더 안의 회의와 회의록도 함께 쓰레기통으로 이동하며\n3개월 안에 복구할 수 있습니다.'}
+          title="폴더를 삭제할까요?"
+          message={'폴더 안의 회의와 회의록도 함께 쓰레기통으로 이동하며\n3개월 안에 복구할 수 있어요.'}
           cancelLabel="취소"
           confirmLabel="삭제하기"
           isDanger
@@ -438,7 +448,7 @@ export default function WorkspacePage() {
         (isOwner ? (
           // MSG-042 소유자는 소유권을 넘긴 뒤에 나갈 수 있다
           <ConfirmDialog
-            title="소유권을 양도해야 워크스페이스에서 나갈 수 있습니다."
+            title="소유권을 양도해야 워크스페이스에서 나갈 수 있어요."
             message="다른 멤버에게 소유권을 양도한 후 다시 시도해 주세요."
             cancelLabel="취소"
             confirmLabel="소유권 양도"
@@ -448,8 +458,8 @@ export default function WorkspacePage() {
         ) : (
           // MSG-041
           <ConfirmDialog
-            title="워크스페이스에서 나가시겠습니까?"
-            message={'나가면 이 워크스페이스의 폴더와 회의록을 더 이상 볼 수 없습니다.\n다시 참여하려면 초대를 받아야 합니다.'}
+            title="워크스페이스에서 나갈까요?"
+            message={'나가면 이 워크스페이스의 폴더와 회의록을 더 이상 볼 수 없어요.\n다시 참여하려면 초대를 받아야 해요.'}
             cancelLabel="취소"
             confirmLabel="나가기"
             onCancel={closeDialog}
@@ -459,8 +469,8 @@ export default function WorkspacePage() {
       {dialog?.type === 'deleteWorkspace' && (
         // MSG-043
         <ConfirmDialog
-          title="워크스페이스를 삭제하시겠습니까?"
-          message={'워크스페이스 안의 모든 폴더, 회의, 회의록이 함께 삭제되며\n되돌릴 수 없습니다.'}
+          title="워크스페이스를 삭제할까요?"
+          message={'워크스페이스 안의 모든 폴더, 회의, 회의록이 함께 삭제되고\n되돌릴 수 없어요.'}
           cancelLabel="취소"
           confirmLabel="삭제하기"
           isDanger
@@ -474,6 +484,8 @@ export default function WorkspacePage() {
 
 interface FolderMenuProps {
   folder: FolderSummary;
+  /** 이름 바꾸기, 삭제를 할 수 있는지. 없으면 더보기 버튼을 숨긴다 */
+  canManage: boolean;
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
@@ -482,8 +494,11 @@ interface FolderMenuProps {
 }
 
 /** 폴더 카드 오른쪽 위 더보기. 기본 폴더는 지울 수 없다 (REQ-044) */
-function FolderMenu({ folder, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
+function FolderMenu({ folder, canManage, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
+  if (!canManage) {
+    return null;
+  }
   const items = [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }];
   if (!folder.isDefault) {
     items.push({ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true });

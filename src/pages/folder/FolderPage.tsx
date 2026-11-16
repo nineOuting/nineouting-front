@@ -48,7 +48,7 @@ const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
 // MSG-031 (서버 FOLDER_NAME_DUPLICATED)
-const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있습니다. 다른 이름을 입력해 주세요.';
+const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있어요. 다른 이름을 입력해 주세요.';
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -101,8 +101,10 @@ export default function FolderPage() {
   const [pendingAgendas, setPendingAgendas] = useState<FolderPendingAgenda[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[] | null>(null);
   const [workspaceMembersError, setWorkspaceMembersError] = useState<string>();
-  // 폴더 멤버 초대·제외는 워크스페이스 소유자만, 다른 멤버는 목록 조회만 (2026-10-26 결정)
+  // 워크스페이스 소유자는 모든 폴더에 들어가고, 폴더 삭제와 멤버 초대, 제외를 한다 (2026-11-16 결정)
   const [isWorkspaceOwner, setIsWorkspaceOwner] = useState(false);
+  // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
+  const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -141,7 +143,7 @@ export default function FolderPage() {
 
   const openMembers = async () => {
     setDialog({ type: 'members' });
-    if (!folder || !isWorkspaceOwner || workspaceMembers) {
+    if (!folder || !canManageMembers || workspaceMembers) {
       return;
     }
     // REQ-041 폴더에는 워크스페이스 멤버만 초대한다
@@ -329,16 +331,17 @@ export default function FolderPage() {
                   anchorRef={folderMenuRef}
                   onClose={() => setIsFolderMenuOpen(false)}
                   items={[
-                    // 이름 바꾸기, 삭제는 폴더를 만든 사람만 (기본 폴더 이름은 워크스페이스 소유자)
-                    ...(folder.isOwner || (folder.isDefault && isWorkspaceOwner)
+                    // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정, 기본 폴더 이름은 워크스페이스 소유자)
+                    ...(folder.isOwner || isWorkspaceOwner
                       ? [{ label: '폴더 이름 바꾸기', icon: editIcon, onSelect: () => setDialog({ type: 'rename' }) }]
                       : []),
                     { label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() },
                     { label: '즐겨찾기에 추가', icon: starIcon, onSelect: () => void addFavorite() },
-                    ...(!folder.isDefault
+                    // 워크스페이스 소유자는 모든 폴더에 들어가므로 나갈 수 없다
+                    ...(!folder.isDefault && !isWorkspaceOwner
                       ? [{ label: '폴더 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) }]
                       : []),
-                    ...(folder.isOwner && !folder.isDefault
+                    ...((folder.isOwner || isWorkspaceOwner) && !folder.isDefault
                       ? [{ label: '폴더 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setDialog({ type: 'delete' }) }]
                       : []),
                   ].map((item) => ({
@@ -484,7 +487,7 @@ export default function FolderPage() {
           members={members}
           workspaceMembers={workspaceMembers}
           workspaceMembersError={workspaceMembersError}
-          canManage={isWorkspaceOwner}
+          canManage={canManageMembers}
           canTransfer={folder.isOwner}
           onAdd={addMembers}
           onRemove={removeMembers}
@@ -528,8 +531,8 @@ export default function FolderPage() {
       {dialog?.type === 'delete' && (
         // MSG-046
         <ConfirmDialog
-          title="폴더를 삭제하시겠습니까?"
-          message={'폴더 안의 회의와 회의록도 함께 삭제 목록으로 이동하며\n3개월 안에 복구할 수 있습니다.'}
+          title="폴더를 삭제할까요?"
+          message={'폴더 안의 회의와 회의록도 함께 쓰레기통으로 이동하며\n3개월 안에 복구할 수 있어요.'}
           cancelLabel="취소"
           confirmLabel="삭제"
           isDanger
@@ -541,7 +544,7 @@ export default function FolderPage() {
         (folder.isOwner ? (
           // MSG-045
           <ConfirmDialog
-            title="소유권을 양도해야 폴더에서 나갈 수 있습니다."
+            title="소유권을 양도해야 폴더에서 나갈 수 있어요."
             message="다른 폴더 멤버에게 소유권을 양도한 후 다시 시도해 주세요."
             cancelLabel="취소"
             confirmLabel="소유권 양도"
@@ -551,8 +554,8 @@ export default function FolderPage() {
         ) : (
           // MSG-044
           <ConfirmDialog
-            title="프로젝트 폴더에서 나가시겠습니까?"
-            message="나가면 이 폴더의 회의와 회의록을 더 이상 볼 수 없습니다."
+            title="프로젝트 폴더에서 나갈까요?"
+            message="나가면 이 폴더의 회의와 회의록을 더 이상 볼 수 없어요."
             cancelLabel="취소"
             confirmLabel="나가기"
             onCancel={closeDialog}
