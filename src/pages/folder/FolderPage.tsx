@@ -101,8 +101,10 @@ export default function FolderPage() {
   const [pendingAgendas, setPendingAgendas] = useState<FolderPendingAgenda[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[] | null>(null);
   const [workspaceMembersError, setWorkspaceMembersError] = useState<string>();
-  // 폴더 멤버 초대·제외는 워크스페이스 소유자만, 다른 멤버는 목록 조회만 (2026-10-26 결정)
+  // 워크스페이스 소유자는 모든 폴더에 들어가고, 폴더 삭제와 멤버 초대, 제외를 한다 (2026-11-16 결정)
   const [isWorkspaceOwner, setIsWorkspaceOwner] = useState(false);
+  // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
+  const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
@@ -141,7 +143,7 @@ export default function FolderPage() {
 
   const openMembers = async () => {
     setDialog({ type: 'members' });
-    if (!folder || !isWorkspaceOwner || workspaceMembers) {
+    if (!folder || !canManageMembers || workspaceMembers) {
       return;
     }
     // REQ-041 폴더에는 워크스페이스 멤버만 초대한다
@@ -329,16 +331,18 @@ export default function FolderPage() {
                   anchorRef={folderMenuRef}
                   onClose={() => setIsFolderMenuOpen(false)}
                   items={[
-                    // 이름 바꾸기, 삭제는 폴더를 만든 사람만 (기본 폴더 이름은 워크스페이스 소유자)
+                    // 이름 바꾸기는 폴더를 만든 사람만 (기본 폴더 이름은 워크스페이스 소유자)
+                    // 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정)
                     ...(folder.isOwner || (folder.isDefault && isWorkspaceOwner)
                       ? [{ label: '폴더 이름 바꾸기', icon: editIcon, onSelect: () => setDialog({ type: 'rename' }) }]
                       : []),
                     { label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() },
                     { label: '즐겨찾기에 추가', icon: starIcon, onSelect: () => void addFavorite() },
-                    ...(!folder.isDefault
+                    // 워크스페이스 소유자는 모든 폴더에 들어가므로 나갈 수 없다
+                    ...(!folder.isDefault && !isWorkspaceOwner
                       ? [{ label: '폴더 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) }]
                       : []),
-                    ...(folder.isOwner && !folder.isDefault
+                    ...((folder.isOwner || isWorkspaceOwner) && !folder.isDefault
                       ? [{ label: '폴더 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setDialog({ type: 'delete' }) }]
                       : []),
                   ].map((item) => ({
@@ -484,7 +488,7 @@ export default function FolderPage() {
           members={members}
           workspaceMembers={workspaceMembers}
           workspaceMembersError={workspaceMembersError}
-          canManage={isWorkspaceOwner}
+          canManage={canManageMembers}
           canTransfer={folder.isOwner}
           onAdd={addMembers}
           onRemove={removeMembers}
