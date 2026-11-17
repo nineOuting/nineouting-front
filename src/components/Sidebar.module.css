@@ -141,3 +141,8 @@
 .subItem:disabled .icon {
   color: var(--text-disabled);
 }
+
+/* REQ-202 폴더 아이콘을 프로젝트 색으로 */
+.folderColor {
+  display: flex;
+}

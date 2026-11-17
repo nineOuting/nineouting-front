@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { errorMessage } from '../../api/client';
-import { getMeetingDetail, listCalendarMeetings, type MeetingDetailResponse } from '../../api/meeting';
+import {
+  completeMyTodo,
+  getMeetingDetail,
+  listCalendarMeetings,
+  listMyTodos,
+  type MeetingDetailResponse,
+  type MyTodo,
+} from '../../api/meeting';
 import { listWritingMinutes, type WritingMinutes } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import { listFavorites, listMyWorkspaces, setFavorite } from '../../api/workspace';
@@ -16,6 +23,7 @@ import HomeCalendar from './HomeCalendar';
 import styles from './HomePage.module.css';
 import UpcomingMeetingCard from './UpcomingMeetingCard';
 import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
+import MyTodosCard from './MyTodosCard';
 import WritingMinutesCard from './WritingMinutesCard';
 
 // 캘린더 API는 한 번에 42일까지 받는다. 이번 주 월요일부터 받아 이번 주 회의 수와 곧 다가오는 회의를 찾는다
@@ -33,6 +41,7 @@ export default function HomePage() {
   const [upcoming, setUpcoming] = useState<MeetingDetailResponse | null>();
   const [writing, setWriting] = useState<WritingMinutes[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [todos, setTodos] = useState<MyTodo[]>([]);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
@@ -73,6 +82,9 @@ export default function HomePage() {
     listFavorites()
       .then((items) => isCurrent && setFavorites(items))
       .catch(showError);
+    listMyTodos()
+      .then((items) => isCurrent && setTodos(items))
+      .catch(showError);
     return () => {
       isCurrent = false;
     };
@@ -84,6 +96,17 @@ export default function HomePage() {
       setFavorites((prev) => prev.filter((item) => item !== favorite));
     } catch (error) {
       showError(error);
+    }
+  };
+
+  // REQ-196 고른 할 일을 완료하고 목록에서 뺀다. 실패한 것은 남긴다
+  const completeTodos = async (picked: MyTodo[]) => {
+    const results = await Promise.allSettled(picked.map((todo) => completeMyTodo(todo.meetingId, todo.itemId)));
+    const done = picked.filter((_, index) => results[index].status === 'fulfilled');
+    setTodos((prev) => prev.filter((todo) => !done.includes(todo)));
+    const failed = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+    if (failed) {
+      showError(failed.reason);
     }
   };
 
@@ -144,6 +167,7 @@ export default function HomePage() {
         <div className={styles.side}>
           <UpcomingMeetingCard meeting={upcoming} />
           <WritingMinutesCard items={writing} />
+          <MyTodosCard items={todos} onComplete={completeTodos} />
         </div>
       </div>
       <FavoritesCard items={favorites} onRemove={removeFavorite} />

@@ -1,0 +1,20 @@
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 40px);
+  gap: var(--spacing-3);
+  justify-content: center;
+  padding: var(--spacing-2) 0;
+}
+
+.swatch {
+  width: 40px;
+  height: 40px;
+  border: 3px solid transparent;
+  border-radius: 50%;
+}
+
+/* 고른 색은 흰 테두리 + 바깥 링 */
+.selected {
+  border-color: var(--bg-surface);
+  box-shadow: 0 0 0 2px var(--text-primary);
+}

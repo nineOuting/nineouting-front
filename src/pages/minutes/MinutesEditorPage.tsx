@@ -29,6 +29,7 @@ import saveIcon from '../../assets/icons/save.svg';
 import scheduleIcon from '../../assets/icons/schedule.svg';
 import templateIcon from '../../assets/icons/template-sm.svg';
 import undoIcon from '../../assets/icons/undo.svg';
+import AccessNotice from '../../components/AccessNotice';
 import AiNotice from '../../components/AiNotice';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
@@ -41,6 +42,7 @@ import Toast, { type ToastMessage } from '../../components/Toast';
 import type { TranscriptLine } from '../../types/meetingRoom';
 import type { MinutesTemplate } from '../../types/template';
 import { toTime } from '../../utils/calendar';
+import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import { formatMeetingDate } from '../../utils/meetingFormat';
 import { toTranscriptLine } from '../meeting/room/roomData';
 import ActionMenu from '../workspace/ActionMenu';
@@ -90,7 +92,12 @@ const FORMAT_ACTIONS: FormatAction[] = [
   { label: '오른쪽 정렬', command: 'justifyRight', icon: alignRightIcon },
 ];
 
-type LoadState = { type: 'loading' } | { type: 'notReady' } | { type: 'error'; message: string } | { type: 'ready' };
+type LoadState =
+  | { type: 'loading' }
+  | { type: 'notReady' }
+  | { type: 'error'; message: string }
+  | { type: 'access'; notice: AccessNoticeKind }
+  | { type: 'ready' };
 
 /** 칸 구성(양식)이 같은지. 다르면 되돌리기 기록을 지운다 (양식을 바꾼 뒤 예전 칸으로 되돌리지 않게) */
 function sameShape(a: MinutesSection[], b: MinutesSection[]) {
@@ -201,11 +208,24 @@ export default function MinutesEditorPage() {
             retryTimer = window.setTimeout(attempt, NOT_READY_RETRY_MS);
             return;
           }
-          setState(
-            isApiError(error, MINUTES_ERROR_CODES.notReady)
-              ? { type: 'notReady' }
-              : { type: 'error', message: errorMessage(error) },
-          );
+          if (isApiError(error, MINUTES_ERROR_CODES.notReady)) {
+            setState({ type: 'notReady' });
+            return;
+          }
+          // REQ-205, 206 권한 없는 링크, 삭제된 회의록 링크. 회의록이 없으면 회의가 삭제됐는지 회의 쪽에 물어본다
+          const notice = accessNoticeOf(error);
+          if (notice || !isApiError(error) || error.status !== 404) {
+            setState(notice ? { type: 'access', notice } : { type: 'error', message: errorMessage(error) });
+            return;
+          }
+          getMeetingDetail(id)
+            .then(() => isCurrent && setState({ type: 'error', message: errorMessage(error) }))
+            .catch((meetingError: unknown) => {
+              if (isCurrent) {
+                const meetingNotice = accessNoticeOf(meetingError);
+                setState(meetingNotice ? { type: 'access', notice: meetingNotice } : { type: 'error', message: errorMessage(error) });
+              }
+            });
         });
     attempt();
     return () => {
@@ -306,6 +326,14 @@ export default function MinutesEditorPage() {
     };
   }, [id]);
 
+  if (state.type === 'access') {
+    return (
+      <div className={styles.page}>
+        <EditorTopBar />
+        <AccessNotice kind={state.notice} />
+      </div>
+    );
+  }
   if (state.type !== 'ready' || !minutes) {
     return (
       <div className={styles.page}>

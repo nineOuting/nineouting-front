@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useBlocker, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
-import { createMeeting, updateMeeting } from '../../api/meeting';
+import { chooseMeetingTemplate, createMeeting, updateMeeting } from '../../api/meeting';
 import { getMe } from '../../api/user';
 import { getFolder, getWorkspace, listFolderMembers, listFolders } from '../../api/workspace';
 import Button from '../../components/Button';
@@ -167,6 +167,9 @@ export default function MeetingCreatePage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
+  // REQ-199 워크스페이스 회의록 기본 양식 (null이면 서비스 기본 양식이라 따로 고르지 않는다)
+  const [defaultTemplateId, setDefaultTemplateId] = useState<number | null>(null);
+
   useEffect(() => {
     if (isEdit || !Number.isInteger(routeFolderId)) {
       return undefined;
@@ -178,6 +181,7 @@ export default function MeetingCreatePage() {
         if (isCurrent) {
           setFolderOptions(folders);
           setWorkspaceName(workspace.name);
+          setDefaultTemplateId(workspace.defaultTemplateId);
         }
       })
       .catch(() => undefined);
@@ -282,6 +286,10 @@ export default function MeetingCreatePage() {
             writer: form.writer ?? me,
             materials: [],
           });
+      // REQ-199 워크스페이스 회의록 기본 양식을 먼저 골라 둔다 (대기 화면에서 바꿀 수 있다). 실패해도 회의는 만들어졌다
+      if (!editingMeeting && defaultTemplateId !== null) {
+        await chooseMeetingTemplate(saved.meetingId, defaultTemplateId).catch(() => undefined);
+      }
       navigate(`/meetings/${saved.meetingId}`, { replace: true });
     } catch (error) {
       setIsSubmitting(false);

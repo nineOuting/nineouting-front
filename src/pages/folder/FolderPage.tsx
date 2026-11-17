@@ -4,6 +4,7 @@ import { errorMessage, isApiError } from '../../api/client';
 import { listFolderMeetingRows, listFolderPendingAgendas, restoreMeeting, trashMeeting } from '../../api/meeting';
 import {
   addFolderMember,
+  changeFolderColor,
   deleteFolder,
   renameFolder,
   setFavorite,
@@ -35,13 +36,19 @@ import editIcon from '../../assets/icons/create-sm.svg';
 import groupIcon from '../../assets/icons/group-add-sm.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
+import paletteIcon from '../../assets/icons/palette.svg';
 import moveIcon from '../../assets/icons/folder-sm.svg';
 import starIcon from '../../assets/icons/star-outline.svg';
 import MoveMeetingModal from '../../components/MoveMeetingModal';
 import ActionMenu from '../workspace/ActionMenu';
 import FolderNameModal from '../workspace/FolderNameModal';
+import FolderCalendar from './FolderCalendar';
+import FolderColorDialog from './FolderColorDialog';
 import FolderMembersModal from './FolderMembersModal';
 import MeetingTable, { type MeetingSort, type SortKey } from './MeetingTable';
+import AccessNotice from '../../components/AccessNotice';
+import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
+import { folderColor } from '../../utils/folderColor';
 import styles from './FolderPage.module.css';
 
 const SEPARATOR_ICON_SIZE = 16;
@@ -67,6 +74,7 @@ function sortOf(params: URLSearchParams): MeetingSort {
 type Dialog =
   | { type: 'members' }
   | { type: 'leave' }
+  | { type: 'color' }
   | { type: 'rename' }
   | { type: 'delete' }
   | { type: 'move'; meeting: FolderMeeting };
@@ -103,6 +111,8 @@ export default function FolderPage() {
   const [workspaceMembersError, setWorkspaceMembersError] = useState<string>();
   // 워크스페이스 소유자는 모든 폴더에 들어가고, 폴더 삭제와 멤버 초대, 제외를 한다 (2026-11-16 결정)
   const [isWorkspaceOwner, setIsWorkspaceOwner] = useState(false);
+  // REQ-205 권한 없는 폴더 링크
+  const [accessNotice, setAccessNotice] = useState<AccessNoticeKind | null>(null);
   // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
   const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -133,7 +143,12 @@ export default function FolderPage() {
     };
     load().catch((error: unknown) => {
       if (isCurrent) {
-        showError(error);
+        const notice = accessNoticeOf(error);
+        if (notice) {
+          setAccessNotice(notice);
+        } else {
+          showError(error);
+        }
       }
     });
     return () => {
@@ -279,6 +294,13 @@ export default function FolderPage() {
   };
 
   // REQ-178 불러오는 동안 회색 자리
+  if (accessNotice) {
+    return (
+      <AppLayout className={styles.page}>
+        <AccessNotice kind={accessNotice} />
+      </AppLayout>
+    );
+  }
   if (!folder) {
     return (
       <AppLayout className={styles.page}>
@@ -305,6 +327,8 @@ export default function FolderPage() {
         </nav>
         <div className={styles.titleRow}>
           <div className={styles.titleGroup}>
+            {/* REQ-202 프로젝트 색 */}
+            <span className={styles.colorDot} style={{ background: folderColor(folder.color) }} aria-hidden="true" />
             <h1 className={styles.title}>{folder.name}</h1>
             <FavoriteButton
               key={favoriteKey}
@@ -336,6 +360,10 @@ export default function FolderPage() {
                       ? [{ label: '폴더 이름 바꾸기', icon: editIcon, onSelect: () => setDialog({ type: 'rename' }) }]
                       : []),
                     { label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() },
+                    // REQ-202 프로젝트 색 설정 (프로젝트 소유자, 워크스페이스 소유자)
+                    ...(folder.isOwner || isWorkspaceOwner
+                      ? [{ label: '프로젝트 색 설정', icon: paletteIcon, onSelect: () => setDialog({ type: 'color' }) }]
+                      : []),
                     { label: '즐겨찾기에 추가', icon: starIcon, onSelect: () => void addFavorite() },
                     // 워크스페이스 소유자는 모든 폴더에 들어가므로 나갈 수 없다
                     ...(!folder.isDefault && !isWorkspaceOwner
@@ -430,14 +458,16 @@ export default function FolderPage() {
         </section>
 
         <aside className={styles.side}>
+          <FolderCalendar folderId={folder.folderId} color={folderColor(folder.color)} />
           <section className={styles.section} aria-labelledby="folder-members-title">
             <h2 id="folder-members-title" className={styles.sectionTitle}>
               멤버
             </h2>
             <div className={styles.memberCard}>
               <AvatarStack members={members} label={`폴더 멤버 ${members.length}명`} />
+              {/* REQ-203 멤버 수를 누르면 멤버 목록. 관리 권한이 있으면 같은 창에서 넣고 뺀다 */}
               <button type="button" className={styles.textButton} onClick={openMembers}>
-                멤버 관리
+                멤버 {members.length}명
               </button>
             </div>
           </section>
@@ -538,6 +568,22 @@ export default function FolderPage() {
           isDanger
           onCancel={closeDialog}
           onConfirm={() => void removeFolder()}
+        />
+      )}
+      {dialog?.type === 'color' && (
+        <FolderColorDialog
+          initialColor={folder.color}
+          onClose={closeDialog}
+          onSave={async (color) => {
+            try {
+              await changeFolderColor(folder.folderId, color);
+              setFolder({ ...folder, color });
+              closeDialog();
+              setToast({ text: '프로젝트 색을 바꿨어요.', variant: 'success' });
+            } catch (error) {
+              showError(error);
+            }
+          }}
         />
       )}
       {dialog?.type === 'leave' &&

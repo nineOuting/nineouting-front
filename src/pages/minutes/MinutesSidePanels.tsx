@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AgendaStatusCode } from '../../api/meeting';
+import arrowDownIcon from '../../assets/icons/arrow-down.svg';
+import arrowUpIcon from '../../assets/icons/arrow-up.svg';
 import checkIcon from '../../assets/icons/check.svg';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
@@ -72,6 +74,8 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(true);
   const [highlighted, setHighlighted] = useState<number[]>([]);
+  // REQ-204 지금 보고 있는 근거 줄 (highlighted 안의 순서)
+  const [evidenceIndex, setEvidenceIndex] = useState(0);
   const pickerRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef(new Map<number, HTMLLIElement>());
   const current = agendas[Math.min(index, agendas.length - 1)];
@@ -93,11 +97,26 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
     return () => document.removeEventListener('pointerdown', close);
   }, [isPickerOpen]);
 
+  const scrollToLine = (seq: number) =>
+    window.requestAnimationFrame(() => lineRefs.current.get(seq)?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+
   const showEvidence = (seqs: number[]) => {
-    setHighlighted(seqs);
+    const sorted = [...seqs].sort((a, b) => a - b);
+    setHighlighted(sorted);
+    setEvidenceIndex(0);
     setIsTranscriptOpen(true);
     // 펼친 뒤 그려진 첫 근거 줄로 옮긴다
-    window.requestAnimationFrame(() => lineRefs.current.get(seqs[0])?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+    scrollToLine(sorted[0]);
+  };
+
+  /** REQ-204 위/아래 버튼으로 근거 줄 사이를 옮겨 다닌다. 더 갈 곳이 없으면 버튼을 막는다 */
+  const moveEvidence = (step: number) => {
+    const next = evidenceIndex + step;
+    if (next < 0 || next >= highlighted.length) {
+      return;
+    }
+    setEvidenceIndex(next);
+    scrollToLine(highlighted[next]);
   };
 
   return (
@@ -259,6 +278,31 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
             <Icon src={transcriptIcon} size={TITLE_ICON_SIZE} className={styles.titleIcon} />
             전사 기록
           </h2>
+          {isTranscriptOpen && highlighted.length > 0 && (
+            <span className={styles.evidenceNav}>
+              <span className={styles.evidenceCount}>
+                근거 {evidenceIndex + 1}/{highlighted.length}
+              </span>
+              <button
+                type="button"
+                className={styles.navButton}
+                aria-label="이전 근거 발언"
+                disabled={evidenceIndex === 0}
+                onClick={() => moveEvidence(-1)}
+              >
+                <Icon src={arrowUpIcon} size={NAV_ICON_SIZE} />
+              </button>
+              <button
+                type="button"
+                className={styles.navButton}
+                aria-label="다음 근거 발언"
+                disabled={evidenceIndex === highlighted.length - 1}
+                onClick={() => moveEvidence(1)}
+              >
+                <Icon src={arrowDownIcon} size={NAV_ICON_SIZE} />
+              </button>
+            </span>
+          )}
           <button
             type="button"
             className={styles.navButton}
@@ -284,7 +328,13 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
                       lineRefs.current.delete(line.seq);
                     }
                   }}
-                  className={[styles.line, highlighted.includes(line.seq) ? styles.lineHighlighted : ''].filter(Boolean).join(' ')}
+                  className={[
+                    styles.line,
+                    highlighted.includes(line.seq) ? styles.lineHighlighted : '',
+                    highlighted[evidenceIndex] === line.seq ? styles.lineCurrent : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   <span className={styles.time}>{line.time}</span>
                   <p className={styles.lineText}>{line.text}</p>

@@ -603,3 +603,25 @@ export interface CalendarMeeting {
 export function listCalendarMeetings(from: string, to: string) {
   return request<CalendarMeeting[]>('GET', `/api/meetings/calendar?from=${from}&to=${to}`);
 }
+
+/** REQ-196 홈 내 할 일: 끝난 회의에서 나에게 배정된, 아직 완료하지 않은 할 일 (최근 회의부터) */
+export interface MyTodo {
+  meetingId: number;
+  itemId: string;
+  task: string;
+  dueText: string | null;
+  meetingTitle: string;
+  meetingStartAt: string;
+  workspaceId: number;
+  folderId: number;
+  folderName: string;
+}
+
+export function listMyTodos() {
+  return request<MyTodo[]>('GET', '/api/meetings/my-todos');
+}
+
+/** REQ-196 내 할 일 완료 (회의 화면의 할 일 체크와 같은 기록) */
+export function completeMyTodo(meetingId: number, itemId: string) {
+  return request('POST', `/api/meetings/${meetingId}/my-todos/${encodeURIComponent(itemId)}/done`);
+}

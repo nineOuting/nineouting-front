@@ -252,3 +252,11 @@
   font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
 }
+
+/* REQ-202 프로젝트 색 */
+.colorDot {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}

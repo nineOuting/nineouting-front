@@ -1,0 +1,74 @@
+.calendar {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.month {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+}
+
+.navButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: var(--spacing-1);
+  text-align: center;
+}
+
+.weekday {
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.day {
+  position: relative;
+  padding: 4px 0 8px;
+  font-size: var(--font-size-caption);
+  color: var(--text-primary);
+}
+
+.outside {
+  color: var(--text-disabled);
+}
+
+.today {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.dot {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: var(--primary-default);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}

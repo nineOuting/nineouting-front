@@ -40,11 +40,14 @@ import deleteIcon from '../../assets/icons/delete.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import ActionMenu from './ActionMenu';
 import CreateWorkspaceModal from './CreateWorkspaceModal';
+import DefaultTemplateCard from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
+import WeekMeetings from './WeekMeetings';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceProfileModal from './WorkspaceProfileModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
+import { folderColor } from '../../utils/folderColor';
 import styles from './WorkspacePage.module.css';
 
 const ICON_SIZE = 20;
@@ -292,6 +295,8 @@ export default function WorkspacePage() {
         </button>
       </div>
 
+      <WeekMeetings workspaceId={id} folders={folders} />
+
       <div className={styles.columns}>
         <section className={styles.folders} aria-labelledby="folders-title">
           <div className={styles.sectionHead}>
@@ -309,7 +314,7 @@ export default function WorkspacePage() {
                   className={styles.folderLink}
                   onClick={() => navigate(`/folders/${folder.folderId}`)}
                 >
-                  <span className={styles.folderIcon}>
+                  <span className={styles.folderIcon} style={{ color: folderColor(folder.color) }}>
                     <Icon src={folderIcon} size={ICON_SIZE} />
                   </span>
                   <span className={styles.folderTexts}>
@@ -355,6 +360,16 @@ export default function WorkspacePage() {
               </button>
             </div>
           </section>
+          <DefaultTemplateCard
+            workspaceId={id}
+            templateId={workspace.defaultTemplateId}
+            isOwner={isOwner}
+            onChanged={(templateId) => {
+              setWorkspace((prev) => prev && { ...prev, defaultTemplateId: templateId });
+              setToast({ text: '회의록 기본 양식을 바꿨어요.', variant: 'success' });
+            }}
+            onError={showError}
+          />
           <div className={styles.links}>
             {/* REQ-114·115·118 디자인이 없어 나가기 버튼과 같은 글자 버튼으로 넣었다 */}
             <button type="button" className={styles.textButton} onClick={() => setDialog({ type: 'profile' })}>

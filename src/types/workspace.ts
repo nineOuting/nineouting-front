@@ -22,6 +22,8 @@ export interface FolderSummary {
   meetingCount: number;
   /** 폴더를 만든 사람 (기본 폴더는 없음). 폴더 메뉴를 보여 줄지 가린다 */
   ownerUserId?: number | null;
+  /** REQ-202 프로젝트 색 번호 (0~7) */
+  color?: number;
 }
 
 export interface FolderMember extends Member {

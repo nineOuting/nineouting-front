@@ -34,6 +34,8 @@ export interface WorkspaceDetail {
   description: string;
   isOwner: boolean;
   memberCount: number;
+  /** REQ-199 회의록 기본 양식. null이면 서비스 기본 양식 */
+  defaultTemplateId: number | null;
 }
 
 interface FolderNode {
@@ -42,6 +44,8 @@ interface FolderNode {
   isDefault: boolean;
   ownerUserId: number | null;
   accessible: boolean;
+  /** REQ-202 프로젝트 색 번호 (0~7) */
+  color?: number;
 }
 
 interface MemberResponse {
@@ -69,6 +73,8 @@ export interface FolderInfo {
   name: string;
   isDefault: boolean;
   isOwner: boolean;
+  /** REQ-202 프로젝트 색 번호 (0~7) */
+  color: number;
 }
 
 const UNKNOWN_NAME = '알 수 없는 사용자';
@@ -95,6 +101,7 @@ export async function getWorkspace(workspaceId: number): Promise<WorkspaceDetail
     description: string | null;
     myRole: WorkspaceRole;
     memberCount: number;
+    defaultTemplateId?: number | null;
   }>('GET', `/api/workspaces/${workspaceId}`);
   return {
     workspaceId: detail.workspaceId,
@@ -102,7 +109,18 @@ export async function getWorkspace(workspaceId: number): Promise<WorkspaceDetail
     description: detail.description ?? '',
     isOwner: detail.myRole === 'OWNER',
     memberCount: detail.memberCount,
+    defaultTemplateId: detail.defaultTemplateId ?? null,
   };
+}
+
+/** REQ-199 회의록 기본 양식 바꾸기 (워크스페이스 소유자). null이면 서비스 기본 양식 */
+export function changeDefaultTemplate(workspaceId: number, templateId: number | null) {
+  return request('PUT', `/api/workspaces/${workspaceId}/default-template`, { templateId });
+}
+
+/** REQ-202 프로젝트 색 바꾸기 (프로젝트 소유자, 워크스페이스 소유자) */
+export function changeFolderColor(folderId: number, color: number) {
+  return request('PUT', `/api/folders/${folderId}/color`, { color });
 }
 
 /** REQ-163 워크스페이스 이름, 설명 수정 (소유자). 바뀐 값을 돌려준다 */
@@ -129,7 +147,7 @@ export async function listFolders(workspaceId: number): Promise<Omit<FolderSumma
   const nodes = await request<FolderNode[]>('GET', `/api/workspaces/${workspaceId}/folders`);
   return nodes
     .filter(({ accessible }) => accessible)
-    .map(({ folderId, name, isDefault, ownerUserId }) => ({ folderId, name, isDefault, ownerUserId }));
+    .map(({ folderId, name, isDefault, ownerUserId, color }) => ({ folderId, name, isDefault, ownerUserId, color }));
 }
 
 /** REQ-039~040 새 프로젝트 폴더 */
@@ -301,6 +319,7 @@ export async function getFolder(folderId: number): Promise<FolderInfo> {
     name: detail.name,
     isDefault: detail.isDefault,
     isOwner: detail.isOwner,
+    color: detail.color ?? 0,
   };
 }
 
