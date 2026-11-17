@@ -601,11 +601,12 @@ export default function MeetingWaitingPage() {
         />
       )}
       {isCancelDialogOpen && (
+        // MSG-082 회의 삭제 확인 (2026-11-17): 삭제 목록으로 가서 3개월 동안 복구할 수 있다
         <ConfirmDialog
-          title="회의를 삭제할까요?"
-          message={'삭제하면 참석자에게 알림이 가고\n되돌릴 수 없어요.'}
-          cancelLabel="돌아가기"
-          confirmLabel="회의 삭제"
+          title={`'${meeting.title}'을 삭제할까요?`}
+          message={'참석자에게 회의 취소 알림이 가요.\n삭제한 회의는 3개월 동안 삭제 목록에서 복구할 수 있어요.'}
+          cancelLabel="취소"
+          confirmLabel="삭제하기"
           isDanger
           onCancel={() => setIsCancelDialogOpen(false)}
           onConfirm={cancel}

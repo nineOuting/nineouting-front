@@ -5,6 +5,8 @@ import Icon from './Icon';
 import styles from './AiNotice.module.css';
 
 const ICON_SIZE = 16;
+/** REQ-172 피드백 버튼은 2026-11-17 기획 결정으로 보류. 지금은 안내 문구만 보인다 (다시 쓰면 true) */
+const SHOW_FEEDBACK = false;
 
 interface AiNoticeProps {
   meetingId: number;
@@ -37,26 +39,28 @@ export default function AiNotice({ meetingId, target }: AiNoticeProps) {
       <p className={styles.text}>
         {rating ? '의견 고마워요. AI가 더 잘 정리하는 데 쓸게요.' : 'AI가 정리한 내용이에요. 틀린 부분이 있을 수 있어요.'}
       </p>
-      <span className={styles.actions}>
-        <button
-          type="button"
-          className={rating === 'ACCURATE' ? `${styles.action} ${styles.selected}` : styles.action}
-          aria-pressed={rating === 'ACCURATE'}
-          disabled={isSending}
-          onClick={() => void send('ACCURATE')}
-        >
-          정확해요
-        </button>
-        <button
-          type="button"
-          className={rating === 'NEEDS_FIX' ? `${styles.action} ${styles.selected}` : styles.action}
-          aria-pressed={rating === 'NEEDS_FIX'}
-          disabled={isSending}
-          onClick={() => void send('NEEDS_FIX')}
-        >
-          고칠 부분 있어요
-        </button>
-      </span>
+      {SHOW_FEEDBACK && (
+        <span className={styles.actions}>
+          <button
+            type="button"
+            className={rating === 'ACCURATE' ? `${styles.action} ${styles.selected}` : styles.action}
+            aria-pressed={rating === 'ACCURATE'}
+            disabled={isSending}
+            onClick={() => void send('ACCURATE')}
+          >
+            정확해요
+          </button>
+          <button
+            type="button"
+            className={rating === 'NEEDS_FIX' ? `${styles.action} ${styles.selected}` : styles.action}
+            aria-pressed={rating === 'NEEDS_FIX'}
+            disabled={isSending}
+            onClick={() => void send('NEEDS_FIX')}
+          >
+            고칠 부분 있어요
+          </button>
+        </span>
+      )}
     </div>
   );
 }
