@@ -1,0 +1,245 @@
+/* 피그마 Page 8 StatsRow (69:8172) */
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--gap-content);
+}
+
+.agendaCard,
+.overrunCard {
+  display: flex;
+  padding: var(--spacing-5);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.agendaCard {
+  flex: 1;
+  gap: var(--spacing-6);
+  min-width: 0;
+}
+
+.overrunCard {
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: var(--spacing-3);
+}
+
+.block {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.label {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-inline);
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+}
+
+.chart {
+  position: relative;
+  display: flex;
+  gap: var(--gap-content);
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.stack,
+.area {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  height: 84px;
+}
+
+.segment {
+  width: 20px;
+  border-radius: var(--radius-sm);
+}
+
+.decided {
+  background: var(--status-decided);
+}
+
+.carried {
+  background: var(--status-undecided);
+}
+
+.excluded {
+  background: var(--border-strong);
+}
+
+.over {
+  background: var(--secondary-strong, #3965fa);
+}
+
+.tick {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* 예정 시간(평균) 점선. 아래 날짜 줄(16px + 8px) 위에서부터 잰다 */
+.plannedLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--text-tertiary);
+}
+
+.legend {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-sm);
+}
+
+.dashed {
+  width: 12px;
+  border-top: 1px dashed var(--text-tertiary);
+}
+
+.divider {
+  flex-shrink: 0;
+  width: 1px;
+  background: var(--border-default);
+}
+
+.pending {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pendingHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-2);
+}
+
+.countBadge {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--primary-default);
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+.pendingRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+  padding: var(--spacing-2) 0;
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.pendingText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.pendingTitle {
+  overflow: hidden;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pendingMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+}
+
+.separator {
+  width: 1px;
+  height: 12px;
+  background: var(--border-strong);
+}
+
+.discard {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.discard:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.empty {
+  padding: var(--spacing-4) 0;
+  font-size: var(--font-size-body-md);
+  color: var(--text-tertiary);
+  border-top: var(--border-width-default) solid var(--border-default);
+}

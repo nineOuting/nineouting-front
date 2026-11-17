@@ -626,3 +626,20 @@ export function listMyTodos() {
 export function completeMyTodo(meetingId: number, itemId: string) {
   return request('POST', `/api/meetings/${meetingId}/my-todos/${encodeURIComponent(itemId)}/done`);
 }
+
+/** REQ-200 프로젝트 회의 현황: 최근 끝난 회의(최대 6개, 오래된 회의부터) */
+export interface FolderMeetingStat {
+  meetingId: number;
+  title: string;
+  /** 2026-10-20 */
+  date: string;
+  decided: number;
+  carried: number;
+  excluded: number;
+  scheduledMinutes: number;
+  actualMinutes: number;
+}
+
+export async function getFolderMeetingStats(folderId: number) {
+  return (await request<{ meetings: FolderMeetingStat[] }>('GET', `/api/folders/${folderId}/meetings/stats`)).meetings;
+}
