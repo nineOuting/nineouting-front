@@ -338,3 +338,18 @@
   line-height: var(--line-height-caption);
   color: var(--text-secondary);
 }
+
+/* 끝난 회의 상단 바 오른쪽 (디자인 Page 9 08 회의록 확인) */
+.finishedAt {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 회의록 정보 (보기만): 양식, 작성자 */
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3) 0;
+}

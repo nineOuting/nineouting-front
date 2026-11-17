@@ -33,7 +33,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Meeting, MeetingStatus, Member, MinutesTemplate, PendingAgenda } from '../../types/meeting';
-import { formatMeetingSchedule } from '../../utils/meetingFormat';
+import { formatMeetingSchedule, formatShortDateTime } from '../../utils/meetingFormat';
 import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
 import ActionMenu from '../workspace/ActionMenu';
 import AgendaBoard from './AgendaBoard';
@@ -41,6 +41,7 @@ import ConsentModal from './ConsentModal';
 import MeetingMaterials from './MeetingMaterials';
 import MemberPickerMenu from './MemberPickerMenu';
 import MicPermissionDialog from './MicPermissionDialog';
+import MinutesCheck from './MinutesCheck';
 import StartingModal from './StartingModal';
 import TemplateDetailModal from './TemplateDetailModal';
 import TemplateGalleryModal from './TemplateGalleryModal';
@@ -116,8 +117,10 @@ export default function MeetingWaitingPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [materialCount, setMaterialCount] = useState(0);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [isMinutesConfirmed, setIsMinutesConfirmed] = useState(false);
   const closeToast = useCallback(() => setToast(null), []);
   const closeMenu = useCallback(() => setOpenMenu(null), []);
+  const showError = useCallback((text: string) => setToast({ text, variant: 'error' }), []);
   const attendeeAnchorRef = useRef<HTMLButtonElement>(null);
   const writerAnchorRef = useRef<HTMLButtonElement>(null);
   const moreAnchorRef = useRef<HTMLButtonElement>(null);
@@ -183,6 +186,8 @@ export default function MeetingWaitingPage() {
   }
 
   const isScheduled = meeting.status === 'SCHEDULED';
+  // REQ-175 회의가 끝나면 이 화면이 회의록 확인 화면으로 바뀐다 (디자인 Page 9 08 회의록 확인)
+  const isFinished = meeting.status === 'FINISHED';
   const isAttendee = meeting.attendees.some(({ userId }) => userId === myId);
   // REQ-130 회의 시작 전에는 참석자만 안건, 참여자, 작성자를 고친다. 참석자가 아닌 폴더 멤버는 보기만 한다
   const canEdit = isScheduled && isAttendee;
@@ -361,6 +366,9 @@ export default function MeetingWaitingPage() {
           ))}
         </span>
       </div>
+      {isFinished && meeting.finishedAt && !isMinutesConfirmed && (
+        <p className={styles.finishedAt}>회의 끝남 · {formatShortDateTime(meeting.finishedAt)}</p>
+      )}
       {isScheduled && (
         <div className={styles.topRight}>
           <p className={[styles.readiness, isReady ? styles.ready : styles.notReady].join(' ')}>
@@ -382,6 +390,15 @@ export default function MeetingWaitingPage() {
 
       <div className={styles.columns}>
         <div className={styles.main}>
+          {isFinished ? (
+            <MinutesCheck
+              meeting={meeting}
+              myId={myId}
+              onConfirmedChange={setIsMinutesConfirmed}
+              onError={showError}
+            />
+          ) : (
+            <>
           <div className={styles.head}>
             <div className={styles.titleBlock}>
               <div className={styles.titleRow}>
@@ -446,6 +463,8 @@ export default function MeetingWaitingPage() {
             }
             onDiscardPending={discardPending}
           />
+            </>
+          )}
         </div>
 
         <aside className={styles.side}>
@@ -493,6 +512,22 @@ export default function MeetingWaitingPage() {
             </ul>
           </section>
 
+          {isFinished ? (
+            // 끝난 회의는 보기만 한다: 회의록 양식, 작성자
+            <section className={styles.sideSection}>
+              <h2 className={styles.sideTitle}>회의록 정보</h2>
+              <dl className={styles.settingsCard}>
+                <div className={styles.infoRow}>
+                  <dt className={styles.settingLabel}>회의록 양식</dt>
+                  <dd className={styles.settingValue}>{selectedTemplate?.name ?? '기본 회의록'}</dd>
+                </div>
+                <div className={styles.infoRow}>
+                  <dt className={styles.settingLabel}>회의록 작성자</dt>
+                  <dd className={styles.settingValue}>{meeting.writer?.name ?? '-'}</dd>
+                </div>
+              </dl>
+            </section>
+          ) : (
           <section className={styles.sideSection}>
             <h2 className={styles.sideTitle}>회의록 설정</h2>
             <div className={styles.settingsCard}>
@@ -540,11 +575,12 @@ export default function MeetingWaitingPage() {
               </div>
             </div>
           </section>
+          )}
 
           <section className={styles.sideSection}>
             <div className={styles.sideHead}>
               <h2 className={styles.sideTitle}>사전 자료{materialCount > 0 ? ` ${materialCount}` : ''}</h2>
-              {isAttendee && meeting.status !== 'CANCELLED' && (
+              {isAttendee && isScheduled && (
                 <button type="button" className={styles.linkButton} onClick={() => setIsUploadOpen(true)}>
                   올리기
                 </button>
@@ -552,7 +588,7 @@ export default function MeetingWaitingPage() {
             </div>
             <MeetingMaterials
               meetingId={meeting.meetingId}
-              canUpload={isAttendee && meeting.status !== 'CANCELLED'}
+              canUpload={isAttendee && isScheduled}
               isUploadOpen={isUploadOpen}
               onUploadClose={() => setIsUploadOpen(false)}
               onCountChange={setMaterialCount}

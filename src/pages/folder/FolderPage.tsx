@@ -78,12 +78,9 @@ type Dialog =
   | { type: 'color' }
   | { type: 'move'; meeting: FolderMeeting };
 
-/** 회의 상태에 따라 대기 화면·회의방·회의록으로 간다 */
+/** 진행 중이면 회의방, 아니면 대기 화면 (끝난 회의는 회의록 확인 화면으로 바뀌어 있다, REQ-175) */
 function meetingPath({ meetingId, status }: FolderMeeting) {
-  if (status === 'inProgress') {
-    return `/meetings/${meetingId}/room`;
-  }
-  return status === 'scheduled' ? `/meetings/${meetingId}` : `/meetings/${meetingId}/minutes`;
+  return status === 'inProgress' ? `/meetings/${meetingId}/room` : `/meetings/${meetingId}`;
 }
 
 /**

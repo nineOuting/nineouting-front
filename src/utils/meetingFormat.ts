@@ -9,17 +9,23 @@ export function formatMeetingDate(date: string) {
   return `${date.replaceAll('-', '.')}(${weekday})`;
 }
 
+/** 2026-10-20T14:52:10 → 10.20(화) 14:52 */
+export function formatShortDateTime(dateTime: string) {
+  return `${formatMeetingDate(dateTime.slice(0, 10)).slice(5)} ${dateTime.slice(11, 16)}`;
+}
+
 /** 2026.10.20(화) 14:00 ~ 15:00 */
 export function formatMeetingSchedule(date: string, startTime: string, endTime: string) {
   return `${formatMeetingDate(date)} ${startTime} ~ ${endTime}`;
 }
 
-/** REQ-019~020 예정된 회의는 대기 화면(진행 중이면 회의방), 끝난 회의는 회의록으로 간다 */
+/** REQ-019~020 진행 중이면 회의방, 아니면 대기 화면 (끝난 회의는 대기 화면이 회의록 확인 화면으로 바뀌어 있다) */
 export function meetingPath({ meetingId, status }: { meetingId: number; status: MeetingStatus }) {
   if (status === 'IN_PROGRESS') {
     return `/meetings/${meetingId}/room`;
   }
-  return status === 'FINISHED' ? `/meetings/${meetingId}/minutes` : `/meetings/${meetingId}`;
+  // REQ-175 끝난 회의도 대기 화면 주소로 간다 (회의록 확인 화면으로 바뀌어 있다)
+  return `/meetings/${meetingId}`;
 }
 
 /** 2026-10-24T10:00:00 → 2026.10.24 오전 10:00 */
