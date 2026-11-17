@@ -15,7 +15,7 @@ import workspaceIcon from '../assets/icons/workspace.svg';
 import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
 import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
-import { folderColor } from '../utils/folderColor';
+import { folderIconColor } from '../utils/folderColor';
 import styles from './Sidebar.module.css';
 
 const MENU_ICON_SIZE = 20;
@@ -126,7 +126,7 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
                     {(folders[workspace.workspaceId] ?? []).map((folder) => (
                       <NavLink key={folder.folderId} to={`/folders/${folder.folderId}`} className={subMenuClass}>
                         {/* REQ-202 프로젝트 색 */}
-                        <span className={styles.folderColor} style={{ color: folderColor(folder.color) }}>
+                        <span className={styles.folderColor} style={{ color: folderIconColor(folder.color) }}>
                           <MenuIcon src={folderIcon} size={SUB_ICON_SIZE} />
                         </span>
                         <span className={styles.text}>{folder.name}</span>

@@ -1,29 +1,22 @@
 /* 많으면 안에서 위아래로 스크롤 */
 .list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
   max-height: 260px;
   overflow-y: auto;
 }
 
+/* 피그마 TaskListItem: 체크박스 + 할 일, 회의명 · 프로젝트 */
 .item {
   display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2);
-  border-radius: var(--radius-md);
-}
-
-.item:hover {
-  background: var(--interactive-hover);
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
 }
 
 .link {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--gap-title-subtitle);
+  gap: var(--spacing-1);
   min-width: 0;
   color: inherit;
   text-decoration: none;
@@ -34,9 +27,7 @@
   text-decoration: none;
 }
 
-.task {
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  color: var(--text-primary);
-  overflow-wrap: anywhere;
+/* 체크한 할 일은 흐리게 (완료 전) */
+.checked .link span {
+  color: var(--text-disabled);
 }

@@ -1,41 +1,20 @@
-/* 디자인 FolderCard: 240px, 안쪽 16px, 간격 16px */
-.list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-4);
-}
-
+/* 피그마 Page 8 FolderCard (즐겨찾기 한 줄): 40px 아이콘 상자 + 이름, 워크스페이스 + 별 */
 .item {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--spacing-3);
-  width: 240px;
-  padding: var(--spacing-4);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-md);
+  padding: var(--spacing-2);
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.iconBox {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: var(--primary-subtle);
-  border-radius: var(--radius-md);
+.item:hover {
+  background: var(--interactive-hover);
 }
 
 .link {
   display: flex;
-  flex-direction: column;
-  gap: var(--gap-title-subtitle);
+  flex: 1;
+  align-items: center;
+  gap: var(--spacing-3);
   min-width: 0;
   color: inherit;
   text-decoration: none;
@@ -46,16 +25,28 @@
   text-decoration: none;
 }
 
-.name {
-  overflow: hidden;
-  font-size: var(--font-size-body-lg);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-body-lg);
-  color: var(--text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.iconBox {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--neutral-default);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-md);
 }
 
-.link:hover .name {
-  color: var(--primary-default);
+.texts {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
+}
+
+.star {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--neutral-default);
 }

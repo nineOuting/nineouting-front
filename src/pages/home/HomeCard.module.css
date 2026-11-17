@@ -119,3 +119,93 @@
   color: var(--text-secondary);
   white-space: pre-line;
 }
+
+/*
+ * 피그마 Page 8 홈 오른쪽 열 (69:10286): 제목 줄 + 흰 목록 상자. 항목 사이는 1px 줄
+ */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  filter: drop-shadow(1px 1px 1px rgb(0 0 0 / 10%));
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.sectionTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.count {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+/* 전체보기, 완료 같은 글자 버튼 */
+.textButton {
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-link);
+}
+
+.textButton:hover:not(:disabled) {
+  background: var(--neutral-ghost-hover);
+}
+
+.textButton:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.listBox {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.listBox > li + li {
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.boxEmpty {
+  padding: var(--spacing-4);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.rowTitle {
+  overflow: hidden;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowCaption {
+  overflow: hidden;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

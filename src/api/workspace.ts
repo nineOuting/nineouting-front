@@ -369,15 +369,17 @@ interface FavoriteResponse {
   /** 워크스페이스 즐겨찾기면 null */
   folderId: number | null;
   folderName: string | null;
+  /** REQ-202 프로젝트 색 번호 (폴더만) */
+  folderColor?: number | null;
 }
 
 /** REQ-151 홈의 즐겨찾기 (등록한 순) */
 export async function listFavorites(): Promise<Favorite[]> {
   const items = await request<FavoriteResponse[]>('GET', '/api/users/me/favorites');
-  return items.map(({ workspaceId, workspaceName, folderId, folderName }) =>
+  return items.map(({ workspaceId, workspaceName, folderId, folderName, folderColor }) =>
     folderId === null
       ? { type: 'workspace', workspaceId, workspaceName }
-      : { type: 'folder', workspaceId, workspaceName, folderId, folderName: folderName ?? '' },
+      : { type: 'folder', workspaceId, workspaceName, folderId, folderName: folderName ?? '', folderColor: folderColor ?? undefined },
   );
 }
 

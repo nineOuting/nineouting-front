@@ -47,7 +47,7 @@ import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceProfileModal from './WorkspaceProfileModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
-import { folderColor } from '../../utils/folderColor';
+import { folderIconColor, folderSubtleColor } from '../../utils/folderColor';
 import styles from './WorkspacePage.module.css';
 
 const ICON_SIZE = 20;
@@ -314,7 +314,7 @@ export default function WorkspacePage() {
                   className={styles.folderLink}
                   onClick={() => navigate(`/folders/${folder.folderId}`)}
                 >
-                  <span className={styles.folderIcon} style={{ color: folderColor(folder.color) }}>
+                  <span className={styles.folderIcon} style={{ color: folderIconColor(folder.color), background: folderSubtleColor(folder.color) }}>
                     <Icon src={folderIcon} size={ICON_SIZE} />
                   </span>
                   <span className={styles.folderTexts}>

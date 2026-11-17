@@ -1,16 +1,33 @@
-/** REQ-202 프로젝트 색 8가지. 서버는 번호(0~7)만 저장하고 색은 화면이 정한다 */
+/**
+ * REQ-202 프로젝트 색 8가지 (피그마 ProjectColorPicker 순서). 서버는 번호(0~7)만 저장하고 색은 화면이 정한다.
+ * 값은 index.css의 --project-{key}-default / -subtle / -icon 토큰
+ */
 export const FOLDER_COLORS = [
-  { label: '보라', value: '#5e48dd' },
-  { label: '파랑', value: '#3965fa' },
-  { label: '초록', value: '#27ae36' },
-  { label: '주황', value: '#e8590c' },
-  { label: '빨강', value: '#de2021' },
-  { label: '청록', value: '#0ca678' },
-  { label: '분홍', value: '#d6336c' },
-  { label: '회색', value: '#6b7280' },
+  { key: 'red', label: '빨강' },
+  { key: 'orange', label: '주황' },
+  { key: 'yellow', label: '노랑' },
+  { key: 'green', label: '초록' },
+  { key: 'pink', label: '분홍' },
+  { key: 'purple', label: '보라' },
+  { key: 'indigo', label: '남색' },
+  { key: 'sky', label: '하늘' },
 ] as const;
 
-/** 번호가 없으면(예전 응답) 첫 색 */
+function keyOf(index?: number | null) {
+  return FOLDER_COLORS[(index ?? 0) % FOLDER_COLORS.length].key;
+}
+
+/** 스와치, 달력 왼쪽 줄, 점 */
 export function folderColor(index?: number | null) {
-  return FOLDER_COLORS[(index ?? 0) % FOLDER_COLORS.length].value;
+  return `var(--project-${keyOf(index)}-default)`;
+}
+
+/** 아이콘 바탕, 달력 일정 바탕 */
+export function folderSubtleColor(index?: number | null) {
+  return `var(--project-${keyOf(index)}-subtle)`;
+}
+
+/** 폴더 아이콘 색 */
+export function folderIconColor(index?: number | null) {
+  return `var(--project-${keyOf(index)}-icon)`;
 }

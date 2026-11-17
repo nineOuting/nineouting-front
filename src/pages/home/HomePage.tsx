@@ -153,24 +153,30 @@ export default function HomePage() {
     );
   }
 
+  // 피그마 Page 8 HomePage_v6: 왼쪽은 인사, 곧 다가오는 회의 띠, 이번 주 일정. 오른쪽 열은 즐겨찾기, 내 할 일, 작성 중인 회의록
   return (
-    <AppLayout className={styles.page}>
+    <AppLayout className={styles.homeLayout}>
       {toast && <Toast message={toast} onClose={closeToast} />}
-      {/* REQ-146 와이어프레임 문구, 0개면 MSG-047 */}
-      <h1 className={styles.greeting}>
-        {weekCount
-          ? `${myName}님, 이번 주에 회의가 ${weekCount}개 있어요`
-          : `${myName}님, 이번 주에 예정된 회의가 없어요`}
-      </h1>
-      <div className={styles.top}>
-        <HomeCalendar workspaces={workspaces} />
-        <div className={styles.side}>
-          <UpcomingMeetingCard meeting={upcoming} />
-          <WritingMinutesCard items={writing} />
-          <MyTodosCard items={todos} onComplete={completeTodos} />
-        </div>
+      <div className={styles.main}>
+        {/* REQ-146 와이어프레임 문구, 0개면 MSG-047 */}
+        <h1 className={styles.greeting}>
+          {weekCount
+            ? `${myName}님, 이번 주에 회의가 ${weekCount}개 있어요`
+            : `${myName}님, 이번 주에 예정된 회의가 없어요`}
+        </h1>
+        <UpcomingMeetingCard meeting={upcoming} />
+        <section className={styles.calendarSection} aria-labelledby="week-schedule-title">
+          <h2 id="week-schedule-title" className={styles.sectionTitle}>
+            이번 주 일정
+          </h2>
+          <HomeCalendar workspaces={workspaces} />
+        </section>
       </div>
-      <FavoritesCard items={favorites} onRemove={removeFavorite} />
+      <aside className={styles.panel}>
+        <FavoritesCard items={favorites} onRemove={removeFavorite} />
+        <MyTodosCard items={todos} onComplete={completeTodos} />
+        <WritingMinutesCard items={writing} />
+      </aside>
     </AppLayout>
   );
 }

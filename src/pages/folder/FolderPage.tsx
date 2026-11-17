@@ -43,7 +43,7 @@ import MoveMeetingModal from '../../components/MoveMeetingModal';
 import ActionMenu from '../workspace/ActionMenu';
 import FolderNameModal from '../workspace/FolderNameModal';
 import FolderCalendar from './FolderCalendar';
-import FolderColorDialog from './FolderColorDialog';
+import ProjectColorPicker from './ProjectColorPicker';
 import FolderMembersModal from './FolderMembersModal';
 import MeetingTable, { type MeetingSort, type SortKey } from './MeetingTable';
 import AccessNotice from '../../components/AccessNotice';
@@ -349,6 +349,21 @@ export default function FolderPage() {
               >
                 <Icon src={moreIcon} size={MORE_ICON_SIZE} />
               </button>
+              {dialog?.type === 'color' && (
+                <ProjectColorPicker
+                  color={folder.color}
+                  onClose={closeDialog}
+                  onPick={(color) => {
+                    // 고르면 바로 바뀐다 (토스트 없음). 실패하면 되돌린다
+                    const before = folder.color;
+                    setFolder({ ...folder, color });
+                    changeFolderColor(folder.folderId, color).catch((error: unknown) => {
+                      setFolder((prev) => prev && { ...prev, color: before });
+                      showError(error);
+                    });
+                  }}
+                />
+              )}
               {isFolderMenuOpen && (
                 <ActionMenu
                   label="폴더 메뉴"
@@ -568,22 +583,6 @@ export default function FolderPage() {
           isDanger
           onCancel={closeDialog}
           onConfirm={() => void removeFolder()}
-        />
-      )}
-      {dialog?.type === 'color' && (
-        <FolderColorDialog
-          initialColor={folder.color}
-          onClose={closeDialog}
-          onSave={async (color) => {
-            try {
-              await changeFolderColor(folder.folderId, color);
-              setFolder({ ...folder, color });
-              closeDialog();
-              setToast({ text: '프로젝트 색을 바꿨어요.', variant: 'success' });
-            } catch (error) {
-              showError(error);
-            }
-          }}
         />
       )}
       {dialog?.type === 'leave' &&
