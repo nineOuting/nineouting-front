@@ -309,14 +309,15 @@ export default function ArchivePage() {
     updateParams({ q: keyword });
   };
   const toggleFilter = (key: FilterKey) => setOpenFilter((open) => (open === key ? null : key));
-  const openMinutes = (meetingId: number) => navigate(`/meetings/${meetingId}/minutes`);
+  // REQ-175 아카이브에서 열어도 회의록 확인 화면 (끝난 회의의 대기 화면)
+  const openMinutes = (meetingId: number) => navigate(`/meetings/${meetingId}`);
   const download = (item: ArchiveMinutes) => navigate(`/meetings/${item.meetingId}/minutes?download=1`);
   const reload = () => setReloadToken((value) => value + 1);
 
   // REQ-160 링크 복사 (MSG-064)
   const copyLink = async (item: ArchiveMinutes) => {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/meetings/${item.meetingId}/minutes`);
+      await navigator.clipboard.writeText(`${window.location.origin}/meetings/${item.meetingId}`);
       setToast({ text: '링크를 복사했어요.', variant: 'success' });
     } catch {
       setToast({ text: '링크를 복사하지 못했어요. 다시 시도해 주세요.', variant: 'error' });
