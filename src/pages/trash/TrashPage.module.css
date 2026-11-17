@@ -1,23 +1,4 @@
 /* 디자인 TrashPage (설정 안): 선택 줄 + 표 */
-.workspacePicker {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-secondary);
-}
-
-.workspaceSelect {
-  height: 32px;
-  padding: 0 var(--spacing-2);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-body-md);
-  color: var(--text-primary);
-}
-
 .card {
   overflow: hidden;
   background: var(--bg-surface);

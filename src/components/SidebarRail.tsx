@@ -8,6 +8,7 @@ import settingsIcon from '../assets/icons/settings.svg';
 import expandIcon from '../assets/icons/sidebar-collapse.svg';
 import templateIcon from '../assets/icons/template.svg';
 import workspaceIcon from '../assets/icons/workspace.svg';
+import { useSettingsModal } from '../pages/settings/useSettingsModal';
 import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
 import type { WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
@@ -27,6 +28,7 @@ interface SidebarRailProps {
  * 아이콘에 마우스를 올리면 메뉴 이름이 보인다 (REQ-181 툴팁)
  */
 export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps) {
+  const settings = useSettingsModal();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -69,9 +71,14 @@ export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps)
         </NavLink>
       </div>
       <div className={styles.list}>
-        <NavLink to="/settings" className={railClass} aria-label="설정">
+        <button
+          type="button"
+          className={railClass({ isActive: settings.tab !== null })}
+          aria-label="설정"
+          onClick={() => settings.open('profile')}
+        >
           <Icon src={settingsIcon} size={ICON_SIZE} />
-        </NavLink>
+        </button>
       </div>
       {isCreating && <CreateWorkspaceModal onClose={() => setIsCreating(false)} />}
     </nav>

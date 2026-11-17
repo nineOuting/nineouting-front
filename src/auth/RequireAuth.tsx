@@ -1,11 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { refresh } from '../api/auth';
+import SettingsModal from '../pages/settings/SettingsModal';
 import { getAccessToken } from './tokenStore';
 
 type AuthStatus = 'checking' | 'authenticated' | 'anonymous';
 
-/** 로그인한 사용자만 볼 수 있는 화면. access 토큰이 없으면(새로고침 등) refresh 쿠키로 다시 받아 본다 */
+/**
+ * 로그인한 사용자만 볼 수 있는 화면. access 토큰이 없으면(새로고침 등) refresh 쿠키로 다시 받아 본다.
+ * 설정 창(REQ-145)은 로그인한 화면이면 어디서든 ?settings=탭으로 뜬다
+ */
 export default function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [status, setStatus] = useState<AuthStatus>(getAccessToken() ? 'authenticated' : 'checking');
@@ -26,5 +30,10 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
     // 로그인하면 보려던 화면(초대 링크 등)으로 돌아온다
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
-  return children;
+  return (
+    <>
+      {children}
+      <SettingsModal />
+    </>
+  );
 }

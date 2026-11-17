@@ -18,11 +18,7 @@ import MeetingWaitingPage from './pages/meeting/MeetingWaitingPage';
 import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
 import TemplateEditorPage from './pages/template/TemplateEditorPage';
 import TemplateListPage from './pages/template/TemplateListPage';
-import DisplaySettingsPage from './pages/settings/DisplaySettingsPage';
-import HelpPage from './pages/settings/HelpPage';
-import PlanPage from './pages/settings/PlanPage';
-import ProfilePage from './pages/settings/ProfilePage';
-import TrashPage from './pages/trash/TrashPage';
+import { settingsPath } from './pages/settings/useSettingsModal';
 import TooltipLayer from './components/TooltipLayer';
 import InvitationPage from './pages/workspace/InvitationPage';
 import InviteLinkPage from './pages/workspace/InviteLinkPage';
@@ -53,38 +49,22 @@ const router = createBrowserRouter(
             </RequireAuth>
           }
         />
+        {/* 예전 설정 주소는 홈 위에 설정 창을 연다 (REQ-145) */}
         <Route
           path="/profile"
-          element={
-            <RequireAuth>
-              <ProfilePage />
-            </RequireAuth>
-          }
+          element={<Navigate to={settingsPath('profile')} replace />}
         />
         <Route
           path="/settings"
-          element={
-            <RequireAuth>
-              <DisplaySettingsPage />
-            </RequireAuth>
-          }
+          element={<Navigate to={settingsPath('display')} replace />}
         />
         <Route
           path="/help"
-          element={
-            <RequireAuth>
-              <HelpPage />
-            </RequireAuth>
-          }
+          element={<Navigate to={settingsPath('help')} replace />}
         />
-        {/* REQ-176 요금제 안내 */}
         <Route
           path="/plan"
-          element={
-            <RequireAuth>
-              <PlanPage />
-            </RequireAuth>
-          }
+          element={<Navigate to={settingsPath('plan')} replace />}
         />
         {/* 로그인한 사람이 로그인, 회원가입 주소를 열면 홈으로 */}
         <Route
@@ -203,14 +183,10 @@ const router = createBrowserRouter(
             </RequireAuth>
           }
         />
-        {/* REQ-143 쓰레기통 */}
+        {/* REQ-143 쓰레기통은 설정 창의 삭제 목록 */}
         <Route
           path="/workspaces/:workspaceId/trash"
-          element={
-            <RequireAuth>
-              <TrashPage />
-            </RequireAuth>
-          }
+          element={<Navigate to={settingsPath('trash')} replace />}
         />
         <Route
           path="/folders/:folderId"

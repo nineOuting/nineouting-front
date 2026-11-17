@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { listMyWorkspaces } from '../api/workspace';
+import { useSettingsModal } from '../pages/settings/useSettingsModal';
 import type { AccessNoticeKind } from '../utils/accessNotice';
 import Button from './Button';
 import styles from './AccessNotice.module.css';
@@ -7,13 +7,8 @@ import styles from './AccessNotice.module.css';
 /** REQ-205 MSG-086, REQ-206 MSG-087 화면 가운데 안내 */
 export default function AccessNotice({ kind }: { kind: AccessNoticeKind }) {
   const navigate = useNavigate();
+  const settings = useSettingsModal();
   const isForbidden = kind === 'forbidden';
-
-  const openTrash = async () => {
-    // 삭제 목록은 워크스페이스마다 있다. 설정 화면처럼 첫 워크스페이스로 열고 그 화면에서 바꾼다
-    const workspaces = await listMyWorkspaces().catch(() => []);
-    navigate(workspaces[0] ? `/workspaces/${workspaces[0].workspaceId}/trash` : '/home');
-  };
 
   return (
     <div className={styles.notice} role="alert">
@@ -23,7 +18,7 @@ export default function AccessNotice({ kind }: { kind: AccessNoticeKind }) {
       </p>
       <div className={styles.actions}>
         {kind === 'deletedRestorable' && (
-          <Button type="button" variant="secondary" size="md" onClick={() => void openTrash()}>
+          <Button type="button" variant="secondary" size="md" onClick={() => settings.open('trash')}>
             삭제 목록 보기
           </Button>
         )}
