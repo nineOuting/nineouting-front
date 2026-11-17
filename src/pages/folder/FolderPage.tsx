@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
-import { listFolderMeetingRows, listFolderPendingAgendas, restoreMeeting, trashMeeting } from '../../api/meeting';
+import {
+  discardPendingAgenda,
+  getFolderMeetingStats,
+  listFolderMeetingRows,
+  listFolderPendingAgendas,
+  restoreMeeting,
+  restorePendingAgenda,
+  trashMeeting,
+  type FolderMeetingStat,
+} from '../../api/meeting';
 import {
   addFolderMember,
+  changeFolderColor,
   getFolder,
   getWorkspace,
   leaveFolder,
@@ -14,11 +24,10 @@ import {
   type FolderInfo,
 } from '../../api/workspace';
 import addIcon from '../../assets/icons/add-sm.svg';
+import folderIcon from '../../assets/icons/folder-md.svg';
 import separatorIcon from '../../assets/icons/breadcrumb-sep.svg';
 import AppLayout from '../../components/AppLayout';
-import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import FavoriteButton from '../../components/FavoriteButton';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
 import Icon from '../../components/Icon';
@@ -31,11 +40,18 @@ import editIcon from '../../assets/icons/create-sm.svg';
 import groupIcon from '../../assets/icons/group-add-sm.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
+import paletteIcon from '../../assets/icons/palette.svg';
 import moveIcon from '../../assets/icons/folder-sm.svg';
 import MoveMeetingModal from '../../components/MoveMeetingModal';
 import ActionMenu from '../workspace/ActionMenu';
+import FolderCalendar from './FolderCalendar';
+import FolderStats from './FolderStats';
+import ProjectColorPicker from './ProjectColorPicker';
 import FolderMembersModal from './FolderMembersModal';
 import MeetingTable, { type MeetingSort, type SortKey } from './MeetingTable';
+import AccessNotice from '../../components/AccessNotice';
+import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
+import { folderColor, folderIconColor, folderSubtleColor } from '../../utils/folderColor';
 import styles from './FolderPage.module.css';
 
 const SEPARATOR_ICON_SIZE = 16;
@@ -59,6 +75,7 @@ function sortOf(params: URLSearchParams): MeetingSort {
 type Dialog =
   | { type: 'members' }
   | { type: 'leave' }
+  | { type: 'color' }
   | { type: 'move'; meeting: FolderMeeting };
 
 /** 회의 상태에 따라 대기 화면·회의방·회의록으로 간다 */
@@ -88,10 +105,13 @@ export default function FolderPage() {
   const [meetings, setMeetings] = useState<FolderMeeting[]>([]);
   const [members, setMembers] = useState<FolderMember[]>([]);
   const [pendingAgendas, setPendingAgendas] = useState<FolderPendingAgenda[]>([]);
+  const [stats, setStats] = useState<FolderMeetingStat[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[] | null>(null);
   const [workspaceMembersError, setWorkspaceMembersError] = useState<string>();
   // 워크스페이스 소유자는 모든 폴더에 들어가고, 폴더 삭제와 멤버 초대, 제외를 한다 (2026-11-16 결정)
   const [isWorkspaceOwner, setIsWorkspaceOwner] = useState(false);
+  // REQ-205 권한 없는 폴더 링크
+  const [accessNotice, setAccessNotice] = useState<AccessNoticeKind | null>(null);
   // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
   const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -104,11 +124,13 @@ export default function FolderPage() {
   useEffect(() => {
     let isCurrent = true;
     const load = async () => {
-      const [info, rows, folderMembers, pending] = await Promise.all([
+      const [info, rows, folderMembers, pending, meetingStats] = await Promise.all([
         getFolder(id),
         listFolderMeetingRows(id),
         listFolderMemberDetails(id),
         listFolderPendingAgendas(id),
+        // REQ-200 그래프는 실패해도 화면은 보인다
+        getFolderMeetingStats(id).catch(() => []),
       ]);
       const workspace = await getWorkspace(info.workspaceId);
       if (!isCurrent) {
@@ -119,16 +141,41 @@ export default function FolderPage() {
       setMeetings(rows);
       setMembers(folderMembers);
       setPendingAgendas(pending);
+      setStats(meetingStats);
     };
     load().catch((error: unknown) => {
       if (isCurrent) {
-        showError(error);
+        const notice = accessNoticeOf(error);
+        if (notice) {
+          setAccessNotice(notice);
+        } else {
+          showError(error);
+        }
       }
     });
     return () => {
       isCurrent = false;
     };
   }, [id, showError]);
+
+  // REQ-188 남은 안건 삭제 (MSG-081, [되돌리기])
+  const discardPending = async (agenda: FolderPendingAgenda) => {
+    try {
+      await discardPendingAgenda(id, agenda.pendingAgendaId);
+      setPendingAgendas((prev) => prev.filter(({ pendingAgendaId }) => pendingAgendaId !== agenda.pendingAgendaId));
+      const undo = async () => {
+        try {
+          await restorePendingAgenda(id, agenda.pendingAgendaId);
+          setPendingAgendas(await listFolderPendingAgendas(id));
+        } catch (error) {
+          showError(error);
+        }
+      };
+      setToast({ text: '남은 안건에서 삭제했어요', variant: 'info', action: { label: '되돌리기', onClick: () => void undo() } });
+    } catch (error) {
+      showError(error);
+    }
+  };
 
   const openMembers = async () => {
     setDialog({ type: 'members' });
@@ -241,6 +288,13 @@ export default function FolderPage() {
   };
 
   // REQ-178 불러오는 동안 회색 자리
+  if (accessNotice) {
+    return (
+      <AppLayout className={styles.page}>
+        <AccessNotice kind={accessNotice} />
+      </AppLayout>
+    );
+  }
   if (!folder) {
     return (
       <AppLayout className={styles.page}>
@@ -267,12 +321,15 @@ export default function FolderPage() {
         </nav>
         <div className={styles.titleRow}>
           <div className={styles.titleGroup}>
+            {/* REQ-202 피그마 Page 8 ProjectColorIcon */}
+            <span
+              className={styles.colorIcon}
+              style={{ background: folderSubtleColor(folder.color), color: folderIconColor(folder.color) }}
+              aria-hidden="true"
+            >
+              <Icon src={folderIcon} size={BUTTON_ICON_SIZE} />
+            </span>
             <h1 className={styles.title}>{folder.name}</h1>
-            <FavoriteButton
-              target={{ type: 'folder', workspaceId: folder.workspaceId, folderId: folder.folderId }}
-              name={folder.name}
-              onError={(text) => setToast({ text, variant: 'error' })}
-            />
             {/* REQ-165 폴더 ⋮ 메뉴. 보일 항목이 없으면(기본 폴더의 일반 멤버) 숨긴다 */}
             {(canManageMembers || !folder.isDefault) && (<span className={styles.menuAnchor}>
               <button
@@ -286,6 +343,21 @@ export default function FolderPage() {
               >
                 <Icon src={moreIcon} size={MORE_ICON_SIZE} />
               </button>
+              {dialog?.type === 'color' && (
+                <ProjectColorPicker
+                  color={folder.color}
+                  onClose={closeDialog}
+                  onPick={(color) => {
+                    // 고르면 바로 바뀐다 (토스트 없음). 실패하면 되돌린다
+                    const before = folder.color;
+                    setFolder({ ...folder, color });
+                    changeFolderColor(folder.folderId, color).catch((error: unknown) => {
+                      setFolder((prev) => prev && { ...prev, color: before });
+                      showError(error);
+                    });
+                  }}
+                />
+              )}
               {isFolderMenuOpen && (
                 <ActionMenu
                   label="폴더 메뉴"
@@ -295,6 +367,10 @@ export default function FolderPage() {
                     // 2026-11-17 기획: 이름 바꾸기, 즐겨찾기, 삭제는 워크스페이스 화면의 폴더 카드 ⋮ 메뉴로 옮겼다
                     ...(canManageMembers
                       ? [{ label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() }]
+                      : []),
+                    // REQ-202 프로젝트 색 설정 (프로젝트 소유자, 워크스페이스 소유자)
+                    ...(folder.isOwner || isWorkspaceOwner
+                      ? [{ label: '프로젝트 색 설정', icon: paletteIcon, onSelect: () => setDialog({ type: 'color' }) }]
                       : []),
                     // 워크스페이스 소유자는 모든 폴더에 들어가므로 나갈 수 없다
                     ...(!folder.isDefault && !isWorkspaceOwner
@@ -322,121 +398,62 @@ export default function FolderPage() {
         </div>
       </div>
 
-      <div className={styles.columns}>
-        <section className={styles.main} aria-labelledby="meetings-title">
-          <div className={styles.sectionHead}>
-            <h2 id="meetings-title" className={styles.sectionTitle}>
-              회의 목록
-            </h2>
-            {/* REQ-167 정렬 */}
-            <select
-              className={styles.sortSelect}
-              aria-label="정렬"
-              value={
-                SORT_OPTIONS.find(
-                  (option) => option.sort.key === sort.key && option.sort.isAscending === sort.isAscending,
-                )?.value ?? ''
-              }
-              onChange={(event) => {
-                const option = SORT_OPTIONS.find(({ value }) => value === event.target.value);
-                if (option) {
-                  changeView({ sort: option.sort });
-                }
-              }}
-            >
-              {!SORT_OPTIONS.some((option) => option.sort.key === sort.key && option.sort.isAscending === sort.isAscending) && (
-                <option value="">직접 정렬</option>
-              )}
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {/* REQ-053 회의 목록 오른쪽 위 [회의록 아카이브] */}
-            <button
-              type="button"
-              className={styles.textButton}
-              onClick={() => navigate(`/workspaces/${folder.workspaceId}/archive`)}
-            >
-              회의록 아카이브
-            </button>
-          </div>
-          <MeetingTable
-            meetings={meetings}
-            onOpen={(meeting) => navigate(meetingPath(meeting))}
-            sort={sort}
-            onSortChange={(next) => changeView({ sort: next })}
-            page={page}
-            onPageChange={(next) => changeView({ page: next })}
-            rowMenu={meetingMenu}
-            empty={
-              // MSG-034 (와이어프레임 ProjectEmptyPage 문구)
-              <EmptyState
-                title="아직 회의가 없어요"
-                description="첫 회의를 만들고 안건을 정리해 보세요"
-                action={
-                  <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
-                    새 회의 만들기
-                  </Button>
-                }
-              />
-            }
-          />
-        </section>
-
-        <aside className={styles.side}>
-          <section className={styles.section} aria-labelledby="folder-members-title">
-            <h2 id="folder-members-title" className={styles.sectionTitle}>
-              멤버
-            </h2>
-            <div className={styles.memberCard}>
-              <AvatarStack members={members} label={`폴더 멤버 ${members.length}명`} />
-              <button type="button" className={styles.textButton} onClick={openMembers}>
-                멤버 관리
-              </button>
-            </div>
-          </section>
-
-          <section className={styles.section} aria-labelledby="pending-title">
-            <div className={styles.pendingHead}>
-              <div className={styles.pendingTitleGroup}>
-                <h2 id="pending-title" className={styles.sectionTitle}>
-                  남은 안건
-                </h2>
-                <p className={styles.pendingCaption}>이전 회의에서 결정하지 못한 안건이에요</p>
-              </div>
-              <span className={styles.countBadge}>{pendingAgendas.length}개</span>
-            </div>
-            <div className={styles.pendingCard}>
-              {pendingAgendas.length === 0 ? (
-                // MSG-035 (와이어프레임 ProjectEmptyPage 문구)
-                <EmptyState title="남은 안건이 없어요" description="회의에서 결정되지 않은 안건이 여기에 모여요" />
-              ) : (
-                <ul className={styles.pendingList}>
-                  {pendingAgendas.map((agenda) => (
-                    <li key={agenda.pendingAgendaId} className={styles.pendingItem}>
-                      <span className={styles.pendingTitle}>{agenda.title}</span>
-                      <span className={styles.pendingMeta}>
-                        {agenda.fromMeetingTitle}
-                        <span className={styles.metaDivider} aria-hidden="true" />
-                        {agenda.carriedAt.replaceAll('-', '.')}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
-
-          {/* REQ-139 기본 폴더에서는 나갈 수 없다 */}
-          {!folder.isDefault && (
-            <button type="button" className={`${styles.textButton} ${styles.leave}`} onClick={() => setDialog({ type: 'leave' })}>
-              이 폴더 나가기
-            </button>
-          )}
-        </aside>
+      {/* 피그마 Page 8 MetaLine: 멤버 수(REQ-203), 회의 수, 내 권한 */}
+      <div className={styles.metaLine}>
+        <button type="button" className={styles.linkButton} onClick={openMembers}>
+          멤버 {members.length}명
+        </button>
+        <span className={styles.metaDivider} aria-hidden="true" />
+        <span className={styles.metaText}>회의 {meetings.length}개</span>
+        <span className={styles.metaDivider} aria-hidden="true" />
+        <span className={styles.metaText}>내 권한</span>
+        <span className={styles.roleBadge}>{folder.isOwner ? '소유자' : isWorkspaceOwner ? '워크스페이스 소유자' : '멤버'}</span>
       </div>
+
+      <FolderStats stats={stats} pendingAgendas={pendingAgendas} onDiscardPending={(agenda) => void discardPending(agenda)} />
+
+      <section className={styles.meetingSection} aria-labelledby="meetings-title">
+        <div className={styles.sectionHead}>
+          <h2 id="meetings-title" className={styles.sectionTitle}>
+            회의 목록
+          </h2>
+          {/* REQ-053 회의 목록 오른쪽 위 [회의록 아카이브] */}
+          <button
+            type="button"
+            className={styles.textButton}
+            onClick={() => navigate(`/workspaces/${folder.workspaceId}/archive`)}
+          >
+            회의록 아카이브
+          </button>
+        </div>
+        <div className={styles.calendarAndList}>
+          {/* REQ-201 */}
+          <FolderCalendar folderId={folder.folderId} color={folderColor(folder.color)} />
+          <div className={styles.tableCard}>
+            <MeetingTable
+              meetings={meetings}
+              onOpen={(meeting) => navigate(meetingPath(meeting))}
+              sort={sort}
+              onSortChange={(next) => changeView({ sort: next })}
+              page={page}
+              onPageChange={(next) => changeView({ page: next })}
+              rowMenu={meetingMenu}
+              empty={
+                // MSG-034 (와이어프레임 ProjectEmptyPage 문구)
+                <EmptyState
+                  title="아직 회의가 없어요"
+                  description="첫 회의를 만들고 안건을 정리해 보세요"
+                  action={
+                    <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
+                      새 회의 만들기
+                    </Button>
+                  }
+                />
+              }
+            />
+          </div>
+        </div>
+      </section>
 
       {dialog?.type === 'members' && (
         <FolderMembersModal

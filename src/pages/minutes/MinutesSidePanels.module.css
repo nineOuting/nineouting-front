@@ -357,3 +357,26 @@
 .lineHighlighted {
   background: var(--secondary-default);
 }
+
+/* REQ-204 근거 발언 사이 이동 */
+.evidenceNav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin-left: auto;
+}
+
+.evidenceCount {
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.navButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.lineCurrent {
+  outline: 2px solid var(--primary-default);
+  outline-offset: -2px;
+}

@@ -43,6 +43,56 @@
   --letter-spacing: var(--letter-spacing-base);
 }
 
+/*
+ * 피그마 2026-11-17 새 디자인(Page 8)에 생긴 변수. nep!nep!_css가 새로 오기 전까지 여기서 정의한다 (오면 지운다).
+ * 프로젝트 색(REQ-202): default는 스와치, 달력 왼쪽 줄. subtle은 아이콘 바탕, 달력 일정 바탕(default 12%). icon은 아이콘 색
+ */
+:root,
+[data-theme] {
+  --bg-panel: var(--bg-page);
+  --bg-sidebar: var(--gray-50);
+  --text-tertiary: var(--gray-500);
+  --border-selected: var(--blue-400);
+  --status-undecided: #ea580c;
+  --status-undecided-subtle: #fff4e6;
+
+  --project-red-default: #eb5342;
+  --project-orange-default: #ffa219;
+  --project-yellow-default: #ffde39;
+  --project-green-default: #6baa75;
+  --project-pink-default: #f588cc;
+  --project-purple-default: #9877d5;
+  --project-indigo-default: #5b67be;
+  --project-sky-default: #7eb8f5;
+
+  --project-red-subtle: color-mix(in srgb, var(--project-red-default) 12%, white);
+  --project-orange-subtle: color-mix(in srgb, var(--project-orange-default) 12%, white);
+  --project-yellow-subtle: color-mix(in srgb, var(--project-yellow-default) 12%, white);
+  --project-green-subtle: #edf5ee;
+  --project-pink-subtle: #fef1f9;
+  --project-purple-subtle: #f3effa;
+  --project-indigo-subtle: color-mix(in srgb, var(--project-indigo-default) 12%, white);
+  --project-sky-subtle: #f0f6fe;
+
+  --project-red-border: color-mix(in srgb, var(--project-red-default) 30%, white);
+  --project-orange-border: color-mix(in srgb, var(--project-orange-default) 30%, white);
+  --project-yellow-border: color-mix(in srgb, var(--project-yellow-default) 30%, white);
+  --project-green-border: #d3e5d6;
+  --project-pink-border: #fcdbf0;
+  --project-purple-border: #e0d6f2;
+  --project-indigo-border: color-mix(in srgb, var(--project-indigo-default) 30%, white);
+  --project-sky-border: #d8eafc;
+
+  --project-red-icon: #d0402f;
+  --project-orange-icon: #d98200;
+  --project-yellow-icon: #c9a800;
+  --project-green-icon: #609969;
+  --project-pink-icon: #c46da3;
+  --project-purple-icon: #9877d5;
+  --project-indigo-icon: #5b67be;
+  --project-sky-icon: #5f8ab8;
+}
+
 body {
   /* 아직 데스크톱 화면만 있다. 모바일 화면은 디자인을 따라 따로 만든다 */
   min-width: 600px;

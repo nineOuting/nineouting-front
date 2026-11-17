@@ -14,6 +14,7 @@ import workspaceIcon from '../assets/icons/workspace.svg';
 import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
 import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
+import { folderIconColor } from '../utils/folderColor';
 import styles from './Sidebar.module.css';
 
 const MENU_ICON_SIZE = 20;
@@ -27,7 +28,7 @@ interface SidebarProps {
   onCollapse: () => void;
 }
 
-type FolderItem = Pick<FolderSummary, 'folderId' | 'name'>;
+type FolderItem = Pick<FolderSummary, 'folderId' | 'name' | 'color'>;
 
 const menuClass = ({ isActive }: { isActive: boolean }) => [styles.item, isActive ? styles.selected : ''].join(' ');
 const subMenuClass = ({ isActive }: { isActive: boolean }) => [styles.subItem, isActive ? styles.selected : ''].join(' ');
@@ -79,7 +80,7 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
         requestedRef.current.add(id);
         listFolders(id)
           .then((items) =>
-            setFolders((prev) => ({ ...prev, [id]: items.map(({ folderId, name }) => ({ folderId, name })) })),
+            setFolders((prev) => ({ ...prev, [id]: items.map(({ folderId, name, color }) => ({ folderId, name, color })) })),
           )
           .catch(() => requestedRef.current.delete(id));
       });
@@ -123,7 +124,10 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
                   <div className={styles.subList}>
                     {(folders[workspace.workspaceId] ?? []).map((folder) => (
                       <NavLink key={folder.folderId} to={`/folders/${folder.folderId}`} className={subMenuClass}>
-                        <MenuIcon src={folderIcon} size={SUB_ICON_SIZE} />
+                        {/* REQ-202 프로젝트 색 */}
+                        <span className={styles.folderColor} style={{ color: folderIconColor(folder.color) }}>
+                          <MenuIcon src={folderIcon} size={SUB_ICON_SIZE} />
+                        </span>
                         <span className={styles.text}>{folder.name}</span>
                       </NavLink>
                     ))}

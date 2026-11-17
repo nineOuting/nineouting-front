@@ -34,3 +34,44 @@
 .newUser {
   padding-top: 160px;
 }
+
+/* 피그마 Page 8 HomePage_v6 (69:10137): 본문(좌우 32px) + 오른쪽 열 367px(옅은 바탕, 화면 높이만큼) */
+.homeLayout {
+  display: flex;
+  align-items: stretch;
+  min-height: 100%;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  min-width: 0;
+  padding: var(--spacing-8) var(--layout-page-margin);
+}
+
+.calendarSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+}
+
+.panel {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--layout-gutter);
+  width: 367px;
+  padding: var(--padding-card);
+  background: var(--bg-panel);
+  border: var(--border-width-default) solid var(--neutral-subtle);
+  border-radius: var(--radius-lg) var(--radius-md) var(--radius-md) var(--radius-lg);
+}

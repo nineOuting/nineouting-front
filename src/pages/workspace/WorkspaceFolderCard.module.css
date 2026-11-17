@@ -1,0 +1,79 @@
+/* 피그마 Page 8 FolderCard (69:9633): 프로젝트 옅은 색 바탕, 같은 계열 테두리, 안쪽 24px */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--padding-card);
+  border: var(--border-width-default) solid;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 var(--spacing-1) var(--spacing-2) rgb(0 0 0 / 10%);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--spacing-2);
+  background: var(--bg-surface-raised);
+  border-radius: var(--radius-md);
+}
+
+.titleGroup {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
+  text-align: left;
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+}
+
+.divider {
+  height: 1px;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-5);
+  text-align: left;
+}
+
+.activity {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-title-subtitle);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}

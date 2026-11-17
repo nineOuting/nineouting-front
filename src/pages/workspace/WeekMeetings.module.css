@@ -1,0 +1,101 @@
+/* 피그마 Page 8 UpcomingSection (69:9633) */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5) 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
+}
+
+.count,
+.empty {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap-content);
+}
+
+.card {
+  display: flex;
+  align-items: stretch;
+  gap: var(--spacing-3);
+  height: 100%;
+  padding: calc(var(--spacing-2) + var(--spacing-3));
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: 1px 1px 2px rgb(0 0 0 / 10%);
+  color: inherit;
+  text-decoration: none;
+}
+
+.card:hover {
+  color: inherit;
+  text-decoration: none;
+  background: var(--interactive-hover);
+}
+
+.dateBox {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  border-radius: var(--radius-md);
+}
+
+.day {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+}
+
+.weekday {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  overflow: hidden;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

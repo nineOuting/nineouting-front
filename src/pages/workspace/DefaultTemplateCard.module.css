@@ -1,0 +1,57 @@
+/* 피그마 Page 8 SummaryBar의 DefaultTemplate */
+.inline {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+  min-width: 0;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+}
+
+.label {
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.change {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}
+
+.change:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--interactive-hover);
+}

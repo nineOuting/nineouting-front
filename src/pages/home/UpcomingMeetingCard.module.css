@@ -1,14 +1,27 @@
+/* 피그마 Page 8 UpcomingMeetingCard (69:10144): 연한 파랑 띠 + 보라 그림자 */
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-content);
+  padding: var(--spacing-4) var(--padding-card);
+  background: var(--secondary-ghost-hover);
+  border: var(--border-width-default) solid var(--border-selected);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 8px rgb(54 26 214 / 14%);
+}
+
 .summary {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 .titleRow {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
-  min-width: 0;
 }
 
 .title {
@@ -21,46 +34,38 @@
   white-space: nowrap;
 }
 
-.people {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-}
-
-.agendaPreview {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-}
-
-.agendaLabel {
+.badge {
+  flex-shrink: 0;
+  padding: var(--spacing-1) var(--spacing-2);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-caption);
+  color: var(--primary-default);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
   color: var(--text-secondary);
 }
 
-/* 안건이 많으면 안에서 스크롤 */
-.agendas {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  max-height: 136px;
-  overflow-y: auto;
+.go {
+  flex-shrink: 0;
+  width: 120px;
 }
 
-.agenda {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  min-width: 0;
-}
-
-.agendaTitle {
-  overflow: hidden;
+.empty {
   font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  color: var(--text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--text-secondary);
 }

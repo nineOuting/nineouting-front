@@ -22,6 +22,8 @@ export interface FolderSummary {
   meetingCount: number;
   /** 폴더를 만든 사람 (기본 폴더는 없음). 폴더 메뉴를 보여 줄지 가린다 */
   ownerUserId?: number | null;
+  /** REQ-202 프로젝트 색 번호 (0~7) */
+  color?: number;
 }
 
 export interface FolderMember extends Member {
@@ -39,6 +41,8 @@ export interface FolderMeeting {
   title: string;
   /** 2026-10-24 */
   date: string;
+  /** 2026-10-24T14:00:00 (워크스페이스 폴더 카드의 다음 회의 시각) */
+  startAt?: string;
   status: FolderMeetingStatus;
   writer: Member & { affiliation?: string };
   attendees: Member[];
@@ -56,4 +60,4 @@ export interface FolderPendingAgenda {
 /** REQ-151 즐겨찾기한 워크스페이스·폴더 */
 export type Favorite =
   | { type: 'workspace'; workspaceId: number; workspaceName: string; folderId?: undefined; folderName?: undefined }
-  | { type: 'folder'; workspaceId: number; workspaceName: string; folderId: number; folderName: string };
+  | { type: 'folder'; workspaceId: number; workspaceName: string; folderId: number; folderName: string; folderColor?: number };

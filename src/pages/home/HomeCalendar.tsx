@@ -10,11 +10,12 @@ import type { WorkspaceSummary } from '../../types/workspace';
 import { addDays, minutesOfDay, monthGridDays, toIsoDate, toTime, weekDays } from '../../utils/calendar';
 import { meetingPath } from '../../utils/meetingFormat';
 import MeetingPreviewCard from './MeetingPreviewCard';
+import { folderColor, folderSubtleColor } from '../../utils/folderColor';
 import styles from './HomeCalendar.module.css';
 
 type View = 'week' | 'month';
 
-const DAY_NAMES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일'];
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 // 디자인 칸 높이 56px = 1시간. 처음에는 09:00부터 보인다
 const HOUR_HEIGHT = 56;
@@ -35,6 +36,8 @@ interface HomeCalendarProps {
 interface FolderOption {
   folderId: number;
   label: string;
+  /** REQ-202 프로젝트 색 번호 */
+  color?: number;
 }
 
 /** 주간: 2026년 10월 19일 ~ 25일 (달이 바뀌면 ~ 11월 1일), 월간: 2026년 10월 */
@@ -108,6 +111,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
             items.map((folder) => ({
               folderId: folder.folderId,
               label: withWorkspaceName ? `${name} · ${folder.name}` : folder.name,
+              color: folder.color,
             })),
           )
           .catch(() => []),
@@ -136,6 +140,14 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
     );
   const eventClass = (meeting: CalendarMeeting) =>
     [styles.event, meeting.status === 'FINISHED' ? styles.past : ''].filter(Boolean).join(' ');
+  // REQ-202 일정은 프로젝트 색: 왼쪽 줄은 진한 색, 바탕은 옅은 색. 끝난 회의는 바탕만 회색
+  const eventStyle = (meeting: CalendarMeeting) => {
+    const color = folders.find(({ folderId }) => folderId === meeting.folderId)?.color;
+    return {
+      borderLeftColor: folderColor(color),
+      ...(meeting.status === 'FINISHED' ? {} : { background: folderSubtleColor(color) }),
+    };
+  };
   const eventLabel = (meeting: CalendarMeeting) =>
     `${meeting.title}, ${toTime(meeting.startAt)} - ${toTime(meeting.endAt)}, ${meeting.folderName}${
       meeting.status === 'FINISHED' ? ', 끝난 회의' : ''
@@ -251,6 +263,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
                       type="button"
                       className={`${eventClass(meeting)} ${styles.weekEvent}`}
                       style={{
+                        ...eventStyle(meeting),
                         top: (start / 60) * HOUR_HEIGHT + EVENT_GAP,
                         height: Math.max(((end - start) / 60) * HOUR_HEIGHT - EVENT_GAP * 2, MIN_EVENT_HEIGHT),
                       }}
@@ -288,6 +301,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
                     key={meeting.meetingId}
                     type="button"
                     className={`${eventClass(meeting)} ${styles.monthEvent}`}
+                    style={eventStyle(meeting)}
                     aria-label={eventLabel(meeting)}
                     onClick={(event) => setPreview({ meeting, anchor: event.currentTarget.getBoundingClientRect() })}
                   >

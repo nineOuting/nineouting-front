@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
-import { countFolderMeetings } from '../../api/meeting';
+import { listFolderMeetingRows } from '../../api/meeting';
 import { getMe } from '../../api/user';
 import {
   changeFolderAccess,
@@ -12,6 +12,7 @@ import {
   inviteByEmail,
   issueInviteLink,
   leaveWorkspace,
+  listFolderMembers,
   listFolders,
   listMyWorkspaces,
   listWorkspaceMembers,
@@ -26,23 +27,28 @@ import {
 } from '../../api/workspace';
 import addIcon from '../../assets/icons/add-sm.svg';
 import arrowDownIcon from '../../assets/icons/arrow-down.svg';
-import folderIcon from '../../assets/icons/folder-md.svg';
-import groupAddIcon from '../../assets/icons/group-add.svg';
+import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
+import personIcon from '../../assets/icons/person-sm.svg';
+import settingsIcon from '../../assets/icons/settings.svg';
 import starIcon from '../../assets/icons/star-outline.svg';
 import AppLayout from '../../components/AppLayout';
-import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import FavoriteButton from '../../components/FavoriteButton';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import type { FolderAccess, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
+import type { Member } from '../../types/meeting';
+import type { FolderAccess, FolderMeeting, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
 import deleteIcon from '../../assets/icons/delete.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import ActionMenu from './ActionMenu';
 import CreateWorkspaceModal from './CreateWorkspaceModal';
+import DefaultTemplateCard from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
+import OnboardingBar from './OnboardingBar';
+import WeekMeetings from './WeekMeetings';
+import WorkspaceFolderCard, { type FolderActivity } from './WorkspaceFolderCard';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceProfileModal from './WorkspaceProfileModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
@@ -72,6 +78,20 @@ function folderNameError(error: unknown) {
   return isApiError(error, WORKSPACE_ERROR_CODES.folderNameDuplicated) ? DUPLICATE_FOLDER_MESSAGE : errorMessage(error);
 }
 
+/** 다음 예정 회의(가장 가까운 것), 없으면 마지막 회의 날짜 */
+function activityOf(rows: FolderMeeting[]): FolderActivity {
+  const now = new Date().toISOString().slice(0, 16);
+  const upcoming = rows
+    .filter(({ status, startAt }) => status === 'scheduled' && (startAt ?? '') >= now)
+    .map(({ startAt }) => startAt ?? '')
+    .sort();
+  if (upcoming.length > 0) {
+    return { next: upcoming[0] };
+  }
+  const past = rows.filter(({ status }) => status !== 'scheduled').map(({ date }) => date).sort();
+  return past.length > 0 ? { last: past[past.length - 1] } : {};
+}
+
 /** REQ-028~040, 127~129, 138 워크스페이스 화면 (프로젝트 폴더 목록·멤버) */
 export default function WorkspacePage() {
   const navigate = useNavigate();
@@ -82,6 +102,11 @@ export default function WorkspacePage() {
   const [folders, setFolders] = useState<FolderSummary[]>([]);
   // 멤버는 목록을 보기만 하고, 초대·제외·권한 변경은 워크스페이스 소유자만 한다 (2026-10-26 결정)
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  // 피그마 Page 8 폴더 카드의 다음(마지막) 회의와 폴더 멤버
+  const [activities, setActivities] = useState<Record<number, FolderActivity>>({});
+  const [folderMembers, setFolderMembers] = useState<Record<number, Member[]>>({});
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreAnchorRef = useRef<HTMLButtonElement>(null);
   const [myUserId, setMyUserId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
@@ -118,8 +143,11 @@ export default function WorkspacePage() {
         listFolders(id),
         getMe().catch(() => null),
       ]);
-      // REQ-037 폴더 카드의 회의 수는 meeting-service 회의 목록의 전체 개수로 센다
-      const counts = await Promise.all(folderList.map(({ folderId }) => countFolderMeetings(folderId).catch(() => 0)));
+      // REQ-037 폴더 카드의 회의 수, 다음(마지막) 회의는 meeting-service 폴더 회의 목록으로, 얼굴은 폴더 멤버로
+      const [rows, memberLists] = await Promise.all([
+        Promise.all(folderList.map(({ folderId }) => listFolderMeetingRows(folderId).catch(() => []))),
+        Promise.all(folderList.map(({ folderId }) => listFolderMembers(folderId).catch(() => []))),
+      ]);
       // TODO(백엔드): 멤버도 목록을 볼 수 있게 바뀌기 전까지는 소유자가 아니면 403이라 빈 목록으로 둔다
       const memberList = await listWorkspaceMembers(id).catch(() => []);
       if (!isCurrent) {
@@ -128,7 +156,9 @@ export default function WorkspacePage() {
       setWorkspace(detail);
       setMyUserId(me?.userId ?? null);
       setWorkspaces(mine);
-      setFolders(folderList.map((folder, index) => ({ ...folder, meetingCount: counts[index] })));
+      setFolders(folderList.map((folder, index) => ({ ...folder, meetingCount: rows[index].length })));
+      setActivities(Object.fromEntries(folderList.map((folder, index) => [folder.folderId, activityOf(rows[index])])));
+      setFolderMembers(Object.fromEntries(folderList.map((folder, index) => [folder.folderId, memberLists[index]])));
       setMembers(memberList);
       // REQ-030 마지막으로 들어온 워크스페이스로 기억한다
       markLastVisited(id).catch(() => undefined);
@@ -202,6 +232,8 @@ export default function WorkspacePage() {
     try {
       await changeFolderAccess(id, userId, folderAccess);
       setMembers((prev) => prev.map((member) => (member.userId === userId ? { ...member, folderAccess } : member)));
+      // REQ-198 워크스페이스 시작하기의 폴더 권한 정하기를 마친다
+      setWorkspace((prev) => prev && { ...prev, folderAccessConfigured: true });
     } catch (error) {
       showError(error);
     }
@@ -299,36 +331,108 @@ export default function WorkspacePage() {
           </div>
           {workspace.description && <p className={styles.workspaceDescription}>{workspace.description}</p>}
         </div>
-        <button type="button" className={styles.newFolder} onClick={() => setDialog({ type: 'newFolder' })}>
-          <Icon src={addIcon} size={ICON_SIZE} />새 폴더
-        </button>
+        <div className={styles.pageActions}>
+          <button type="button" className={styles.newFolder} onClick={() => setDialog({ type: 'newFolder' })}>
+            <Icon src={addIcon} size={ICON_SIZE} />새 폴더
+          </button>
+          {/* 피그마 Page 8 MoreButton: 워크스페이스 설정, 내 프로필, 나가기 */}
+          <span className={styles.anchor}>
+            <button
+              ref={moreAnchorRef}
+              type="button"
+              className={styles.iconButton}
+              aria-label="워크스페이스 더보기"
+              aria-haspopup="menu"
+              aria-expanded={isMoreOpen}
+              onClick={() => setIsMoreOpen((value) => !value)}
+            >
+              <Icon src={moreIcon} size={ARROW_ICON_SIZE} />
+            </button>
+            {isMoreOpen && (
+              <ActionMenu
+                label="워크스페이스 메뉴"
+                anchorRef={moreAnchorRef}
+                onClose={() => setIsMoreOpen(false)}
+                items={[
+                  { label: '워크스페이스 설정', icon: settingsIcon, onSelect: () => setDialog({ type: 'settings' }) },
+                  { label: '이 워크스페이스에서 내 프로필', icon: personIcon, onSelect: () => setDialog({ type: 'profile' }) },
+                  { label: '워크스페이스 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) },
+                ].map((item) => ({
+                  ...item,
+                  onSelect: () => {
+                    setIsMoreOpen(false);
+                    item.onSelect();
+                  },
+                }))}
+              />
+            )}
+          </span>
+        </div>
       </div>
 
-      <div className={styles.columns}>
-        <section className={styles.folders} aria-labelledby="folders-title">
-          <div className={styles.sectionHead}>
-            <h2 id="folders-title" className={styles.sectionTitle}>
-              프로젝트 폴더
-            </h2>
-            <span className={styles.count}>총 {folders.length}개</span>
-          </div>
-          <ul className={styles.folderGrid}>
-            {folders.map((folder) => (
-              <li key={folder.folderId} className={styles.folderCard}>
-                {/* 카드 전체를 누르면 폴더로 이동한다 (REQ-038) */}
-                <button
-                  type="button"
-                  className={styles.folderLink}
-                  onClick={() => navigate(`/folders/${folder.folderId}`)}
-                >
-                  <span className={styles.folderIcon}>
-                    <Icon src={folderIcon} size={ICON_SIZE} />
-                  </span>
-                  <span className={styles.folderTexts}>
-                    <span className={styles.folderName}>{folder.name}</span>
-                    <span className={styles.folderMeta}>회의 {folder.meetingCount}개</span>
-                  </span>
-                </button>
+      {/* 피그마 Page 8 SummaryBar: 멤버 수, 내 권한, 회의록 기본 양식(REQ-199) */}
+      <div className={styles.summaryBar}>
+        <button type="button" className={styles.linkButton} onClick={() => setDialog({ type: 'members' })}>
+          멤버 {workspace.memberCount}명
+        </button>
+        <span className={styles.summaryDivider} aria-hidden="true" />
+        <span className={styles.summaryLabel}>내 권한</span>
+        <span className={styles.roleBadge}>{isOwner ? '소유자' : '멤버'}</span>
+        <span className={styles.summaryDivider} aria-hidden="true" />
+        <DefaultTemplateCard
+          workspaceId={id}
+          templateId={workspace.defaultTemplateId}
+          isOwner={isOwner}
+          onChanged={(templateId) => {
+            setWorkspace((prev) => prev && { ...prev, defaultTemplateId: templateId });
+            setToast({ text: '회의록 기본 양식을 바꿨어요.', variant: 'success' });
+          }}
+          onError={showError}
+        />
+      </div>
+
+      <WeekMeetings workspaceId={id} folders={folders} />
+
+      {isOwner && (
+        <OnboardingBar
+          workspaceId={id}
+          steps={[
+            { label: '멤버 초대하기', done: workspace.memberCount > 1, actionLabel: '멤버 초대', onAction: () => setDialog({ type: 'members' }) },
+            {
+              label: '회의록 기본 양식 정하기',
+              done: workspace.defaultTemplateId !== null,
+              actionLabel: '양식 정하기',
+              onAction: () => document.getElementById('default-template-change')?.click(),
+            },
+            {
+              // 멤버 권한 관리에서 멤버의 폴더 접근 권한(모든 폴더 / 초대된 폴더만)을 한 번이라도 정하면 끝 (2026-11-17 결정)
+              label: '폴더 권한 정하기',
+              done: workspace.folderAccessConfigured,
+              actionLabel: '권한 설정',
+              onAction: () => setDialog({ type: 'members' }),
+            },
+          ]}
+        />
+      )}
+
+      {/* 피그마 Page 8 FolderPanel: 프로젝트 색 폴더 카드 (REQ-037, 202) */}
+      <section className={styles.folders} aria-labelledby="folders-title">
+        <div className={styles.sectionHead}>
+          <h2 id="folders-title" className={styles.sectionTitle}>
+            프로젝트 폴더
+          </h2>
+          <span className={styles.count}>총 {folders.length}개</span>
+        </div>
+        <ul className={styles.folderGrid}>
+          {folders.map((folder) => (
+            <WorkspaceFolderCard
+              key={folder.folderId}
+              folder={folder}
+              workspaceId={id}
+              activity={activities[folder.folderId]}
+              members={folderMembers[folder.folderId] ?? []}
+              onError={(text) => setToast({ text, variant: 'error' })}
+              menu={
                 <FolderMenu
                   folder={folder}
                   // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정). 즐겨찾기는 모두
@@ -340,45 +444,11 @@ export default function WorkspacePage() {
                   onRename={() => setDialog({ type: 'rename', folder })}
                   onDelete={() => setDialog({ type: 'deleteFolder', folder })}
                 />
-              </li>
-            ))}
-          </ul>
-          <p className={styles.hint}>폴더를 누르면 해당 프로젝트 폴더로 이동해요</p>
-        </section>
-
-        <aside className={styles.side}>
-          <section className={styles.memberSection} aria-labelledby="members-title">
-            <h2 id="members-title" className={styles.sectionTitle}>
-              멤버
-            </h2>
-            <div className={styles.memberCard}>
-              <div className={styles.memberSummary}>
-                <div className={styles.memberHead}>
-                  <span className={styles.memberLabel}>워크스페이스 멤버</span>
-                  <span className={styles.memberCount}>총 {workspace.memberCount}명</span>
-                </div>
-                {members.length > 0 && (
-                  <AvatarStack members={members} label={`워크스페이스 멤버 ${workspace.memberCount}명`} />
-                )}
-              </div>
-              {/* 멤버는 목록만 보고, 관리는 소유자만 (REQ-033) */}
-              <button type="button" className={styles.manageButton} onClick={() => setDialog({ type: 'members' })}>
-                <Icon src={groupAddIcon} size={ICON_SIZE} />
-                {isOwner ? '멤버 권한 관리' : '멤버 목록'}
-              </button>
-            </div>
-          </section>
-          <div className={styles.links}>
-            {/* REQ-114·115·118 디자인이 없어 나가기 버튼과 같은 글자 버튼으로 넣었다 */}
-            <button type="button" className={styles.textButton} onClick={() => setDialog({ type: 'profile' })}>
-              이 워크스페이스에서 내 프로필
-            </button>
-            <button type="button" className={styles.textButton} onClick={() => setDialog({ type: 'leave' })}>
-              이 워크스페이스 나가기
-            </button>
-          </div>
-        </aside>
-      </div>
+              }
+            />
+          ))}
+        </ul>
+      </section>
 
       {dialog?.type === 'createWorkspace' && <CreateWorkspaceModal onClose={closeDialog} />}
       {dialog?.type === 'settings' && (

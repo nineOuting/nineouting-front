@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import folderIcon from '../../assets/icons/folder-md.svg';
 import starIcon from '../../assets/icons/star-fill.svg';
 import workspaceIcon from '../../assets/icons/workspace.svg';
+import Icon from '../../components/Icon';
 import type { Favorite } from '../../types/workspace';
+import { folderIconColor, folderSubtleColor } from '../../utils/folderColor';
 import card from './HomeCard.module.css';
 import styles from './FavoritesCard.module.css';
 
 const ICON_SIZE = 20;
+// 처음에는 3개만 보이고 [전체보기]로 모두 펼친다
+const PREVIEW_COUNT = 3;
 
 interface FavoritesCardProps {
   items: Favorite[];
@@ -16,41 +21,59 @@ interface FavoritesCardProps {
 const favoritePath = (favorite: Favorite) =>
   favorite.type === 'folder' ? `/folders/${favorite.folderId}` : `/workspaces/${favorite.workspaceId}`;
 
-/** REQ-151~153 즐겨찾기한 워크스페이스, 폴더. 별을 누르면 즐겨찾기에서 뺀다 */
+/**
+ * REQ-151~153 즐겨찾기한 워크스페이스, 폴더 (피그마 Page 8 FavoritesSection).
+ * 폴더 아이콘은 프로젝트 색(REQ-202). 별을 누르면 즐겨찾기에서 뺀다
+ */
 export default function FavoritesCard({ items, onRemove }: FavoritesCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const shown = isExpanded ? items : items.slice(0, PREVIEW_COUNT);
+
   return (
-    <section className={card.card} aria-labelledby="favorites-title">
-      <div className={card.head}>
+    <section className={card.section} aria-labelledby="favorites-title">
+      <div className={card.sectionHead}>
         <h2 id="favorites-title" className={card.title}>
           즐겨찾기
         </h2>
+        {items.length > PREVIEW_COUNT && (
+          <button type="button" className={card.textButton} onClick={() => setIsExpanded((value) => !value)}>
+            {isExpanded ? '접기' : '전체보기'}
+          </button>
+        )}
       </div>
       {items.length === 0 ? (
-        <p className={card.secondary}>워크스페이스나 폴더 화면에서 별을 눌러 즐겨찾기에 추가해 보세요.</p>
+        <p className={`${card.listBox} ${card.boxEmpty}`}>워크스페이스나 폴더 화면에서 별을 눌러 추가해 보세요.</p>
       ) : (
-        <ul className={styles.list}>
-          {items.map((favorite) => {
+        <ul className={card.listBox}>
+          {shown.map((favorite) => {
             const isFolder = favorite.type === 'folder';
             const name = isFolder ? favorite.folderName : favorite.workspaceName;
             return (
               <li key={`${favorite.type}-${favorite.folderId ?? favorite.workspaceId}`} className={styles.item}>
-                <div className={styles.header}>
-                  <span className={styles.iconBox}>
-                    <img src={isFolder ? folderIcon : workspaceIcon} alt="" width={ICON_SIZE} height={ICON_SIZE} />
-                  </span>
-                  <button
-                    type="button"
-                    className={card.iconButton}
-                    aria-label={`${name} 즐겨찾기 해제`}
-                    onClick={() => onRemove(favorite)}
-                  >
-                    <img src={starIcon} alt="" width={ICON_SIZE} height={ICON_SIZE} />
-                  </button>
-                </div>
                 <Link to={favoritePath(favorite)} className={styles.link}>
-                  <span className={styles.name}>{name}</span>
-                  <span className={card.caption}>{isFolder ? favorite.workspaceName : '워크스페이스'}</span>
+                  <span
+                    className={styles.iconBox}
+                    style={
+                      isFolder
+                        ? { background: folderSubtleColor(favorite.folderColor), color: folderIconColor(favorite.folderColor) }
+                        : undefined
+                    }
+                  >
+                    <Icon src={isFolder ? folderIcon : workspaceIcon} size={ICON_SIZE} />
+                  </span>
+                  <span className={styles.texts}>
+                    <span className={card.rowTitle}>{name}</span>
+                    <span className={card.rowCaption}>{isFolder ? favorite.workspaceName : '워크스페이스'}</span>
+                  </span>
                 </Link>
+                <button
+                  type="button"
+                  className={styles.star}
+                  aria-label={`${name} 즐겨찾기 해제`}
+                  onClick={() => onRemove(favorite)}
+                >
+                  <Icon src={starIcon} size={ICON_SIZE} />
+                </button>
               </li>
             );
           })}

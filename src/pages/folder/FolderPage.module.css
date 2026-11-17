@@ -252,3 +252,87 @@
   font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
 }
+
+/* REQ-202 프로젝트 색 */
+.colorDot {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+/* 피그마 Page 8 ProjectPage (69:8172) */
+.colorIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+}
+
+.metaLine {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-top: calc(var(--spacing-2) * -1);
+}
+
+.linkButton {
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}
+
+.linkButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.metaDivider {
+  width: 1px;
+  height: 16px;
+  background: var(--border-default);
+}
+
+.metaText {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-tertiary);
+}
+
+.roleBadge {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+}
+
+.meetingSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+  margin-top: var(--spacing-4);
+}
+
+.calendarAndList {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-content);
+}
+
+.calendarAndList > :first-child {
+  flex-shrink: 0;
+  width: 320px;
+}
+
+.tableCard {
+  flex: 1;
+  min-width: 0;
+}

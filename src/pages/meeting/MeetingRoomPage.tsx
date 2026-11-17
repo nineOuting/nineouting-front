@@ -68,6 +68,8 @@ import RecordingBar from './room/RecordingBar';
 import RoomBanner, { SilenceNotice } from './room/RoomBanner';
 import { askAbout, detectTerms } from './room/termGlossary';
 import TranscriptPanel from './room/TranscriptPanel';
+import AccessNotice from '../../components/AccessNotice';
+import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import styles from './MeetingRoomPage.module.css';
 
 // REQ-174 첫 사용 안내를 본 적 있는지 (브라우저에 남긴다)
@@ -116,6 +118,8 @@ export default function MeetingRoomPage() {
   const [isEndBusy, setIsEndBusy] = useState(false);
   // REQ-097 작성자가 아닌 참석자가 오늘 회의 요약 창을 닫았는지 (요약이 다시 오면 다시 연다)
   const [isViewerSummaryClosed, setIsViewerSummaryClosed] = useState(false);
+  // REQ-205, 206 권한 없는 회의, 삭제된 회의 링크
+  const [accessNotice, setAccessNotice] = useState<AccessNoticeKind | null>(null);
   const [templateName, setTemplateName] = useState<string | null>(null);
   // REQ-089 줄마다 안건 (seq → 안건 id). 작성자가 고친 줄은 자동 분류로 덮지 않는다
   const [lineAgendas, setLineAgendas] = useState<Record<number, string | null>>({});
@@ -300,7 +304,12 @@ export default function MeetingRoomPage() {
     };
     load().catch((error: unknown) => {
       if (isCurrent) {
-        showError(error);
+        const notice = accessNoticeOf(error);
+        if (notice) {
+          setAccessNotice(notice);
+        } else {
+          showError(error);
+        }
       }
     });
     return () => {
@@ -408,6 +417,13 @@ export default function MeetingRoomPage() {
     },
   });
 
+  if (accessNotice) {
+    return (
+      <div className={styles.page}>
+        <AccessNotice kind={accessNotice} />
+      </div>
+    );
+  }
   if (!detail) {
     return (
       <div className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</div>

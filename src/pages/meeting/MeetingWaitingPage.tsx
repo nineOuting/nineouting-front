@@ -44,6 +44,8 @@ import MicPermissionDialog from './MicPermissionDialog';
 import StartingModal from './StartingModal';
 import TemplateDetailModal from './TemplateDetailModal';
 import TemplateGalleryModal from './TemplateGalleryModal';
+import AccessNotice from '../../components/AccessNotice';
+import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import styles from './MeetingWaitingPage.module.css';
 
 const ICON_SIZE = 20;
@@ -109,6 +111,8 @@ export default function MeetingWaitingPage() {
   const [micDialog, setMicDialog] = useState<'request' | 'denied' | null>(null);
   const [isCheckingMic, setIsCheckingMic] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  // REQ-205, 206 권한 없는 회의, 삭제된 회의 링크
+  const [accessNotice, setAccessNotice] = useState<AccessNoticeKind | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [materialCount, setMaterialCount] = useState(0);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -146,7 +150,12 @@ export default function MeetingWaitingPage() {
     };
     load().catch((error: unknown) => {
       if (isCurrent) {
-        setToast({ text: errorMessage(error), variant: 'error' });
+        const notice = accessNoticeOf(error);
+        if (notice) {
+          setAccessNotice(notice);
+        } else {
+          setToast({ text: errorMessage(error), variant: 'error' });
+        }
       }
     });
     return () => {
@@ -154,6 +163,13 @@ export default function MeetingWaitingPage() {
     };
   }, [meetingId]);
 
+  if (accessNotice) {
+    return (
+      <AppLayout className={styles.page} variant="compact">
+        <AccessNotice kind={accessNotice} />
+      </AppLayout>
+    );
+  }
   if (!meeting) {
     // 불러오는 동안에도 접힌 메뉴로 그린다 (같은 AppLayout이 이어서 쓰여 메뉴 열림 상태가 남는다)
     return (
