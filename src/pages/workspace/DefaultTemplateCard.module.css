@@ -1,42 +1,37 @@
-.card {
+/* 피그마 Page 8 SummaryBar의 DefaultTemplate */
+.inline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-3);
-  padding: var(--padding-card);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.texts {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-title-subtitle);
+  gap: var(--gap-inline);
   min-width: 0;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
 }
 
 .label {
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 .name {
   overflow: hidden;
-  font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .change {
   flex-shrink: 0;
-  font-size: var(--font-size-body-md);
+  height: 32px;
+  padding: 0 var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   color: var(--text-link);
+}
+
+.change:hover {
+  background: var(--neutral-ghost-hover);
 }
 
 .options {

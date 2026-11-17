@@ -31,3 +31,8 @@ export function folderSubtleColor(index?: number | null) {
 export function folderIconColor(index?: number | null) {
   return `var(--project-${keyOf(index)}-icon)`;
 }
+
+/** 폴더 카드 테두리, 나눔 줄 */
+export function folderBorderColor(index?: number | null) {
+  return `var(--project-${keyOf(index)}-border)`;
+}

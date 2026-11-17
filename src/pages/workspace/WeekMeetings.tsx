@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listCalendarMeetings, type CalendarMeeting } from '../../api/meeting';
 import type { FolderSummary } from '../../types/workspace';
-import { folderColor } from '../../utils/folderColor';
+import { folderIconColor, folderSubtleColor } from '../../utils/folderColor';
 import { addDays, startOfWeek, toIsoDate, toTime } from '../../utils/calendar';
-import { formatMeetingDate } from '../../utils/meetingFormat';
 import styles from './WeekMeetings.module.css';
 
 const DAYS_IN_WEEK = 7;
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+/** 2026-11-17T09:00 → 화 */
+const weekdayOf = (startAt: string) => WEEKDAYS[new Date(startAt.slice(0, 10) + 'T00:00:00').getDay()];
 
 interface WeekMeetingsProps {
   workspaceId: number;
@@ -39,6 +42,8 @@ export default function WeekMeetings({ workspaceId, folders }: WeekMeetingsProps
     };
   }, [workspaceId]);
 
+  const colorOf = (meeting: CalendarMeeting) => folders.find(({ folderId }) => folderId === meeting.folderId)?.color;
+
   if (meetings === null) {
     return null;
   }
@@ -56,16 +61,20 @@ export default function WeekMeetings({ workspaceId, folders }: WeekMeetingsProps
         <ul className={styles.list}>
           {meetings.map((meeting) => (
             <li key={meeting.meetingId}>
+              {/* 피그마 Page 8 MeetingCard: 날짜 상자(프로젝트 색) + 회의명, 프로젝트 · 시간 */}
               <Link to={meetingPath(meeting)} className={styles.card}>
                 <span
-                  className={styles.date}
-                  style={{ color: folderColor(folders.find(({ folderId }) => folderId === meeting.folderId)?.color) }}
+                  className={styles.dateBox}
+                  style={{ background: folderSubtleColor(colorOf(meeting)), color: folderIconColor(colorOf(meeting)) }}
                 >
-                  {formatMeetingDate(meeting.startAt.slice(0, 10))}
+                  <span className={styles.day}>{Number(meeting.startAt.slice(8, 10))}</span>
+                  <span className={styles.weekday}>{weekdayOf(meeting.startAt)}</span>
                 </span>
-                <span className={styles.name}>{meeting.title}</span>
-                <span className={styles.meta}>
-                  {meeting.folderName} · {toTime(meeting.startAt)} - {toTime(meeting.endAt)}
+                <span className={styles.texts}>
+                  <span className={styles.name}>{meeting.title}</span>
+                  <span className={styles.meta}>
+                    {meeting.folderName} · {toTime(meeting.startAt)}~{toTime(meeting.endAt)}
+                  </span>
                 </span>
               </Link>
             </li>

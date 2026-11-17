@@ -1,7 +1,9 @@
+/* 피그마 Page 8 UpcomingSection (69:9633) */
 .section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
+  padding: var(--spacing-5) 0;
 }
 
 .head {
@@ -11,9 +13,9 @@
 }
 
 .title {
-  font-size: var(--font-size-heading-sm);
+  font-size: var(--font-size-body-lg);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-heading-sm);
+  line-height: var(--line-height-body-lg);
   color: var(--text-primary);
 }
 
@@ -24,23 +26,22 @@
   color: var(--text-secondary);
 }
 
-/* 카드가 많으면 옆으로 넘긴다 */
 .list {
-  display: flex;
-  gap: var(--spacing-3);
-  overflow-x: auto;
-  padding-bottom: var(--spacing-1);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap-content);
 }
 
 .card {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  width: 220px;
-  padding: var(--spacing-4);
+  align-items: stretch;
+  gap: var(--spacing-3);
+  height: 100%;
+  padding: calc(var(--spacing-2) + var(--spacing-3));
   background: var(--bg-surface);
   border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: 1px 1px 2px rgb(0 0 0 / 10%);
   color: inherit;
   text-decoration: none;
 }
@@ -51,16 +52,40 @@
   background: var(--interactive-hover);
 }
 
-.date {
+.dateBox {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  border-radius: var(--radius-md);
+}
+
+.day {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-body-md);
+}
+
+.weekday {
   font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  color: var(--primary-default);
+  line-height: var(--line-height-caption);
+}
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gap-title-subtitle);
+  min-width: 0;
 }
 
 .name {
   overflow: hidden;
   font-size: var(--font-size-body-md);
   font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
   color: var(--text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -69,7 +94,8 @@
 .meta {
   overflow: hidden;
   font-size: var(--font-size-caption);
-  color: var(--text-secondary);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

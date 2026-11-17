@@ -59,15 +59,12 @@ export default function DefaultTemplateCard({ workspaceId, templateId, isOwner, 
   };
 
   return (
-    <section className={styles.card} aria-labelledby="default-template-title">
-      <div className={styles.texts}>
-        <h2 id="default-template-title" className={styles.label}>
-          회의록 기본 양식
-        </h2>
-        <span className={styles.name}>{name}</span>
-      </div>
+    // 피그마 Page 8 SummaryBar의 DefaultTemplate: "기본 양식 {이름} [변경]"
+    <span className={styles.inline}>
+      <span className={styles.label}>기본 양식</span>
+      <span className={styles.name}>{name}</span>
       {isOwner && (
-        <button type="button" className={styles.change} onClick={() => setPicked(currentId)}>
+        <button id="default-template-change" type="button" className={styles.change} onClick={() => setPicked(currentId)}>
           변경
         </button>
       )}
@@ -105,6 +102,6 @@ export default function DefaultTemplateCard({ workspaceId, templateId, isOwner, 
           </ul>
         </Dialog>
       )}
-    </section>
+    </span>
   );
 }

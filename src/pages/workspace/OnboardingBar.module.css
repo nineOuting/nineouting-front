@@ -1,0 +1,92 @@
+/* 피그마 Page 8 OnboardingChecklist */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-content);
+  padding: var(--spacing-3) var(--spacing-3) var(--spacing-3) var(--spacing-5);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.title {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.progress {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--gap-inline);
+}
+
+.track {
+  position: relative;
+  width: 120px;
+  height: 6px;
+  overflow: hidden;
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-full);
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--success-default);
+  border-radius: var(--radius-full);
+}
+
+.progressText {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 16px;
+  background: var(--border-default);
+}
+
+.next {
+  display: flex;
+  flex: 1;
+  gap: var(--gap-inline);
+  min-width: 0;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.nextLabel {
+  color: var(--text-tertiary);
+}
+
+.action {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 var(--button-md-padding-x);
+  background: var(--secondary-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-on-secondary);
+}
+
+.close {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--neutral-default);
+}

@@ -74,6 +74,15 @@
   --project-indigo-subtle: color-mix(in srgb, var(--project-indigo-default) 12%, white);
   --project-sky-subtle: #f0f6fe;
 
+  --project-red-border: color-mix(in srgb, var(--project-red-default) 30%, white);
+  --project-orange-border: color-mix(in srgb, var(--project-orange-default) 30%, white);
+  --project-yellow-border: color-mix(in srgb, var(--project-yellow-default) 30%, white);
+  --project-green-border: #d3e5d6;
+  --project-pink-border: #fcdbf0;
+  --project-purple-border: #e0d6f2;
+  --project-indigo-border: color-mix(in srgb, var(--project-indigo-default) 30%, white);
+  --project-sky-border: #d8eafc;
+
   --project-red-icon: #d0402f;
   --project-orange-icon: #d98200;
   --project-yellow-icon: #c9a800;

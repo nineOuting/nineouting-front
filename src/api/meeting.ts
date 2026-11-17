@@ -401,6 +401,7 @@ export async function listFolderMeetingRows(folderId: number): Promise<FolderMee
     meetingId: item.meetingId,
     title: item.title,
     date: item.startAt.slice(0, 10),
+    startAt: item.startAt,
     status: toFolderMeetingStatus(item.status, item.minutesStatus),
     writer: toMember(item.writer),
     attendees: item.attendees.map(toMember),
