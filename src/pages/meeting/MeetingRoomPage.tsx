@@ -426,7 +426,7 @@ export default function MeetingRoomPage() {
   }
   if (!detail) {
     return (
-      <div className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} />}</div>
+      <div className={styles.page}>{toast && <Toast message={toast} onClose={closeToast} position="top" />}</div>
     );
   }
 
@@ -746,7 +746,7 @@ export default function MeetingRoomPage() {
 
   return (
     <div className={styles.page}>
-      {toast && <Toast message={toast} onClose={closeToast} />}
+      {toast && <Toast message={toast} onClose={closeToast} position="top" />}
 
       {/* 디자인 Version02 Live 상단 바: 뒤로 가기, 회의명, 참여자 얼굴 / 회의 끝내기(작성자), 보기 전용(참석자) */}
       <header className={styles.topBar}>

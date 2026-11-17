@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listMinutesTemplates } from '../../api/minutes';
+import { listMinutesTemplates, shareTemplateToWorkspace } from '../../api/minutes';
 import { changeDefaultTemplate } from '../../api/workspace';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
@@ -47,8 +47,16 @@ export default function DefaultTemplateCard({ workspaceId, templateId, isOwner, 
     }
     setIsSaving(true);
     const next = picked === SERVICE_DEFAULT_TEMPLATE_ID ? null : picked;
+    const isMine = (id: number | null) => id !== null && templates.some((template) => template.templateId === id && !template.isDefault && !template.shared);
     try {
+      // REQ-199 (2026-11-17): 내 양식을 기본 양식으로 정하면 이 워크스페이스 멤버 모두 쓰게 공유하고, 바꾸면 예전 공유를 거둔다
+      if (isMine(next) && next !== null) {
+        await shareTemplateToWorkspace(next, workspaceId, true);
+      }
       await changeDefaultTemplate(workspaceId, next);
+      if (templateId !== null && templateId !== next && isMine(templateId)) {
+        await shareTemplateToWorkspace(templateId, workspaceId, false).catch(() => undefined);
+      }
       onChanged(next);
       setPicked(null);
     } catch (error) {

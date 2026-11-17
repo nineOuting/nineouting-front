@@ -51,7 +51,8 @@ export default function MinutesDocument({
   const paperRef = useRef<HTMLDivElement>(null);
   const pageHeight = (PAGE_HEIGHT * zoom) / 100;
   // 양식의 레이아웃·항목 설정을 문서에 그대로 쓴다 (양식이 지워졌으면 기본값)
-  const template = templates.find(({ templateId }) => templateId === minutes.templateId);
+  // 내 양식 목록에 없는 양식(다른 사람의 개인 양식)이면 회의록 응답에 함께 온 양식 설정을 쓴다
+  const template = templates.find(({ templateId }) => templateId === minutes.templateId) ?? minutes.template ?? undefined;
   const layout = template?.layout ?? DEFAULT_LAYOUT;
   const settingsOf = (title: string) => withItemDefaults(template?.items.find((item) => item.title === title)?.settings);
 

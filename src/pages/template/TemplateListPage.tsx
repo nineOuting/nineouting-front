@@ -49,7 +49,9 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
-  const menuItems = template.isDefault
+  // 기본 양식과 공유받은 양식(REQ-199)은 고칠 수 없고 복제만 된다
+  const isReadOnly = template.isDefault || Boolean(template.shared);
+  const menuItems = isReadOnly
     ? [{ label: '복제해서 내 양식 만들기', icon: copyIcon, onSelect: onDuplicate }]
     : [
         ...(onEdit ? [{ label: '수정', icon: editIcon, onSelect: onEdit }] : []),
@@ -62,8 +64,8 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
       <button
         type="button"
         className={styles.preview}
-        aria-label={`${template.name} ${template.isDefault ? '복제해서 만들기' : '수정'}`}
-        onClick={template.isDefault ? onDuplicate : onEdit}
+        aria-label={`${template.name} ${isReadOnly ? '복제해서 만들기' : '수정'}`}
+        onClick={isReadOnly ? onDuplicate : onEdit}
       >
         <span className={styles.paper} aria-hidden="true">
           <span className={styles.paperTitle} />
@@ -117,11 +119,11 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
           {template.description || template.items.map(({ title }) => title).join(', ')}
         </p>
         <p className={styles.metaRow}>
-          <span className={[styles.kind, template.isDefault ? styles.kindDefault : ''].filter(Boolean).join(' ')}>
-            {template.isDefault ? '기본 양식' : '내 양식'}
+          <span className={[styles.kind, isReadOnly ? styles.kindDefault : ''].filter(Boolean).join(' ')}>
+            {template.isDefault ? '기본 양식' : template.shared ? '공유 양식' : '내 양식'}
           </span>
           <span className={styles.meta}>
-            {template.isDefault ? '기본 제공' : modifiedLabel(template)}
+            {template.isDefault ? '기본 제공' : template.shared ? '워크스페이스 기본 양식' : modifiedLabel(template)}
           </span>
         </p>
       </div>
@@ -207,17 +209,18 @@ export default function TemplateListPage() {
       ? a.name.localeCompare(b.name, 'ko')
       : (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || b.templateId - a.templateId,
   );
-  const defaults = sorted.filter(({ isDefault }) => isDefault);
-  const mine = sorted.filter(({ isDefault }) => !isDefault);
+  // 공유받은 양식은 기본 양식 쪽에 함께 둔다 (내가 만든 양식이 아니다)
+  const defaults = sorted.filter(({ isDefault, shared }) => isDefault || shared);
+  const mine = sorted.filter(({ isDefault, shared }) => !isDefault && !shared);
 
   const renderCard = (template: MinutesTemplate) => (
     <TemplateCard
       key={template.templateId}
       template={template}
       onToggleFavorite={() => void toggleFavorite(template)}
-      onEdit={template.isDefault ? undefined : () => navigate(`/templates/${template.templateId}/edit`)}
+      onEdit={template.isDefault || template.shared ? undefined : () => navigate(`/templates/${template.templateId}/edit`)}
       onDuplicate={() => void duplicate(template)}
-      onDelete={template.isDefault ? undefined : () => setDeleting(template)}
+      onDelete={template.isDefault || template.shared ? undefined : () => setDeleting(template)}
     />
   );
 
