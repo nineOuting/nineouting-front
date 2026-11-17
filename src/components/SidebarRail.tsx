@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import { listMyWorkspaces } from '../api/workspace';
 import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/archive.svg';
-import helpIcon from '../assets/icons/help.svg';
 import homeIcon from '../assets/icons/home.svg';
 import settingsIcon from '../assets/icons/settings.svg';
 import expandIcon from '../assets/icons/sidebar-collapse.svg';
@@ -70,9 +69,6 @@ export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps)
         </NavLink>
       </div>
       <div className={styles.list}>
-        <NavLink to="/help" className={railClass} aria-label="도움말">
-          <Icon src={helpIcon} size={ICON_SIZE} />
-        </NavLink>
         <NavLink to="/settings" className={railClass} aria-label="설정">
           <Icon src={settingsIcon} size={ICON_SIZE} />
         </NavLink>

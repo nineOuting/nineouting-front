@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { errorMessage, isApiError } from '../../api/client';
+import { errorMessage } from '../../api/client';
 import { listFolderMeetingRows, listFolderPendingAgendas, restoreMeeting, trashMeeting } from '../../api/meeting';
 import {
   addFolderMember,
-  deleteFolder,
-  renameFolder,
-  setFavorite,
-  WORKSPACE_ERROR_CODES,
   getFolder,
   getWorkspace,
   leaveFolder,
@@ -36,10 +32,8 @@ import groupIcon from '../../assets/icons/group-add-sm.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
 import moveIcon from '../../assets/icons/folder-sm.svg';
-import starIcon from '../../assets/icons/star-outline.svg';
 import MoveMeetingModal from '../../components/MoveMeetingModal';
 import ActionMenu from '../workspace/ActionMenu';
-import FolderNameModal from '../workspace/FolderNameModal';
 import FolderMembersModal from './FolderMembersModal';
 import MeetingTable, { type MeetingSort, type SortKey } from './MeetingTable';
 import styles from './FolderPage.module.css';
@@ -47,8 +41,6 @@ import styles from './FolderPage.module.css';
 const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
-// MSG-031 (서버 FOLDER_NAME_DUPLICATED)
-const DUPLICATE_FOLDER_MESSAGE = '같은 이름의 폴더가 이미 있어요. 다른 이름을 입력해 주세요.';
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -67,8 +59,6 @@ function sortOf(params: URLSearchParams): MeetingSort {
 type Dialog =
   | { type: 'members' }
   | { type: 'leave' }
-  | { type: 'rename' }
-  | { type: 'delete' }
   | { type: 'move'; meeting: FolderMeeting };
 
 /** 회의 상태에 따라 대기 화면·회의방·회의록으로 간다 */
@@ -94,7 +84,6 @@ export default function FolderPage() {
   const [isFolderMenuOpen, setIsFolderMenuOpen] = useState(false);
   const folderMenuRef = useRef<HTMLButtonElement>(null);
   // 즐겨찾기 버튼은 스스로 상태를 불러오므로 메뉴에서 바꾸면 다시 그린다
-  const [favoriteKey, setFavoriteKey] = useState(0);
   const [folder, setFolder] = useState<FolderInfo | null>(null);
   const [meetings, setMeetings] = useState<FolderMeeting[]>([]);
   const [members, setMembers] = useState<FolderMember[]>([]);
@@ -221,33 +210,6 @@ export default function FolderPage() {
   ];
 
   // REQ-153 폴더 메뉴의 [즐겨찾기에 추가]
-  const addFavorite = async () => {
-    if (!folder) {
-      return;
-    }
-    try {
-      await setFavorite({ type: 'folder', workspaceId: folder.workspaceId, folderId: folder.folderId }, true);
-      setFavoriteKey((value) => value + 1);
-      setToast({ text: '즐겨찾기에 추가했어요.', variant: 'success' });
-    } catch (error) {
-      showError(error);
-    }
-  };
-
-  // REQ-058 폴더 삭제 (쓰레기통으로)
-  const removeFolder = async () => {
-    closeDialog();
-    if (!folder) {
-      return;
-    }
-    try {
-      await deleteFolder(folder.folderId);
-      navigate(`/workspaces/${folder.workspaceId}`, { replace: true });
-    } catch (error) {
-      showError(error);
-    }
-  };
-
   const addMembers = async (userIds: number[]) => {
     try {
       for (const userId of userIds) {
@@ -307,13 +269,12 @@ export default function FolderPage() {
           <div className={styles.titleGroup}>
             <h1 className={styles.title}>{folder.name}</h1>
             <FavoriteButton
-              key={favoriteKey}
               target={{ type: 'folder', workspaceId: folder.workspaceId, folderId: folder.folderId }}
               name={folder.name}
               onError={(text) => setToast({ text, variant: 'error' })}
             />
-            {/* REQ-165 폴더 ⋮ 메뉴 */}
-            <span className={styles.menuAnchor}>
+            {/* REQ-165 폴더 ⋮ 메뉴. 보일 항목이 없으면(기본 폴더의 일반 멤버) 숨긴다 */}
+            {(canManageMembers || !folder.isDefault) && (<span className={styles.menuAnchor}>
               <button
                 ref={folderMenuRef}
                 type="button"
@@ -331,18 +292,13 @@ export default function FolderPage() {
                   anchorRef={folderMenuRef}
                   onClose={() => setIsFolderMenuOpen(false)}
                   items={[
-                    // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정, 기본 폴더 이름은 워크스페이스 소유자)
-                    ...(folder.isOwner || isWorkspaceOwner
-                      ? [{ label: '폴더 이름 바꾸기', icon: editIcon, onSelect: () => setDialog({ type: 'rename' }) }]
+                    // 2026-11-17 기획: 이름 바꾸기, 즐겨찾기, 삭제는 워크스페이스 화면의 폴더 카드 ⋮ 메뉴로 옮겼다
+                    ...(canManageMembers
+                      ? [{ label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() }]
                       : []),
-                    { label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() },
-                    { label: '즐겨찾기에 추가', icon: starIcon, onSelect: () => void addFavorite() },
                     // 워크스페이스 소유자는 모든 폴더에 들어가므로 나갈 수 없다
                     ...(!folder.isDefault && !isWorkspaceOwner
                       ? [{ label: '폴더 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) }]
-                      : []),
-                    ...((folder.isOwner || isWorkspaceOwner) && !folder.isDefault
-                      ? [{ label: '폴더 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setDialog({ type: 'delete' }) }]
                       : []),
                   ].map((item) => ({
                     ...item,
@@ -353,7 +309,7 @@ export default function FolderPage() {
                   }))}
                 />
               )}
-            </span>
+            </span>)}
           </div>
           {/* REQ-050 폴더 멤버 모두 새 회의를 만들 수 있다 */}
           <button
@@ -508,36 +464,6 @@ export default function FolderPage() {
             setToast({ text: `'${dialog.meeting.title}'을 ${folderName} 폴더로 옮겼어요.`, variant: 'success' });
           }}
           onClose={closeDialog}
-        />
-      )}
-      {dialog?.type === 'rename' && (
-        <FolderNameModal
-          title="폴더 이름 바꾸기"
-          description="새 폴더 이름을 입력해 주세요"
-          submitLabel="저장"
-          initialName={folder.name}
-          siblingNames={[]}
-          onSubmit={async (name) => {
-            await renameFolder(folder.folderId, name);
-            setFolder({ ...folder, name });
-            closeDialog();
-          }}
-          toErrorMessage={(error) =>
-            isApiError(error, WORKSPACE_ERROR_CODES.folderNameDuplicated) ? DUPLICATE_FOLDER_MESSAGE : errorMessage(error)
-          }
-          onClose={closeDialog}
-        />
-      )}
-      {dialog?.type === 'delete' && (
-        // MSG-046
-        <ConfirmDialog
-          title="폴더를 삭제할까요?"
-          message={'폴더 안의 회의와 회의록도 함께 쓰레기통으로 이동하며\n3개월 안에 복구할 수 있어요.'}
-          cancelLabel="취소"
-          confirmLabel="삭제"
-          isDanger
-          onCancel={closeDialog}
-          onConfirm={() => void removeFolder()}
         />
       )}
       {dialog?.type === 'leave' &&
