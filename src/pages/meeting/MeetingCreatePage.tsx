@@ -532,7 +532,7 @@ export default function MeetingCreatePage() {
                       onClose={closeMenu}
                     />
                   )}
-                  <span className={styles.helper}>같은 워크스페이스 멤버 중에서 골라요</span>
+                  <span className={styles.helper}>프로젝트 멤버 중에서 골라요</span>
                   <MemberChips members={form.attendees} onRemove={toggleAttendee} />
                 </div>
 
