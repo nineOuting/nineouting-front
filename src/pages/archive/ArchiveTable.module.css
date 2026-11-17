@@ -1,30 +1,22 @@
-/* 디자인 ArchiveTable: 회색 머리줄, 행 사이 선 */
+/* 디자인 Page 9 ArchivePage 표: 회색 머리줄, 줄 높이 52px, 줄 사이 선 (바깥 테두리는 감싼 카드가 그린다) */
 .table {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .row {
   display: flex;
   align-items: center;
-  padding: var(--spacing-3) var(--spacing-4);
+  gap: var(--spacing-4);
+  min-height: 52px;
+  padding: 0 var(--spacing-4);
   border-bottom: var(--border-width-default) solid var(--border-default);
 }
 
-.row:last-child {
-  border-bottom: none;
-}
-
 .head {
-  padding: var(--spacing-2) var(--spacing-4);
+  min-height: 40px;
   background: var(--bg-surface-muted);
   font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-caption);
   color: var(--text-secondary);
 }
@@ -52,51 +44,46 @@
   white-space: nowrap;
 }
 
-.folder,
-.location {
+.folder {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2);
+  width: 152px;
   min-width: 0;
 }
 
-.folder {
-  width: 140px;
-}
-
-.location {
-  width: 120px;
-}
-
-.item .folder,
-.item .location {
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
-  color: var(--text-secondary);
+.folderIcon {
+  display: flex;
+  flex-shrink: 0;
 }
 
 .date {
-  width: 120px;
-}
-
-.item .date {
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  color: var(--text-primary);
+  width: 128px;
 }
 
 .people {
-  width: 128px;
+  width: 56px;
+}
+
+.location {
+  width: 112px;
+}
+
+.item .folder,
+.item .date,
+.item .people,
+.item .location {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
 .action {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--spacing-1);
   width: 64px;
-}
-
-.mutedIcon {
-  color: var(--neutral-default);
 }
 
 .ellipsis {
@@ -124,12 +111,4 @@
 .menu {
   right: 0;
   left: auto;
-}
-
-.hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
 }

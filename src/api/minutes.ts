@@ -63,9 +63,12 @@ export interface ArchiveQuery {
   locations: string[];
   attendeeIds: number[];
   sort: 'LATEST' | 'OLDEST';
+  /** 폴더 탭에서 고른 폴더. 없으면 전체 */
+  folderId?: number;
 }
 
-const ARCHIVE_PAGE_SIZE = 20;
+/** REQ-168 한 페이지 20건 */
+export const ARCHIVE_PAGE_SIZE = 20;
 
 /** REQ-053~055, 029~030 워크스페이스에서 내가 들어갈 수 있는 모든 폴더의 회의록 */
 export async function listWorkspaceMinutes(workspaceId: number, query: ArchiveQuery, page: number) {
@@ -81,8 +84,16 @@ export async function listWorkspaceMinutes(workspaceId: number, query: ArchiveQu
   }
   query.locations.forEach((location) => params.append('location', location));
   query.attendeeIds.forEach((attendeeId) => params.append('attendeeId', String(attendeeId)));
+  if (query.folderId !== undefined) {
+    params.set('folderId', String(query.folderId));
+  }
   const result = await request<ArchivePageResponse>('GET', `/api/workspaces/${workspaceId}/minutes?${params}`);
   return { ...result, items: result.items.map((item) => ({ ...item, attendees: item.attendees.map(toMember) })) };
+}
+
+/** 아카이브 폴더 탭의 회의록 수 (검색어, 필터와 상관없이 전체). 내가 들어갈 수 있는 폴더만 온다 */
+export function listArchiveFolderCounts(workspaceId: number) {
+  return request<{ folderId: number; minutesCount: number }[]>('GET', `/api/workspaces/${workspaceId}/minutes/folder-counts`);
 }
 
 /** REQ-055 장소 필터의 선택지 (가나다순) */
@@ -97,6 +108,8 @@ export interface ViewedMinutes {
   title: string;
   meetingStartAt: string;
   viewedAt: string;
+  folderId: number;
+  folderName: string;
 }
 
 export function listViewedMinutes(workspaceId: number, size: number) {
