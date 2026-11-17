@@ -31,9 +31,10 @@
   color: var(--status-pending);
 }
 
+/* REQ-124 미결은 주황 (2026-11-17 기획 결정). 결정할 사항의 미결 표시와 같은 색 */
 .undecided {
-  background: var(--status-undecided-subtle);
-  color: var(--status-undecided);
+  background: var(--warning-subtle, #fff4e6);
+  color: var(--warning-default, #e8590c);
 }
 
 .decisionCheck {

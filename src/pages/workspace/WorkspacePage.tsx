@@ -18,6 +18,7 @@ import {
   markLastVisited,
   removeWorkspaceMember,
   renameFolder,
+  setFavorite,
   transferWorkspaceOwnership,
   updateWorkspace,
   WORKSPACE_ERROR_CODES,
@@ -28,6 +29,7 @@ import arrowDownIcon from '../../assets/icons/arrow-down.svg';
 import folderIcon from '../../assets/icons/folder-md.svg';
 import groupAddIcon from '../../assets/icons/group-add.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
+import starIcon from '../../assets/icons/star-outline.svg';
 import AppLayout from '../../components/AppLayout';
 import AvatarStack from '../../components/AvatarStack';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -96,6 +98,16 @@ export default function WorkspacePage() {
   const isOwner = Boolean(workspace?.isOwner);
   const notice = (text: string) => setToast({ text, variant: 'info' });
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
+
+  const addFavorite = async (folder: FolderSummary) => {
+    closeFolderMenu();
+    try {
+      await setFavorite({ type: 'folder', workspaceId: id, folderId: folder.folderId }, true);
+      setToast({ text: '즐겨찾기에 추가했어요.', variant: 'success' });
+    } catch (error) {
+      showError(error);
+    }
+  };
 
   useEffect(() => {
     let isCurrent = true;
@@ -319,8 +331,9 @@ export default function WorkspacePage() {
                 </button>
                 <FolderMenu
                   folder={folder}
-                  // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정)
+                  // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정). 즐겨찾기는 모두
                   canManage={isOwner || (myUserId !== null && folder.ownerUserId === myUserId)}
+                  onFavorite={() => void addFavorite(folder)}
                   isOpen={menuFolderId === folder.folderId}
                   onToggle={() => setMenuFolderId((current) => (current === folder.folderId ? null : folder.folderId))}
                   onClose={closeFolderMenu}
@@ -484,23 +497,27 @@ export default function WorkspacePage() {
 
 interface FolderMenuProps {
   folder: FolderSummary;
-  /** 이름 바꾸기, 삭제를 할 수 있는지. 없으면 더보기 버튼을 숨긴다 */
+  /** 이름 바꾸기, 삭제를 할 수 있는지 */
   canManage: boolean;
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
   onRename: () => void;
   onDelete: () => void;
+  onFavorite: () => void;
 }
 
-/** 폴더 카드 오른쪽 위 더보기. 기본 폴더는 지울 수 없다 (REQ-044) */
-function FolderMenu({ folder, canManage, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
+/**
+ * REQ-165 폴더 카드 오른쪽 위 더보기: 이름 바꾸기, 즐겨찾기에 추가, 폴더 삭제 (2026-11-17 기획, 폴더 화면 ⋮ 메뉴에서 옮김).
+ * 기본 폴더는 지울 수 없다 (REQ-044)
+ */
+function FolderMenu({ folder, canManage, isOpen, onToggle, onClose, onRename, onDelete, onFavorite }: FolderMenuProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
-  if (!canManage) {
-    return null;
-  }
-  const items = [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }];
-  if (!folder.isDefault) {
+  const items = [
+    ...(canManage ? [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }] : []),
+    { label: '즐겨찾기에 추가', icon: starIcon, onSelect: onFavorite, isDanger: false },
+  ];
+  if (canManage && !folder.isDefault) {
     items.push({ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true });
   }
 

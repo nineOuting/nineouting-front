@@ -6,7 +6,6 @@ import archiveIcon from '../assets/icons/archive.svg';
 import arrowDownIcon from '../assets/icons/arrow-down.svg';
 import arrowUpIcon from '../assets/icons/arrow-up.svg';
 import folderIcon from '../assets/icons/folder-sm.svg';
-import helpIcon from '../assets/icons/help.svg';
 import homeIcon from '../assets/icons/home.svg';
 import settingsIcon from '../assets/icons/settings.svg';
 import collapseIcon from '../assets/icons/sidebar-collapse.svg';
@@ -149,10 +148,6 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
         </div>
       </div>
       <div className={styles.footer}>
-        <NavLink to="/help" className={subMenuClass}>
-          <MenuIcon src={helpIcon} size={SUB_ICON_SIZE} />
-          <span className={styles.text}>도움말</span>
-        </NavLink>
         <NavLink to="/settings" className={subMenuClass}>
           <MenuIcon src={settingsIcon} size={SUB_ICON_SIZE} />
           <span className={styles.text}>설정</span>

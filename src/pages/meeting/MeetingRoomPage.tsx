@@ -29,6 +29,7 @@ import {
   type BoardEndSnapshot,
   type MeetingDetailResponse,
 } from '../../api/meeting';
+import { listMinutesTemplates } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import stopIcon from '../../assets/icons/stop.svg';
@@ -45,7 +46,7 @@ import Toast, { type ToastMessage } from '../../components/Toast';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
 import { SttStream } from '../../meeting/SttStream';
 import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
-import type { DecisionPoint, RoomAgenda, RoomSummaryItem, RoomTodo, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
+import type { DecisionPoint, RoomAgenda, RoomTodo, SuggestedAgenda, TranscriptLine } from '../../types/meetingRoom';
 import AddAgendaModal from './room/AddAgendaModal';
 import AgendaFocus from './room/AgendaFocus';
 import AgendaNav from './room/AgendaNav';
@@ -56,7 +57,6 @@ import EvidencePanel from './room/EvidencePanel';
 import { AgendaSuggestion, OffTopicNotice } from './room/RoomNotices';
 import {
   applyBoard,
-  summaryAgendas,
   elapsedSecondsOf,
   mergeTranscript,
   removeTranscript,
@@ -113,10 +113,10 @@ export default function MeetingRoomPage() {
   const [endStep, setEndStep] = useState<EndStep | null>(null);
   const [leftover, setLeftover] = useState<BoardEndSnapshot | null>(null);
   const [todaySummary, setTodaySummary] = useState<BoardEndSnapshot | null>(null);
-  const [carriedIds, setCarriedIds] = useState<string[]>([]);
   const [isEndBusy, setIsEndBusy] = useState(false);
   // REQ-097 작성자가 아닌 참석자가 오늘 회의 요약 창을 닫았는지 (요약이 다시 오면 다시 연다)
   const [isViewerSummaryClosed, setIsViewerSummaryClosed] = useState(false);
+  const [templateName, setTemplateName] = useState<string | null>(null);
   // REQ-089 줄마다 안건 (seq → 안건 id). 작성자가 고친 줄은 자동 분류로 덮지 않는다
   const [lineAgendas, setLineAgendas] = useState<Record<number, string | null>>({});
   const correctedSeqsRef = useRef(new Set<number>());
@@ -279,6 +279,16 @@ export default function MeetingRoomPage() {
       }
       const roomAgendas = loaded.agendas.map(toRoomAgenda);
       setDetail(loaded);
+      // MSG-083 회의를 끝낼 때 어떤 양식으로 회의록을 만드는지 보여 준다
+      if (loaded.templateId !== null) {
+        listMinutesTemplates()
+          .then((templates) => {
+            if (isCurrent) {
+              setTemplateName(templates.find(({ templateId }) => templateId === loaded.templateId)?.name ?? null);
+            }
+          })
+          .catch(() => undefined);
+      }
       setIsWriter(loaded.writer.userId === me.userId);
       setAgendas(roomAgendas);
       // 처음에는 고르지 않은 상태로 두어 지금 논의 중인 안건을 따라간다 (focusedAgenda)
@@ -438,12 +448,11 @@ export default function MeetingRoomPage() {
       showError(error);
     }
   };
-  // REQ-093·096 끝내기 요청 뒤 남은 안건 목록이 오면: 비었으면 바로 오늘 회의 요약, 아니면 목록
+  // REQ-093·096 끝내기 요청 뒤 남은 안건 목록이 오면: 비었으면 바로 회의록 양식 확인(MSG-083), 아니면 목록
   const shownEndStep: EndStep | null =
-    endStep === 'waiting' && leftover ? (leftover.agendas.length === 0 ? 'summary' : 'leftover') : endStep;
-  // REQ-097 다른 참석자도 작성자가 끝내기를 누르면 같은 요약을 본다 (읽기만)
-  const viewerEndStep: EndStep | null =
-    !isWriter && isLive && (leftover || todaySummary) ? (todaySummary ? 'summary' : 'leftover') : null;
+    endStep === 'waiting' && leftover ? (leftover.agendas.length === 0 ? 'confirm' : 'leftover') : endStep;
+  // 다른 참석자는 작성자가 끝내기를 누르면 정리 중이라는 안내를 본다
+  const viewerEndStep: EndStep | null = !isWriter && isLive && (leftover || todaySummary) ? 'waiting' : null;
   const currentAgenda =
     agendas.find(({ id }) => id === currentAgendaId) ?? agendas.find(({ status }) => status === 'discussing');
   // 고른 안건이 없으면 지금 논의 중인 안건을 보여 주고, 논의 중인 안건이 바뀌면 함께 바뀐다
@@ -547,25 +556,6 @@ export default function MeetingRoomPage() {
     }
   };
 
-  /** REQ-097 요약 문장 고치기. 고친 보드가 회의방으로 다시 온다 */
-  const saveSummaryItem = async (agendaId: string, item: RoomSummaryItem, text: string) => {
-    const before = agendas.find(({ id }) => id === agendaId);
-    if (!before) {
-      return;
-    }
-    const replace = (items: RoomSummaryItem[]) =>
-      setAgendas((prev) =>
-        prev.map((agenda) => (agenda.id === agendaId ? { ...agenda, summaryItems: items, summary: items.map((one) => one.text) } : agenda)),
-      );
-    replace((before.summaryItems ?? []).map((one) => (one.id === item.id ? { ...one, text } : one)));
-    try {
-      await editAgendaItem(meetingIdNumber, 'summary', item.id, { agendaId: Number(agendaId), text, evidenceSeqs: item.evidenceSeqs });
-    } catch (error) {
-      showError(error);
-      replace(before.summaryItems ?? []);
-    }
-  };
-
   /** REQ-097 할 일, 담당자, 기한 고치기. 담당자 이름을 바꾸면 명단과 다시 맞추게 사용자 번호는 비운다 */
   const saveTodo = async (agendaId: string, todo: RoomTodo, change: TodoChange) => {
     const before = agendas.find(({ id }) => id === agendaId);
@@ -634,7 +624,6 @@ export default function MeetingRoomPage() {
     // 이어서 논의하기 전의 목록·요약이 남아 있으면 새로 정리한 값이 오기 전에 보이므로 비운다
     setLeftover(null);
     setTodaySummary(null);
-    setCarriedIds([]);
     setEndStep('waiting');
     try {
       await requestMeetingEnd(meetingIdNumber);
@@ -657,15 +646,14 @@ export default function MeetingRoomPage() {
     }
   };
 
-  /** REQ-094 고른 안건을 다음 회의로 넘기고 오늘 회의 요약으로 */
+  /** REQ-094 고른 안건을 다음 회의로 넘기고 회의록 양식 확인으로 */
   const carryOver = async (agendaIds: string[]) => {
     setIsEndBusy(true);
     try {
       if (agendaIds.length > 0) {
         await carryOverAgendas(meetingIdNumber, agendaIds.map(Number));
       }
-      setCarriedIds(agendaIds);
-      setEndStep('summary');
+      setEndStep('confirm');
     } catch (error) {
       showError(error);
     } finally {
@@ -771,7 +759,7 @@ export default function MeetingRoomPage() {
         <div className={styles.topRight}>
           {viewerEndStep && isViewerSummaryClosed && (
             <Button variant="secondary" size="md" onClick={() => setIsViewerSummaryClosed(false)}>
-              오늘 회의 요약 보기
+              회의 정리 상황 보기
             </Button>
           )}
           {isWriter && isLive ? (
@@ -1062,16 +1050,11 @@ export default function MeetingRoomPage() {
           key={shownEndStep}
           step={shownEndStep}
           leftover={leftover ? snapshotAgendas(agendas, leftover) : []}
-          summary={todaySummary ? summaryAgendas(agendas, todaySummary) : null}
-          carriedIds={carriedIds}
+          templateName={templateName}
           isBusy={isEndBusy || isEnding}
           onContinue={() => void continueMeeting()}
           onCarryOver={(agendaIds) => void carryOver(agendaIds)}
           onFinish={() => void endMeeting()}
-          onChangeDecisionStatus={(agendaId, decisionId, status) => void changeDecisionStatus(agendaId, decisionId, status)}
-          onSaveDecision={(decisionId, text) => void saveDecision(decisionId, text)}
-          onSaveSummary={(agendaId, item, text) => void saveSummaryItem(agendaId, item, text)}
-          onSaveTodo={(agendaId, todo, change) => void saveTodo(agendaId, todo, change)}
         />
       )}
       {viewerEndStep && !isViewerSummaryClosed && (
@@ -1080,8 +1063,7 @@ export default function MeetingRoomPage() {
           isViewer
           step={viewerEndStep}
           leftover={[]}
-          summary={todaySummary ? summaryAgendas(agendas, todaySummary) : null}
-          carriedIds={[]}
+          templateName={null}
           isBusy={false}
           onContinue={() => undefined}
           onCarryOver={() => undefined}
