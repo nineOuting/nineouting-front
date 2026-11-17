@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { requestPasswordReset, verifyPasswordReset } from '../../api/auth';
 import { errorMessage, isApiError } from '../../api/client';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
+import CodeInput from '../../components/CodeInput';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import Icon from '../../components/Icon';
 import timerIcon from '../../assets/icons/timer.svg';
@@ -30,7 +31,6 @@ export default function PasswordVerifyPage() {
   const navigate = useNavigate();
   const email = (useLocation().state as { email?: string } | null)?.email;
   const countdown = useCountdown();
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [digits, setDigits] = useState<string[]>(EMPTY_CODE);
   const [toast, setToast] = useState<ToastMessage | null>(CODE_SENT_TOAST);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,36 +63,8 @@ export default function PasswordVerifyPage() {
 
   const isComplete = digits.every(Boolean) && countdown.remaining > 0 && !isSubmitting && !codeLock.isLocked;
 
-  const focusInput = (index: number) => inputRefs.current[index]?.focus();
-
-  const handleChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(-1);
-    setDigits((prev) => prev.map((current, i) => (i === index ? digit : current)));
-    if (digit && index < VERIFICATION_CODE_LENGTH - 1) {
-      focusInput(index + 1);
-    }
-  };
-
-  const handleKeyDown = (index: number, event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Backspace' && !digits[index] && index > 0) {
-      focusInput(index - 1);
-    }
-  };
-
-  const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
-    const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, VERIFICATION_CODE_LENGTH);
-    if (!pasted) {
-      return;
-    }
-    event.preventDefault();
-    setDigits(EMPTY_CODE.map((_, i) => pasted[i] ?? ''));
-    focusInput(Math.min(pasted.length, VERIFICATION_CODE_LENGTH - 1));
-  };
-
-  const resetDigits = () => {
-    setDigits(EMPTY_CODE);
-    focusInput(0);
-  };
+  // 칸이 모두 비면 CodeInput이 첫 칸에 커서를 둔다
+  const resetDigits = () => setDigits(EMPTY_CODE);
 
   const resendCode = async () => {
     setIsSubmitting(true);
@@ -141,31 +113,11 @@ export default function PasswordVerifyPage() {
             </button>
             <div className={auth.titleGroup}>
               <h1 className={auth.displayTitle}>인증 번호 입력</h1>
-              <p className={auth.subtitle}>{`${email}로 발송된 인증 코드를 입력해 주세요`}</p>
+              <p className={auth.subtitle}>{`${email}으로 보낸\n6자리 인증 번호를 입력해 주세요`}</p>
             </div>
           </div>
           <div className={styles.codeGroup}>
-            <div className={styles.codeInputs}>
-              {digits.map((digit, index) => (
-                <input
-                  // 자리 순서가 바뀌지 않으므로 index를 key로 쓴다
-                  key={index}
-                  ref={(element) => {
-                    inputRefs.current[index] = element;
-                  }}
-                  className={styles.codeInput}
-                  inputMode="numeric"
-                  autoComplete={index === 0 ? 'one-time-code' : 'off'}
-                  maxLength={1}
-                  aria-label={`인증 번호 ${index + 1}번째 자리`}
-                  value={digit}
-                  disabled={codeLock.isLocked}
-                  onChange={(event) => handleChange(index, event.target.value)}
-                  onKeyDown={(event) => handleKeyDown(index, event)}
-                  onPaste={handlePaste}
-                />
-              ))}
-            </div>
+            <CodeInput digits={digits} disabled={codeLock.isLocked} onChange={setDigits} />
             {lockMessage && (
               <p role="alert" className={styles.error}>
                 {lockMessage}
@@ -173,7 +125,7 @@ export default function PasswordVerifyPage() {
             )}
             <div className={styles.timer} aria-live="polite">
               <Icon src={timerIcon} size={TIMER_ICON_SIZE} />
-              <span>{formatSeconds(countdown.remaining, true)}</span>
+              <span>남은 시간 {formatSeconds(countdown.remaining, true)}</span>
             </div>
           </div>
           <div className={styles.actions}>

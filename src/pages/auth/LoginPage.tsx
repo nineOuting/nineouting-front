@@ -4,7 +4,9 @@ import { login } from '../../api/auth';
 import { isApiError } from '../../api/client';
 import AuthLayout from '../../components/AuthLayout';
 import Button from '../../components/Button';
+import infoIcon from '../../assets/icons/info.svg';
 import Checkbox from '../../components/Checkbox';
+import Icon from '../../components/Icon';
 import PasswordField from '../../components/PasswordField';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
@@ -13,10 +15,14 @@ import { useTimedLock } from '../../hooks/useTimedLock';
 import auth from './auth.module.css';
 import styles from './LoginPage.module.css';
 
+const INFO_ICON_SIZE = 16;
+
 /** REQ-005~009 로그인 */
 export default function LoginPage() {
   // RequireAuth가 보낸 원래 화면. 없으면 홈
   const redirectTo = (useLocation().state as { from?: string } | null)?.from ?? '/home';
+  // REQ-015, 127 초대 링크로 들어왔으면 초대 안내를 함께 보여 준다 (디자인 Page 9 InviteLandingPage)
+  const isInvite = /^\/(invites|invitations)\//.test(redirectTo);
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
@@ -67,10 +73,28 @@ export default function LoginPage() {
     <AuthLayout>
       {toast && <Toast message={toast} onClose={closeToast} />}
       <form className={auth.card} onSubmit={handleSubmit} noValidate>
-        <div className={auth.titleGroup}>
-          <h1 className={auth.displayTitle}>로그인</h1>
-          <p className={auth.subtitle}>nep!nep!에 다시 오신 걸 환영해요</p>
-        </div>
+        {isInvite ? (
+          <>
+            {/* 로그인 전에는 워크스페이스 이름과 초대한 사람을 알 수 없어 일반 문구로 보여 준다 */}
+            <div className={auth.titleGroup}>
+              <h1 className={auth.displayTitle}>워크스페이스에 초대받았어요</h1>
+              <p className={auth.subtitle}>함께 회의를 기록하자는 초대예요.</p>
+            </div>
+            <div className={styles.inviteNotice}>
+              <Icon src={infoIcon} size={INFO_ICON_SIZE} className={styles.inviteIcon} />
+              <p>
+                <strong className={styles.inviteStrong}>로그인하면 참여 여부를 한 번 더 확인해요.</strong>
+                <br />
+                계정이 없다면 회원가입해 주세요.
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className={auth.titleGroup}>
+            <h1 className={auth.displayTitle}>로그인</h1>
+            <p className={auth.subtitle}>nep!nep!에 다시 오신 걸 환영해요</p>
+          </div>
+        )}
         <div className={styles.fields}>
           <TextField
             label="이메일"
