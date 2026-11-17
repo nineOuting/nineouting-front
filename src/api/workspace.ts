@@ -36,6 +36,8 @@ export interface WorkspaceDetail {
   memberCount: number;
   /** REQ-199 회의록 기본 양식. null이면 서비스 기본 양식 */
   defaultTemplateId: number | null;
+  /** REQ-198 소유자가 멤버의 폴더 접근 권한을 한 번이라도 정했는지 */
+  folderAccessConfigured: boolean;
 }
 
 interface FolderNode {
@@ -102,6 +104,7 @@ export async function getWorkspace(workspaceId: number): Promise<WorkspaceDetail
     myRole: WorkspaceRole;
     memberCount: number;
     defaultTemplateId?: number | null;
+    folderAccessConfigured?: boolean;
   }>('GET', `/api/workspaces/${workspaceId}`);
   return {
     workspaceId: detail.workspaceId,
@@ -110,6 +113,7 @@ export async function getWorkspace(workspaceId: number): Promise<WorkspaceDetail
     isOwner: detail.myRole === 'OWNER',
     memberCount: detail.memberCount,
     defaultTemplateId: detail.defaultTemplateId ?? null,
+    folderAccessConfigured: detail.folderAccessConfigured ?? false,
   };
 }
 

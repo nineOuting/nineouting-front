@@ -220,6 +220,8 @@ export default function WorkspacePage() {
     try {
       await changeFolderAccess(id, userId, folderAccess);
       setMembers((prev) => prev.map((member) => (member.userId === userId ? { ...member, folderAccess } : member)));
+      // REQ-198 워크스페이스 시작하기의 폴더 권한 정하기를 마친다
+      setWorkspace((prev) => prev && { ...prev, folderAccessConfigured: true });
     } catch (error) {
       showError(error);
     }
@@ -391,9 +393,9 @@ export default function WorkspacePage() {
               onAction: () => document.getElementById('default-template-change')?.click(),
             },
             {
-              // 완료 기준은 기획 확인 중 (모든 폴더 권한을 준 멤버가 있으면 정한 것으로 본다)
+              // 멤버 권한 관리에서 멤버의 폴더 접근 권한(모든 폴더 / 초대된 폴더만)을 한 번이라도 정하면 끝 (2026-11-17 결정)
               label: '폴더 권한 정하기',
-              done: members.some(({ folderAccess }) => folderAccess === 'all'),
+              done: workspace.folderAccessConfigured,
               actionLabel: '권한 설정',
               onAction: () => setDialog({ type: 'members' }),
             },
