@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { errorMessage } from '../../api/client';
+import { errorMessage, isApiError } from '../../api/client';
 import {
   discardPendingAgenda,
   getFolderMeetingStats,
   listFolderMeetingRows,
   listFolderPendingAgendas,
+  MEETING_ERROR_CODES,
+  PENDING_AGENDA_UNAVAILABLE_MESSAGE,
   restoreMeeting,
   restorePendingAgenda,
   trashMeeting,
@@ -172,6 +174,10 @@ export default function FolderPage() {
       };
       setToast({ text: '남은 안건에서 삭제했어요', variant: 'info', action: { label: '되돌리기', onClick: () => void undo() } });
     } catch (error) {
+      if (isApiError(error, MEETING_ERROR_CODES.pendingAgendaUnavailable)) {
+        setToast({ text: PENDING_AGENDA_UNAVAILABLE_MESSAGE, variant: 'error' });
+        return;
+      }
       showError(error);
     }
   };
@@ -275,6 +281,8 @@ export default function FolderPage() {
       for (const userId of userIds) {
         await addFolderMember(id, userId);
       }
+      // MSG-096
+      setToast({ text: `멤버 ${userIds.length}명을 프로젝트에 추가했어요.`, variant: 'success' });
     } finally {
       await reloadMembers();
     }

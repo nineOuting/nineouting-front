@@ -6,7 +6,11 @@ import { putToStorage, request } from './client';
 
 export const MEETING_ERROR_CODES = {
   alreadyStarted: 'MEETING_ALREADY_STARTED',
+  pendingAgendaUnavailable: 'PENDING_AGENDA_UNAVAILABLE',
 } as const;
+
+/** MSG-089 다음 회의에 불러온 남은 안건을 지우려 할 때 */
+export const PENDING_AGENDA_UNAVAILABLE_MESSAGE = '다음 회의에 불러온 안건은 삭제할 수 없어요.';
 
 const UNKNOWN_USER_NAME = '알 수 없는 사용자';
 
