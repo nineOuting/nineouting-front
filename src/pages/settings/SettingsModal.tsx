@@ -1,6 +1,7 @@
 import brightnessIcon from '../../assets/icons/brightness.svg';
 import cardIcon from '../../assets/icons/card.svg';
 import closeIcon from '../../assets/icons/close.svg';
+import helpIcon from '../../assets/icons/nav-help.svg';
 import profileIcon from '../../assets/icons/nav-profile.svg';
 import trashIcon from '../../assets/icons/nav-trash.svg';
 import Icon from '../../components/Icon';
@@ -25,7 +26,8 @@ const MENU: { tab: SettingsTab; label: string; icon: string }[][] = [
   ],
   [
     { tab: 'trash', label: '삭제 목록', icon: trashIcon },
-    // REQ-145 도움말은 보류 (2026-11-18 시트). 화면은 남겨 두고 메뉴에서만 뺀다
+    // REQ-212 설정 창 도움말 (2026-11-18 시트)
+    { tab: 'help', label: '도움말', icon: helpIcon },
   ],
 ];
 

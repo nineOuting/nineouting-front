@@ -50,7 +50,7 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
     <>
       <Dialog
         title="비밀번호 변경"
-        description="지금 비밀번호를 확인한 뒤 새 비밀번호로 바꿔요"
+        width="md"
         onClose={requestClose}
         onSubmit={submit}
         footer={
@@ -59,13 +59,15 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
               취소
             </Button>
             <Button isLoading={isSubmitting} type="submit" size="md" disabled={!current || !next || !confirm || isSubmitting}>
-              변경하기
+              변경
             </Button>
           </>
         }
       >
         <PasswordField
-          label="지금 비밀번호"
+          label="현재 비밀번호"
+          placeholder="현재 비밀번호를 입력해 주세요"
+          required
           autoComplete="current-password"
           value={current}
           error={errors.current}
@@ -73,14 +75,18 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
         />
         <PasswordField
           label="새 비밀번호"
+          placeholder="새 비밀번호를 입력해 주세요"
+          required
           autoComplete="new-password"
           value={next}
           error={errors.next}
-          helper="8자 이상, 영문과 숫자를 각각 1자 이상 넣어 주세요"
+          helper="8자 이상, 영문과 숫자를 함께 써 주세요"
           onChange={(event) => setNext(event.target.value)}
         />
         <PasswordField
           label="새 비밀번호 확인"
+          placeholder="새 비밀번호를 한 번 더 입력해 주세요"
+          required
           autoComplete="new-password"
           value={confirm}
           error={errors.confirm}

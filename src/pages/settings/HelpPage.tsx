@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import unknownCharacter from '../../assets/characters/unknown.svg';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
 import searchIcon from '../../assets/icons/search.svg';
+import EmptyState from '../../components/EmptyState';
 import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
 import layout from './SettingsLayout.module.css';
@@ -33,7 +35,7 @@ const FAQ = [
   },
 ];
 
-/** REQ-144 도움말: 자주 묻는 질문 (디자인 HelpPage). 문의하기는 받을 곳이 없어 넣지 않았다 */
+/** REQ-144 도움말: 자주 묻는 질문 (디자인 HelpPage). 문의하기는 디자인에서 빠졌다 (2026-11-18 디자인 코멘트) */
 export default function HelpPage() {
   const [query, setQuery] = useState('');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -51,7 +53,8 @@ export default function HelpPage() {
         onChange={(event) => setQuery(event.target.value)}
       />
       <div className={`${layout.card} ${styles.faqCard}`}>
-        {shown.length === 0 && <p className={styles.empty}>검색 결과가 없어요</p>}
+        {/* MSG-123. 문의하기는 디자인에서 빠져 안내도 검색만 권한다 */}
+        {shown.length === 0 && <EmptyState character={unknownCharacter} title="찾는 답이 없어요" description="다른 말로 검색해 보세요" />}
         {shown.map((item, index) => {
           const isOpen = keyword ? true : openIndex === index;
           return (

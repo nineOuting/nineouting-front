@@ -4,6 +4,8 @@ import Icon from './Icon';
 import styles from './EmptyState.module.css';
 
 const ICON_SIZE = 24;
+// 디자인 설정 창 안 빈 상태의 캐릭터 크기
+const CHARACTER_SIZE = 96;
 
 interface EmptyStateProps {
   title: string;
@@ -13,13 +15,19 @@ interface EmptyStateProps {
   /** 버튼 아래 작은 안내 */
   note?: ReactNode;
   className?: string;
+  /** 넵넵 캐릭터 그림 (assets/characters). 있으면 아이콘 대신 보이고 글자는 작게 (디자인 EmptyState showCharacter) */
+  character?: string;
 }
 
 /** 디자인 EmptyState: 느낌표 아이콘, 제목, 설명, 버튼 (빈 목록, 검색 결과 없음, 오류) */
-export default function EmptyState({ title, description, action, note, className }: EmptyStateProps) {
+export default function EmptyState({ title, description, action, note, className, character }: EmptyStateProps) {
   return (
-    <div className={[styles.empty, className].filter(Boolean).join(' ')}>
-      <Icon src={errorIcon} size={ICON_SIZE} className={styles.icon} />
+    <div className={[styles.empty, character && styles.withCharacter, className].filter(Boolean).join(' ')}>
+      {character ? (
+        <img src={character} alt="" width={CHARACTER_SIZE} height={CHARACTER_SIZE} />
+      ) : (
+        <Icon src={errorIcon} size={ICON_SIZE} className={styles.icon} />
+      )}
       <div className={styles.texts}>
         <p className={styles.title}>{title}</p>
         {description && <p className={styles.description}>{description}</p>}

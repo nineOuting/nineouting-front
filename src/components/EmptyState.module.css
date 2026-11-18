@@ -37,3 +37,16 @@
   line-height: var(--line-height-caption);
   color: var(--text-secondary);
 }
+
+/* 캐릭터가 있는 빈 상태 (디자인 11 상태 모음: 삭제 목록, 도움말) */
+.withCharacter .title {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.withCharacter .description {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+}
