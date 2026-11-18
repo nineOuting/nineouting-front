@@ -305,3 +305,9 @@
   background: var(--neutral-subtle);
   color: var(--text-secondary);
 }
+
+/* 멤버 줄 맨 왼쪽 ⋮ 메뉴는 오른쪽으로 펼친다 (왼쪽으로 펼치면 창 밖으로 잘린다) */
+.rowMenu {
+  right: auto;
+  left: 0;
+}

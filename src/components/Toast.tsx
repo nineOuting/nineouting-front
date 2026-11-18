@@ -29,7 +29,8 @@ interface ToastProps {
 
 export default function Toast({ message, onClose, position = 'bottom' }: ToastProps) {
   useEffect(() => {
-    const duration = message.action ? ACTION_TOAST_DURATION_MS : position === 'top' ? TOP_TOAST_DURATION_MS : TOAST_DURATION_MS;
+    // REQ-177 회의 중 화면(위 가운데)은 [되돌리기]가 있어도 4초 (MSG-120)
+    const duration = position === 'top' ? TOP_TOAST_DURATION_MS : message.action ? ACTION_TOAST_DURATION_MS : TOAST_DURATION_MS;
     const timerId = window.setTimeout(onClose, duration);
     return () => window.clearTimeout(timerId);
   }, [message, onClose, position]);

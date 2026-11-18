@@ -49,8 +49,9 @@
   color: var(--text-secondary);
 }
 
-/* 폭이 좁으면(1280px 화면 등) 고정 폭 열이 자리를 다 차지해 회의명이 사라지므로 참여자 열을 숨긴다 */
-@container (max-width: 760px) {
+/* 폭이 좁으면(1280px 화면 등) 고정 폭 열이 자리를 다 차지해 회의명이 사라지므로 참여자 열을 숨긴다.
+   1440px 화면(표 안쪽 약 750px)에서는 보인다 (REQ-048, 디자인 04 프로젝트) */
+@container (max-width: 700px) {
   .attendees {
     display: none;
   }

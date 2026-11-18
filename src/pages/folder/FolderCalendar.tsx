@@ -13,10 +13,17 @@ interface FolderCalendarProps {
   folderId: number;
   /** REQ-202 점은 프로젝트 색 */
   color: string;
+  /** 회의 목록을 이 날 회의로 걸러 보는 중 (2026-11-18) */
+  selectedDay: string | null;
+  /** 같은 날을 다시 누르면 null (해제) */
+  onSelectDay: (day: string | null) => void;
 }
 
-/** REQ-201 폴더 회의 목록 옆 월 달력. 이 프로젝트 회의가 있는 날에 점을 찍는다 */
-export default function FolderCalendar({ folderId, color }: FolderCalendarProps) {
+/**
+ * REQ-201 폴더 회의 목록 옆 월 달력. 이 프로젝트 회의가 있는 날에 점을 찍고,
+ * 그 날을 누르면 회의 목록을 그날 회의로 걸러 보여 준다 (다시 누르면 해제)
+ */
+export default function FolderCalendar({ folderId, color, selectedDay, onSelectDay }: FolderCalendarProps) {
   const [today] = useState(() => new Date());
   const [month, setMonth] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const [meetingDays, setMeetingDays] = useState<Set<string>>(new Set());
@@ -71,12 +78,27 @@ export default function FolderCalendar({ folderId, color }: FolderCalendarProps)
             styles.day,
             day.getMonth() !== month.month ? styles.outside : '',
             iso === todayIso ? styles.today : '',
+            iso === selectedDay ? styles.selected : '',
           ].filter(Boolean);
+          if (!hasMeeting) {
+            return (
+              <span key={iso} className={classes.join(' ')}>
+                {day.getDate()}
+              </span>
+            );
+          }
           return (
-            <span key={iso} className={classes.join(' ')} aria-label={hasMeeting ? `${day.getDate()}일 회의 있음` : undefined}>
-              {day.getDate()}
-              {hasMeeting && <span className={styles.dot} style={{ background: color }} aria-hidden="true" />}
-            </span>
+            <button
+              key={iso}
+              type="button"
+              className={classes.join(' ')}
+              aria-label={`${day.getMonth() + 1}월 ${day.getDate()}일 회의만 보기`}
+              aria-pressed={iso === selectedDay}
+              onClick={() => onSelectDay(iso === selectedDay ? null : iso)}
+            >
+              <span className={styles.dayNumber}>{day.getDate()}</span>
+              <span className={styles.dot} style={{ background: color }} aria-hidden="true" />
+            </button>
           );
         })}
       </div>

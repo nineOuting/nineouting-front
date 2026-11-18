@@ -11,19 +11,22 @@ interface TransferCandidate extends Member {
 }
 
 interface TransferOwnerDialogProps {
-  /** 워크스페이스 또는 폴더 */
-  target: string;
   candidates: TransferCandidate[];
   /** 실패하면 던진다. 메시지를 창 안에 보여 준다 */
   onTransfer: (userId: number) => Promise<void>;
   onClose: () => void;
 }
 
-/** REQ-043, 129 소유권을 넘길 멤버를 고른다. 소유자는 1명이라 넘기면 나는 일반 멤버가 된다 (디자인이 없어 멤버 권한 관리 창 모양을 따랐다) */
-export default function TransferOwnerDialog({ target, candidates, onTransfer, onClose }: TransferOwnerDialogProps) {
+/**
+ * REQ-043, 129 소유권 넘기기. 멤버를 고르고(MSG-090) [다음]을 누르면 한 번 더 묻는다(MSG-091).
+ * 소유자는 1명이라 넘기면 나는 일반 멤버가 된다
+ */
+export default function TransferOwnerDialog({ candidates, onTransfer, onClose }: TransferOwnerDialogProps) {
   const [selectedId, setSelectedId] = useState<number>();
+  const [isConfirming, setIsConfirming] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [error, setError] = useState<string>();
+  const selected = candidates.find(({ userId }) => userId === selectedId);
 
   const transfer = async () => {
     if (selectedId === undefined) {
@@ -39,10 +42,39 @@ export default function TransferOwnerDialog({ target, candidates, onTransfer, on
     }
   };
 
+  if (isConfirming && selected) {
+    // MSG-091
+    return (
+      <Dialog
+        title={`${selected.name} 님에게 소유권을 넘길까요?`}
+        description={`넘기면 관리 권한은 ${selected.name} 님에게 가고, 나는 일반 멤버가 돼요.`}
+        width="md"
+        onClose={onClose}
+        footer={
+          <>
+            <Button variant="secondary" size="md" disabled={isTransferring} onClick={() => setIsConfirming(false)}>
+              취소
+            </Button>
+            <Button size="md" isLoading={isTransferring} onClick={() => void transfer()}>
+              넘기기
+            </Button>
+          </>
+        }
+      >
+        {error && (
+          <p className={`${styles.empty} ${styles.danger}`} role="alert">
+            {error}
+          </p>
+        )}
+      </Dialog>
+    );
+  }
+
+  // MSG-090
   return (
     <Dialog
-      title="소유권 양도"
-      description={`${target} 소유권을 넘길 멤버를 골라 주세요. 넘기면 나는 일반 멤버가 돼요.`}
+      title="소유권을 넘길 멤버를 골라 주세요"
+      description="넘기면 나는 일반 멤버가 돼요."
       width="md"
       onClose={onClose}
       footer={
@@ -50,8 +82,8 @@ export default function TransferOwnerDialog({ target, candidates, onTransfer, on
           <Button variant="secondary" size="md" onClick={onClose}>
             취소
           </Button>
-          <Button size="md" disabled={selectedId === undefined} isLoading={isTransferring} onClick={() => void transfer()}>
-            양도하기
+          <Button size="md" disabled={selectedId === undefined} onClick={() => setIsConfirming(true)}>
+            다음
           </Button>
         </>
       }
@@ -74,11 +106,6 @@ export default function TransferOwnerDialog({ target, candidates, onTransfer, on
           </li>
         ))}
       </ul>
-      {error && (
-        <p className={`${styles.empty} ${styles.danger}`} role="alert">
-          {error}
-        </p>
-      )}
     </Dialog>
   );
 }

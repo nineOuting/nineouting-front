@@ -6,6 +6,7 @@ import {
   resendInvitation,
   type PendingInvitation,
 } from '../../api/workspace';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
 import copyIcon from '../../assets/icons/copy.svg';
@@ -57,6 +58,8 @@ export default function WorkspaceMembersModal({
   onClose,
 }: WorkspaceMembersModalProps) {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  // MSG-097 내보낼 멤버 (확인 창)
+  const [removing, setRemoving] = useState<WorkspaceMember>();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>();
   const [isInviting, setIsInviting] = useState(false);
@@ -167,7 +170,7 @@ export default function WorkspaceMembersModal({
               member={member}
               canManage={canManage}
               onAccessChange={(folderAccess) => onAccessChange(member.userId, folderAccess)}
-              onRemove={() => onRemove(member.userId)}
+              onRemove={() => setRemoving(member)}
             />
           ))}
         </ul>
@@ -216,9 +219,22 @@ export default function WorkspaceMembersModal({
           </ul>
         </section>
       )}
+      {removing && (
+        <ConfirmDialog
+          title={`${removing.name} 님을 워크스페이스에서 내보낼까요?`}
+          message="내보내면 이 워크스페이스의 폴더와 회의록을 볼 수 없어요. 다시 들어오려면 초대를 받아야 해요."
+          cancelLabel="취소"
+          confirmLabel="내보내기"
+          isDanger
+          onCancel={() => setRemoving(undefined)}
+          onConfirm={() => {
+            onRemove(removing.userId);
+            setRemoving(undefined);
+          }}
+        />
+      )}
       {isTransferOpen && (
         <TransferOwnerDialog
-          target="워크스페이스"
           candidates={members.filter(({ isOwner }) => !isOwner)}
           onTransfer={async (userId) => {
             await onTransfer(userId);
@@ -274,8 +290,9 @@ function MemberRow({ member, canManage, onAccessChange, onRemove }: MemberRowPro
               <ActionMenu
                 label={`${member.name} 메뉴`}
                 anchorRef={moreRef}
-                // REQ-036 워크스페이스에서 제외
-                items={[{ label: '워크스페이스에서 제외', icon: deleteIcon, isDanger: true, onSelect: onRemove }]}
+                className={styles.rowMenu}
+                // REQ-036 워크스페이스에서 내보내기 (확인 창 MSG-097)
+                items={[{ label: '워크스페이스에서 내보내기', icon: deleteIcon, isDanger: true, onSelect: onRemove }]}
                 onClose={closeMenu}
               />
             )}

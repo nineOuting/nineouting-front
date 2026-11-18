@@ -30,6 +30,7 @@ import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
+import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
@@ -57,6 +58,7 @@ import styles from './FolderPage.module.css';
 const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
+const CHIP_ICON_SIZE = 16;
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -195,7 +197,7 @@ export default function FolderPage() {
     setFolder((prev) => prev && { ...prev, isOwner: false });
     closeDialog();
     const newOwner = members.find((member) => member.userId === userId);
-    notice(`${newOwner?.name ?? '선택한 멤버'}님에게 폴더 소유권을 넘겼어요.`);
+    notice(`${newOwner?.name ?? '선택한 멤버'} 님에게 소유권을 넘겼어요.`); // MSG-092
     await reloadMembers().catch(() => undefined);
   };
   const reloadMeetings = async () => setMeetings(await listFolderMeetingRows(id));
@@ -206,6 +208,20 @@ export default function FolderPage() {
     params.set('sort', nextSort.key);
     params.set('asc', nextSort.isAscending ? '1' : '0');
     params.set('page', String((next.page ?? (next.sort ? 0 : page)) + 1));
+    setSearchParams(params, { replace: true });
+  };
+
+  // REQ-201 달력에서 고른 날 (그날 회의만 본다). 뒤로 가기에도 남게 주소에 둔다 (REQ-180)
+  const selectedDay = searchParams.get('day');
+  const shownMeetings = selectedDay ? meetings.filter(({ date }) => date === selectedDay) : meetings;
+  const selectDay = (day: string | null) => {
+    const params = new URLSearchParams(searchParams);
+    if (day) {
+      params.set('day', day);
+    } else {
+      params.delete('day');
+    }
+    params.set('page', '1');
     setSearchParams(params, { replace: true });
   };
 
@@ -411,9 +427,18 @@ export default function FolderPage() {
 
       <section className={styles.meetingSection} aria-labelledby="meetings-title">
         <div className={styles.sectionHead}>
-          <h2 id="meetings-title" className={styles.sectionTitle}>
-            회의 목록
-          </h2>
+          <div className={styles.sectionTitleGroup}>
+            <h2 id="meetings-title" className={styles.sectionTitle}>
+              회의 목록
+            </h2>
+            {selectedDay && (
+              <button type="button" className={styles.dayChip} onClick={() => selectDay(null)}>
+                {Number(selectedDay.slice(5, 7))}월 {Number(selectedDay.slice(8, 10))}일 회의만 보기
+                <Icon src={chipRemoveIcon} size={CHIP_ICON_SIZE} />
+                <span className={styles.hidden}>해제</span>
+              </button>
+            )}
+          </div>
           {/* REQ-053 회의 목록 오른쪽 위 [회의록 아카이브] */}
           <button
             type="button"
@@ -425,10 +450,15 @@ export default function FolderPage() {
         </div>
         <div className={styles.calendarAndList}>
           {/* REQ-201 */}
-          <FolderCalendar folderId={folder.folderId} color={folderColor(folder.color)} />
+          <FolderCalendar
+            folderId={folder.folderId}
+            color={folderColor(folder.color)}
+            selectedDay={selectedDay}
+            onSelectDay={selectDay}
+          />
           <div className={styles.tableCard}>
             <MeetingTable
-              meetings={meetings}
+              meetings={shownMeetings}
               onOpen={(meeting) => navigate(meetingPath(meeting))}
               sort={sort}
               onSortChange={(next) => changeView({ sort: next })}

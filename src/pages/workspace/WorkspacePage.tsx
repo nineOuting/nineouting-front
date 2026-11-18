@@ -220,6 +220,7 @@ export default function WorkspacePage() {
     try {
       await changeFolderAccess(id, userId, folderAccess);
       setMembers((prev) => prev.map((member) => (member.userId === userId ? { ...member, folderAccess } : member)));
+      notice(`${members.find((member) => member.userId === userId)?.name ?? '멤버'} 님의 권한을 바꿨어요.`); // MSG-095
       // REQ-198 워크스페이스 시작하기의 폴더 권한 정하기를 마친다
       setWorkspace((prev) => prev && { ...prev, folderAccessConfigured: true });
     } catch (error) {
@@ -232,6 +233,7 @@ export default function WorkspacePage() {
       await removeWorkspaceMember(id, userId);
       setMembers((prev) => prev.filter((member) => member.userId !== userId));
       setWorkspace((prev) => prev && { ...prev, memberCount: prev.memberCount - 1 });
+      notice(`${members.find((member) => member.userId === userId)?.name ?? '멤버'} 님을 워크스페이스에서 내보냈어요.`); // MSG-098
     } catch (error) {
       showError(error);
     }
@@ -244,7 +246,7 @@ export default function WorkspacePage() {
     setWorkspace((prev) => prev && { ...prev, isOwner: false });
     closeDialog();
     const newOwner = members.find((member) => member.userId === userId);
-    notice(`${newOwner?.name ?? '선택한 멤버'}님에게 워크스페이스 소유권을 넘겼어요.`);
+    notice(`${newOwner?.name ?? '선택한 멤버'} 님에게 소유권을 넘겼어요.`); // MSG-092
   };
 
   const leave = async () => {
