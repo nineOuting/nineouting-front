@@ -20,6 +20,7 @@ import {
 } from '../../api/workspace';
 import { getMe } from '../../api/user';
 import AppLayout from '../../components/AppLayout';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
 import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
@@ -55,7 +56,8 @@ const PAGER_ICON_SIZE = 16;
 const VIEWED_SIZE = 2;
 // 페이지 번호를 모두 보여 주는 최대 페이지 수 (넘으면 … 으로 줄인다)
 const PAGER_FULL = 7;
-const SORT_LABELS = { LATEST: '최신순', OLDEST: '오래된순' } as const;
+// REQ-167 최신순(기본), 오래된순, 회의명순
+const SORT_LABELS = { LATEST: '최신순', OLDEST: '오래된순', TITLE: '회의명순' } as const;
 
 type FilterKey = 'period' | 'location' | 'attendee';
 
@@ -171,6 +173,8 @@ export default function ArchivePage() {
   const [isViewedOpen, setIsViewedOpen] = useState(false);
   const [keyword, setKeyword] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '');
   const [moving, setMoving] = useState<ArchiveMinutes | null>(null);
+  // REQ-160 [회의록 삭제] 확인 창 (MSG-116)
+  const [deleting, setDeleting] = useState<ArchiveMinutes | null>(null);
   // 되돌리기, 이동, 다시 시도 뒤 같은 조건으로 다시 받는다
   const [reloadToken, setReloadToken] = useState(0);
   const [items, setItems] = useState<ArchiveMinutes[]>([]);
@@ -194,7 +198,8 @@ export default function ArchivePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const paramsKey = searchParams.toString();
   const query = searchParams.get('q') ?? '';
-  const sort: ArchiveQuery['sort'] = searchParams.get('sort') === 'OLDEST' ? 'OLDEST' : 'LATEST';
+  const sortParam = searchParams.get('sort');
+  const sort: ArchiveQuery['sort'] = sortParam === 'OLDEST' || sortParam === 'TITLE' ? sortParam : 'LATEST';
   const folderParam = Number(searchParams.get('folder'));
   const folderId = Number.isInteger(folderParam) && folderParam > 0 ? folderParam : undefined;
   const filters = useMemo(() => filtersOf(new URLSearchParams(paramsKey)), [paramsKey]);
@@ -537,7 +542,7 @@ export default function ArchivePage() {
                 emptyText=""
                 anchorRef={sortRef}
                 className={styles.sortMenu}
-                items={(['LATEST', 'OLDEST'] as const).map((option) => ({
+                items={(['LATEST', 'OLDEST', 'TITLE'] as const).map((option) => ({
                   id: option,
                   label: SORT_LABELS[option],
                   isSelected: sort === option,
@@ -616,7 +621,7 @@ export default function ArchivePage() {
               { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
               { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
               ...(isFolderOwner(item.folderId)
-                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, onSelect: () => void removeMinutes(item) }]
+                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setDeleting(item) }]
                 : []),
             ]}
           />
@@ -685,6 +690,20 @@ export default function ArchivePage() {
             reload();
           }}
           onClose={() => setMoving(null)}
+        />
+      )}
+      {deleting && (
+        <ConfirmDialog
+          title={`'${deleting.title}' 회의록을 삭제할까요?`}
+          message="삭제한 회의록은 3개월 동안 삭제 목록에서 복구할 수 있어요."
+          cancelLabel="취소"
+          confirmLabel="삭제하기"
+          isDanger
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => {
+            void removeMinutes(deleting);
+            setDeleting(null);
+          }}
         />
       )}
     </AppLayout>

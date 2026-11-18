@@ -168,7 +168,6 @@ export default function FolderMembersModal({
       )}
       {isTransferOpen && (
         <TransferOwnerDialog
-          target="폴더"
           // 서버는 폴더에 초대된 멤버에게만 넘긴다 ("모든 폴더" 권한으로 들어오는 멤버는 빼고)
           candidates={removable}
           onTransfer={async (userId) => {

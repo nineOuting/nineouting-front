@@ -62,7 +62,7 @@ export interface ArchiveQuery {
   to?: string;
   locations: string[];
   attendeeIds: number[];
-  sort: 'LATEST' | 'OLDEST';
+  sort: 'LATEST' | 'OLDEST' | 'TITLE';
   /** 폴더 탭에서 고른 폴더. 없으면 전체 */
   folderId?: number;
 }

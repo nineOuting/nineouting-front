@@ -569,7 +569,24 @@ export default function MeetingRoomPage() {
     } catch (error) {
       showError(error);
       updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
+      return;
     }
+    if (status !== 'DECIDED') {
+      return;
+    }
+    // REQ-211 결정으로 확정 (MSG-120). [되돌리기]는 확정 전 상태로 (사람이 정한 적 없으면 AI 판정으로)
+    const previous: DecisionStatusEdit = !before.statusEdited ? 'AUTO' : before.status === 'decided' ? 'DECIDED' : 'UNDECIDED';
+    setToast({
+      text: '결정으로 확정했어요',
+      variant: 'success',
+      action: {
+        label: '되돌리기',
+        onClick: () => {
+          updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
+          setDecisionStatus(meetingIdNumber, Number(agendaId), Number(decisionId), previous).catch(showError);
+        },
+      },
+    });
   };
 
   /** REQ-097 할 일, 담당자, 기한 고치기. 담당자 이름을 바꾸면 명단과 다시 맞추게 사용자 번호는 비운다 */

@@ -72,3 +72,28 @@
   border-radius: 50%;
   transform: translateX(-50%);
 }
+
+/* REQ-201 회의가 있는 날은 눌러서 그날 회의만 본다 (디자인 ProjectCalendarFilterPage) */
+button.day {
+  cursor: pointer;
+}
+
+.dayNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+button.day:hover .dayNumber {
+  background: var(--neutral-ghost-hover);
+}
+
+.selected .dayNumber,
+button.selected:hover .dayNumber {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-on-primary);
+  background: var(--primary-default);
+}
