@@ -54,7 +54,7 @@ export default function HelpPage() {
       />
       <div className={`${layout.card} ${styles.faqCard}`}>
         {/* MSG-123. 문의하기는 디자인에서 빠져 안내도 검색만 권한다 */}
-        {shown.length === 0 && <EmptyState character={unknownCharacter} title="찾는 답이 없어요" description="다른 말로 검색해 보세요" />}
+        {shown.length === 0 && <EmptyState character={unknownCharacter} title="찾는 답이 없어요" description="다른 말로 다시 검색해 주세요." />}
         {shown.map((item, index) => {
           const isOpen = keyword ? true : openIndex === index;
           return (

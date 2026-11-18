@@ -919,7 +919,7 @@ export default function MeetingRoomPage() {
         <aside
           id="room-side-panel"
           className={styles.sidePanel}
-          aria-label={selectedDecision ? '결정 근거' : sideTab === 'chat' ? '내 도우미' : '실시간 전사'}
+          aria-label={selectedDecision ? '결정 근거' : sideTab === 'chat' ? '넵넵 AI' : '실시간 전사'}
         >
           {!selectedDecision && (
             <div className={styles.tabs} role="tablist">
@@ -932,7 +932,7 @@ export default function MeetingRoomPage() {
                   className={[styles.tab, sideTab === tab ? styles.tabActive : ''].filter(Boolean).join(' ')}
                   onClick={() => (tab === 'chat' ? openHelper() : setSideTab(tab))}
                 >
-                  {tab === 'chat' ? '내 도우미' : '실시간 전사'}
+                  {tab === 'chat' ? '넵넵 AI' : '실시간 전사'}
                   {tab === 'chat' && newTermCount > 0 && <span className={styles.tabBadge}>용어 {newTermCount}</span>}
                 </button>
               ))}

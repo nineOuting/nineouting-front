@@ -162,15 +162,15 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
           </div>
         )}
         {isEmpty && (
-          // 디자인 Version02 Live_19 내 도우미 처음 열기
+          // 디자인 Live_19 넵넵 AI 처음 열기 (2026-11-18 이름 바뀜)
           <div className={styles.intro}>
             <span className={styles.privateChip}>
               <Icon src={lockIcon} size={12} />
               나만 보여요
             </span>
-            <p className={styles.introTitle}>회의 중에 궁금한 걸 물어보세요</p>
+            <p className={styles.introTitle}>나만 보는 넵넵 AI예요</p>
             <p className={styles.introText}>
-              놓친 이야기를 정리해 주고, 지난 회의에서 비슷한 내용을 찾아주고, 어려운 용어는 먼저 알려드려요.
+              다른 참석자에게 보이지 않으니 편하게 물어보세요. 놓친 내용과 용어를 바로 알려드려요.
             </p>
             {loadError && <p className={room.fieldError}>{loadError}</p>}
           </div>
@@ -227,7 +227,7 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
       <form className={styles.form} onSubmit={submit}>
         <textarea
           className={styles.input}
-          aria-label="내 도우미에게 질문"
+          aria-label="넵넵 AI에게 질문"
           placeholder={canAsk ? '회의 내용, 지난 회의, 용어를 물어보세요' : '회의가 진행 중일 때만 질문할 수 있어요'}
           value={query}
           maxLength={MAX_QUERY}

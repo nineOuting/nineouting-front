@@ -97,7 +97,7 @@ export default function FolderStats({ stats, pendingAgendas, onDiscardPending }:
           </div>
           {pendingAgendas.length === 0 ? (
             // MSG-035
-            <p className={styles.empty}>남은 안건이 없어요</p>
+            <p className={styles.empty}>남은 안건 없이 다 정했어요.</p>
           ) : (
             <ul className={styles.pendingList}>
               {pendingAgendas.map((agenda) => (

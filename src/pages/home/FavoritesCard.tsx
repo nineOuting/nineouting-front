@@ -42,7 +42,7 @@ export default function FavoritesCard({ items, onRemove }: FavoritesCardProps) {
         )}
       </div>
       {items.length === 0 ? (
-        <p className={`${card.listBox} ${card.boxEmpty}`}>워크스페이스나 폴더 화면에서 별을 눌러 추가해 보세요.</p>
+        <p className={`${card.listBox} ${card.boxEmpty}`}>아직 즐겨찾기가 없어요. 폴더에 별을 누르면 여기 모아 둘게요.</p>
       ) : (
         <ul className={card.listBox}>
           {shown.map((favorite) => {

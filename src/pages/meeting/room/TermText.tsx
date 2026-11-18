@@ -36,7 +36,7 @@ export default function TermText({ text, matcher, onAsk }: TermTextProps) {
                 </span>
                 <span className={styles.cardText}>{card.text}</span>
                 <span className={styles.cardFooter}>
-                  <span>내 도우미에 저장됐어요</span>
+                  <span>넵넵 AI에 저장됐어요</span>
                   {onAsk && (
                     <button type="button" className={styles.ask} onClick={() => onAsk(card.term)}>
                       더 묻기
