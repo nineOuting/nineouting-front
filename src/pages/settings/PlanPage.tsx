@@ -4,7 +4,8 @@ import SettingsLayout from './SettingsLayout';
 import styles from './PlanPage.module.css';
 
 const CHECK_ICON_SIZE = 16;
-const BETA_FEATURES = ['회의 무제한', '회의록 AI 요약', '워크스페이스 무제한', '멤버 무제한'];
+// REQ-176 회의는 무제한, 워크스페이스와 멤버는 최대 개수까지
+const BETA_FEATURES = ['회의 무제한', '회의록 AI 요약', '워크스페이스 최대 개수까지', '멤버 최대 인원까지'];
 
 /** REQ-176 요금제 안내 (디자인 PlanPage, MSG-074). 결제, 업그레이드, 사용량 한도는 없다 (베타 기간 모두 무료) */
 export default function PlanPage() {

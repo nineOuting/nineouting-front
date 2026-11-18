@@ -44,7 +44,7 @@ export interface FolderMeeting {
   /** 2026-10-24T14:00:00 (워크스페이스 폴더 카드의 다음 회의 시각) */
   startAt?: string;
   status: FolderMeetingStatus;
-  writer: Member & { affiliation?: string };
+  writer: Member;
   attendees: Member[];
 }
 

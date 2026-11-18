@@ -527,7 +527,8 @@ export default function MinutesEditorPage() {
               <button
                 type="button"
                 className={`${editorBar.action} ${editorBar.secondary}`}
-                disabled={isSaving}
+                // REQ-101 AI 초안을 만드는 동안은 [임시저장], [작성 완료]를 끈다 (다 되거나 실패하면 다시 켜진다)
+                disabled={isSaving || isDrafting}
                 onClick={saveDraft}
               >
                 {/* REQ-135 저장하는 동안 아이콘이 로딩 표시로 바뀐다 */}
@@ -536,7 +537,12 @@ export default function MinutesEditorPage() {
               </button>
             )}
             {isWriter && minutes.status === 'WRITING' && (
-              <button type="button" className={`${editorBar.action} ${editorBar.primary}`} onClick={() => setDialog('share')}>
+              <button
+                type="button"
+                className={`${editorBar.action} ${editorBar.primary}`}
+                disabled={isDrafting}
+                onClick={() => setDialog('share')}
+              >
                 작성 완료
               </button>
             )}

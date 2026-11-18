@@ -18,6 +18,7 @@ import {
   listWorkspaceMembers,
   type WorkspaceDetail,
 } from '../../api/workspace';
+import { getMe } from '../../api/user';
 import AppLayout from '../../components/AppLayout';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
@@ -163,6 +164,7 @@ export default function ArchivePage() {
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [folderTabs, setFolderTabs] = useState<FolderTab[]>([]);
+  const [myUserId, setMyUserId] = useState<number | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [viewed, setViewed] = useState<ViewedMinutes[]>([]);
@@ -231,6 +233,9 @@ export default function ArchivePage() {
       .catch(showError);
     listViewedMinutes(id, VIEWED_SIZE)
       .then((loaded) => isCurrent && setViewed(loaded))
+      .catch(() => undefined);
+    getMe()
+      .then((me) => isCurrent && setMyUserId(me.userId))
       .catch(() => undefined);
     return () => {
       isCurrent = false;
@@ -351,6 +356,14 @@ export default function ArchivePage() {
   };
   const hasFilters = Boolean(filters.period || filters.locations.length || filters.attendeeIds.length);
   const folderColors = new Map(folderTabs.map((folder) => [folder.folderId, folder.color]));
+  // REQ-160 [회의록 삭제]는 폴더 소유자만 본다 (소유자가 없는 기본 폴더는 워크스페이스 소유자)
+  const isFolderOwner = (folderId: number) => {
+    const folder = folderTabs.find((tab) => tab.folderId === folderId);
+    if (!folder) {
+      return false;
+    }
+    return folder.isDefault ? Boolean(workspace?.isOwner) : myUserId !== null && folder.ownerUserId === myUserId;
+  };
   const pageCount = Math.max(1, Math.ceil(totalCount / ARCHIVE_PAGE_SIZE));
   const tabs: { id: number | null; name: string; count: number }[] = [
     { id: null, name: '전체', count: folderTabs.reduce((sum, folder) => sum + folder.minutesCount, 0) },
@@ -602,7 +615,9 @@ export default function ArchivePage() {
               { label: '다운로드', icon: downloadIcon, onSelect: () => download(item) },
               { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
               { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
-              { label: '회의록 삭제', icon: deleteIcon, isDanger: true, onSelect: () => void removeMinutes(item) },
+              ...(isFolderOwner(item.folderId)
+                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, onSelect: () => void removeMinutes(item) }]
+                : []),
             ]}
           />
         )}

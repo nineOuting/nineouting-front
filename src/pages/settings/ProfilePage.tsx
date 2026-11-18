@@ -20,17 +20,14 @@ import SettingsLayout from './SettingsLayout';
 import styles from './ProfilePage.module.css';
 
 const AVATAR_SIZE = 64;
-// user-service UpdateProfileRequest 길이 제한과 같다
-const AFFILIATION_MAX_LENGTH = 100;
 const IMAGE_TYPE_MESSAGE = 'JPG, PNG, WEBP 사진만 올릴 수 있어요.';
 
-/** REQ-114~118 내 계정 프로필 (디자인 Page 9 Profile_Modal, 설정 창 안): 사진, 이름, 소속, 비밀번호 변경, 로그아웃 */
+/** REQ-114~116 프로필 (디자인 Page 9 Profile_Modal, 설정 창 안): 사진, 이름, 비밀번호 변경, 로그아웃. 모든 워크스페이스에 공통 */
 export default function ProfilePage() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<MyProfile>();
   const [name, setName] = useState('');
-  const [affiliation, setAffiliation] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -38,7 +35,6 @@ export default function ProfilePage() {
   const apply = (next: MyProfile) => {
     setProfile(next);
     setName(next.name);
-    setAffiliation(next.affiliation);
   };
 
   useEffect(() => {
@@ -90,7 +86,7 @@ export default function ProfilePage() {
     if (!profile || isBusy) {
       return;
     }
-    void run(async () => apply(await updateMyProfile({ name: name.trim(), affiliation: affiliation.trim() })), '프로필을 저장했어요');
+    void run(async () => apply(await updateMyProfile({ name: name.trim() })), '프로필을 저장했어요');
   };
 
   const signOut = async () => {
@@ -140,13 +136,6 @@ export default function ProfilePage() {
                 maxLength={NAME_MAX_LENGTH}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-              />
-              <TextField
-                label="소속"
-                placeholder="예: 디자인팀"
-                maxLength={AFFILIATION_MAX_LENGTH}
-                value={affiliation}
-                onChange={(event) => setAffiliation(event.target.value)}
               />
               <TextField label="이메일" value={profile.email} disabled helper="이메일은 바꿀 수 없어요" />
             </div>
