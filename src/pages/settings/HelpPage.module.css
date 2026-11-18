@@ -59,9 +59,3 @@
   color: var(--text-secondary);
 }
 
-.empty {
-  padding: var(--spacing-6) 0;
-  font-size: var(--font-size-body-md);
-  color: var(--text-secondary);
-  text-align: center;
-}

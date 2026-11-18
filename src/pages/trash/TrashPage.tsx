@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { errorMessage } from '../../api/client';
 import { listTrashMeetings, purgeMeeting, restoreMeeting } from '../../api/meeting';
 import { listMyWorkspaces, listTrash, purgeTrashFolder, restoreTrashFolder } from '../../api/workspace';
+import emptyCharacter from '../../assets/characters/empty.svg';
 import folderIcon from '../../assets/icons/folder-meta.svg';
 import minutesIcon from '../../assets/icons/minutes-doc.svg';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -31,6 +32,9 @@ interface TrashItem {
   deletedAt: string;
   purgeAt: string;
 }
+
+// 표 머리글. 비어 있을 때도 보인다 (디자인 11 상태 모음)
+const COLUMNS = ['이름', '종류', '위치', '삭제한 날짜', '남은 기간'];
 
 const KIND_LABELS: Record<Kind, string> = { folder: '폴더', minutes: '회의록', meeting: '회의' };
 
@@ -168,7 +172,24 @@ export default function TrashPage() {
             ))}
           </div>
         )}
-        {items?.length === 0 && <EmptyState title="삭제 목록이 비어 있어요" description="삭제한 항목은 3개월 동안 여기에 보관돼요" />}
+        {items?.length === 0 && (
+          <>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col" className={styles.checkCell} aria-hidden="true" />
+                  {COLUMNS.map((column) => (
+                    <th key={column} scope="col">
+                      {column}
+                    </th>
+                  ))}
+                  <th scope="col" aria-hidden="true" />
+                </tr>
+              </thead>
+            </table>
+            <EmptyState character={emptyCharacter} title="삭제 목록이 비어 있어요" description="삭제한 항목은 3개월 동안 여기에 보관돼요" />
+          </>
+        )}
         {items && items.length > 0 && (
           <>
             <div className={styles.toolbar}>
@@ -203,11 +224,11 @@ export default function TrashPage() {
                       onChange={() => setSelected(isAllSelected ? new Set() : new Set(items.map((item) => item.key)))}
                     />
                   </th>
-                  <th scope="col">이름</th>
-                  <th scope="col">종류</th>
-                  <th scope="col">위치</th>
-                  <th scope="col">삭제한 날짜</th>
-                  <th scope="col">남은 기간</th>
+                  {COLUMNS.map((column) => (
+                    <th key={column} scope="col">
+                      {column}
+                    </th>
+                  ))}
                   <th scope="col">
                     <span className={styles.hidden}>복구</span>
                   </th>
