@@ -19,7 +19,6 @@ import {
   markLastVisited,
   removeWorkspaceMember,
   renameFolder,
-  setFavorite,
   transferWorkspaceOwnership,
   updateWorkspace,
   WORKSPACE_ERROR_CODES,
@@ -31,7 +30,6 @@ import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
 import personIcon from '../../assets/icons/person-sm.svg';
 import settingsIcon from '../../assets/icons/settings.svg';
-import starIcon from '../../assets/icons/star-outline.svg';
 import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import FavoriteButton from '../../components/FavoriteButton';
@@ -108,10 +106,13 @@ export default function WorkspacePage() {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreAnchorRef = useRef<HTMLButtonElement>(null);
   const [myUserId, setMyUserId] = useState<number | null>(null);
-  const [dialog, setDialog] = useState<Dialog | null>(null);
+  const location = useLocation();
+  // MSG-101 폴더 화면의 [소유권 양도]로 오면 멤버 관리 창(소유권 넘기기)을 바로 연다
+  const [dialog, setDialog] = useState<Dialog | null>(() =>
+    (location.state as { openMembers?: boolean } | null)?.openMembers ? { type: 'members' } : null,
+  );
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [menuFolderId, setMenuFolderId] = useState<number | null>(null);
-  const location = useLocation();
   // 새 워크스페이스 만들기에서 초대 메일을 보내고 넘어오면 결과를 토스트로 보여 준다 (MSG-061)
   const arrivedNotice = (location.state as { notice?: string } | null)?.notice;
   const [toast, setToast] = useState<ToastMessage | null>(arrivedNotice ? { text: arrivedNotice, variant: 'success' } : null);
@@ -123,16 +124,6 @@ export default function WorkspacePage() {
   const isOwner = Boolean(workspace?.isOwner);
   const notice = (text: string) => setToast({ text, variant: 'info' });
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
-
-  const addFavorite = async (folder: FolderSummary) => {
-    closeFolderMenu();
-    try {
-      await setFavorite({ type: 'folder', workspaceId: id, folderId: folder.folderId }, true);
-      setToast({ text: '즐겨찾기에 추가했어요.', variant: 'success' });
-    } catch (error) {
-      showError(error);
-    }
-  };
 
   useEffect(() => {
     let isCurrent = true;
@@ -435,9 +426,9 @@ export default function WorkspacePage() {
               menu={
                 <FolderMenu
                   folder={folder}
-                  // 이름 바꾸기, 삭제는 폴더를 만든 사람과 워크스페이스 소유자 (2026-11-16 결정). 즐겨찾기는 모두
-                  canManage={isOwner || (myUserId !== null && folder.ownerUserId === myUserId)}
-                  onFavorite={() => void addFavorite(folder)}
+                  // REQ-165 (2026-11-17 시트): 이름 바꾸기는 프로젝트 소유자(기본 폴더는 워크스페이스 소유자), 삭제는 프로젝트 소유자와 워크스페이스 소유자
+                  canRename={folder.isDefault ? isOwner : myUserId !== null && folder.ownerUserId === myUserId}
+                  canDelete={!folder.isDefault && (isOwner || (myUserId !== null && folder.ownerUserId === myUserId))}
                   isOpen={menuFolderId === folder.folderId}
                   onToggle={() => setMenuFolderId((current) => (current === folder.folderId ? null : folder.folderId))}
                   onClose={closeFolderMenu}
@@ -567,28 +558,28 @@ export default function WorkspacePage() {
 
 interface FolderMenuProps {
   folder: FolderSummary;
-  /** 이름 바꾸기, 삭제를 할 수 있는지 */
-  canManage: boolean;
+  canRename: boolean;
+  /** 기본 폴더는 지울 수 없다 (REQ-044) */
+  canDelete: boolean;
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
   onRename: () => void;
   onDelete: () => void;
-  onFavorite: () => void;
 }
 
 /**
- * REQ-165 폴더 카드 오른쪽 위 더보기: 이름 바꾸기, 즐겨찾기에 추가, 폴더 삭제 (2026-11-17 기획, 폴더 화면 ⋮ 메뉴에서 옮김).
- * 기본 폴더는 지울 수 없다 (REQ-044)
+ * REQ-165 폴더 카드 오른쪽 위 더보기: 이름 바꾸기, 폴더 삭제. 즐겨찾기는 카드의 별로 한다 (2026-11-17).
+ * 할 수 있는 것이 없으면 더보기를 숨긴다
  */
-function FolderMenu({ folder, canManage, isOpen, onToggle, onClose, onRename, onDelete, onFavorite }: FolderMenuProps) {
+function FolderMenu({ folder, canRename, canDelete, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const items = [
-    ...(canManage ? [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }] : []),
-    { label: '즐겨찾기에 추가', icon: starIcon, onSelect: onFavorite, isDanger: false },
+    ...(canRename ? [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }] : []),
+    ...(canDelete ? [{ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true }] : []),
   ];
-  if (canManage && !folder.isDefault) {
-    items.push({ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true });
+  if (items.length === 0) {
+    return null;
   }
 
   return (

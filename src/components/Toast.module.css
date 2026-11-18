@@ -4,7 +4,6 @@
  */
 .toast {
   position: fixed;
-  top: var(--spacing-14);
   left: 50%;
   z-index: 300;
   display: flex;
@@ -53,4 +52,13 @@
 
 .action:hover {
   background: var(--gray-800);
+}
+
+/* REQ-177 기본은 화면 아래, 회의 중 화면은 위쪽 */
+.bottom {
+  bottom: var(--spacing-8);
+}
+
+.top {
+  top: var(--spacing-14);
 }

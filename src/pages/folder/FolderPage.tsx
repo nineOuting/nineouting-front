@@ -372,8 +372,8 @@ export default function FolderPage() {
                     ...(folder.isOwner || isWorkspaceOwner
                       ? [{ label: '프로젝트 색 설정', icon: paletteIcon, onSelect: () => setDialog({ type: 'color' }) }]
                       : []),
-                    // 워크스페이스 소유자는 모든 폴더에 들어가므로 나갈 수 없다
-                    ...(!folder.isDefault && !isWorkspaceOwner
+                    // 폴더 나가기는 모두에게 보인다. 소유자는 누르면 소유권 양도 안내 (MSG-045, MSG-101)
+                    ...(!folder.isDefault
                       ? [{ label: '폴더 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) }]
                       : []),
                   ].map((item) => ({
@@ -484,7 +484,17 @@ export default function FolderPage() {
         />
       )}
       {dialog?.type === 'leave' &&
-        (folder.isOwner ? (
+        (isWorkspaceOwner && !folder.isOwner ? (
+          // MSG-101 워크스페이스 소유자는 모든 폴더를 함께 관리하므로 워크스페이스 소유권을 넘겨야 나갈 수 있다
+          <ConfirmDialog
+            title="워크스페이스 소유권을 넘겨야 폴더에서 나갈 수 있어요."
+            message={'워크스페이스 소유자는 모든 폴더를 함께 관리해요.\n다른 멤버에게 워크스페이스 소유권을 넘긴 뒤 다시 시도해 주세요.'}
+            cancelLabel="취소"
+            confirmLabel="소유권 양도"
+            onCancel={closeDialog}
+            onConfirm={() => navigate(`/workspaces/${folder.workspaceId}`, { state: { openMembers: true } })}
+          />
+        ) : folder.isOwner ? (
           // MSG-045
           <ConfirmDialog
             title="소유권을 양도해야 폴더에서 나갈 수 있어요."

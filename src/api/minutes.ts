@@ -148,11 +148,14 @@ export interface MinutesDetail {
   draftError: string | null;
   /** REQ-194 서식 기능이 켜져 있는지. 서버에서 끄면 예전처럼 서식 없는 입력 칸을 쓴다 */
   richText: boolean;
+  /** 쓰는 양식의 레이아웃과 칸 설정. 내 양식 목록에 없는 다른 사람의 양식이어도 같은 모양으로 그린다. 양식이 없으면 null */
+  template: MinutesTemplate | null;
 }
 
-type MinutesDetailResponse = Omit<MinutesDetail, 'writer' | 'attendees'> & {
+type MinutesDetailResponse = Omit<MinutesDetail, 'writer' | 'attendees' | 'template'> & {
   writer: PersonResponse;
   attendees: PersonResponse[];
+  template?: TemplateResponse | null;
 };
 
 function toMinutesDetail(response: MinutesDetailResponse): MinutesDetail {
@@ -167,6 +170,7 @@ function toMinutesDetail(response: MinutesDetailResponse): MinutesDetail {
       richContent: richContent ?? null,
     })),
     richText: response.richText ?? false,
+    template: response.template ? toTemplate(response.template) : null,
   };
 }
 
@@ -263,4 +267,9 @@ export async function uploadTemplateBackground(file: File) {
 
 export function deleteMinutesTemplate(templateId: number) {
   return request('DELETE', `/api/minutes-templates/${templateId}`);
+}
+
+/** REQ-199 워크스페이스 기본 양식으로 정한 내 양식을 그 워크스페이스 멤버 모두 쓰게 한다 (끄면 공유를 거둔다) */
+export function shareTemplateToWorkspace(templateId: number, workspaceId: number, shared: boolean) {
+  return request(shared ? 'PUT' : 'DELETE', `/api/minutes-templates/${templateId}/workspace-shares/${workspaceId}`);
 }
