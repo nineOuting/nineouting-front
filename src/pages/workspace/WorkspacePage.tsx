@@ -28,7 +28,6 @@ import addIcon from '../../assets/icons/add-sm.svg';
 import arrowDownIcon from '../../assets/icons/arrow-down.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
-import personIcon from '../../assets/icons/person-sm.svg';
 import settingsIcon from '../../assets/icons/settings.svg';
 import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -48,7 +47,6 @@ import OnboardingBar from './OnboardingBar';
 import WeekMeetings from './WeekMeetings';
 import WorkspaceFolderCard, { type FolderActivity } from './WorkspaceFolderCard';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
-import WorkspaceProfileModal from './WorkspaceProfileModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import styles from './WorkspacePage.module.css';
@@ -65,7 +63,6 @@ type Dialog =
   | { type: 'rename'; folder: FolderSummary }
   | { type: 'deleteFolder'; folder: FolderSummary }
   | { type: 'members' }
-  | { type: 'profile' }
   | { type: 'leave' }
   | { type: 'deleteWorkspace' }
   | { type: 'createWorkspace' }
@@ -346,7 +343,6 @@ export default function WorkspacePage() {
                 onClose={() => setIsMoreOpen(false)}
                 items={[
                   { label: '워크스페이스 설정', icon: settingsIcon, onSelect: () => setDialog({ type: 'settings' }) },
-                  { label: '이 워크스페이스에서 내 프로필', icon: personIcon, onSelect: () => setDialog({ type: 'profile' }) },
                   { label: '워크스페이스 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) },
                 ].map((item) => ({
                   ...item,
@@ -505,16 +501,6 @@ export default function WorkspacePage() {
           onRemove={removeMember}
           onTransfer={transferOwnership}
           onNotice={notice}
-          onClose={closeDialog}
-        />
-      )}
-      {dialog?.type === 'profile' && (
-        <WorkspaceProfileModal
-          workspaceId={id}
-          onSaved={(text) => {
-            closeDialog();
-            notice(text);
-          }}
           onClose={closeDialog}
         />
       )}

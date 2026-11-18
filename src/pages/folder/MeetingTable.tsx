@@ -142,7 +142,7 @@ export default function MeetingTable({
                   ) : (
                     <span className={styles.face} aria-hidden="true" />
                   )}
-                  <span className={styles.writerName} title={meeting.writer.affiliation ?? undefined}>
+                  <span className={styles.writerName}>
                     {meeting.writer.name}
                   </span>
                 </span>

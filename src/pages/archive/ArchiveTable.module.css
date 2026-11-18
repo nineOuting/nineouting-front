@@ -108,6 +108,16 @@
   display: inline-flex;
 }
 
+/* REQ-160 다운로드 아이콘은 늘 보이고 ⋮는 줄에 마우스를 올리거나 키보드로 들어오면 보인다 */
+.item .menuAnchor {
+  visibility: hidden;
+}
+
+.item:hover .menuAnchor,
+.item:focus-within .menuAnchor {
+  visibility: visible;
+}
+
 .menu {
   right: 0;
   left: auto;

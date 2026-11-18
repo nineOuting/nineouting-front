@@ -148,3 +148,24 @@
   outline: 2px solid var(--blue-70);
   outline-offset: 2px;
 }
+
+/* REQ-055 1주, 1개월, 3개월 빠른 선택 */
+.quickRow {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.quick {
+  flex: 1;
+  height: 32px;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+
+.quick:hover {
+  background: var(--interactive-hover);
+}

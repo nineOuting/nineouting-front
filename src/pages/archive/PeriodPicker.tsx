@@ -9,6 +9,12 @@ import styles from './PeriodPicker.module.css';
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const NAV_ICON_SIZE = 16;
 const DIVIDER_WIDTH = 227;
+// REQ-055 빠른 선택: 오늘부터 거슬러 1주, 1개월, 3개월
+const QUICK_RANGES = [
+  { label: '1주', days: 7, months: 0 },
+  { label: '1개월', days: 0, months: 1 },
+  { label: '3개월', days: 0, months: 3 },
+];
 
 export interface Period {
   from: string;
@@ -130,6 +136,27 @@ export default function PeriodPicker({ value, onChange }: PeriodPickerProps) {
             </button>
           );
         })}
+      </div>
+      <div className={styles.quickRow}>
+        {QUICK_RANGES.map((range) => (
+          <button
+            key={range.label}
+            type="button"
+            className={styles.quick}
+            onClick={() => {
+              const end = fromIsoDate(today);
+              const start = range.months
+                ? new Date(end.getFullYear(), end.getMonth() - range.months, end.getDate())
+                : addDays(end, -range.days);
+              setRangeStart(null);
+              setIsRange(true);
+              setMonth(end);
+              onChange({ from: toIsoDate(start), to: today });
+            }}
+          >
+            {range.label}
+          </button>
+        ))}
       </div>
       <img src={dividerPeriod} alt="" width={DIVIDER_WIDTH} height={1} className={styles.divider} />
       <label className={styles.option}>

@@ -67,8 +67,8 @@ export interface ArchiveQuery {
   folderId?: number;
 }
 
-/** REQ-168 한 페이지 20건 */
-export const ARCHIVE_PAGE_SIZE = 20;
+/** REQ-168 한 페이지 10건 */
+export const ARCHIVE_PAGE_SIZE = 10;
 
 /** REQ-053~055, 029~030 워크스페이스에서 내가 들어갈 수 있는 모든 폴더의 회의록 */
 export async function listWorkspaceMinutes(workspaceId: number, query: ArchiveQuery, page: number) {
