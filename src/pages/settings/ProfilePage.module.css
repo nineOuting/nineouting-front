@@ -87,7 +87,3 @@
   color: var(--text-secondary);
 }
 
-.divider {
-  height: 1px;
-  background: var(--border-default);
-}

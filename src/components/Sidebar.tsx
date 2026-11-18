@@ -11,6 +11,7 @@ import settingsIcon from '../assets/icons/settings.svg';
 import collapseIcon from '../assets/icons/sidebar-collapse.svg';
 import templateIcon from '../assets/icons/template.svg';
 import workspaceIcon from '../assets/icons/workspace.svg';
+import { useSettingsModal } from '../pages/settings/useSettingsModal';
 import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
 import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
@@ -56,6 +57,7 @@ function MenuLink({ to, icon, children }: { to: string | undefined; icon: string
 
 /** REQ-001 왼쪽 메뉴 (nep!nep! 디자인 Sidebar). 워크스페이스를 펼치면 그 안의 프로젝트 폴더가 보인다 */
 export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
+  const settings = useSettingsModal();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [expandedIds, setExpandedIds] = useState<number[]>(workspaceId ? [workspaceId] : []);
   const [folders, setFolders] = useState<Record<number, FolderItem[]>>({});
@@ -152,10 +154,11 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
         </div>
       </div>
       <div className={styles.footer}>
-        <NavLink to="/settings" className={subMenuClass}>
+        {/* REQ-145 설정은 보던 화면 위에 창으로 뜬다 */}
+        <button type="button" className={subMenuClass({ isActive: settings.tab !== null })} onClick={() => settings.open('profile')}>
           <MenuIcon src={settingsIcon} size={SUB_ICON_SIZE} />
           <span className={styles.text}>설정</span>
-        </NavLink>
+        </button>
       </div>
       {isCreating && <CreateWorkspaceModal onClose={() => setIsCreating(false)} />}
     </nav>

@@ -1,0 +1,95 @@
+/* 피그마 Page 9 11 설정 Profile_Modal: 1440 화면에서 1120×892, 안쪽 24px */
+.modal {
+  width: min(1120px, calc(100vw - 2 * var(--spacing-6)));
+  height: min(892px, calc(100vh - 2 * var(--spacing-6)));
+  padding: var(--spacing-6);
+  gap: var(--spacing-6);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-md);
+  color: var(--text-primary);
+}
+
+.close {
+  display: flex;
+  color: var(--neutral-default);
+  border-radius: var(--radius-sm);
+}
+
+.close:hover {
+  background: var(--interactive-hover);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  gap: var(--spacing-8);
+  min-height: 0;
+}
+
+/* 왼쪽 메뉴 220px, 두 묶음 사이 구분선 */
+.nav {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  width: 220px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) 0;
+}
+
+.group + .group {
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-inline);
+  height: 40px;
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  text-align: left;
+  border-right: 2px solid transparent;
+}
+
+.navItem:hover {
+  background: var(--interactive-hover);
+}
+
+.icon {
+  color: var(--neutral-default);
+}
+
+.selected,
+.selected:hover {
+  color: var(--primary-default);
+  background: var(--interactive-selected);
+  border-right-color: var(--primary-default);
+}
+
+.selected .icon {
+  color: var(--primary-default);
+}
+
+/* 내용이 길면 이 안에서만 스크롤 */
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}

@@ -8,6 +8,7 @@ import logoutIcon from '../assets/icons/logout.svg';
 import settingsIcon from '../assets/icons/menu-settings.svg';
 import notificationsIcon from '../assets/icons/notifications.svg';
 import personIcon from '../assets/icons/person.svg';
+import { useSettingsModal, type SettingsTab } from '../pages/settings/useSettingsModal';
 import Icon from './Icon';
 import menu from './Menu.module.css';
 import NotificationPanel from './NotificationPanel';
@@ -37,6 +38,12 @@ export default function TopBarUser() {
   const profileRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const closePanel = useCallback(() => setOpenPanel(null), []);
+  const settings = useSettingsModal();
+  // REQ-003 프로필, 요금제, 화면 설정은 설정 창(REQ-145)의 해당 메뉴로 연다
+  const openSettings = (tab: SettingsTab) => {
+    closePanel();
+    settings.open(tab);
+  };
 
   useEffect(() => {
     let isCurrent = true;
@@ -128,18 +135,18 @@ export default function TopBarUser() {
                 </span>
               </div>
               <div className={menu.divider} />
-              <button type="button" role="menuitem" className={menu.item} onClick={() => navigate('/profile')}>
+              <button type="button" role="menuitem" className={menu.item} onClick={() => openSettings('profile')}>
                 <Icon src={personIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
                 프로필
               </button>
               {/* REQ-003 요금제 (REQ-176) */}
-              <button type="button" role="menuitem" className={menu.item} onClick={() => navigate('/plan')}>
+              <button type="button" role="menuitem" className={menu.item} onClick={() => openSettings('plan')}>
                 <Icon src={planIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
                 요금제
               </button>
-              <button type="button" role="menuitem" className={menu.item} onClick={() => navigate('/settings')}>
+              <button type="button" role="menuitem" className={menu.item} onClick={() => openSettings('display')}>
                 <Icon src={settingsIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
-                화면 설정
+                화면
               </button>
               <div className={menu.divider} />
               <button type="button" role="menuitem" className={menu.item} onClick={signOut}>

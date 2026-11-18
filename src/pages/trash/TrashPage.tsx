@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import { listTrashMeetings, purgeMeeting, restoreMeeting } from '../../api/meeting';
 import { listMyWorkspaces, listTrash, purgeTrashFolder, restoreTrashFolder } from '../../api/workspace';
@@ -10,7 +9,6 @@ import EmptyState from '../../components/EmptyState';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import type { WorkspaceSummary } from '../../types/workspace';
 import SettingsLayout from '../settings/SettingsLayout';
 import styles from './TrashPage.module.css';
 
@@ -26,6 +24,8 @@ interface TrashItem {
   key: string;
   kind: Kind;
   id: number;
+  /** 폴더 복구, 영구 삭제에 쓴다 */
+  workspaceId: number;
   name: string;
   location: string;
   deletedAt: string;
@@ -49,15 +49,38 @@ function restoredMessage(items: TrashItem[]) {
   return `${label}${items.length}개를 복구했어요.`;
 }
 
+/** 한 워크스페이스의 지운 폴더와 회의, 회의록. 폴더의 위치는 워크스페이스, 회의는 폴더 */
+async function loadWorkspace(workspaceId: number, workspaceName: string): Promise<TrashItem[]> {
+  const [folders, meetings] = await Promise.all([listTrash(workspaceId), listTrashMeetings(workspaceId)]);
+  return [
+    ...folders.map((folder) => ({
+      key: `folder-${folder.folderId}`,
+      kind: 'folder' as const,
+      id: folder.folderId,
+      workspaceId,
+      name: folder.name,
+      location: workspaceName,
+      deletedAt: folder.deletedAt,
+      purgeAt: folder.purgeAt,
+    })),
+    ...meetings.map((meeting) => ({
+      key: `meeting-${meeting.meetingId}`,
+      kind: meeting.hasMinutes ? ('minutes' as const) : ('meeting' as const),
+      id: meeting.meetingId,
+      workspaceId,
+      name: meeting.title,
+      location: meeting.folderName,
+      deletedAt: meeting.deletedAt,
+      purgeAt: meeting.purgeAt,
+    })),
+  ];
+}
+
 /**
- * REQ-143 삭제 목록 (디자인 TrashPage, 설정 안). 지운 폴더(workspace-service)와 회의, 회의록(meeting-service)을 함께 보여 주고
- * 골라서 복구하거나 영구 삭제한다. 3개월이 지나면 자동으로 영구 삭제된다
+ * REQ-143 삭제 목록 (디자인 Page 9 Trash_Modal, 설정 창 안). 내가 속한 모든 워크스페이스의 지운 폴더(workspace-service)와
+ * 회의, 회의록(meeting-service)을 함께 보여 주고 골라서 복구하거나 영구 삭제한다. 3개월이 지나면 자동으로 영구 삭제된다
  */
 export default function TrashPage() {
-  const navigate = useNavigate();
-  const { workspaceId } = useParams();
-  const id = Number(workspaceId);
-  const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [items, setItems] = useState<TrashItem[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPurging, setIsPurging] = useState<TrashItem[] | null>(null);
@@ -65,39 +88,13 @@ export default function TrashPage() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
 
-  const load = useCallback(async () => {
-    const [folders, meetings, mine] = await Promise.all([listTrash(id), listTrashMeetings(id), listMyWorkspaces()]);
-    const workspaceName = mine.find((workspace) => workspace.workspaceId === id)?.name ?? '';
-    const rows: TrashItem[] = [
-      ...folders.map((folder) => ({
-        key: `folder-${folder.folderId}`,
-        kind: 'folder' as const,
-        id: folder.folderId,
-        name: folder.name,
-        location: workspaceName,
-        deletedAt: folder.deletedAt,
-        purgeAt: folder.purgeAt,
-      })),
-      ...meetings.map((meeting) => ({
-        key: `meeting-${meeting.meetingId}`,
-        kind: meeting.hasMinutes ? ('minutes' as const) : ('meeting' as const),
-        id: meeting.meetingId,
-        name: meeting.title,
-        location: meeting.folderName,
-        deletedAt: meeting.deletedAt,
-        purgeAt: meeting.purgeAt,
-      })),
-    ].sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
-    return { rows, mine };
-  }, [id]);
-
   useEffect(() => {
     let isCurrent = true;
-    load()
-      .then(({ rows, mine }) => {
+    listMyWorkspaces()
+      .then((mine) => Promise.all(mine.map((workspace) => loadWorkspace(workspace.workspaceId, workspace.name))))
+      .then((groups) => {
         if (isCurrent) {
-          setItems(rows);
-          setWorkspaces(mine);
+          setItems(groups.flat().sort((a, b) => b.deletedAt.localeCompare(a.deletedAt)));
           setSelected(new Set());
         }
       })
@@ -110,7 +107,7 @@ export default function TrashPage() {
     return () => {
       isCurrent = false;
     };
-  }, [load]);
+  }, []);
 
   const run = async (targets: TrashItem[], action: 'restore' | 'purge') => {
     setIsBusy(true);
@@ -119,7 +116,9 @@ export default function TrashPage() {
     for (const item of targets) {
       try {
         if (item.kind === 'folder') {
-          await (action === 'restore' ? restoreTrashFolder(id, item.id) : purgeTrashFolder(id, item.id));
+          await (action === 'restore'
+            ? restoreTrashFolder(item.workspaceId, item.id)
+            : purgeTrashFolder(item.workspaceId, item.id));
         } else {
           await (action === 'restore' ? restoreMeeting(item.id) : purgeMeeting(item.id));
         }
@@ -158,25 +157,9 @@ export default function TrashPage() {
   return (
     <SettingsLayout
       title="삭제 목록"
-      description="삭제한 회의록과 폴더는 3개월 동안 보관된 뒤 영구 삭제돼요. 지운 사람과 만든 사람이 복구할 수 있어요."
+      description="삭제한 폴더, 회의, 회의록은 3개월 동안 보관된 뒤 영구 삭제돼요"
     >
       {toast && <Toast message={toast} onClose={closeToast} />}
-      {workspaces.length > 1 && (
-        <label className={styles.workspacePicker}>
-          워크스페이스
-          <select
-            className={styles.workspaceSelect}
-            value={id}
-            onChange={(event) => navigate(`/workspaces/${event.target.value}/trash`, { replace: true })}
-          >
-            {workspaces.map((workspace) => (
-              <option key={workspace.workspaceId} value={workspace.workspaceId}>
-                {workspace.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
       <div className={styles.card}>
         {items === null && (
           <div className={styles.loading}>
@@ -185,7 +168,7 @@ export default function TrashPage() {
             ))}
           </div>
         )}
-        {items?.length === 0 && <EmptyState title="삭제한 항목이 없어요" description="지운 회의록과 폴더가 여기에 모여요" />}
+        {items?.length === 0 && <EmptyState title="삭제 목록이 비어 있어요" description="삭제한 항목은 3개월 동안 여기에 보관돼요" />}
         {items && items.length > 0 && (
           <>
             <div className={styles.toolbar}>

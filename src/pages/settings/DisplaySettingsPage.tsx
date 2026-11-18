@@ -38,7 +38,7 @@ export default function DisplaySettingsPage() {
   };
 
   return (
-    <SettingsLayout title="화면 설정" description="테마를 내게 맞게 바꿔요">
+    <SettingsLayout title="화면" description="테마를 내게 맞게 바꿔요">
       <fieldset className={layout.card}>
         <legend className={`${layout.cardTitle} ${styles.legend}`}>테마</legend>
         <div className={styles.options}>

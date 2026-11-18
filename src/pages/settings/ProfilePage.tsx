@@ -24,7 +24,7 @@ const AVATAR_SIZE = 64;
 const AFFILIATION_MAX_LENGTH = 100;
 const IMAGE_TYPE_MESSAGE = 'JPG, PNG, WEBP 사진만 올릴 수 있어요.';
 
-/** REQ-114~118 내 계정 프로필 (디자인 ProfilePage): 사진, 이름, 소속, 비밀번호 변경, 로그아웃 */
+/** REQ-114~118 내 계정 프로필 (디자인 Page 9 Profile_Modal, 설정 창 안): 사진, 이름, 소속, 비밀번호 변경, 로그아웃 */
 export default function ProfilePage() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -127,9 +127,9 @@ export default function ProfilePage() {
                     사진 바꾸기
                   </button>
                   {profile.profileImageUrl && (
-                    <Button variant="text" disabled={isBusy} onClick={removeImage}>
-                      사진 지우기
-                    </Button>
+                    <button type="button" className={styles.smallButton} disabled={isBusy} onClick={removeImage}>
+                      사진 삭제
+                    </button>
                   )}
                 </div>
               </div>
@@ -166,11 +166,16 @@ export default function ProfilePage() {
                 비밀번호 변경
               </button>
             </div>
-            <div className={styles.divider} />
+          </div>
+          <div className={layout.card}>
             <div className={styles.row}>
-              <Button variant="text" onClick={signOut}>
+              <div className={styles.rowText}>
+                <p className={layout.cardTitle}>로그아웃</p>
+                <p className={styles.caption}>이 기기에서 로그아웃해요</p>
+              </div>
+              <button type="button" className={styles.smallButton} onClick={signOut}>
                 로그아웃
-              </Button>
+              </button>
             </div>
           </div>
         </>
