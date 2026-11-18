@@ -12,7 +12,7 @@ export default function AccessNotice({ kind }: { kind: AccessNoticeKind }) {
 
   return (
     <div className={styles.notice} role="alert">
-      <p className={styles.title}>{isForbidden ? '이 폴더를 볼 수 있는 권한이 없어요.' : '삭제된 회의예요.'}</p>
+      <p className={styles.title}>{isForbidden ? '이 폴더는 볼 수 없어요.' : '삭제된 회의예요.'}</p>
       <p className={styles.description}>
         {isForbidden ? '폴더 소유자에게 초대를 요청해 주세요.' : '삭제 목록에서 3개월 동안 복구할 수 있어요.'}
       </p>

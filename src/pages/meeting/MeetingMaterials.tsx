@@ -28,10 +28,13 @@ const SHEET_EXTENSIONS = /\.(xlsx?|csv)$/i;
 /** REQ-187 챗봇 검색 상태 (MSG-078~080). 안 되는 것은 이유를 보여 준다 */
 const SEARCH_STATUS: Record<MaterialSearchStatus, { label: string; title?: string; tone: 'muted' | 'ok' | 'warning' }> = {
   PREPARING: { label: '검색 준비 중', tone: 'muted' },
-  READY: { label: '챗봇 검색 가능', tone: 'ok' },
-  UNREADABLE: { label: '챗봇이 읽을 수 없는 파일', title: '챗봇이 읽을 수 없는 파일이에요. 파일은 그대로 볼 수 있어요.', tone: 'warning' },
-  TOO_LARGE: { label: '챗봇 검색에서 빠짐', title: '파일이 너무 커서 챗봇 검색에서 빠졌어요.', tone: 'warning' },
-  FAILED: { label: '검색 준비 실패', title: '챗봇 검색 준비에 실패했어요. 파일을 지우고 다시 올려 주세요.', tone: 'warning' },
+  READY: { label: 'AI 검색 가능', tone: 'ok' },
+  // MSG-078
+  UNREADABLE: { label: '읽을 수 없는 파일', title: '읽을 수 없는 파일이에요. 파일 형식을 확인해 주세요.', tone: 'warning' },
+  // MSG-079
+  TOO_LARGE: { label: 'AI 검색에서 빠짐', title: '내용이 약 100쪽을 넘어 AI 검색에서 빠졌어요.', tone: 'warning' },
+  // MSG-080
+  FAILED: { label: '검색 준비 실패', title: 'AI 검색 준비에 실패했어요. 파일을 지우고 다시 올려 주세요.', tone: 'warning' },
 };
 
 function formatSize(bytes: number) {
@@ -278,7 +281,7 @@ export default function MeetingMaterials({
             </ul>
           )}
           <p className={uploadError ? styles.error : styles.formats} role={uploadError ? 'alert' : undefined}>
-            {uploadError ?? 'PDF · Word · Excel · PowerPoint · 이미지 | 파일당 최대 50MB'}
+            {uploadError ?? 'PDF · Word · Excel · 텍스트(txt·md·csv) | 파일당 50MB · 약 100쪽 · 최대 5개'}
           </p>
         </Dialog>
       )}

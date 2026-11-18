@@ -56,7 +56,7 @@ const HISTORY_ICON_SIZE = 24;
 const HISTORY_MERGE_MS = 1000;
 const HISTORY_LIMIT = 100;
 // MSG-037~040
-const SHARED_MESSAGE = '회의록을 저장하고 참석 멤버에게 공유했어요.';
+const SHARED_MESSAGE = '넵! 참석자 모두에게 회의록을 공유했어요.';
 const SHARE_FAILED_MESSAGE = '회의록을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.';
 const SAVE_FAILED_MESSAGE = '임시저장하지 못했어요. 잠시 후 다시 시도해 주세요.';
 const DOWNLOAD_FAILED_MESSAGE = '파일을 다운로드하지 못했어요. 잠시 후 다시 시도해 주세요.';

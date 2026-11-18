@@ -72,7 +72,7 @@ export default function InviteLinkPage() {
             title={state.isExpired ? '초대 링크가 만료됐어요' : '초대 링크를 열 수 없어요'}
             description={
               state.isExpired
-                ? '초대 링크는 발급 후 1일 동안만 쓸 수 있어요.\n초대한 사람에게 다시 보내 달라고 요청해 주세요.'
+                ? '초대한 분께 다시 보내 달라고 해 주세요.'
                 : state.message
             }
             action={
