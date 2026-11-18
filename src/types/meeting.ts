@@ -38,6 +38,8 @@ export interface Meeting extends MeetingBasicInfo {
   /** REQ-123 대기 화면에서 고른 회의록 양식 (minutes-service). 사전 자료는 MeetingMaterials가 따로 불러온다 (REQ-067) */
   templateId?: number;
   materials: string[];
+  /** 회의를 마무리한 시각 (끝난 회의만) */
+  finishedAt?: string;
 }
 
 /** 대기 화면 양식 고르기 창에 보여 줄 양식 (REQ-123) */

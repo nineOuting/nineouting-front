@@ -245,6 +245,7 @@ export function toMeeting(detail: MeetingDetailResponse): Meeting {
     writer: toMember(detail.writer),
     templateId: detail.templateId ?? undefined,
     materials: [],
+    finishedAt: detail.finishedAt ?? undefined,
   };
 }
 

@@ -276,9 +276,9 @@ export default function MeetingRoomPage() {
         navigate(`/meetings/${loaded.meetingId}`, { replace: true });
         return;
       }
-      // 이미 끝난 회의는 회의록 작성 화면으로 (REQ-098)
+      // 이미 끝난 회의는 회의록 확인 화면으로 (REQ-098, 175)
       if (loaded.status === 'FINISHED') {
-        navigate(`/meetings/${loaded.meetingId}/minutes`, { replace: true });
+        navigate(`/meetings/${loaded.meetingId}`, { replace: true });
         return;
       }
       const roomAgendas = loaded.agendas.map(toRoomAgenda);
@@ -399,10 +399,10 @@ export default function MeetingRoomPage() {
         setLineAgendas((prev) => ({ ...prev, [message.data.seq]: toLineAgendaId(message.data.agendaId) }));
         break;
       case 'finished':
-        // REQ-098 작성자가 회의를 마무리하면 참석자 모두 회의록 작성 화면으로 간다
+        // REQ-098, 175 작성자가 회의를 마무리하면 참석자 모두 회의록 확인 화면으로 간다
         setIsFinished(true);
         if (numericMeetingId !== undefined) {
-          navigate(`/meetings/${numericMeetingId}/minutes`, { replace: true });
+          navigate(`/meetings/${numericMeetingId}`, { replace: true });
         }
         break;
     }
@@ -688,7 +688,7 @@ export default function MeetingRoomPage() {
       // 먼저 보내면 마무리가 실패했을 때 ai-service는 이미 회의를 끝낸 상태가 된다
       void sttRef.current?.end();
       setIsFinished(true);
-      navigate(`/meetings/${meetingIdNumber}/minutes`, { replace: true });
+      navigate(`/meetings/${meetingIdNumber}`, { replace: true });
     } catch (error) {
       // 마무리하지 못했으므로 STT는 그대로 이어서 보낸다
       isFinishingRef.current = false;

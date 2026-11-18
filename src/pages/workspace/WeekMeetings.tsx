@@ -23,7 +23,8 @@ function meetingPath(meeting: CalendarMeeting) {
   if (meeting.status === 'IN_PROGRESS') {
     return `/meetings/${meeting.meetingId}/room`;
   }
-  return meeting.status === 'FINISHED' ? `/meetings/${meeting.meetingId}/minutes` : `/meetings/${meeting.meetingId}`;
+  // 끝난 회의는 대기 화면이 회의록 확인 화면으로 바뀌어 있다 (REQ-175)
+  return `/meetings/${meeting.meetingId}`;
 }
 
 /** REQ-197 워크스페이스 이번 주 회의: 이번 주(월~일)에 이 워크스페이스에서 열리는 회의를 카드로 (날짜, 회의명, 프로젝트, 시간) */
