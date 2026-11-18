@@ -81,7 +81,7 @@ export default function PasswordResetPage() {
             </button>
             <div className={auth.titleGroup}>
               <h1 className={auth.displayTitle}>새 비밀번호 설정</h1>
-              <p className={auth.subtitle}>{'8자리 이상, 영문과 숫자를 각각 1자 이상\n포함해 주세요.'}</p>
+              <p className={auth.subtitle}>앞으로 사용할 비밀번호를 입력해 주세요</p>
             </div>
           </div>
           <div className={styles.form}>
@@ -120,7 +120,7 @@ export default function PasswordResetPage() {
               </div>
               <PasswordField
                 label="새 비밀번호 확인"
-                placeholder="비밀번호를 다시 입력해 주세요."
+                placeholder="비밀번호를 한 번 더 입력해 주세요"
                 autoComplete="new-password"
                 value={passwordConfirm}
                 error={passwordConfirm && !isPasswordMatched ? MESSAGES.passwordMismatch : undefined}

@@ -1,35 +1,98 @@
-/* 디자인 SignupPage AuthCard 560px */
-.card {
-  gap: var(--gap-content);
-  width: var(--layout-modal-width-md);
+/* 디자인 Page 9 01 회원가입: 로그인과 같은 400px 카드, 위에 단계 막대 */
+.page {
+  padding-block: var(--spacing-8);
 }
 
-.emailGroup {
+.progress {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  gap: var(--spacing-1);
 }
 
+.bar {
+  flex: 1;
+  height: 4px;
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-full);
+}
+
+.barDone {
+  background: var(--primary-default);
+}
+
+.progressText {
+  margin-left: var(--spacing-2);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 인증 번호 */
 .codeGroup {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-4);
 }
 
-.codeField {
-  gap: 4px;
+/* MSG-005, 006 인증 번호 칸 아래 빨간 글씨 */
+.error {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
+}
+
+.timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .codeActions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--spacing-2);
+}
+
+/* 계정 정보 */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
+.passwordGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.rules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+}
+
+.ruleMet {
+  color: var(--success-default);
 }
 
 .agreements {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-3);
   margin: 0;
   padding: 0;
   border: none;
@@ -44,22 +107,10 @@
 }
 
 .agreeAll {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.agreeAllLabel {
+  padding-bottom: var(--spacing-3);
+  border-bottom: var(--border-width-default) solid var(--border-default);
   font-size: var(--font-size-body-lg);
   line-height: var(--line-height-body-lg);
-}
-
-.agreeAllDescription {
-  padding-bottom: var(--spacing-2);
-  border-bottom: var(--border-width-default) solid var(--border-default);
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
-  color: var(--text-secondary);
 }
 
 .agreementList {
@@ -75,6 +126,10 @@
   gap: var(--spacing-3);
 }
 
+.agreementLabel {
+  font-size: var(--font-size-body-md);
+}
+
 .viewTerms {
   height: 32px;
   padding: 0 var(--spacing-2);
@@ -87,19 +142,4 @@
 
 .viewTerms:hover {
   background: var(--primary-ghost-hover);
-}
-
-.title {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-}
-
-/* REQ-011 [이메일 바꾸기] */
-.changeEmail {
-  align-self: flex-start;
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-caption);
-  color: var(--text-link);
 }

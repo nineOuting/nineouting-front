@@ -1,0 +1,31 @@
+/* 디자인 인증 번호 칸 48×56 */
+.inputs {
+  display: flex;
+  justify-content: space-between;
+}
+
+.input {
+  width: 48px;
+  height: 56px;
+  padding: 0;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  outline: none;
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.input:focus {
+  border-color: var(--border-focus);
+}
+
+.input:disabled {
+  background: var(--grey-10);
+}
+
+.invalid {
+  border-color: var(--danger-default);
+}

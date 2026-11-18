@@ -48,7 +48,7 @@ export default function PasswordFindPage() {
             </button>
             <div className={auth.titleGroup}>
               <h1 className={auth.displayTitle}>비밀번호 찾기</h1>
-              <p className={auth.subtitle}>{'가입한 이메일을 입력하면\n인증 번호를 보내드려요.'}</p>
+              <p className={auth.subtitle}>가입한 이메일을 입력하면 인증 번호를 보내 드려요</p>
             </div>
           </div>
           <div className={styles.form}>
@@ -56,7 +56,7 @@ export default function PasswordFindPage() {
               label="이메일"
               className={styles.emailField}
               type="email"
-              placeholder="test@naver.com"
+              placeholder="이메일을 입력해 주세요"
               autoComplete="email"
               maxLength={EMAIL_MAX_LENGTH}
               value={email}

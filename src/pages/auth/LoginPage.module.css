@@ -23,3 +23,26 @@
   line-height: var(--line-height-caption);
   color: var(--danger-default);
 }
+
+/* 디자인 InviteLandingPage 안내 상자 */
+.inviteNotice {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-3);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.inviteIcon {
+  flex-shrink: 0;
+  color: var(--primary-default);
+}
+
+.inviteStrong {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
