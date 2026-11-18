@@ -18,6 +18,7 @@ import {
   editTranscript,
   getAgendaBoard,
   getMeetingDetail,
+  getTranscriptTerms,
   listLineAgendas,
   listTranscripts,
   pauseMeeting,
@@ -28,6 +29,7 @@ import {
   type AgendaBoard,
   type BoardEndSnapshot,
   type MeetingDetailResponse,
+  type TranscriptTerms,
 } from '../../api/meeting';
 import { listMinutesTemplates } from '../../api/minutes';
 import { getMe } from '../../api/user';
@@ -66,7 +68,7 @@ import {
 } from './room/roomData';
 import RecordingBar from './room/RecordingBar';
 import RoomBanner, { SilenceNotice } from './room/RoomBanner';
-import { askAbout, detectTerms } from './room/termGlossary';
+import { askAbout, buildTermMatcher } from './room/termGlossary';
 import TranscriptPanel from './room/TranscriptPanel';
 import AccessNotice from '../../components/AccessNotice';
 import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
@@ -134,6 +136,12 @@ export default function MeetingRoomPage() {
   const [helperQuery, setHelperQuery] = useState<{ text: string; key: number } | null>(null);
   // 내 도우미 탭을 마지막으로 본 때까지 알려 준 용어 수 (그 뒤로 새로 나온 용어를 탭에 표시)
   const [seenTermCount, setSeenTermCount] = useState(0);
+  // REQ-191 ai-service가 찾은 전사 속 용어 (늘 전체가 오고, 늦게 온 낮은 버전은 버린다)
+  const [termList, setTermList] = useState<TranscriptTerms | null>(null);
+  const showTerms = useCallback(
+    (next: TranscriptTerms) => setTermList((prev) => (prev && prev.version > next.version ? prev : next)),
+    [],
+  );
   // 안건 추가 창. 새 안건 제안에서 열면 제안된 제목을 채운다
   const [addAgendaTitle, setAddAgendaTitle] = useState<string | null>(null);
   const [suggestion, setSuggestion] = useState<SuggestedAgenda | null>(demo === 'suggestion' ? ROOM_SUGGESTION : null);
@@ -248,13 +256,17 @@ export default function MeetingRoomPage() {
   /** 처음 들어올 때와 회의방 연결이 끊겼다 다시 붙을 때 지금 상태를 다시 받는다 */
   const reloadLive = useCallback(
     async (id: number) => {
-      const [lines, board, classified, todoChecks] = await Promise.all([
+      const [lines, board, classified, todoChecks, terms] = await Promise.all([
         listTranscripts(id),
         getAgendaBoard(id),
         listLineAgendas(id).catch(() => []),
         listTodoChecks(id).catch(() => []),
+        getTranscriptTerms(id).catch(() => null),
       ]);
       setDoneTodoIds(todoChecks);
+      if (terms) {
+        showTerms(terms);
+      }
       setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
       if (board) {
         showBoard(board);
@@ -262,7 +274,7 @@ export default function MeetingRoomPage() {
       correctedSeqsRef.current = new Set(classified.filter(({ corrected }) => corrected).map(({ seq }) => seq));
       setLineAgendas(Object.fromEntries(classified.map(({ seq, agendaId }) => [seq, toLineAgendaId(agendaId)])));
     },
-    [showBoard],
+    [showBoard, showTerms],
   );
 
   useEffect(() => {
@@ -385,6 +397,9 @@ export default function MeetingRoomPage() {
         break;
       case 'todoChecks':
         setDoneTodoIds(message.data);
+        break;
+      case 'transcriptTerms':
+        showTerms(message.data);
         break;
       case 'agendaClassification': {
         const changed = message.data.lines.filter(({ seq }) => !correctedSeqsRef.current.has(seq));
@@ -731,7 +746,10 @@ export default function MeetingRoomPage() {
 
   const plannedMinutes = Math.round((new Date(detail.endAt).getTime() - new Date(detail.startAt).getTime()) / 60000);
   const writerName = detail.writer.name ?? '알 수 없음';
-  const terms = detectTerms(transcript.map(({ text }) => text));
+  // REQ-191 칠할 용어 = 받은 목록 + 내 설정. 지금은 받은 목록뿐이고, 나중에 아는 말 숨기기, 개인 용어집을 여기서 합친다
+  const shownTerms = [...(termList?.terms ?? [])].sort((a, b) => a.firstSeq - b.firstSeq);
+  const termMatcher = buildTermMatcher(shownTerms);
+  const terms = shownTerms.map(({ term }) => term);
   const newTermCount = sideTab === 'chat' ? 0 : Math.max(0, terms.length - seenTermCount);
   const openHelper = (query?: string) => {
     setSideTab('chat');
@@ -943,6 +961,7 @@ export default function MeetingRoomPage() {
               lineAgendas={lineAgendas}
               agendaOptions={agendas.map(({ id, title }) => ({ id, title }))}
               onChangeAgenda={(seq, agendaId) => void changeLineAgenda(seq, agendaId)}
+              termMatcher={termMatcher}
               onAskTerm={(term) => openHelper(askAbout(term))}
               isOffline={!isOnline}
             />

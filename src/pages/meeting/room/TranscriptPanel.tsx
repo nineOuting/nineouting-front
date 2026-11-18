@@ -4,6 +4,7 @@ import Icon from '../../../components/Icon';
 import type { TranscriptLine } from '../../../types/meetingRoom';
 import room from './room.module.css';
 import TermText from './TermText';
+import type { TermMatcher } from './termGlossary';
 import styles from './SidePanel.module.css';
 
 const EMPTY_ICON_SIZE = 48;
@@ -22,6 +23,8 @@ interface TranscriptPanelProps {
   agendaOptions?: { id: string; title: string }[];
   /** REQ-089 줄의 안건 고치기 (회의록 작성자). null = 해당 없음 */
   onChangeAgenda?: (seq: number, agendaId: string | null) => void;
+  /** REQ-191 전사 속 용어 찾기 */
+  termMatcher: TermMatcher;
   /** 용어 카드의 [더 묻기] → 내 도우미 */
   onAskTerm?: (term: string) => void;
   /** 인터넷이 끊겼을 때 맨 아래 안내 */
@@ -36,6 +39,7 @@ export default function TranscriptPanel({
   lineAgendas = {},
   agendaOptions = [],
   onChangeAgenda,
+  termMatcher,
   onAskTerm,
   isOffline = false,
 }: TranscriptPanelProps) {
@@ -144,11 +148,11 @@ export default function TranscriptPanel({
                       }
                     }}
                   >
-                    <TermText text={line.text} onAsk={onAskTerm} />
+                    <TermText text={line.text} matcher={termMatcher} onAsk={onAskTerm} />
                   </p>
                 ) : (
                   <p className={styles.text}>
-                    <TermText text={line.text} onAsk={onAskTerm} />
+                    <TermText text={line.text} matcher={termMatcher} onAsk={onAskTerm} />
                   </p>
                 )}
               </li>
