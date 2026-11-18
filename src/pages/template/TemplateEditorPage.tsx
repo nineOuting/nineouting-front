@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { errorMessage } from '../../api/client';
+import { errorMessage, isApiError } from '../../api/client';
 import { createMinutesTemplate, listMinutesTemplates, updateMinutesTemplate } from '../../api/minutes';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import addIcon from '../../assets/icons/add-plain.svg';
@@ -214,7 +214,9 @@ export default function TemplateEditorPage() {
       }
       navigate('/templates', { state: { saved: true } });
     } catch (error) {
-      setToast({ text: errorMessage(error), variant: 'error' });
+      // MSG-053 서버 오류, 네트워크 오류일 때만 정해 둔 문구를 쓴다
+      const text = isApiError(error) && error.status < 500 ? errorMessage(error) : '양식을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.';
+      setToast({ text, variant: 'error' });
       setIsSaving(false);
     }
   };

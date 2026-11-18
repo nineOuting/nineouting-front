@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { errorMessage } from '../../api/client';
+import { errorMessage, isApiError } from '../../api/client';
 import { changePassword } from '../../api/user';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
@@ -40,7 +40,8 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
       await changePassword(current, next);
       onDone();
     } catch (error) {
-      setErrors({ current: errorMessage(error) });
+      // MSG-107
+      setErrors({ current: isApiError(error, 'PASSWORD_MISMATCH') ? '현재 비밀번호가 맞지 않아요. 다시 확인해 주세요.' : errorMessage(error) });
       setIsSubmitting(false);
     }
   };

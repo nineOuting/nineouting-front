@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useBlocker, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { errorMessage } from '../../api/client';
+import { errorMessage, isApiError } from '../../api/client';
 import { chooseMeetingTemplate, createMeeting, updateMeeting } from '../../api/meeting';
 import { getMe } from '../../api/user';
 import { getFolder, getWorkspace, listFolderMembers, listFolders } from '../../api/workspace';
@@ -293,7 +293,9 @@ export default function MeetingCreatePage() {
       navigate(`/meetings/${saved.meetingId}`, { replace: true });
     } catch (error) {
       setIsSubmitting(false);
-      setToast({ text: errorMessage(error), variant: 'error' });
+      // MSG-020 서버 오류, 네트워크 오류일 때만 정해 둔 문구를 쓴다. 권한 등 4xx는 서버 문구를 보여 준다
+      const text = isApiError(error) && error.status < 500 ? errorMessage(error) : '회의를 만들지 못했어요. 잠시 후 다시 시도해 주세요.';
+      setToast({ text, variant: 'error' });
     }
   };
 

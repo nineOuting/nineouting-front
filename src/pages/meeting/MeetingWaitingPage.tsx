@@ -9,6 +9,7 @@ import {
   listPendingAgendas,
   restorePendingAgenda,
   MEETING_ERROR_CODES,
+  PENDING_AGENDA_UNAVAILABLE_MESSAGE,
   startMeeting,
   toMeeting,
   updateMeeting,
@@ -201,7 +202,8 @@ export default function MeetingWaitingPage() {
     try {
       await discardPendingAgenda(folderId, pending.id);
     } catch (error) {
-      setToast({ text: errorMessage(error), variant: 'error' });
+      const text = isApiError(error, MEETING_ERROR_CODES.pendingAgendaUnavailable) ? PENDING_AGENDA_UNAVAILABLE_MESSAGE : errorMessage(error);
+      setToast({ text, variant: 'error' });
       return;
     }
     setPendingAgendas((prev) => prev.filter(({ id }) => id !== pending.id));

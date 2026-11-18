@@ -178,6 +178,8 @@ export default function WorkspacePage() {
     const created = await createFolder(id, name);
     setFolders((prev) => [...prev, { folderId: created.folderId, name: created.name, isDefault: false, meetingCount: 0, ownerUserId: myUserId }]);
     closeDialog();
+    // MSG-093
+    setToast({ text: `'${created.name}' 폴더를 만들었어요.`, variant: 'success' });
   };
 
   const rename = async (folderId: number, name: string) => {
