@@ -514,6 +514,35 @@ export async function getAgendaBoard(meetingId: number) {
   return (await request<AgendaBoardResponse>('GET', `/api/meetings/${meetingId}/agenda-board`)).board;
 }
 
+/** REQ-191 전사 속 용어 (ai-service 전사 속 용어 목록 API 명세). 모르는 칸은 무시한다 */
+export interface TranscriptTerm {
+  id: string;
+  /** 전사에서 칠할 표기 */
+  term: string;
+  /** 뜻 카드 제목 (용어집에 적힌 용어만). 없으면 term */
+  name?: string | null;
+  /** 같은 뜻의 다른 표기. term과 함께 칠한다 */
+  aliases: string[];
+  /** 한 줄 뜻 */
+  text: string;
+  /** GLOSSARY 팀 용어집 / AI_EXPLAIN AI가 쓴 뜻 */
+  origin: string;
+  /** 처음 찾은 전사 줄 번호 */
+  firstSeq: number;
+}
+
+/** 회의에서 지금까지 찾은 용어 전체. 회의방 transcriptTerms와 같은 모양 */
+export interface TranscriptTerms {
+  version: number;
+  final: boolean;
+  terms: TranscriptTerm[];
+}
+
+/** REQ-191 지금 용어 목록 (회의방에 늦게 들어왔을 때). 아직 없으면 version 0, 빈 목록 */
+export function getTranscriptTerms(meetingId: number) {
+  return request<TranscriptTerms>('GET', `/api/meetings/${meetingId}/transcript-terms`);
+}
+
 /** REQ-126 결정 내용 수정 (회의록 작성자, 진행 중). ai-service로 보내고 고친 보드가 회의방으로 다시 온다 */
 export function editDecision(meetingId: number, agendaId: number, decisionPointId: number, decisionText: string,
   evidenceSeqs: number[]) {

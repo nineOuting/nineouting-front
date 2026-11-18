@@ -6,6 +6,7 @@ import {
   type LineAgendaResponse,
   type LiveSummaryResponse,
   type TranscriptLineResponse,
+  type TranscriptTerms,
 } from '../api/meeting';
 import { retryDelay, socketUrl } from '../meeting/socketUrl';
 
@@ -22,7 +23,9 @@ export type RoomMessage =
   | { type: 'agendaClassification'; data: AgendaClassificationMessage }
   | { type: 'lineAgenda'; data: LineAgendaResponse }
   // 할 일 완료 체크가 바뀜. data = 체크한 할 일 항목 번호 전체
-  | { type: 'todoChecks'; data: string[] };
+  | { type: 'todoChecks'; data: string[] }
+  // REQ-191 전사 속 용어 목록이 바뀜. data = ai-service가 보낸 것 그대로 (늘 전체)
+  | { type: 'transcriptTerms'; data: TranscriptTerms };
 
 interface RoomSocketHandlers {
   onMessage: (message: RoomMessage) => void;
