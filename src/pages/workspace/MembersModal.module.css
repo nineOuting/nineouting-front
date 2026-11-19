@@ -160,7 +160,7 @@
 }
 
 .transfer:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 /* 전체선택 줄 (폴더 멤버) */

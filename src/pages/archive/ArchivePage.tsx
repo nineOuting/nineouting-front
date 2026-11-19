@@ -35,6 +35,7 @@ import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
 import moveIcon from '../../assets/icons/folder-sm.svg';
 import MoveMeetingModal from '../../components/MoveMeetingModal';
+import emptyCharacter from '../../assets/characters/empty.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
 import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
@@ -598,6 +599,7 @@ export default function ArchivePage() {
         ) : items.length === 0 ? (
           query || hasFilters ? (
             <EmptyState
+              character={emptyCharacter}
               title="검색 결과가 없어요"
               description="다른 검색어를 입력하거나 필터를 줄여 보세요"
               action={

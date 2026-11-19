@@ -130,7 +130,7 @@
 }
 
 .textButton:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 .memberCard {

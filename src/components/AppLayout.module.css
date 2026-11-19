@@ -15,7 +15,7 @@
   width: var(--layout-sidebar-width);
   height: 100vh;
   overflow-y: auto;
-  background: var(--bg-surface);
+  background: var(--bg-sidebar);
   border-right: var(--border-width-default) solid var(--border-default);
 }
 

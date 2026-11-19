@@ -347,11 +347,11 @@
   border-radius: var(--radius-lg);
   font-size: var(--font-size-body-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--primary-default);
+  color: var(--text-link);
 }
 
 .addAgenda:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 /* 이전 회의에서 남은 안건 */

@@ -37,7 +37,7 @@
 }
 
 .action:hover:not(:disabled) {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 .selected {

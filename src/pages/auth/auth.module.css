@@ -82,5 +82,5 @@
 
 .footerLink:hover {
   text-decoration: none;
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
