@@ -1,0 +1,25 @@
+# 의존성 업데이트 PR (매주). 비슷한 것끼리 PR 하나로 묶는다.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Seoul
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Seoul
+    groups:
+      actions:
+        patterns: ['*']
