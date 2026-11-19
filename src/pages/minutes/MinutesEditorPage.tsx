@@ -131,6 +131,17 @@ export default function MinutesEditorPage() {
   const [isRetryingDraft, setIsRetryingDraft] = useState(false);
   const [dialog, setDialog] = useState<'download' | 'share' | null>(searchParams.get('download') ? 'download' : null);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+  // 서식은 줄글 칸(RichTextField)에만 넣을 수 있다. 커서가 그 칸에 있을 때만 서식 버튼을 켠다
+  const [canFormat, setCanFormat] = useState(false);
+  useEffect(() => {
+    const update = () => {
+      const node = document.getSelection()?.anchorNode;
+      const element = node instanceof Element ? node : node?.parentElement;
+      setCanFormat(Boolean(element?.closest('[contenteditable="true"]')));
+    };
+    document.addEventListener('selectionchange', update);
+    return () => document.removeEventListener('selectionchange', update);
+  }, []);
   // 디자인 Version02: 양식을 고르면 바꾸기 전에 한 번 묻는다 / 다운로드는 상단 바 아래 작은 메뉴
   const [pendingTemplate, setPendingTemplate] = useState<{ templateId: number; name: string } | null>(null);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
@@ -610,6 +621,7 @@ export default function MinutesEditorPage() {
                 type="button"
                 className={styles.formatButton}
                 aria-label={action.label}
+                disabled={!canFormat}
                 onMouseDown={(event) => {
                   // 누르는 동안 문서 칸의 선택이 풀리지 않게
                   event.preventDefault();

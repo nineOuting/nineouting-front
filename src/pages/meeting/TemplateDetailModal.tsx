@@ -14,11 +14,14 @@ interface TemplateDetailModalProps {
   onChangeIndex: (index: number) => void;
   /** 없으면 보기만 한다 (참석자가 아니면, REQ-130) */
   onUse?: (templateId: number) => void;
+  /** X: 창을 모두 닫는다 */
   onClose: () => void;
+  /** [목록으로]: 양식 목록 창으로 돌아간다 */
+  onBack: () => void;
 }
 
 /** REQ-123 회의록 양식 상세 보기 (디자인 TemplateDetail). 좌우 버튼으로 다른 양식을 넘겨 본다 */
-export default function TemplateDetailModal({ templates, index, onChangeIndex, onUse, onClose }: TemplateDetailModalProps) {
+export default function TemplateDetailModal({ templates, index, onChangeIndex, onUse, onClose, onBack }: TemplateDetailModalProps) {
   const template = templates[index];
   const lastIndex = templates.length - 1;
 
@@ -30,7 +33,7 @@ export default function TemplateDetailModal({ templates, index, onChangeIndex, o
       onClose={onClose}
       footer={
         <>
-          <Button variant="secondary" size="md" onClick={onClose}>
+          <Button variant="secondary" size="md" onClick={onBack}>
             목록으로
           </Button>
           {onUse && (

@@ -62,11 +62,11 @@
   align-items: center;
   gap: var(--gap-content);
   min-width: 0;
-  overflow: hidden;
 }
 
 .metaItem {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: var(--gap-title-subtitle);
   font-size: var(--font-size-caption);
@@ -257,8 +257,12 @@
   color: var(--text-primary);
 }
 
-.formatButton:hover {
+.formatButton:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
+}
+
+.formatButton:disabled {
+  color: var(--text-disabled);
 }
 
 .formatDivider {

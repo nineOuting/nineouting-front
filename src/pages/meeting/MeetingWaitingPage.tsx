@@ -625,7 +625,8 @@ export default function MeetingWaitingPage() {
                 }
               : undefined
           }
-          onClose={() => setTemplateModal({ view: 'gallery' })}
+          onClose={() => setTemplateModal(null)}
+          onBack={() => setTemplateModal({ view: 'gallery' })}
         />
       )}
       {isConsentOpen && <ConsentModal onCancel={() => setIsConsentOpen(false)} onAgree={start} />}

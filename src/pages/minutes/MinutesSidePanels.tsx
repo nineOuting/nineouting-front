@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { AgendaStatusCode } from '../../api/meeting';
-import arrowDownIcon from '../../assets/icons/arrow-down.svg';
-import arrowUpIcon from '../../assets/icons/arrow-up.svg';
 import checkIcon from '../../assets/icons/check.svg';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
@@ -17,6 +15,11 @@ import styles from './MinutesSidePanels.module.css';
 const TITLE_ICON_SIZE = 20;
 const NAV_ICON_SIZE = 20;
 const STATUS_ICON_SIZE = 12;
+// REQ-134 요약본과 전사 높이 비율. 가운데 막대를 끌어 바꾼다
+const DEFAULT_RATIO = 0.5;
+const MIN_RATIO = 0.2;
+const MAX_RATIO = 0.8;
+const clampRatio = (value: number) => Math.min(MAX_RATIO, Math.max(MIN_RATIO, value));
 
 /** 디자인 Version02 결정현황 한 줄 */
 export interface AgendaDecision {
@@ -67,12 +70,13 @@ function agendaStateLabel(agenda: AgendaSummary) {
 
 /**
  * REQ-133~134 디자인 Version02 MinutesEditor 오른쪽: 회의 요약본(안건을 골라 요약·주요 의견·결정현황·합의되지 않은 부분)
- * + 전사 기록(접고 펼치기). 결정현황의 [근거 발언 보기]를 누르면 전사에서 근거 줄을 칠하고 그쪽으로 옮긴다
+ * + 전사 기록. 가운데 막대로 두 칸 높이를 바꾼다. 결정현황의 [근거 발언 보기]를 누르면 전사에서 근거 줄을 칠하고 그쪽으로 옮긴다
  */
 export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsProps) {
   const [index, setIndex] = useState(0);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const [isTranscriptOpen, setIsTranscriptOpen] = useState(true);
+  const [ratio, setRatio] = useState(DEFAULT_RATIO);
+  const panelsRef = useRef<HTMLDivElement>(null);
   const [highlighted, setHighlighted] = useState<number[]>([]);
   // REQ-204 지금 보고 있는 근거 줄 (highlighted 안의 순서)
   const [evidenceIndex, setEvidenceIndex] = useState(0);
@@ -104,12 +108,18 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
     const sorted = [...seqs].sort((a, b) => a - b);
     setHighlighted(sorted);
     setEvidenceIndex(0);
-    setIsTranscriptOpen(true);
-    // 펼친 뒤 그려진 첫 근거 줄로 옮긴다
     scrollToLine(sorted[0]);
   };
 
-  /** REQ-204 위/아래 버튼으로 근거 줄 사이를 옮겨 다닌다. 더 갈 곳이 없으면 버튼을 막는다 */
+  const startDrag = (event: ReactPointerEvent<HTMLDivElement>) => event.currentTarget.setPointerCapture(event.pointerId);
+  const drag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const box = panelsRef.current?.getBoundingClientRect();
+    if (box && event.currentTarget.hasPointerCapture(event.pointerId)) {
+      setRatio(clampRatio((event.clientY - box.top) / box.height));
+    }
+  };
+
+  /** REQ-204 좌우 버튼으로 근거 줄 사이를 옮겨 다닌다 (디자인 TranscriptNav). 더 갈 곳이 없으면 버튼을 막는다 */
   const moveEvidence = (step: number) => {
     const next = evidenceIndex + step;
     if (next < 0 || next >= highlighted.length) {
@@ -120,11 +130,8 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
   };
 
   return (
-    <div className={styles.panels}>
-      <section
-        className={[styles.summarySection, isTranscriptOpen ? '' : styles.grow].filter(Boolean).join(' ')}
-        aria-labelledby="minutes-summary-title"
-      >
+    <div ref={panelsRef} className={styles.panels}>
+      <section className={styles.summarySection} style={{ flexGrow: ratio }} aria-labelledby="minutes-summary-title">
         <h2 id="minutes-summary-title" className={styles.title}>
           <Icon src={summaryIcon} size={TITLE_ICON_SIZE} className={styles.titleIcon} />
           회의 요약본
@@ -269,52 +276,61 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
         )}
       </section>
 
-      <section
-        className={[styles.transcriptSection, isTranscriptOpen ? styles.grow : ''].filter(Boolean).join(' ')}
-        aria-labelledby="minutes-transcript-title"
+      <div
+        className={styles.handle}
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="요약본과 전사 높이 조절"
+        aria-valuenow={Math.round(ratio * 100)}
+        aria-valuemin={MIN_RATIO * 100}
+        aria-valuemax={MAX_RATIO * 100}
+        tabIndex={0}
+        onPointerDown={startDrag}
+        onPointerMove={drag}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            const step = event.key === 'ArrowUp' ? -0.05 : 0.05;
+            setRatio((value) => clampRatio(value + step));
+          }
+        }}
       >
+        <span className={styles.handleGrip} />
+      </div>
+
+      <section className={styles.transcriptSection} style={{ flexGrow: 1 - ratio }} aria-labelledby="minutes-transcript-title">
         <div className={styles.transcriptHead}>
           <h2 id="minutes-transcript-title" className={styles.title}>
             <Icon src={transcriptIcon} size={TITLE_ICON_SIZE} className={styles.titleIcon} />
             전사 기록
           </h2>
-          {isTranscriptOpen && highlighted.length > 0 && (
-            <span className={styles.evidenceNav}>
+          <span className={styles.evidenceNav}>
+            {highlighted.length > 0 && (
               <span className={styles.evidenceCount}>
                 근거 {evidenceIndex + 1}/{highlighted.length}
               </span>
-              <button
-                type="button"
-                className={styles.navButton}
-                aria-label="이전 근거 발언"
-                disabled={evidenceIndex === 0}
-                onClick={() => moveEvidence(-1)}
-              >
-                <Icon src={arrowUpIcon} size={NAV_ICON_SIZE} />
-              </button>
-              <button
-                type="button"
-                className={styles.navButton}
-                aria-label="다음 근거 발언"
-                disabled={evidenceIndex === highlighted.length - 1}
-                onClick={() => moveEvidence(1)}
-              >
-                <Icon src={arrowDownIcon} size={NAV_ICON_SIZE} />
-              </button>
-            </span>
-          )}
-          <button
-            type="button"
-            className={styles.navButton}
-            aria-label={isTranscriptOpen ? '전사 기록 접기' : '전사 기록 펼치기'}
-            aria-expanded={isTranscriptOpen}
-            onClick={() => setIsTranscriptOpen((open) => !open)}
-          >
-            <Icon src={isTranscriptOpen ? chevronDownIcon : chevronUpIcon} size={NAV_ICON_SIZE} />
-          </button>
+            )}
+            <button
+              type="button"
+              className={styles.navButton}
+              aria-label="이전 근거 발언"
+              disabled={evidenceIndex <= 0}
+              onClick={() => moveEvidence(-1)}
+            >
+              <Icon src={chevronLeftIcon} size={NAV_ICON_SIZE} />
+            </button>
+            <button
+              type="button"
+              className={styles.navButton}
+              aria-label="다음 근거 발언"
+              disabled={evidenceIndex >= highlighted.length - 1}
+              onClick={() => moveEvidence(1)}
+            >
+              <Icon src={chevronRightIcon} size={NAV_ICON_SIZE} />
+            </button>
+          </span>
         </div>
-        {isTranscriptOpen &&
-          (lines.length === 0 ? (
+        {lines.length === 0 ? (
             <p className={styles.empty}>받아쓴 발언이 없어요.</p>
           ) : (
             <ol className={styles.lines}>
@@ -341,7 +357,7 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
                 </li>
               ))}
             </ol>
-          ))}
+          )}
       </section>
     </div>
   );
