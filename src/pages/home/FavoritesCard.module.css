@@ -50,3 +50,32 @@
   flex-shrink: 0;
   color: var(--neutral-default);
 }
+
+/* 디자인 Card 즐겨찾기 없음: 높이 120, 가운데 정렬 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
+  min-height: 120px;
+  padding: var(--spacing-4);
+  text-align: center;
+}
+
+.emptyIcon {
+  margin-bottom: var(--spacing-3);
+  color: var(--text-secondary);
+}
+
+.emptyTitle {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.emptyDescription {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+}

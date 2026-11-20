@@ -51,11 +51,15 @@ function InfoNote({ children }: { children: ReactNode }) {
   );
 }
 
-/** MSG-083 회의록 양식 확인 */
+/** MSG-083 회의록 양식 확인. 디자인 Card 회의록 양식 확인: 양식 이름은 제목에, 설명은 한 줄 (디자인 체크 2026-11-19) */
+function confirmTitle(templateName: string | null) {
+  return templateName ? `'${templateName}' 양식으로 회의록을 만들어요` : TITLES.confirm.title;
+}
+
 function confirmMessage(templateName: string | null) {
   return templateName
-    ? `'${templateName}' 양식으로 회의록을 만들어요. [확인]을 누르면 녹음이 멈추고 회의록 작성 화면으로 이동해요.`
-    : '[확인]을 누르면 녹음이 멈추고 회의록 작성 화면으로 이동해요. 양식은 회의록 작성 화면에서 골라 주세요.';
+    ? '[확인]을 누르면 녹음이 멈추고 회의록을 만들기 시작해요'
+    : '[확인]을 누르면 녹음이 멈추고 회의록을 만들기 시작해요. 양식은 회의록 작성 화면에서 골라 주세요.';
 }
 
 /**
@@ -136,7 +140,7 @@ export default function EndMeetingModal({
 
   return (
     <Dialog
-      title={TITLES[step].title}
+      title={step === 'confirm' ? confirmTitle(templateName) : TITLES[step].title}
       description={
         step === 'leftover'
           ? `결론이 나지 않은 안건이 ${leftover.length}개 있어요. 다음 회의로 넘길 안건을 골라 주세요.`
@@ -144,7 +148,8 @@ export default function EndMeetingModal({
             ? confirmMessage(templateName)
             : TITLES[step].description
       }
-      onBack={!isBusy ? onContinue : undefined}
+      // 양식 확인 창은 뒤로가기 없이 [취소]로 돌아간다 (디자인 체크 2026-11-19)
+      onBack={!isBusy && step !== 'confirm' ? onContinue : undefined}
       width="md"
       hideClose={isBusy}
       onClose={isBusy ? () => undefined : onContinue}

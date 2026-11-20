@@ -91,16 +91,14 @@ export default function LoadPreviousSettings({ folderId, onBack, onApply }: Load
       title="이전 회의 설정 불러오기"
       description="같은 프로젝트 폴더의 회의를 골라 주세요"
       width="md"
+      // 디자인 LoadSettingsModal: 왼쪽 뒤로가기로 회의 만들기 창에 돌아간다. X, [취소] 없음 (디자인 체크 2026-11-19)
+      onBack={onBack}
       onClose={onBack}
+      hideClose
       footer={
-        <>
-          <Button variant="secondary" size="md" onClick={onBack}>
-            취소
-          </Button>
-          <Button size="md" disabled={!selected || keys.length === 0} onClick={apply}>
-            선택한 설정 불러오기
-          </Button>
-        </>
+        <Button size="md" disabled={!selected || keys.length === 0} onClick={apply}>
+          선택한 설정 불러오기
+        </Button>
       }
     >
       <TextField

@@ -41,7 +41,19 @@
 }
 
 .failed {
-  background: var(--danger-subtle);
+  padding: var(--spacing-3);
+  background: var(--bg-page);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.failedHead {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
 }
 
 .basis {

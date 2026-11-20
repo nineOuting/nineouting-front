@@ -138,19 +138,21 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
     setCursor((date) =>
       view === 'week' ? addDays(date, direction * 7) : new Date(date.getFullYear(), date.getMonth() + direction, 1),
     );
-  const eventClass = (meeting: CalendarMeeting) =>
-    [styles.event, meeting.status === 'FINISHED' ? styles.past : ''].filter(Boolean).join(' ');
+  // 끝난 회의와, 끝날 시각이 지나도록 열리지 않은 회의는 지난 회의로 회색 (디자인 체크 2026-11-19)
+  const isPast = (meeting: CalendarMeeting) =>
+    meeting.status === 'FINISHED' || new Date(meeting.endAt).getTime() < Date.now();
+  const eventClass = (meeting: CalendarMeeting) => [styles.event, isPast(meeting) ? styles.past : ''].filter(Boolean).join(' ');
   // REQ-202 일정은 프로젝트 색: 왼쪽 줄은 진한 색, 바탕은 옅은 색. 끝난 회의는 바탕만 회색
   const eventStyle = (meeting: CalendarMeeting) => {
     const color = folders.find(({ folderId }) => folderId === meeting.folderId)?.color;
     return {
       borderLeftColor: folderColor(color),
-      ...(meeting.status === 'FINISHED' ? {} : { background: folderSubtleColor(color) }),
+      ...(isPast(meeting) ? {} : { background: folderSubtleColor(color) }),
     };
   };
   const eventLabel = (meeting: CalendarMeeting) =>
     `${meeting.title}, ${toTime(meeting.startAt)} - ${toTime(meeting.endAt)}, ${meeting.folderName}${
-      meeting.status === 'FINISHED' ? ', 끝난 회의' : ''
+      isPast(meeting) ? ', 지난 회의' : ''
     }`;
 
   return (
@@ -329,6 +331,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
         <MeetingPreviewCard
           meeting={preview.meeting}
           anchor={preview.anchor}
+          folderColor={folders.find(({ folderId }) => folderId === preview.meeting.folderId)?.color}
           onOpen={() => navigate(meetingPath(preview.meeting))}
           onClose={() => setPreview(null)}
         />

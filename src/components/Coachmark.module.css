@@ -43,7 +43,4 @@
   color: var(--text-secondary);
 }
 
-.buttons {
-  display: flex;
-  gap: var(--spacing-2);
-}
+

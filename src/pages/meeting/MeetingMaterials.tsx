@@ -10,7 +10,7 @@ import {
 import closeIcon from '../../assets/icons/close-sm.svg';
 import fileIcon from '../../assets/icons/minutes-doc.svg';
 import tableIcon from '../../assets/icons/rail-table.svg';
-import uploadIcon from '../../assets/icons/upload-file.svg';
+import uploadIcon from '../../assets/icons/upload.svg';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
@@ -19,7 +19,8 @@ import styles from './MeetingMaterials.module.css';
 
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
-const UPLOAD_ICON_SIZE = 24;
+// 디자인 UploadIcon 32px (디자인 체크 2026-11-19)
+const UPLOAD_ICON_SIZE = 32;
 // REQ-067 50MB 이하 파일만 (MSG-067). 서버도 다시 확인한다
 const MAX_MATERIAL_BYTES = 50 * 1024 * 1024;
 const SEARCH_STATUS_POLL_MS = 5000;

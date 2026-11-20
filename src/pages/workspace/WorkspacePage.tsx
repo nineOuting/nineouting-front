@@ -31,7 +31,6 @@ import moreIcon from '../../assets/icons/more-vert.svg';
 import settingsIcon from '../../assets/icons/settings.svg';
 import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import FavoriteButton from '../../components/FavoriteButton';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
@@ -315,11 +314,7 @@ export default function WorkspacePage() {
                 />
               )}
             </span>
-            <FavoriteButton
-              target={{ type: 'workspace', workspaceId: workspace.workspaceId }}
-              name={workspace.name}
-              onError={(text) => setToast({ text, variant: 'error' })}
-            />
+            {/* REQ-151 즐겨찾기는 폴더만. 워크스페이스 별은 뺐다 (디자인 체크 2026-11-19) */}
           </div>
           {workspace.description && <p className={styles.workspaceDescription}>{workspace.description}</p>}
         </div>
@@ -522,8 +517,9 @@ export default function WorkspacePage() {
         ) : (
           // MSG-041
           <ConfirmDialog
-            title="워크스페이스에서 나갈까요?"
-            message={'나가면 이 워크스페이스의 폴더와 회의록을 더 이상 볼 수 없어요.\n다시 참여하려면 초대를 받아야 해요.'}
+            title={`${workspace.name}에서 나갈까요?`}
+            // 디자인 LeaveConfirmModal 문구 (강제 줄바꿈 없이)
+            message="나가면 이 워크스페이스의 폴더와 회의록을 볼 수 없어요. 다시 들어오려면 초대를 받아야 해요."
             cancelLabel="취소"
             confirmLabel="나가기"
             onCancel={closeDialog}

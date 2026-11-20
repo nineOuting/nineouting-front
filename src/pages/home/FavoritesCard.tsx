@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import folderIcon from '../../assets/icons/folder-md.svg';
 import starIcon from '../../assets/icons/star-fill.svg';
+import starOutlineIcon from '../../assets/icons/star-outline.svg';
 import workspaceIcon from '../../assets/icons/workspace.svg';
 import Icon from '../../components/Icon';
 import type { Favorite } from '../../types/workspace';
@@ -42,7 +43,12 @@ export default function FavoritesCard({ items, onRemove }: FavoritesCardProps) {
         )}
       </div>
       {items.length === 0 ? (
-        <p className={`${card.listBox} ${card.boxEmpty}`}>아직 즐겨찾기가 없어요. 폴더에 별을 누르면 여기 모아 둘게요.</p>
+        // 디자인 EmptyFavorites: 아이콘, 제목, 설명을 가운데에
+        <div className={`${card.listBox} ${styles.empty}`}>
+          <Icon src={starOutlineIcon} size={20} className={styles.emptyIcon} />
+          <p className={styles.emptyTitle}>아직 즐겨찾기가 없어요</p>
+          <p className={styles.emptyDescription}>폴더에 별을 누르면 여기 모아 둘게요.</p>
+        </div>
       ) : (
         <ul className={card.listBox}>
           {shown.map((favorite) => {
