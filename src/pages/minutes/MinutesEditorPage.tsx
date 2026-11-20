@@ -65,6 +65,7 @@ const SHARE_FAILED_MESSAGE = '회의록을 저장하지 못했어요. 잠시 후
 const SAVE_FAILED_MESSAGE = '임시저장하지 못했어요. 잠시 후 다시 시도해 주세요.';
 const DOWNLOAD_FAILED_MESSAGE = '파일을 다운로드하지 못했어요. 잠시 후 다시 시도해 주세요.';
 const SAVED_MESSAGE = '임시저장했어요.';
+const EDITED_MESSAGE = '고친 내용을 저장하고 참석자에게 알렸어요.';
 const DRAFT_FILLED_MESSAGE = 'AI 초안으로 비어 있던 칸을 채웠어요.';
 // MSG-055~057 (REQ-101, REQ-161)
 const DRAFTING_MESSAGE = 'AI 초안을 만들고 있어요. 완성되면 비어 있는 칸에 채워 드려요.';
@@ -424,6 +425,19 @@ export default function MinutesEditorPage() {
     }
   };
 
+  // REQ-111 공유한 회의록을 고친 뒤 저장 (서버가 참석자에게 알린다)
+  const finishEdit = async () => {
+    setIsSaving(true);
+    try {
+      await save();
+      setToast({ text: EDITED_MESSAGE, variant: 'info' });
+    } catch (error) {
+      setToast({ text: failMessage(error, SAVE_FAILED_MESSAGE), variant: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const share = async () => {
     setIsSharing(true);
     try {
@@ -561,6 +575,17 @@ export default function MinutesEditorPage() {
                 onClick={() => setDialog('share')}
               >
                 작성 완료
+              </button>
+            )}
+            {/* 디자인 체크 2026-11-19: 공유한 뒤에도 고치면 [수정 완료]가 나온다. 저장하면 참석자에게 알림 (REQ-111) */}
+            {isWriter && minutes.status !== 'WRITING' && (
+              <button
+                type="button"
+                className={`${editorBar.action} ${editorBar.primary}`}
+                disabled={!isDirty || isSaving}
+                onClick={finishEdit}
+              >
+                수정 완료
               </button>
             )}
           </>
