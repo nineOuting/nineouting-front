@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { Fragment, useEffect, useRef, type RefObject } from 'react';
 import Icon from '../../components/Icon';
 import menu from '../../components/Menu.module.css';
 import styles from './ActionMenu.module.css';
@@ -12,6 +12,8 @@ export interface ActionMenuItem {
   icon?: string;
   /** 삭제처럼 되돌릴 수 없는 일은 빨간 글자 */
   isDanger?: boolean;
+  /** 위 항목들과 나누는 선을 앞에 긋는다 */
+  hasDividerBefore?: boolean;
 }
 
 interface ActionMenuProps {
@@ -50,19 +52,21 @@ export default function ActionMenu({ label, items, anchorRef, onClose, className
   return (
     <div ref={menuRef} role="menu" aria-label={label} className={[menu.menu, styles.menu, className].filter(Boolean).join(' ')}>
       {items.map((item) => (
-        <button
-          key={item.label}
-          type="button"
-          role="menuitem"
-          className={[menu.item, item.isDanger ? menu.danger : ''].filter(Boolean).join(' ')}
-          onClick={() => {
-            onClose();
-            item.onSelect();
-          }}
-        >
-          {item.icon && <Icon src={item.icon} size={ICON_SIZE} className={menu.itemIcon} />}
-          {item.label}
-        </button>
+        <Fragment key={item.label}>
+          {item.hasDividerBefore && <div className={menu.divider} role="separator" />}
+          <button
+            type="button"
+            role="menuitem"
+            className={[menu.item, item.isDanger ? menu.danger : ''].filter(Boolean).join(' ')}
+            onClick={() => {
+              onClose();
+              item.onSelect();
+            }}
+          >
+            {item.icon && <Icon src={item.icon} size={ICON_SIZE} className={menu.itemIcon} />}
+            {item.label}
+          </button>
+        </Fragment>
       ))}
     </div>
   );

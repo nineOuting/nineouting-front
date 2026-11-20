@@ -80,13 +80,7 @@ export default function FolderCalendar({ folderId, color, selectedDay, onSelectD
             iso === todayIso ? styles.today : '',
             iso === selectedDay ? styles.selected : '',
           ].filter(Boolean);
-          if (!hasMeeting) {
-            return (
-              <span key={iso} className={classes.join(' ')}>
-                {day.getDate()}
-              </span>
-            );
-          }
+          // 회의가 없는 날도 누를 수 있다. 누르면 회의 목록에 그날 회의가 없다고 알려 준다 (디자인 체크 2026-11-19)
           return (
             <button
               key={iso}
@@ -97,7 +91,7 @@ export default function FolderCalendar({ folderId, color, selectedDay, onSelectD
               onClick={() => onSelectDay(iso === selectedDay ? null : iso)}
             >
               <span className={styles.dayNumber}>{day.getDate()}</span>
-              <span className={styles.dot} style={{ background: color }} aria-hidden="true" />
+              {hasMeeting && <span className={styles.dot} style={{ background: color }} aria-hidden="true" />}
             </button>
           );
         })}

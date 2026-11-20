@@ -18,14 +18,17 @@ import {
 import alignCenterIcon from '../../assets/icons/align-center.svg';
 import alignLeftIcon from '../../assets/icons/align-left.svg';
 import alignRightIcon from '../../assets/icons/align-right.svg';
-import bulletIcon from '../../assets/icons/bullet.svg';
+import bulletIcon from '../../assets/icons/format-bullet.svg';
+import boldIcon from '../../assets/icons/format-bold.svg';
+import italicIcon from '../../assets/icons/format-italic.svg';
+import underlineIcon from '../../assets/icons/format-underline.svg';
 import downloadIcon from '../../assets/icons/download.svg';
 import locationIcon from '../../assets/icons/location.svg';
-import personIcon from '../../assets/icons/person-sm.svg';
+import personIcon from '../../assets/icons/participants.svg';
 import redoIcon from '../../assets/icons/redo.svg';
 import saveIcon from '../../assets/icons/save.svg';
 import scheduleIcon from '../../assets/icons/schedule.svg';
-import templateIcon from '../../assets/icons/template-sm.svg';
+import templateIcon from '../../assets/icons/template-doc.svg';
 import undoIcon from '../../assets/icons/undo.svg';
 import AccessNotice from '../../components/AccessNotice';
 import AiNotice from '../../components/AiNotice';
@@ -51,7 +54,8 @@ import styles from './MinutesEditorPage.module.css';
 
 const META_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 16;
-const HISTORY_ICON_SIZE = 24;
+// 디자인 History: 28px 버튼 안 20px 아이콘
+const HISTORY_ICON_SIZE = 20;
 // 되돌리기: 이 시간 안에 이어 쓴 글은 한 번에 되돌린다. 너무 길어지지 않게 최근 것만 둔다
 const HISTORY_MERGE_MS = 1000;
 const HISTORY_LIMIT = 100;
@@ -61,6 +65,7 @@ const SHARE_FAILED_MESSAGE = '회의록을 저장하지 못했어요. 잠시 후
 const SAVE_FAILED_MESSAGE = '임시저장하지 못했어요. 잠시 후 다시 시도해 주세요.';
 const DOWNLOAD_FAILED_MESSAGE = '파일을 다운로드하지 못했어요. 잠시 후 다시 시도해 주세요.';
 const SAVED_MESSAGE = '임시저장했어요.';
+const EDITED_MESSAGE = '고친 내용을 저장하고 참석자에게 알렸어요.';
 const DRAFT_FILLED_MESSAGE = 'AI 초안으로 비어 있던 칸을 채웠어요.';
 // MSG-055~057 (REQ-101, REQ-161)
 const DRAFTING_MESSAGE = 'AI 초안을 만들고 있어요. 완성되면 비어 있는 칸에 채워 드려요.';
@@ -78,9 +83,10 @@ const STATUS_LABELS = { WRITING: '작성 중', REVIEWING: '검토 중', CONFIRME
 type FormatAction = { label: string; command: string; icon?: string; text?: string; textClass?: string } | 'divider';
 
 const FORMAT_ACTIONS: FormatAction[] = [
-  { label: '굵게', command: 'bold', text: 'B', textClass: styles.formatBold },
-  { label: '기울임', command: 'italic', text: 'I', textClass: styles.formatItalic },
-  { label: '밑줄', command: 'underline', text: 'U', textClass: styles.formatUnderline },
+  // 디자인 DocEditToolbar: 글자 대신 아이콘 (디자인 체크 2026-11-19)
+  { label: '굵게', command: 'bold', icon: boldIcon },
+  { label: '기울임', command: 'italic', icon: italicIcon },
+  { label: '밑줄', command: 'underline', icon: underlineIcon },
   'divider',
   { label: '글머리 기호', command: 'insertUnorderedList', icon: bulletIcon },
   'divider',
@@ -131,6 +137,17 @@ export default function MinutesEditorPage() {
   const [isRetryingDraft, setIsRetryingDraft] = useState(false);
   const [dialog, setDialog] = useState<'download' | 'share' | null>(searchParams.get('download') ? 'download' : null);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+  // 서식은 줄글 칸(RichTextField)에만 넣을 수 있다. 커서가 그 칸에 있을 때만 서식 버튼을 켠다
+  const [canFormat, setCanFormat] = useState(false);
+  useEffect(() => {
+    const update = () => {
+      const node = document.getSelection()?.anchorNode;
+      const element = node instanceof Element ? node : node?.parentElement;
+      setCanFormat(Boolean(element?.closest('[contenteditable="true"]')));
+    };
+    document.addEventListener('selectionchange', update);
+    return () => document.removeEventListener('selectionchange', update);
+  }, []);
   // 디자인 Version02: 양식을 고르면 바꾸기 전에 한 번 묻는다 / 다운로드는 상단 바 아래 작은 메뉴
   const [pendingTemplate, setPendingTemplate] = useState<{ templateId: number; name: string } | null>(null);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
@@ -340,7 +357,8 @@ export default function MinutesEditorPage() {
     { icon: scheduleIcon, label: scheduleLabel(minutes.meetingStartAt, meeting?.endAt) },
     ...(minutes.location ? [{ icon: locationIcon, label: minutes.location }] : []),
     { icon: personIcon, label: `참석자 ${minutes.attendees.length}명` },
-    { icon: templateIcon, label: templateName ?? '양식 없음' },
+    // 디자인 Meta_Template: "기본 회의록 양식"처럼 양식 이름 뒤에 "양식"
+    { icon: templateIcon, label: templateName ? (templateName.endsWith('양식') ? templateName : `${templateName} 양식`) : '양식 없음' },
   ];
   // 디자인 DocInfoList: 일시, 장소, 참석자
   const documentInfo: DocInfo[] = [
@@ -400,6 +418,19 @@ export default function MinutesEditorPage() {
     try {
       await save();
       setToast({ text: SAVED_MESSAGE, variant: 'info' });
+    } catch (error) {
+      setToast({ text: failMessage(error, SAVE_FAILED_MESSAGE), variant: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // REQ-111 공유한 회의록을 고친 뒤 저장 (서버가 참석자에게 알린다)
+  const finishEdit = async () => {
+    setIsSaving(true);
+    try {
+      await save();
+      setToast({ text: EDITED_MESSAGE, variant: 'info' });
     } catch (error) {
       setToast({ text: failMessage(error, SAVE_FAILED_MESSAGE), variant: 'error' });
     } finally {
@@ -546,6 +577,17 @@ export default function MinutesEditorPage() {
                 작성 완료
               </button>
             )}
+            {/* 디자인 체크 2026-11-19: 공유한 뒤에도 고치면 [수정 완료]가 나온다. 저장하면 참석자에게 알림 (REQ-111) */}
+            {isWriter && minutes.status !== 'WRITING' && (
+              <button
+                type="button"
+                className={`${editorBar.action} ${editorBar.primary}`}
+                disabled={!isDirty || isSaving}
+                onClick={finishEdit}
+              >
+                수정 완료
+              </button>
+            )}
           </>
         }
       />
@@ -610,6 +652,7 @@ export default function MinutesEditorPage() {
                 type="button"
                 className={styles.formatButton}
                 aria-label={action.label}
+                disabled={!canFormat}
                 onMouseDown={(event) => {
                   // 누르는 동안 문서 칸의 선택이 풀리지 않게
                   event.preventDefault();

@@ -46,6 +46,8 @@ export interface Meeting extends MeetingBasicInfo {
 export interface MinutesTemplate {
   templateId: number;
   name: string;
+  /** 상세 보기 부제 */
+  description?: string;
   isFavorite: boolean;
 }
 

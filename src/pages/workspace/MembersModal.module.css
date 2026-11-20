@@ -266,7 +266,19 @@
 }
 
 .accessButton:disabled {
+  background: var(--bg-surface-muted);
+  border-color: var(--border-default);
+  color: var(--text-disabled);
   cursor: default;
+}
+
+.accessText {
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .flipped {

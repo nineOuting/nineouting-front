@@ -1,5 +1,6 @@
-import type { FolderMeetingStat } from '../../api/meeting';
-import closeIcon from '../../assets/icons/close-sm.svg';
+import { useState } from 'react';
+import { PENDING_AGENDA_UNAVAILABLE_MESSAGE, type FolderMeetingStat } from '../../api/meeting';
+import deleteIcon from '../../assets/icons/delete-sm.svg';
 import Icon from '../../components/Icon';
 import type { FolderPendingAgenda } from '../../types/workspace';
 import styles from './FolderStats.module.css';
@@ -7,7 +8,7 @@ import styles from './FolderStats.module.css';
 const CHART_HEIGHT = 84;
 const STACK_GAP = 4;
 const MAX_UNIT = 14;
-const CLOSE_ICON_SIZE = 16;
+const DELETE_ICON_SIZE = 16;
 
 interface FolderStatsProps {
   stats: FolderMeetingStat[];
@@ -23,6 +24,8 @@ const shortDate = (date: string) => `${date.slice(5, 7)}/${date.slice(8, 10)}`;
  * 그래프는 최근 끝난 회의 6개. 회의가 하나도 없으면 그래프 대신 안내 문구
  */
 export default function FolderStats({ stats, pendingAgendas, onDiscardPending }: FolderStatsProps) {
+  // 누르면 제목 전체와 결정할 사항을 펼쳐 본다
+  const [openId, setOpenId] = useState<number | null>(null);
   const total = stats.reduce((sum, stat) => sum + stat.decided + stat.carried + stat.excluded, 0);
   const decided = stats.reduce((sum, stat) => sum + stat.decided, 0);
   const maxAgendas = Math.max(1, ...stats.map((stat) => stat.decided + stat.carried + stat.excluded));
@@ -102,21 +105,38 @@ export default function FolderStats({ stats, pendingAgendas, onDiscardPending }:
             <ul className={styles.pendingList}>
               {pendingAgendas.map((agenda) => (
                 <li key={agenda.pendingAgendaId} className={styles.pendingRow}>
-                  <span className={styles.pendingText}>
-                    <span className={styles.pendingTitle}>{agenda.title}</span>
+                  <button
+                    type="button"
+                    className={styles.pendingText}
+                    aria-expanded={openId === agenda.pendingAgendaId}
+                    onClick={() => setOpenId((id) => (id === agenda.pendingAgendaId ? null : agenda.pendingAgendaId))}
+                  >
+                    <span className={openId === agenda.pendingAgendaId ? styles.pendingTitleOpen : styles.pendingTitle}>
+                      {agenda.title}
+                    </span>
+                    {openId === agenda.pendingAgendaId && agenda.decisionPoints.length > 0 && (
+                      <ul className={styles.pendingPoints}>
+                        {agenda.decisionPoints.map((point) => (
+                          <li key={point}>{point}</li>
+                        ))}
+                      </ul>
+                    )}
                     <span className={styles.pendingMeta}>
                       {agenda.fromMeetingTitle}
                       <span className={styles.separator} aria-hidden="true" />
                       {agenda.carriedAt.replaceAll('-', '.')}
                     </span>
-                  </span>
+                  </button>
+                  {/* 디자인: 휴지통. 다음 회의에 이미 불러온 안건은 흐리게 (MSG-089) */}
                   <button
                     type="button"
                     className={styles.discard}
                     aria-label={`${agenda.title} 남은 안건에서 삭제`}
+                    title={agenda.isTaken ? PENDING_AGENDA_UNAVAILABLE_MESSAGE : undefined}
+                    disabled={agenda.isTaken}
                     onClick={() => onDiscardPending(agenda)}
                   >
-                    <Icon src={closeIcon} size={CLOSE_ICON_SIZE} />
+                    <Icon src={deleteIcon} size={DELETE_ICON_SIZE} />
                   </button>
                 </li>
               ))}

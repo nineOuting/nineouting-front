@@ -52,7 +52,7 @@ export default function Button({
       aria-busy={isLoading || undefined}
       {...props}
     >
-      {isLoading && isSlow && <Spinner size={SPINNER_SIZE[size]} />}
+      {isLoading && isSlow && <Spinner size={SPINNER_SIZE[size]} className={styles.busySpinner} />}
       {children}
     </button>
   );

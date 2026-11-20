@@ -19,19 +19,33 @@
   overflow-y: auto;
 }
 
-.summarySection {
-  flex: 0 1 auto;
-  max-height: 55%;
-}
-
+/* 높이는 화면에서 비율(flex-grow)로 준다 (REQ-134) */
+.summarySection,
 .transcriptSection {
-  flex: 0 0 auto;
-  border-top: var(--border-width-default) solid var(--border-default);
+  flex: 1 1 0;
 }
 
-.grow {
-  flex: 1 1 0;
-  max-height: none;
+/* 디자인 SplitBar: 가운데 손잡이. 끌거나 위아래 화살표 키로 두 칸 높이를 바꾼다 */
+.handle {
+  display: flex;
+  flex: 0 0 12px;
+  align-items: center;
+  justify-content: center;
+  border-top: var(--border-width-default) solid var(--border-default);
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.handle:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+
+.handleGrip {
+  width: 32px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
 }
 
 .title {
@@ -282,8 +296,9 @@
   border-radius: var(--radius-md);
 }
 
+/* 디자인 DecisionHover: interactive/hover (선택 색과 구분, 디자인 체크 2026-11-19) */
 .decision:hover {
-  background: var(--secondary-default);
+  background: var(--interactive-hover);
 }
 
 .decisionIcon {

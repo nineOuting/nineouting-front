@@ -126,9 +126,14 @@
   text-align: left;
 }
 
-.box:hover,
+.box:hover:not(:disabled),
 .selectBox:hover {
   border-color: var(--border-strong);
+}
+
+.box:disabled {
+  background: var(--bg-surface-muted);
+  cursor: default;
 }
 
 .box:focus-visible,
