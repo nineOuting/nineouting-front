@@ -70,7 +70,6 @@ import RecordingBar from './room/RecordingBar';
 import RoomBanner, { SilenceNotice } from './room/RoomBanner';
 import { askAbout, buildTermMatcher } from './room/termGlossary';
 import TranscriptPanel from './room/TranscriptPanel';
-import { useSidePanelResize } from './room/useSidePanelResize';
 import AccessNotice from '../../components/AccessNotice';
 import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import styles from './MeetingRoomPage.module.css';
@@ -104,7 +103,6 @@ export default function MeetingRoomPage() {
   const { meetingId } = useParams();
   const [searchParams] = useSearchParams();
   const demo = searchParams.get('demo') as DemoScenario;
-  const sidePanel = useSidePanelResize();
 
   const [detail, setDetail] = useState<MeetingDetailResponse | null>(null);
   const [isWriter, setIsWriter] = useState(false);
@@ -782,7 +780,7 @@ export default function MeetingRoomPage() {
       : undefined;
 
   return (
-    <div className={[styles.page, sidePanel.isResizing ? styles.resizing : ''].filter(Boolean).join(' ')}>
+    <div className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} position="top" />}
 
       {/* 디자인 Version02 Live 상단 바: 뒤로 가기, 회의명, 참여자 얼굴 / 회의 끝내기(작성자), 보기 전용(참석자) */}
@@ -918,12 +916,9 @@ export default function MeetingRoomPage() {
           </div>
         </main>
 
-        {/* REQ-213 패널 왼쪽 테두리를 끌어 너비 조절 */}
-        <div className={styles.resizer} {...sidePanel.handleProps} />
         <aside
           id="room-side-panel"
           className={styles.sidePanel}
-          style={{ width: sidePanel.width }}
           aria-label={selectedDecision ? '결정 근거' : sideTab === 'chat' ? '넵넵 AI' : '실시간 전사'}
         >
           {!selectedDecision && (
