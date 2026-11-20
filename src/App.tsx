@@ -5,6 +5,7 @@ import RequireAuth from './auth/RequireAuth';
 import ArchivePage from './pages/archive/ArchivePage';
 import FolderPage from './pages/folder/FolderPage';
 import HomePage from './pages/home/HomePage';
+import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import PasswordCompletePage from './pages/auth/PasswordCompletePage';
 import PasswordFindPage from './pages/auth/PasswordFindPage';
@@ -41,6 +42,15 @@ function RootLayout() {
 const router = createBrowserRouter(
   createRoutesFromElements(
       <Route element={<RootLayout />}>
+        {/* 첫 화면: 로그인하지 않았으면 넵넵 소개, 로그인했으면 홈으로 */}
+        <Route
+          path="/"
+          element={
+            <GuestOnly>
+              <LandingPage />
+            </GuestOnly>
+          }
+        />
         <Route
           path="/home"
           element={
