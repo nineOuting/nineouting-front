@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { getUnreadCount } from '../api/notification';
 import { getMe, type Me } from '../api/user';
-import planIcon from '../assets/icons/template-sm.svg';
 import logoutIcon from '../assets/icons/logout.svg';
 import settingsIcon from '../assets/icons/menu-settings.svg';
 import notificationsIcon from '../assets/icons/notifications.svg';
@@ -139,11 +138,7 @@ export default function TopBarUser() {
                 <Icon src={personIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
                 프로필
               </button>
-              {/* REQ-003 요금제 (REQ-176) */}
-              <button type="button" role="menuitem" className={menu.item} onClick={() => openSettings('plan')}>
-                <Icon src={planIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
-                요금제
-              </button>
+              {/* 요금제는 프로필 메뉴에서 뺐다 (디자인 체크 2026-11-19). 설정 창의 요금제 메뉴로 본다 */}
               <button type="button" role="menuitem" className={menu.item} onClick={() => openSettings('display')}>
                 <Icon src={settingsIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
                 화면

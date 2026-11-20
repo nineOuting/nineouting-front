@@ -23,7 +23,6 @@ import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
-import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
 import searchIcon from '../../assets/icons/search.svg';
@@ -375,14 +374,6 @@ export default function ArchivePage() {
     { id: null, name: '전체', count: folderTabs.reduce((sum, folder) => sum + folder.minutesCount, 0) },
     ...folderTabs.map((folder) => ({ id: folder.folderId, name: folder.name, count: folder.minutesCount })),
   ];
-  const removeChip = (label: string, onRemove: () => void, key: string) => (
-    <li key={key} className={styles.appliedChip}>
-      {label}
-      <button type="button" className={styles.iconButton} aria-label={`${label} 필터 지우기`} onClick={onRemove}>
-        <Icon src={chipRemoveIcon} size={ICON_SIZE} />
-      </button>
-    </li>
-  );
 
   return (
     <AppLayout className={styles.page} workspaceId={id}>
@@ -558,28 +549,7 @@ export default function ArchivePage() {
           </span>
         </div>
 
-        {/* REQ-055 적용된 조건 칩: 하나씩 지운다 */}
-        {hasFilters && (
-          <ul className={styles.appliedChips} aria-label="적용된 필터">
-            {filters.period &&
-              removeChip(periodText(filters.period), () => changeFilters({ ...filters, period: null }), 'period')}
-            {filters.locations.map((location) =>
-              removeChip(
-                location,
-                () => changeFilters({ ...filters, locations: filters.locations.filter((value) => value !== location) }),
-                `location-${location}`,
-              ),
-            )}
-            {filters.attendeeIds.map((attendeeId) =>
-              removeChip(
-                memberName(attendeeId),
-                () => changeFilters({ ...filters, attendeeIds: filters.attendeeIds.filter((value) => value !== attendeeId) }),
-                `attendee-${attendeeId}`,
-              ),
-            )}
-          </ul>
-        )}
-
+        {/* 적용된 조건 칩 줄은 뺐다 (디자인 체크 2026-11-19). 필터 버튼에 고른 값이 보이고 [필터 초기화]로 지운다 */}
         {isLoading ? (
           <div className={styles.loadingRows}>
             {Array.from({ length: LOADING_ROWS }, (_, index) => (

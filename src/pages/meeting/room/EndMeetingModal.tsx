@@ -101,7 +101,7 @@ export default function EndMeetingModal({
       <>
         {continueButton('이어서 논의하기')}
         <Button isLoading={isBusy} type="button" variant="primary" size="md" disabled={isBusy} onClick={() => onCarryOver(selected)}>
-          다음
+          회의 끝내기
         </Button>
       </>
     ),
@@ -148,8 +148,7 @@ export default function EndMeetingModal({
             ? confirmMessage(templateName)
             : TITLES[step].description
       }
-      // 양식 확인 창은 뒤로가기 없이 [취소]로 돌아간다 (디자인 체크 2026-11-19)
-      onBack={!isBusy && step !== 'confirm' ? onContinue : undefined}
+      // 디자인 EndMeetingModal: 뒤로가기 없이 X와 [이어서 논의하기]로 돌아간다 (디자인 체크 2026-11-19)
       width="md"
       hideClose={isBusy}
       onClose={isBusy ? () => undefined : onContinue}
@@ -168,6 +167,7 @@ export default function EndMeetingModal({
             <>
               <ul className={styles.agendaList}>
                 {leftover.map((agenda) => (
+                  // 디자인 AgendaCheckItem: 체크, 제목과 한 줄 설명, 오른쪽 상태 배지
                   <li key={agenda.id} className={styles.agenda}>
                     <Checkbox
                       className={styles.agendaHead}
@@ -175,10 +175,14 @@ export default function EndMeetingModal({
                       disabled={isBusy}
                       onChange={() => toggle(agenda.id)}
                     >
-                      <span className={styles.agendaTitle}>{agenda.title}</span>
+                      <span className={styles.agendaText}>
+                        <span className={styles.agendaTitle}>{agenda.title}</span>
+                        <span className={styles.agendaSummary}>
+                          {agenda.summary.length > 0 ? agenda.summary.join(' ') : '아직 이야기하지 않았어요'}
+                        </span>
+                      </span>
                       <StatusPill status={agenda.status} soft />
                     </Checkbox>
-                    {agenda.summary.length > 0 && <p className={styles.agendaSummary}>{agenda.summary.join(' ')}</p>}
                   </li>
                 ))}
               </ul>
