@@ -55,6 +55,9 @@
   --border-selected: var(--blue-400);
   --status-undecided: #ea580c;
   --status-undecided-subtle: #fff4e6;
+  /* 피그마 warning/default, warning/subtle (orange 600, 50) */
+  --warning-default: #ea580c;
+  --warning-subtle: #fff7ed;
 
   --project-red-default: #eb5342;
   --project-orange-default: #ffa219;
@@ -96,6 +99,19 @@
 body {
   /* 아직 데스크톱 화면만 있다. 모바일 화면은 디자인을 따라 따로 만든다 */
   min-width: 600px;
+}
+
+/* 피그마 warning 어두운 테마 (orange 400, 950) */
+[data-theme='dark'] {
+  --warning-default: #fb923c;
+  --warning-subtle: #431407;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --warning-default: #fb923c;
+    --warning-subtle: #431407;
+  }
 }
 
 /* 로고 파일은 진한 보라 한 가지라 어두운 테마에서는 밝게 바꿔 보인다 */

@@ -87,3 +87,24 @@
   color: var(--text-secondary);
 }
 
+
+/* 디자인 AccountCard: 로그아웃과 회원 탈퇴 사이 선, [탈퇴하기]는 빨간 글자 */
+.withdrawRow {
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-4);
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.withdrawButton {
+  height: 32px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
+}
+
+.withdrawButton:hover {
+  background: var(--danger-subtle);
+}
