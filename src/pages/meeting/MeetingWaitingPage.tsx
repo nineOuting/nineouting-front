@@ -66,14 +66,25 @@ const STATUS_LABELS: Record<MeetingStatus, string> = {
   CANCELLED: '취소된 회의',
 };
 
-function readinessMessage(hasAgenda: boolean, hasWriter: boolean) {
+/**
+ * 상단 준비 상태 (REQ-076, 130). 필수 정보가 다 있어도 회의록 작성자가 아니면 시작할 수 없다고 알린다
+ * (디자인 06 상태 모음 "회의록 작성자가 아닌 참석자 화면")
+ */
+function readinessMessage(hasAgenda: boolean, hasWriter: boolean, writerName: string | null) {
   if (hasAgenda && hasWriter) {
-    return '필수 정보를 모두 입력했어요';
+    return writerName ? `회의록 작성자(${writerName})만 회의를 시작할 수 있어요` : '필수 정보를 모두 입력했어요';
   }
   if (!hasAgenda && !hasWriter) {
     return '안건과 회의록 작성자를 정해 주세요';
   }
   return hasAgenda ? '회의록 작성자를 선택해 주세요' : '안건을 추가해 주세요';
+}
+
+/** 목적격 조사: 마지막 글자에 받침이 있으면 "을", 없으면 "를" (한글이 아니면 "을") */
+function objectParticle(word: string) {
+  const last = word.trim().charCodeAt(word.trim().length - 1);
+  const isHangul = last >= 0xac00 && last <= 0xd7a3;
+  return isHangul && (last - 0xac00) % 28 === 0 ? '를' : '을';
 }
 
 function minutesBetween(startTime: string, endTime: string) {
@@ -193,6 +204,9 @@ export default function MeetingWaitingPage() {
   // REQ-130 회의 시작 전에는 참석자만 안건, 참여자, 작성자를 고친다. 참석자가 아닌 폴더 멤버는 보기만 한다
   const canEdit = isScheduled && isAttendee;
   const isReady = isScheduled && meeting.agendas.length > 0 && Boolean(meeting.writer);
+  // REQ-076 회의록 작성자만 시작한다. 다른 참석자는 버튼을 막고 이유를 보여 준다
+  const isWriter = meeting.writer?.userId === myId;
+  const canStart = isReady && isWriter;
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
   /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
@@ -375,9 +389,10 @@ export default function MeetingWaitingPage() {
         <div className={styles.topRight}>
           <p className={[styles.readiness, isReady ? styles.ready : styles.notReady].join(' ')}>
             <Icon src={isReady ? checkIcon : errorIcon} size={SMALL_ICON_SIZE} />
-            {readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer))}
+            {readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer),
+              isWriter ? null : (meeting.writer?.name ?? '알 수 없음'))}
           </p>
-          <Button size="md" disabled={!isReady || isStarting} onClick={() => setIsConsentOpen(true)}>
+          <Button size="md" disabled={!canStart || isStarting} onClick={() => setIsConsentOpen(true)}>
             <Icon src={playIcon} size={ICON_SIZE} />
             {isStarting ? '회의 준비 중' : '회의 시작하기'}
           </Button>
@@ -641,7 +656,7 @@ export default function MeetingWaitingPage() {
       {isCancelDialogOpen && (
         // MSG-082 회의 삭제 확인 (2026-11-17): 삭제 목록으로 가서 3개월 동안 복구할 수 있다
         <ConfirmDialog
-          title={`'${meeting.title}'을 삭제할까요?`}
+          title={`'${meeting.title}'${objectParticle(meeting.title)} 삭제할까요?`}
           message={'참석자에게 회의 취소 알림이 가요.\n삭제한 회의는 3개월 동안 삭제 목록에서 복구할 수 있어요.'}
           cancelLabel="취소"
           confirmLabel="삭제하기"

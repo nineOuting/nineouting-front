@@ -385,15 +385,23 @@ export default function AgendaBoard({
                       </div>
                     ))}
                     {agendaErrors?.decisions && <p className={styles.fieldError}>{agendaErrors.decisions}</p>}
-                    <button
-                      type="button"
-                      className={styles.addDecision}
-                      disabled={agenda.decisionPoints.length >= DECISION_MAX_COUNT}
-                      onClick={() => updateAgenda(agenda.id, { decisionPoints: [...agenda.decisionPoints, ''] })}
-                    >
-                      <Icon src={addIcon} size={SMALL_ICON_SIZE} />
-                      {agenda.decisionPoints.length >= DECISION_MAX_COUNT ? '결정할 사항은 5개까지 넣을 수 있어요' : '결정할 사항 추가'}
-                    </button>
+                    {/* MSG-088 5개가 되면 버튼을 흐리게 하고, 마우스를 올리면 말풍선으로 알린다 (디자인 06 상태 모음) */}
+                    <span className={styles.addDecisionWrap}>
+                      <button
+                        type="button"
+                        className={styles.addDecision}
+                        disabled={agenda.decisionPoints.length >= DECISION_MAX_COUNT}
+                        onClick={() => updateAgenda(agenda.id, { decisionPoints: [...agenda.decisionPoints, ''] })}
+                      >
+                        <Icon src={addIcon} size={SMALL_ICON_SIZE} />
+                        결정할 사항 추가
+                      </button>
+                      {agenda.decisionPoints.length >= DECISION_MAX_COUNT && (
+                        <span className={styles.limitTooltip} role="tooltip">
+                          결정할 사항은 안건마다 5개까지 넣을 수 있어요.
+                        </span>
+                      )}
+                    </span>
                   </div>
                 </li>
               );

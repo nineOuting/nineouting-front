@@ -16,7 +16,7 @@ export default function MicPermissionDialog({ state, isChecking, onAllow, onClos
     return (
       <Dialog
         title="마이크 사용을 허용해 주세요"
-        description="회의 내용을 기록하려면 마이크 권한이 필요해요. 브라우저에 권한 요청 창이 뜨면 [허용]을 눌러 주세요."
+        description="회의 내용을 기록하려면 마이크 권한이 필요해요."
         onClose={onClose}
         footer={
           <>
@@ -28,13 +28,19 @@ export default function MicPermissionDialog({ state, isChecking, onAllow, onClos
             </Button>
           </>
         }
-      />
+      >
+        {/* MSG-065 디자인 06 상태 모음 "마이크 권한 요청" */}
+        <div className={styles.notes}>
+          <p>브라우저에 권한 요청 창이 뜨면 [허용]을 눌러 주세요.</p>
+          <p>녹음은 회의 중에만 켜지고, 언제든 일시정지할 수 있어요.</p>
+        </div>
+      </Dialog>
     );
   }
   return (
     <Dialog
       title="마이크 권한이 꺼져 있어요"
-      description="마이크를 허용해야 회의를 기록할 수 있어요."
+      description="마이크를 허용해야 회의를 기록할 수 있어요. 아래 순서대로 바꿔 주세요."
       width="md"
       onClose={onClose}
       footer={
@@ -49,7 +55,7 @@ export default function MicPermissionDialog({ state, isChecking, onAllow, onClos
       }
     >
       <ol className={styles.steps}>
-        <li>주소창 왼쪽의 자물쇠 아이콘을 눌러요</li>
+        <li>주소창 왼쪽의 사이트 정보 아이콘을 눌러요</li>
         <li>마이크를 [허용]으로 바꿔요</li>
         <li>[다시 확인하기]를 눌러요</li>
       </ol>
