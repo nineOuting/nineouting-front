@@ -80,25 +80,9 @@
   color: var(--danger-default);
 }
 
-.searchStatus {
-  padding: 0 var(--spacing-1);
-  border-radius: var(--radius-sm);
-}
 
-.searchStatus_muted {
-  background: var(--neutral-subtle);
-  color: var(--text-secondary);
-}
 
-.searchStatus_ok {
-  background: var(--success-subtle);
-  color: var(--success-default);
-}
 
-.searchStatus_warning {
-  background: var(--warning-subtle, var(--danger-subtle));
-  color: var(--warning-default, var(--danger-default));
-}
 
 /* 올리기 창 */
 .dropZone {
@@ -143,25 +127,8 @@
   font-size: var(--font-size-caption);
 }
 
-.selectedList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  margin-top: var(--spacing-3);
-}
 
-.selectedItem {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-3);
-  background: var(--bg-surface-muted);
-  border-radius: var(--radius-md);
-}
 
-.selectedItem .name {
-  flex: 1;
-}
 
 .formats {
   margin-top: var(--spacing-4);
@@ -170,6 +137,46 @@
   color: var(--text-secondary);
 }
 
-.error:not(:first-child) {
-  margin-top: var(--spacing-4);
+
+/* 검색할 수 없는 자료: 크기 대신 이유 (MSG-078~080) */
+.warning {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--warning-default, var(--danger-default));
+}
+
+/* 올리기 창: 파일마다 진행률, 완료, 실패 (디자인 06 상태 모음) */
+.uploadList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+}
+
+.uploadItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.uploadError {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--danger-default);
+}
+
+.progress {
+  display: block;
+  height: 4px;
+  margin-top: var(--spacing-1);
+  overflow: hidden;
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-full, 999px);
+}
+
+.progressBar {
+  display: block;
+  height: 100%;
+  background: var(--primary-default);
+  transition: width 0.2s;
 }

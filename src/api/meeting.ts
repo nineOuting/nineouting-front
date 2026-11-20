@@ -314,14 +314,15 @@ export function listMaterials(meetingId: number) {
  * REQ-067 사전 자료 올리기: 업로드 주소 받기 → 브라우저가 저장소(S3)에 바로 올리기 → 다 올렸다고 알리기.
  * 서버가 실제 크기를 다시 확인한다 (50MB 이하)
  */
-export async function uploadMaterial(meetingId: number, file: File) {
+export async function uploadMaterial(meetingId: number, file: File,
+  onProgress?: (loaded: number, total: number) => void) {
   const contentType = file.type || 'application/octet-stream';
   const { materialId, uploadUrl } = await request<{ materialId: number; uploadUrl: string }>(
     'POST',
     `/api/meetings/${meetingId}/materials`,
     { fileName: file.name, contentType, size: file.size },
   );
-  await putToStorage(uploadUrl, file, contentType);
+  await putToStorage(uploadUrl, file, contentType, onProgress);
   return request<MeetingMaterial>('POST', `/api/meetings/${meetingId}/materials/${materialId}/complete`);
 }
 
