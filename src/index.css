@@ -56,6 +56,9 @@
   --status-undecided: #ea580c;
   --status-undecided-subtle: #fff4e6;
   --status-discussing-border: var(--brand-300);
+  /* 피그마 warning/default, warning/subtle (orange 600, 50) */
+  --warning-default: #ea580c;
+  --warning-subtle: #fff7ed;
 
   --project-red-default: #eb5342;
   --project-orange-default: #ffa219;
@@ -129,6 +132,8 @@ body {
   --project-sky-subtle: #25354c;
   --project-sky-border: #3d5879;
   --project-sky-icon: #7eb8f5;
+  --warning-default: #fb923c;
+  --warning-subtle: #431407;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -161,6 +166,8 @@ body {
     --project-sky-subtle: #25354c;
     --project-sky-border: #3d5879;
     --project-sky-icon: #7eb8f5;
+    --warning-default: #fb923c;
+    --warning-subtle: #431407;
   }
 }
 
