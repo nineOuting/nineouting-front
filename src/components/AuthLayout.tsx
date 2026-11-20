@@ -16,7 +16,8 @@ export default function AuthLayout({ children, className }: AuthLayoutProps) {
   return (
     <div className={styles.layout}>
       <header className={styles.header}>
-        <Link to="/login" aria-label="nep!nep! 로그인으로">
+        {/* 로그인하지 않았으면 랜딩, 로그인했으면 홈 (/ 라우트가 나눈다) */}
+        <Link to="/" aria-label="nep!nep! 첫 화면으로">
           <img src={logo} alt="nep!nep!" width={LOGO_WIDTH} height={LOGO_HEIGHT} className="nepnep-logo" />
         </Link>
       </header>
