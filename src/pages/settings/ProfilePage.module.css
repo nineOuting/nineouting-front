@@ -31,14 +31,41 @@
   color: var(--text-primary);
 }
 
-.inline {
+.avatarLoading {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 디자인 PhotoButtons: 150px 버튼 두 개. 팝오버는 이 줄 아래에 뜬다 */
+.photoButtons {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--gap-inline);
 }
 
-.fileInput {
-  display: none;
+.photoButton {
+  width: 150px;
+  height: var(--button-sm-height);
+  background: var(--secondary-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--button-sm-font-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-on-secondary);
+}
+
+.photoButton:hover:not(:disabled) {
+  background: var(--secondary-hover);
+}
+
+/* 사진 올리는 중: 회색으로 잠시 막힘 */
+.photoButton:disabled {
+  background: var(--secondary-disabled);
+  color: var(--text-disabled);
+  cursor: default;
 }
 
 /* 디자인 Button secondary sm */
