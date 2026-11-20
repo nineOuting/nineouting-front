@@ -43,6 +43,8 @@ export interface FolderMeeting {
   date: string;
   /** 2026-10-24T14:00:00 (워크스페이스 폴더 카드의 다음 회의 시각) */
   startAt?: string;
+  /** 예정 종료 시각. 시작하지 않은 채 지난 회의를 가려낸다 */
+  endAt?: string;
   status: FolderMeetingStatus;
   writer: Member;
   attendees: Member[];
@@ -55,6 +57,9 @@ export interface FolderPendingAgenda {
   fromMeetingTitle: string;
   /** 2026-10-20 */
   carriedAt: string;
+  decisionPoints: string[];
+  /** 다음 회의에 이미 불러왔으면 삭제할 수 없다 (MSG-089) */
+  isTaken: boolean;
 }
 
 /** REQ-151 즐겨찾기한 워크스페이스·폴더 */

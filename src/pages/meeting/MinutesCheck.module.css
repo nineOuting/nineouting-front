@@ -30,12 +30,12 @@
 /* 작성 중은 파랑, 확정은 초록 */
 .badge {
   padding: var(--spacing-1) var(--spacing-2);
-  background: var(--primary-subtle);
+  background: var(--info-subtle);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-caption);
-  color: var(--primary-default);
+  color: var(--info-default);
 }
 
 .badgeConfirmed {
@@ -173,9 +173,22 @@
   color: var(--success-default);
 }
 
-.active {
-  background: var(--primary-subtle);
-  color: var(--primary-default);
+/* 디자인: 진행 중인 단계는 파랑 바탕, 표시는 회색 */
+.active,
+.turn {
+  background: var(--info-subtle);
+  color: var(--text-secondary);
+}
+
+.stepMark .stepSpinner {
+  color: inherit;
+}
+
+.turnDot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentcolor;
+  border-radius: var(--radius-full);
 }
 
 .failed {

@@ -36,14 +36,16 @@ const DRAFTING_STATUSES: ReadonlyArray<MinutesDetail['draftStatus']> = ['WAITING
 const DOWNLOAD_FAILED_MESSAGE = '파일을 다운로드하지 못했어요. 잠시 후 다시 시도해 주세요.';
 const DRAFT_RETRY_FAILED_MESSAGE = 'AI 초안을 다시 요청하지 못했어요. 잠시 후 다시 시도해 주세요.';
 
-type StepState = 'done' | 'active' | 'failed' | 'waiting';
+// active: AI가 만드는 중(도는 표시), turn: 사람이 할 차례(멈춘 표시. 계속 돌면 끝나지 않는 로딩처럼 보인다)
+type StepState = 'done' | 'active' | 'turn' | 'failed' | 'waiting';
 
 function Step({ index, state, title, caption }: { index: number; state: StepState; title: string; caption: string }) {
   return (
     <li className={styles.step}>
       <span className={`${styles.stepMark} ${styles[state]}`}>
         {state === 'done' && <Icon src={checkIcon} size={ICON_SIZE} />}
-        {state === 'active' && <Spinner size={ICON_SIZE} />}
+        {state === 'active' && <Spinner size={ICON_SIZE} className={styles.stepSpinner} />}
+        {state === 'turn' && <span className={styles.turnDot} />}
         {state === 'failed' && <Icon src={errorIcon} size={ICON_SIZE} />}
         {state === 'waiting' && index}
       </span>
@@ -293,7 +295,7 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
           <Step index={2} state={draftStep.state} title="AI 초안 만들기" caption={draftStep.caption} />
           <Step
             index={3}
-            state={isDraftReady ? 'active' : 'waiting'}
+            state={isDraftReady ? 'turn' : 'waiting'}
             title={writeStep.title}
             caption={writeStep.caption}
           />
