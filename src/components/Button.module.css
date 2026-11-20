@@ -89,7 +89,7 @@
 }
 
 .text:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
   color: var(--text-link-hover);
 }
 

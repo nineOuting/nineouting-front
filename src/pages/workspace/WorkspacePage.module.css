@@ -283,7 +283,7 @@
 
 .textButton:hover {
   color: var(--text-link-hover);
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 /* REQ-163 워크스페이스 설명 */

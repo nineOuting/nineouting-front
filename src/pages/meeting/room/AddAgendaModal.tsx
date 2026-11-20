@@ -42,7 +42,6 @@ export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: A
         title="안건 추가"
         description="추가한 안건은 안건 목록 맨 아래에 들어가요."
         width="sm"
-        onBack={requestClose}
         onClose={requestClose}
         onSubmit={handleSubmit}
         footer={

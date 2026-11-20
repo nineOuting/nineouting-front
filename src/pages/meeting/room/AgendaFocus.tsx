@@ -3,11 +3,11 @@ import type { DecisionStatusEdit } from '../../../api/meeting';
 import addIcon from '../../../assets/icons/add-sm.svg';
 import checkIcon from '../../../assets/icons/check.svg';
 import editIcon from '../../../assets/icons/edit.svg';
+import evidenceIcon from '../../../assets/icons/evidence.svg';
 import moreIcon from '../../../assets/icons/more-vert.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
 import refreshIcon from '../../../assets/icons/refresh.svg';
 import todoIcon from '../../../assets/icons/agenda-status.svg';
-import transcriptIcon from '../../../assets/icons/transcript.svg';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionPoint, RoomAgenda, RoomTodo } from '../../../types/meetingRoom';
 import ActionMenu from '../../workspace/ActionMenu';
@@ -143,7 +143,7 @@ function DecisionCard({
       ? { label: '미결로 되돌리기', icon: pauseIcon, onSelect: () => onChangeStatus('UNDECIDED') }
       : { label: '결정으로 확정하기', icon: checkIcon, onSelect: () => onChangeStatus('DECIDED') },
     { label: '결정 내용 수정하기', icon: editIcon, onSelect: () => setDraft(decision.summary ?? '') },
-    { label: '근거 발언 보기', icon: transcriptIcon, onSelect: onSelect },
+    { label: '근거 발언 보기', icon: evidenceIcon, onSelect: onSelect },
     ...(decision.statusEdited ? [{ label: 'AI 판정으로 되돌리기', icon: refreshIcon, onSelect: () => onChangeStatus('AUTO') }] : []),
   ];
 
@@ -223,7 +223,8 @@ function NewDecisionCard({ onAdd, onClose }: { onAdd: (content: string) => Promi
 
   return (
     <li className={`${styles.decision} ${styles.discussing} ${styles.editingCard}`}>
-      <p className={styles.editHeading}>결정할 사항 추가</p>
+      {/* 디자인 체크 2026-11-19: 더하는 카드도 수정 카드와 같은 제목 */}
+      <p className={styles.editHeading}>결정 내용 수정</p>
       <label className={styles.editField}>
         <span className={styles.editLabel}>결정할 사항</span>
         <input

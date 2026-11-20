@@ -39,7 +39,7 @@ export default function UpcomingMeetingCard({ meeting }: UpcomingMeetingCardProp
   return (
     <section className={styles.card} aria-label="곧 다가오는 회의">
       {meeting === null ? (
-        <p className={styles.empty}>예정된 회의가 없어요</p>
+        <p className={styles.empty}>예정된 회의가 없어요. 새 회의를 만들면 이곳에서 확인할 수 있어요.</p>
       ) : (
         <>
           <div className={styles.summary}>
