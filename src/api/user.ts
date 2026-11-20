@@ -92,3 +92,23 @@ export async function deleteMyProfileImage() {
   await request('DELETE', '/api/users/me/profile-image');
   forgetMe();
 }
+
+/** REQ-207 탈퇴 전에 확인하는 내가 소유한 워크스페이스와 폴더. 둘 다 비어 있어야 탈퇴할 수 있다 */
+export interface Ownership {
+  workspaces: string[];
+  folders: string[];
+}
+
+export function getMyOwnership() {
+  return request<Ownership>('GET', '/api/workspaces/ownership/me');
+}
+
+/**
+ * REQ-207 회원 탈퇴. 내가 쓴 회의록 삭제 → 모든 워크스페이스에서 나가기 → 계정 삭제 순서로 부른다.
+ * 계정은 마지막에 지워 중간에 실패해도 다시 시도할 수 있다 (소유한 것이 있으면 워크스페이스 단계에서 막힌다)
+ */
+export async function withdrawAccount() {
+  await request('DELETE', '/api/minutes/mine');
+  await request('DELETE', '/api/workspaces/memberships/me');
+  await request('DELETE', '/api/users/me');
+}

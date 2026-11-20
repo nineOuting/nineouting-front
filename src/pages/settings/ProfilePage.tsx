@@ -15,6 +15,7 @@ import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import { NAME_MAX_LENGTH } from '../../constants/auth';
 import ChangePasswordModal from './ChangePasswordModal';
+import WithdrawModal from './WithdrawModal';
 import layout from './SettingsLayout.module.css';
 import SettingsLayout from './SettingsLayout';
 import styles from './ProfilePage.module.css';
@@ -30,6 +31,7 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const apply = (next: MyProfile) => {
@@ -166,8 +168,29 @@ export default function ProfilePage() {
                 로그아웃
               </button>
             </div>
+            {/* REQ-207 회원 탈퇴 (디자인 AccountCard WithdrawRow) */}
+            <div className={`${styles.row} ${styles.withdrawRow}`}>
+              <div className={styles.rowText}>
+                <p className={layout.cardTitle}>회원 탈퇴</p>
+                <p className={styles.caption}>계정과 내가 만든 회의록이 모두 삭제돼요</p>
+              </div>
+              <button type="button" className={styles.withdrawButton} onClick={() => setIsWithdrawOpen(true)}>
+                탈퇴하기
+              </button>
+            </div>
           </div>
         </>
+      )}
+      {isWithdrawOpen && (
+        <WithdrawModal
+          onDone={() => {
+            // 계정이 지워졌으니 이 기기의 로그인도 정리하고 로그인 화면으로 (로그아웃 요청이 실패해도 간다)
+            void logout()
+              .catch(() => undefined)
+              .finally(() => navigate('/login', { replace: true }));
+          }}
+          onClose={() => setIsWithdrawOpen(false)}
+        />
       )}
       {isPasswordOpen && (
         <ChangePasswordModal
