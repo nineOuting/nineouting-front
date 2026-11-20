@@ -149,7 +149,7 @@ export default function MeetingWaitingPage() {
       const usable = pendingAgendasFor(pending, loaded.meetingId);
       setFolderMembers(members);
       setPendingAgendas(usable);
-      setTemplates(templateList.map(({ templateId, name, favorite }) => ({ templateId, name, isFavorite: favorite })));
+      setTemplates(templateList.map(({ templateId, name, description, favorite }) => ({ templateId, name, description, isFavorite: favorite })));
       setMeeting({ ...loaded, agendas: withCarriedOverDates(loaded.agendas, usable) });
     };
     load().catch((error: unknown) => {
@@ -538,7 +538,11 @@ export default function MeetingWaitingPage() {
                 className={styles.settingRow}
                 onClick={() => setTemplateModal({ view: 'gallery' })}
               >
-                <span className={styles.templateName}>{selectedTemplate?.name ?? '회의록 양식 고르기'}</span>
+                {/* 디자인 SettingRow: 라벨 "회의록 양식" + 고른 양식 이름 (작성자 줄과 같은 모양) */}
+                <span className={styles.settingLabel}>회의록 양식</span>
+                <span className={selectedTemplate ? styles.settingValue : styles.settingPlaceholder}>
+                  {selectedTemplate?.name ?? '선택해 주세요'}
+                </span>
                 <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
               </button>
               <div className={styles.menuAnchor}>
@@ -609,6 +613,14 @@ export default function MeetingWaitingPage() {
           onOpenDetail={(index) => setTemplateModal({ view: 'detail', index })}
           onToggleFavorite={(templateId) => void toggleFavorite(templateId)}
           onCreateTemplate={() => navigate('/templates/new')}
+          onUse={
+            canEdit
+              ? (templateId) => {
+                  void chooseTemplate(templateId);
+                  setTemplateModal(null);
+                }
+              : undefined
+          }
           onClose={() => setTemplateModal(null)}
         />
       )}

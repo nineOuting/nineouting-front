@@ -85,7 +85,6 @@ export default function MinutesDocument({
 
   return (
     <section className={styles.canvas} aria-label="회의록 문서">
-      {notice}
       <div
         ref={viewportRef}
         className={styles.viewport}
@@ -97,6 +96,8 @@ export default function MinutesDocument({
             <span className={styles.pageNumber}>{page} 페이지</span>
             <span className={styles.pageTitle}>{minutes.title}</span>
           </p>
+          {/* 디자인 Banner: 쪽 라벨과 문서 사이, 문서 폭 (디자인 체크 2026-11-19) */}
+          {notice}
           <div
             ref={paperRef}
             className={styles.paper}

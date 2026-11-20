@@ -6,7 +6,7 @@ import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
 import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
 import pauseIcon from '../../assets/icons/pause.svg';
-import summaryIcon from '../../assets/icons/summary.svg';
+import summaryIcon from '../../assets/icons/ai-summary.svg';
 import transcriptIcon from '../../assets/icons/transcript.svg';
 import Icon from '../../components/Icon';
 import type { TranscriptLine } from '../../types/meetingRoom';

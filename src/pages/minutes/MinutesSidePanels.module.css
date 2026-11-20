@@ -296,8 +296,9 @@
   border-radius: var(--radius-md);
 }
 
+/* 디자인 DecisionHover: interactive/hover (선택 색과 구분, 디자인 체크 2026-11-19) */
 .decision:hover {
-  background: var(--secondary-default);
+  background: var(--interactive-hover);
 }
 
 .decisionIcon {

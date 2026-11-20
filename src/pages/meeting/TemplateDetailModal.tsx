@@ -6,6 +6,8 @@ import Icon from '../../components/Icon';
 import type { MinutesTemplate } from '../../types/meeting';
 import styles from './TemplateDetailModal.module.css';
 
+// 미리보기 속 줄 길이 (디자인 Preview Line)
+const PREVIEW_LINES = [110, 220, 187, 220, 154, 220, 198, 88, 220, 132];
 const ICON_SIZE = 24;
 
 interface TemplateDetailModalProps {
@@ -28,7 +30,8 @@ export default function TemplateDetailModal({ templates, index, onChangeIndex, o
   return (
     <Dialog
       title={template.name}
-      description={`${index + 1} / ${templates.length}`}
+      // 디자인 TemplateDetailModal: 부제는 양식 설명, 쪽 표시는 미리보기 아래 (디자인 체크 2026-11-19)
+      description={template.description || undefined}
       width="md"
       onClose={onClose}
       footer={
@@ -54,8 +57,12 @@ export default function TemplateDetailModal({ templates, index, onChangeIndex, o
         >
           <Icon src={chevronLeftIcon} size={ICON_SIZE} />
         </button>
-        {/* 양식 미리보기 이미지는 양식 관리(REQ-119) 연동 때 채운다 */}
-        <div className={styles.preview} />
+        {/* 디자인 Preview 260x340 세로 쪽. 양식 미리보기 이미지는 양식 관리(REQ-119) 연동 때 채운다 */}
+        <div className={styles.preview}>
+          {PREVIEW_LINES.map((width, line) => (
+            <span key={line} className={styles.line} style={{ width }} />
+          ))}
+        </div>
         <button
           type="button"
           className={styles.iconButton}
@@ -66,6 +73,11 @@ export default function TemplateDetailModal({ templates, index, onChangeIndex, o
           <Icon src={chevronRightIcon} size={ICON_SIZE} />
         </button>
       </div>
+      <p className={styles.pageBadgeRow}>
+        <span className={styles.pageBadge}>
+          {index + 1} / {templates.length}
+        </span>
+      </p>
     </Dialog>
   );
 }

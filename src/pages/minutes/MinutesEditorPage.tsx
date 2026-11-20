@@ -18,14 +18,17 @@ import {
 import alignCenterIcon from '../../assets/icons/align-center.svg';
 import alignLeftIcon from '../../assets/icons/align-left.svg';
 import alignRightIcon from '../../assets/icons/align-right.svg';
-import bulletIcon from '../../assets/icons/bullet.svg';
+import bulletIcon from '../../assets/icons/format-bullet.svg';
+import boldIcon from '../../assets/icons/format-bold.svg';
+import italicIcon from '../../assets/icons/format-italic.svg';
+import underlineIcon from '../../assets/icons/format-underline.svg';
 import downloadIcon from '../../assets/icons/download.svg';
 import locationIcon from '../../assets/icons/location.svg';
-import personIcon from '../../assets/icons/person-sm.svg';
+import personIcon from '../../assets/icons/participants.svg';
 import redoIcon from '../../assets/icons/redo.svg';
 import saveIcon from '../../assets/icons/save.svg';
 import scheduleIcon from '../../assets/icons/schedule.svg';
-import templateIcon from '../../assets/icons/template-sm.svg';
+import templateIcon from '../../assets/icons/template-doc.svg';
 import undoIcon from '../../assets/icons/undo.svg';
 import AccessNotice from '../../components/AccessNotice';
 import AiNotice from '../../components/AiNotice';
@@ -51,7 +54,8 @@ import styles from './MinutesEditorPage.module.css';
 
 const META_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 16;
-const HISTORY_ICON_SIZE = 24;
+// 디자인 History: 28px 버튼 안 20px 아이콘
+const HISTORY_ICON_SIZE = 20;
 // 되돌리기: 이 시간 안에 이어 쓴 글은 한 번에 되돌린다. 너무 길어지지 않게 최근 것만 둔다
 const HISTORY_MERGE_MS = 1000;
 const HISTORY_LIMIT = 100;
@@ -78,9 +82,10 @@ const STATUS_LABELS = { WRITING: '작성 중', REVIEWING: '검토 중', CONFIRME
 type FormatAction = { label: string; command: string; icon?: string; text?: string; textClass?: string } | 'divider';
 
 const FORMAT_ACTIONS: FormatAction[] = [
-  { label: '굵게', command: 'bold', text: 'B', textClass: styles.formatBold },
-  { label: '기울임', command: 'italic', text: 'I', textClass: styles.formatItalic },
-  { label: '밑줄', command: 'underline', text: 'U', textClass: styles.formatUnderline },
+  // 디자인 DocEditToolbar: 글자 대신 아이콘 (디자인 체크 2026-11-19)
+  { label: '굵게', command: 'bold', icon: boldIcon },
+  { label: '기울임', command: 'italic', icon: italicIcon },
+  { label: '밑줄', command: 'underline', icon: underlineIcon },
   'divider',
   { label: '글머리 기호', command: 'insertUnorderedList', icon: bulletIcon },
   'divider',
@@ -351,7 +356,8 @@ export default function MinutesEditorPage() {
     { icon: scheduleIcon, label: scheduleLabel(minutes.meetingStartAt, meeting?.endAt) },
     ...(minutes.location ? [{ icon: locationIcon, label: minutes.location }] : []),
     { icon: personIcon, label: `참석자 ${minutes.attendees.length}명` },
-    { icon: templateIcon, label: templateName ?? '양식 없음' },
+    // 디자인 Meta_Template: "기본 회의록 양식"처럼 양식 이름 뒤에 "양식"
+    { icon: templateIcon, label: templateName ? (templateName.endsWith('양식') ? templateName : `${templateName} 양식`) : '양식 없음' },
   ];
   // 디자인 DocInfoList: 일시, 장소, 참석자
   const documentInfo: DocInfo[] = [

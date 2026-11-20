@@ -161,7 +161,9 @@
   flex-direction: column;
   flex-shrink: 0;
   gap: var(--spacing-2);
-  padding: var(--spacing-4) var(--layout-page-margin) 0;
+  /* 문서 종이 폭을 따르고, 긴 문구가 쪽 폭을 넓히지 않게 */
+  width: 0;
+  min-width: 100%;
 }
 
 .notices:empty {
@@ -183,28 +185,23 @@
   display: flex;
   align-items: center;
   gap: var(--gap-inline);
-  padding: var(--spacing-3) var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-3);
   background: var(--info-subtle);
-  border: var(--border-width-default) solid var(--info-default);
   border-radius: var(--radius-md);
   font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-body-md);
-  color: var(--info-default);
+  color: var(--text-secondary);
 }
 
 .draftFailed {
   justify-content: space-between;
   background: var(--danger-subtle);
-  border-color: var(--danger-default);
   color: var(--danger-default);
 }
 
 /* REQ-175 초안 준비 안내 (MSG-071) */
 .draftReady {
-  background: var(--success-subtle);
-  border-color: var(--success-default);
-  color: var(--success-default);
+  background: var(--info-subtle);
 }
 
 /* REQ-172 AI 결과 안내 */
@@ -251,10 +248,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: var(--neutral-default);
 }
 
 .formatButton:hover:not(:disabled) {
