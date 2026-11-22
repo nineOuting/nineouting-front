@@ -213,3 +213,25 @@ body {
     --bg-floating-dark-hover: var(--gray-600);
   }
 }
+
+/*
+ * 피그마 다크 모드에서는 회의록 종이도 어둡다. 양식에서 고른 글자색(기본 #383838)과 표 머리 색(기본 #f4f4f4)은
+ * 밝은 종이 기준이라, 다크에서는 토큰 색으로 바꿔 보여 준다 (내려받는 PDF, Word는 그대로)
+ */
+[data-theme='dark'] [data-paper] [style*='color'] {
+  color: var(--text-primary) !important;
+}
+
+[data-theme='dark'] [data-paper] tr[style] {
+  background: var(--bg-surface-muted) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) [data-paper] [style*='color'] {
+    color: var(--text-primary) !important;
+  }
+
+  :root:not([data-theme='light']) [data-paper] tr[style] {
+    background: var(--bg-surface-muted) !important;
+  }
+}
