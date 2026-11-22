@@ -110,16 +110,6 @@
   text-decoration: underline;
 }
 
-.actions {
-  display: none;
-  flex-shrink: 0;
-}
-
-.item:hover .actions,
-.item:focus-within .actions {
-  display: flex;
-}
-
 .iconButton {
   display: flex;
   flex-shrink: 0;
@@ -130,4 +120,11 @@
 
 .iconButton:hover {
   background: var(--neutral-ghost-hover);
+}
+
+/* 피그마 "회의 중 안건 메뉴": 누른 안건 아래 왼쪽에 맞춘다 */
+.menu {
+  top: calc(100% - var(--spacing-4));
+  left: var(--spacing-5, 20px);
+  right: auto;
 }

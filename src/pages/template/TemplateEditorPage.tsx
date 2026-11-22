@@ -131,7 +131,7 @@ export default function TemplateEditorPage() {
         setDraft(
           source
             ? {
-                name: editingId !== null ? source.name : `${source.name} 복사본`.slice(0, MAX_NAME_LENGTH),
+                name: editingId !== null ? source.name : `${source.name} (사본)`.slice(0, MAX_NAME_LENGTH),
                 description: source.description,
                 items: source.items,
                 layout: source.layout,

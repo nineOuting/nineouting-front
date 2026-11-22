@@ -308,9 +308,18 @@
   color: var(--text-disabled);
 }
 
+/* 피그마 월간 칸: 시작 시간 아래 회의명 */
 .monthEvent {
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  height: 22px;
+  gap: 0;
+  height: auto;
+  padding-block: 2px;
+}
+
+.monthEvent > span {
+  max-width: 100%;
 }
 
 .more {

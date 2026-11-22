@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { ArchiveMinutes } from '../../api/minutes';
+import type { ArchiveMinutes, ExportFormat } from '../../api/minutes';
 import downloadIcon from '../../assets/icons/download.svg';
 import folderIcon from '../../assets/icons/folder-sm.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
@@ -24,15 +24,18 @@ interface ArchiveTableProps {
   /** 폴더 아이콘 색 (REQ-202 프로젝트 색) */
   folderColors: Map<number, number | undefined>;
   onOpen: (item: ArchiveMinutes) => void;
-  onDownload: (item: ArchiveMinutes) => void;
-  /** REQ-160 줄마다 ⋮ 메뉴: 회의록 보기, 다운로드, 링크 복사, 다른 폴더로 이동, 회의록 삭제 */
-  rowMenu: (item: ArchiveMinutes) => ActionMenuItem[];
+  /** 피그마 프론트 "다운로드 메뉴": 형식(PDF, Word)을 고르면 바로 받는다 */
+  onDownload: (item: ArchiveMinutes, format: ExportFormat) => void;
+  /** REQ-160 줄마다 ⋮ 메뉴: 회의록 보기, 다운로드, 링크 복사, 다른 폴더로 이동, 회의록 삭제. openDownload는 형식 메뉴를 연다 */
+  rowMenu: (item: ArchiveMinutes, openDownload: () => void) => ActionMenuItem[];
 }
 
 /** REQ-053 아카이브 목록 (디자인 Page 9 ArchivePage): 회의명, 폴더, 일시, 참석자, 장소, 작업. 줄을 누르면 회의록을 연다 */
 export default function ArchiveTable({ items, folderColors, onOpen, onDownload, rowMenu }: ArchiveTableProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const [downloadMenuId, setDownloadMenuId] = useState<number | null>(null);
+  const downloadAnchorRef = useRef<HTMLButtonElement | null>(null);
   return (
     <div className={styles.table} role="table" aria-label="회의록 목록">
       <div className={`${styles.row} ${styles.head}`} role="row">
@@ -93,14 +96,37 @@ export default function ArchiveTable({ items, folderColors, onOpen, onDownload, 
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              className={styles.iconButton}
-              aria-label={`${item.title} 다운로드`}
-              onClick={() => onDownload(item)}
-            >
-              <Icon src={downloadIcon} size={ACTION_ICON_SIZE} />
-            </button>
+            <span className={styles.downloadAnchor}>
+              <button
+                ref={downloadMenuId === item.minutesId ? downloadAnchorRef : undefined}
+                type="button"
+                className={styles.iconButton}
+                aria-label={`${item.title} 다운로드`}
+                aria-haspopup="menu"
+                aria-expanded={downloadMenuId === item.minutesId}
+                onClick={() => setDownloadMenuId((current) => (current === item.minutesId ? null : item.minutesId))}
+              >
+                <Icon src={downloadIcon} size={ACTION_ICON_SIZE} />
+              </button>
+              {downloadMenuId === item.minutesId && (
+                <ActionMenu
+                  label="다운로드 형식"
+                  anchorRef={downloadAnchorRef}
+                  className={styles.menu}
+                  items={[
+                    { label: 'PDF로 다운로드', onSelect: () => onDownload(item, 'PDF') },
+                    { label: 'Word (.docx)로 다운로드', onSelect: () => onDownload(item, 'DOCX') },
+                  ].map((entry) => ({
+                    ...entry,
+                    onSelect: () => {
+                      setDownloadMenuId(null);
+                      entry.onSelect();
+                    },
+                  }))}
+                  onClose={() => setDownloadMenuId(null)}
+                />
+              )}
+            </span>
             <span className={styles.menuAnchor}>
               <button
                 ref={openMenuId === item.minutesId ? menuAnchorRef : undefined}
@@ -118,7 +144,7 @@ export default function ArchiveTable({ items, folderColors, onOpen, onDownload, 
                   label={`${item.title} 메뉴`}
                   anchorRef={menuAnchorRef}
                   className={styles.menu}
-                  items={rowMenu(item).map((entry) => ({
+                  items={rowMenu(item, () => setDownloadMenuId(item.minutesId)).map((entry) => ({
                     ...entry,
                     onSelect: () => {
                       setOpenMenuId(null);

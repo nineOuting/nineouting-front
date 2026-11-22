@@ -1,0 +1,79 @@
+/* 피그마 프론트 "멤버 목록 팝오버": 280px, 이름과 역할, 아래에 초대 대기 */
+.popover {
+  width: 280px;
+  gap: var(--spacing-2);
+}
+
+.title {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.loading {
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  height: 36px;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: var(--border-width-default) solid var(--avatar-empty-border);
+  border-radius: var(--radius-full);
+  background: var(--avatar-empty-bg);
+  object-fit: cover;
+}
+
+.name {
+  flex: 1;
+  overflow: hidden;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role {
+  flex-shrink: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.pending {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding-top: var(--spacing-2);
+  border-top: var(--border-width-default) solid var(--border-default);
+}
+
+.pendingTitle {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.pendingEmail {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-tertiary);
+}

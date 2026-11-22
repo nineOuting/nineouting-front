@@ -151,7 +151,12 @@ export default function ProfilePage() {
             <div className={styles.row}>
               <div className={styles.rowText}>
                 <p className={layout.cardTitle}>비밀번호</p>
-                <p className={styles.caption}>로그인할 때 쓰는 비밀번호를 바꿔요</p>
+                {/* 피그마 프론트 Profile_Modal: "마지막 변경 2026.10.02" */}
+                <p className={styles.caption}>
+                  {profile.passwordChangedAt
+                    ? `마지막 변경 ${profile.passwordChangedAt.slice(0, 10).replaceAll('-', '.')}`
+                    : '로그인할 때 쓰는 비밀번호를 바꿔요'}
+                </p>
               </div>
               <button type="button" className={styles.smallButton} onClick={() => setIsPasswordOpen(true)}>
                 비밀번호 변경
@@ -196,6 +201,7 @@ export default function ProfilePage() {
         <ChangePasswordModal
           onDone={() => {
             setIsPasswordOpen(false);
+            void getMyProfile().then(setProfile).catch(() => undefined);
             setToast({ text: '비밀번호를 바꿨어요', variant: 'success' });
           }}
           onClose={() => setIsPasswordOpen(false)}

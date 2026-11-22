@@ -36,6 +36,7 @@ import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
 import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
 import Icon from '../../components/Icon';
+import MemberListPopover from '../../components/MemberListPopover';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderMeeting, FolderMember, FolderPendingAgenda, WorkspaceMember } from '../../types/workspace';
@@ -96,6 +97,8 @@ export default function FolderPage() {
   const page = Math.max(0, Number(searchParams.get('page') ?? '1') - 1);
   const [isFolderMenuOpen, setIsFolderMenuOpen] = useState(false);
   const folderMenuRef = useRef<HTMLButtonElement>(null);
+  const memberListRef = useRef<HTMLButtonElement>(null);
+  const [isMemberListOpen, setIsMemberListOpen] = useState(false);
   // 즐겨찾기 버튼은 스스로 상태를 불러오므로 메뉴에서 바꾸면 다시 그린다
   const [folder, setFolder] = useState<FolderInfo | null>(null);
   const [meetings, setMeetings] = useState<FolderMeeting[]>([]);
@@ -427,9 +430,22 @@ export default function FolderPage() {
 
       {/* 피그마 Page 8 MetaLine: 멤버 수(REQ-203), 회의 수, 내 권한 */}
       <div className={styles.metaLine}>
-        <button type="button" className={styles.linkButton} onClick={openMembers}>
-          멤버 {members.length}명
-        </button>
+        {/* 피그마 프론트 "프로젝트 멤버 목록 보기": [멤버 N명]은 보기 전용, 관리는 ⋮ [멤버 관리] */}
+        <span className={styles.memberAnchor}>
+          <button
+            ref={memberListRef}
+            type="button"
+            className={styles.linkButton}
+            aria-haspopup="dialog"
+            aria-expanded={isMemberListOpen}
+            onClick={() => setIsMemberListOpen((value) => !value)}
+          >
+            멤버 {members.length}명
+          </button>
+          {isMemberListOpen && (
+            <MemberListPopover anchorRef={memberListRef} members={members} onClose={() => setIsMemberListOpen(false)} />
+          )}
+        </span>
         <span className={styles.metaDivider} aria-hidden="true" />
         <span className={styles.metaText}>회의 {meetings.length}개</span>
         <span className={styles.metaDivider} aria-hidden="true" />

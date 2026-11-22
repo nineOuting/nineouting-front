@@ -368,3 +368,9 @@
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+
+/* [멤버 N명] 보기 전용 목록이 버튼 아래에 뜬다 */
+.memberAnchor {
+  position: relative;
+  display: inline-flex;
+}

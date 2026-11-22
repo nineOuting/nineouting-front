@@ -199,6 +199,20 @@ export interface InvitationInfo {
   member: boolean;
 }
 
+export interface InvitePreview {
+  workspaceName: string;
+  inviterName: string | null;
+}
+
+/**
+ * 로그인 전 초대 첫 화면 (피그마 프론트 InviteLandingPage). 로그인 없이 부른다 (workspace-service, api-gateway SCRUM-351).
+ * 쓸 수 없는 초대면 메일 초대는 INVITATION_INVALID, 링크 초대는 INVITE_LINK_INVALID
+ */
+export function previewInvite(kind: 'invitations' | 'invites', token: string) {
+  const base = kind === 'invitations' ? '/api/workspaces/invitations' : '/api/invites';
+  return request<InvitePreview>('GET', `${base}/${encodeURIComponent(token)}/preview`);
+}
+
 /** REQ-127 초대 메일의 링크를 연 사람에게 보여 줄 정보 */
 export function getInvitation(token: string) {
   return request<InvitationInfo>('GET', `/api/workspaces/invitations/${encodeURIComponent(token)}`);
