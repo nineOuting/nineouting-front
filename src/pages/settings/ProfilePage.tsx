@@ -1,33 +1,63 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../api/auth';
 import { errorMessage } from '../../api/client';
 import {
+  DEFAULT_AVATARS,
   deleteMyProfileImage,
   getMyProfile,
+  PROFILE_IMAGE_MAX_BYTES,
   PROFILE_IMAGE_TYPES,
+  registerMyProfileImage,
   updateMyProfile,
-  uploadMyProfileImage,
+  uploadProfileImageFile,
   type MyProfile,
 } from '../../api/user';
 import Button from '../../components/Button';
+import Spinner from '../../components/Spinner';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import { NAME_MAX_LENGTH } from '../../constants/auth';
 import ChangePasswordModal from './ChangePasswordModal';
+import ProfilePhotoPicker from './ProfilePhotoPicker';
 import WithdrawModal from './WithdrawModal';
 import layout from './SettingsLayout.module.css';
 import SettingsLayout from './SettingsLayout';
 import styles from './ProfilePage.module.css';
 
 const AVATAR_SIZE = 64;
-const IMAGE_TYPE_MESSAGE = 'JPG, PNG, WEBP 사진만 올릴 수 있어요.';
+/** MSG-126 JPG·PNG가 아니거나 5MB를 넘거나 올리기에 실패하면 */
+const PHOTO_FAILED_MESSAGE = '사진을 올리지 못했어요. JPG·PNG 파일을 5MB까지 올릴 수 있어요.';
+/** 사진이 없으면 기본 캐릭터 01 (디자인 ProfileCard · default) */
+const FALLBACK_AVATAR = DEFAULT_AVATARS[0];
 
-/** REQ-114~116 프로필 (디자인 Page 9 Profile_Modal, 설정 창 안): 사진, 이름, 비밀번호 변경, 로그아웃. 모든 워크스페이스에 공통 */
+/**
+ * [저장] 전까지 고른 사진. keep: 바꾸지 않음, set: 기본 캐릭터나 올린 사진의 키, remove: [사진 삭제]
+ */
+type PhotoDraft = { kind: 'keep' } | { kind: 'set'; key: string; url: string } | { kind: 'remove' };
+
+/** 2026-10-02T09:00:00 → 2026.10.02 */
+function formatDate(dateTime: string) {
+  return dateTime.slice(0, 10).replaceAll('-', '.');
+}
+
+/**
+ * REQ-114~116 프로필 (디자인 11 Profile_Modal, 설정 창 안): 사진, 이름, 비밀번호 변경, 로그아웃. 모든 워크스페이스에 공통.
+ * 사진은 고르거나 올려도 바로 저장하지 않고 미리 보여 주다가 [저장]을 누르면 저장한다 (디자인 11 상태 모음 프로필 사진)
+ */
+/** 사진 자리에 넣을 수 있는 주소만 쓴다: 고른 파일(blob:), 저장소 주소(https:), 기본 캐릭터(/avatars/) */
+function safeImageUrl(url: string | undefined) {
+  return url && /^(blob:|https:\/\/|http:\/\/localhost[:/]|\/avatars\/)/.test(url) ? url : undefined;
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const photoButtonsRef = useRef<HTMLDivElement>(null);
   const [profile, setProfile] = useState<MyProfile>();
+  const [photo, setPhoto] = useState<PhotoDraft>({ kind: 'keep' });
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string>();
   const [name, setName] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
@@ -37,6 +67,7 @@ export default function ProfilePage() {
   const apply = (next: MyProfile) => {
     setProfile(next);
     setName(next.name);
+    setPhoto({ kind: 'keep' });
   };
 
   useEffect(() => {
@@ -61,34 +92,62 @@ export default function ProfilePage() {
     }
   };
 
-  const changeImage = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file || !profile) {
-      return;
-    }
-    if (!PROFILE_IMAGE_TYPES.includes(file.type)) {
-      setToast({ text: IMAGE_TYPE_MESSAGE, variant: 'error' });
-      return;
-    }
-    await run(async () => {
-      const profileImageUrl = await uploadMyProfileImage(file);
-      setProfile({ ...profile, profileImageUrl });
-    }, '프로필 사진을 바꿨어요');
+  // 원 안에 보이는 사진: 고른 사진 > 저장된 사진 > 기본 캐릭터 01
+  const shownUrl =
+    photo.kind === 'set' ? photo.url : photo.kind === 'remove' ? undefined : profile?.profileImageUrl;
+  const avatarUrl = safeImageUrl(shownUrl) ?? FALLBACK_AVATAR.url;
+  const selectedDefaultKey = DEFAULT_AVATARS.find(({ url }) => url === avatarUrl)?.key;
+
+  const selectDefault = (key: string, url: string) => {
+    setPhoto({ kind: 'set', key, url });
+    setPhotoError(undefined);
+    setIsPickerOpen(false);
   };
 
-  const removeImage = () =>
-    run(async () => {
-      await deleteMyProfileImage();
-      setProfile((prev) => prev && { ...prev, profileImageUrl: undefined });
-    }, '프로필 사진을 지웠어요');
+  // 올리는 동안 팝오버를 닫고 사진 자리에 로딩, 실패하면 팝오버를 다시 열어 안내 (MSG-126)
+  const uploadFile = async (file: File) => {
+    if (!PROFILE_IMAGE_TYPES.includes(file.type) || file.size > PROFILE_IMAGE_MAX_BYTES) {
+      setPhotoError(PHOTO_FAILED_MESSAGE);
+      return;
+    }
+    setPhotoError(undefined);
+    setIsPickerOpen(false);
+    setIsUploading(true);
+    try {
+      const key = await uploadProfileImageFile(file);
+      setPhoto({ kind: 'set', key, url: URL.createObjectURL(file) });
+    } catch {
+      setPhotoError(PHOTO_FAILED_MESSAGE);
+      setIsPickerOpen(true);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const closePicker = () => {
+    setIsPickerOpen(false);
+    setPhotoError(undefined);
+  };
 
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!profile || isBusy) {
+    if (!profile || isBusy || isUploading) {
       return;
     }
-    void run(async () => apply(await updateMyProfile({ name: name.trim() })), '프로필을 저장했어요');
+    void run(async () => {
+      if (photo.kind === 'set') {
+        await registerMyProfileImage(photo.key);
+      } else if (photo.kind === 'remove' && profile.profileImageUrl) {
+        await deleteMyProfileImage();
+      }
+      apply(await updateMyProfile({ name: name.trim() }));
+    }, '프로필을 저장했어요');
+  };
+
+  const reloadProfile = () => {
+    getMyProfile()
+      .then((loaded) => setProfile((prev) => prev && { ...prev, passwordChangedAt: loaded.passwordChangedAt }))
+      .catch(() => undefined);
   };
 
   const signOut = async () => {
@@ -106,28 +165,45 @@ export default function ProfilePage() {
         <>
           <form className={`${layout.card} ${styles.profileCard}`} onSubmit={save} noValidate>
             <div className={styles.avatarRow}>
-              {profile.profileImageUrl ? (
-                <img src={profile.profileImageUrl} alt="" width={AVATAR_SIZE} height={AVATAR_SIZE} className={styles.avatar} />
+              {isUploading ? (
+                <span className={`${styles.avatar} ${styles.avatarLoading}`} role="status" aria-label="사진 올리는 중">
+                  <Spinner size={24} />
+                </span>
               ) : (
-                <span className={styles.avatar} aria-hidden="true" />
+                <img src={avatarUrl} alt="" width={AVATAR_SIZE} height={AVATAR_SIZE} className={styles.avatar} />
               )}
               <div className={styles.avatarText}>
                 <p className={styles.label}>프로필 사진</p>
-                <div className={styles.inline}>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept={PROFILE_IMAGE_TYPES.join(',')}
-                    className={styles.fileInput}
-                    onChange={changeImage}
-                  />
-                  <button type="button" className={styles.smallButton} disabled={isBusy} onClick={() => fileRef.current?.click()}>
+                <div ref={photoButtonsRef} className={styles.photoButtons}>
+                  <button
+                    type="button"
+                    className={styles.photoButton}
+                    disabled={isBusy || isUploading}
+                    aria-expanded={isPickerOpen}
+                    onClick={() => (isPickerOpen ? closePicker() : setIsPickerOpen(true))}
+                  >
                     사진 바꾸기
                   </button>
-                  {profile.profileImageUrl && (
-                    <button type="button" className={styles.smallButton} disabled={isBusy} onClick={removeImage}>
-                      사진 삭제
-                    </button>
+                  <button
+                    type="button"
+                    className={styles.photoButton}
+                    disabled={isBusy || isUploading}
+                    onClick={() => {
+                      closePicker();
+                      setPhoto({ kind: 'remove' });
+                    }}
+                  >
+                    사진 삭제
+                  </button>
+                  {isPickerOpen && (
+                    <ProfilePhotoPicker
+                      anchorRef={photoButtonsRef}
+                      selectedKey={selectedDefaultKey}
+                      error={photoError}
+                      onSelectDefault={selectDefault}
+                      onSelectFile={(file) => void uploadFile(file)}
+                      onClose={closePicker}
+                    />
                   )}
                 </div>
               </div>
@@ -142,7 +218,7 @@ export default function ProfilePage() {
               <TextField label="이메일" value={profile.email} disabled helper="이메일은 바꿀 수 없어요" />
             </div>
             <div className={styles.footer}>
-              <Button isLoading={isBusy} type="submit" size="md" disabled={isBusy || !name.trim()}>
+              <Button isLoading={isBusy} type="submit" size="md" disabled={isBusy || isUploading || !name.trim()}>
                 저장
               </Button>
             </div>
@@ -151,10 +227,9 @@ export default function ProfilePage() {
             <div className={styles.row}>
               <div className={styles.rowText}>
                 <p className={layout.cardTitle}>비밀번호</p>
-                {/* 피그마 프론트 Profile_Modal: "마지막 변경 2026.10.02" */}
                 <p className={styles.caption}>
                   {profile.passwordChangedAt
-                    ? `마지막 변경 ${profile.passwordChangedAt.slice(0, 10).replaceAll('-', '.')}`
+                    ? `마지막 변경 ${formatDate(profile.passwordChangedAt)}`
                     : '로그인할 때 쓰는 비밀번호를 바꿔요'}
                 </p>
               </div>
@@ -201,8 +276,8 @@ export default function ProfilePage() {
         <ChangePasswordModal
           onDone={() => {
             setIsPasswordOpen(false);
-            void getMyProfile().then(setProfile).catch(() => undefined);
             setToast({ text: '비밀번호를 바꿨어요', variant: 'success' });
+            reloadProfile(); // MSG-108 마지막 변경 날짜 갱신
           }}
           onClose={() => setIsPasswordOpen(false)}
         />

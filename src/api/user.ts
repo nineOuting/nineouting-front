@@ -8,7 +8,7 @@ interface MyProfileResponse {
   name: string;
   affiliation: string | null;
   profileImageUrl: string | null;
-  /** 비밀번호를 마지막으로 정한 때 (user-service SCRUM-350). 예전 서버면 없다 */
+  /** REQ-116 비밀번호 마지막 변경 시각 (예전 서버는 주지 않는다) */
   passwordChangedAt?: string | null;
 }
 
@@ -35,7 +35,15 @@ export function getMe() {
 }
 
 // user-service가 받는 사진 형식
-export const PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+/** 디자인 11 프로필 사진: 5MB까지 (user-service도 같은 기준으로 막는다) */
+export const PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+/** REQ-115 기본 캐릭터 9개. 그림은 public/avatars, 서버에는 default/NN 키로 저장한다 */
+export const DEFAULT_AVATARS = ['01', '02', '03', '04', '05', '06', '07', '08', '09'].map((no) => ({
+  key: `default/${no}`,
+  url: `/avatars/${no}.png`,
+}));
 
 export interface MyProfile {
   email: string;
@@ -73,8 +81,8 @@ export function changePassword(currentPassword: string, newPassword: string) {
   return request('PUT', '/api/users/me/password', { currentPassword, newPassword });
 }
 
-/** REQ-115 계정 사진을 S3에 직접 올린 뒤 등록한다 */
-export async function uploadMyProfileImage(file: File) {
+/** REQ-115 사진 파일을 S3에 직접 올리고 키를 돌려준다. 프로필에는 [저장] 때 registerMyProfileImage로 등록한다 */
+export async function uploadProfileImageFile(file: File) {
   const { uploadUrl, imageKey } = await request<{ uploadUrl: string; imageKey: string }>(
     'POST',
     '/api/users/me/profile-image/upload-url',
@@ -84,6 +92,11 @@ export async function uploadMyProfileImage(file: File) {
   if (!uploaded.ok) {
     throw new Error(`profile image upload failed: ${uploaded.status}`);
   }
+  return imageKey;
+}
+
+/** REQ-115 올린 사진의 키나 기본 캐릭터 키(default/NN)를 내 프로필 사진으로 등록한다 */
+export async function registerMyProfileImage(imageKey: string) {
   const { profileImageUrl } = await request<{ profileImageUrl: string }>('PUT', '/api/users/me/profile-image', {
     imageKey,
   });

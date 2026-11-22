@@ -46,11 +46,9 @@ function formatDate(dateTime: string) {
   return dateTime.slice(0, 10).replaceAll('-', '.');
 }
 
-/** MSG-073 "회의록 N개를 복구했어요." 종류가 섞이면 개수만 */
+/** MSG-073 "N개 항목을 복구했어요" (디자인 11 상태 모음 복구 완료) */
 function restoredMessage(items: TrashItem[]) {
-  const kinds = new Set(items.map(({ kind }) => kind));
-  const label = kinds.size === 1 ? `${KIND_LABELS[items[0].kind]} ` : '';
-  return `${label}${items.length}개를 복구했어요.`;
+  return `${items.length}개 항목을 복구했어요`;
 }
 
 /** 한 워크스페이스의 지운 폴더와 회의, 회의록. 폴더의 위치는 워크스페이스, 회의는 폴더 */
