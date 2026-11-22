@@ -1,6 +1,6 @@
 /*
  * 디자인 Version02 Toast: 화면 위쪽 가운데 어두운 알림, 흰 글자, 파란 아이콘과 [되돌리기] (REQ-177)
- * 라이트, 다크 모드 모두 같은 어두운 바탕이라 의미 토큰 대신 기본 색 토큰을 쓴다
+ * 라이트, 다크 모드 모두 어두운 바탕이라 의미 토큰 대신 기본 색 토큰을 쓴다. 바탕만 다크에서 페이지와 구분되게 밝힌다 (--bg-floating-dark)
  */
 .toast {
   position: fixed;
@@ -12,7 +12,7 @@
   max-width: min(560px, calc(100vw - var(--spacing-8)));
   padding: var(--spacing-3) var(--spacing-4);
   border-radius: var(--radius-md);
-  background: var(--gray-900);
+  background: var(--bg-floating-dark);
   box-shadow: var(--shadow-md);
   color: var(--gray-0);
   transform: translateX(-50%);
@@ -51,7 +51,7 @@
 }
 
 .action:hover {
-  background: var(--gray-800);
+  background: var(--bg-floating-dark-hover);
 }
 
 /* REQ-177 기본은 화면 아래, 회의 중 화면은 위쪽 */
