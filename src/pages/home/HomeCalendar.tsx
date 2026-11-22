@@ -309,6 +309,8 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
                     aria-label={eventLabel(meeting)}
                     onClick={(event) => setPreview({ meeting, anchor: event.currentTarget.getBoundingClientRect() })}
                   >
+                    {/* 피그마 HomeMonthViewPage_v6: 칸마다 시작 시간과 회의명 두 줄 */}
+                    <span className={styles.eventMeta}>{toTime(meeting.startAt)}</span>
                     <span className={styles.eventTitle}>{meeting.title}</span>
                   </button>
                 ))}
@@ -321,7 +323,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
                       setView('week');
                     }}
                   >
-                    +{items.length - MONTH_EVENT_LIMIT}
+                    +{items.length - MONTH_EVENT_LIMIT}개 더보기
                   </button>
                 )}
               </div>

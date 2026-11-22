@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
   completeMyTodo,
@@ -33,6 +34,9 @@ const FAVORITE_SKELETONS = 3;
 
 /** REQ-018~020, 146~153 홈 (nep!nep! 디자인 HomePage) */
 export default function HomePage() {
+  const [searchParams] = useSearchParams();
+  // HomeCalendar가 주간/월간을 주소(?view=month)에 둔다
+  const isMonthView = searchParams.get('view') === 'month';
   const [myName, setMyName] = useState('');
   // null이면 아직 불러오는 중
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[] | null>(null);
@@ -167,7 +171,8 @@ export default function HomePage() {
         <UpcomingMeetingCard meeting={upcoming} />
         <section className={styles.calendarSection} aria-labelledby="week-schedule-title">
           <h2 id="week-schedule-title" className={styles.sectionTitle}>
-            이번 주 일정
+            {/* 피그마 HomeMonthViewPage_v6: 월간이면 "이번 달 일정" */}
+            {isMonthView ? '이번 달 일정' : '이번 주 일정'}
           </h2>
           <HomeCalendar workspaces={workspaces} />
         </section>

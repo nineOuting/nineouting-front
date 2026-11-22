@@ -107,6 +107,8 @@ function Avatar({ member }: { member: Member }) {
 export default function MeetingWaitingPage() {
   const navigate = useNavigate();
   const { meetingId } = useParams();
+  // 피그마 MeetingWaiting_EditAgenda: 안건을 고치는 동안에는 [회의 시작하기]를 막는다
+  const [isEditingAgenda, setIsEditingAgenda] = useState(false);
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [myId, setMyId] = useState<number>();
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
@@ -206,7 +208,7 @@ export default function MeetingWaitingPage() {
   const isReady = isScheduled && meeting.agendas.length > 0 && Boolean(meeting.writer);
   // REQ-076 회의록 작성자만 시작한다. 다른 참석자는 버튼을 막고 이유를 보여 준다
   const isWriter = meeting.writer?.userId === myId;
-  const canStart = isReady && isWriter;
+  const canStart = isReady && isWriter && !isEditingAgenda;
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
   /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
@@ -479,6 +481,7 @@ export default function MeetingWaitingPage() {
               setToast({ text: '이번 회의 안건에 추가했어요', variant: 'success', action: { label: '되돌리기', onClick: undo } })
             }
             onDiscardPending={discardPending}
+            onEditingChange={setIsEditingAgenda}
           />
             </>
           )}

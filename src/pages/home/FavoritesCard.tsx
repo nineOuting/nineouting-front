@@ -36,7 +36,8 @@ export default function FavoritesCard({ items, onRemove }: FavoritesCardProps) {
         <h2 id="favorites-title" className={card.title}>
           즐겨찾기
         </h2>
-        {items.length > PREVIEW_COUNT && (
+        {/* 피그마 HomePage_v6: 즐겨찾기가 있으면 [전체보기]를 늘 보여 준다 */}
+        {items.length > 0 && (
           <button type="button" className={card.textButton} onClick={() => setIsExpanded((value) => !value)}>
             {isExpanded ? '접기' : '전체보기'}
           </button>

@@ -29,6 +29,9 @@ interface WorkspaceFolderCardProps {
   /** ⋮ 더보기 메뉴 */
   menu: ReactNode;
   onError: (text: string) => void;
+  /** ⋮ [즐겨찾기에 추가]와 같은 상태 */
+  isFavorite: boolean;
+  onFavoriteChange: (isFavorite: boolean) => void;
 }
 
 /** 2026-11-18T14:00:00 → 11.18(화) 14:00, 2026-10-30 → 10.30(목) */
@@ -41,7 +44,16 @@ function shortDate(value: string, withTime: boolean) {
  * REQ-037~038 피그마 Page 8 FolderCard: 프로젝트 색 카드(REQ-202). 이름, 회의 수, ⋮, 즐겨찾기,
  * 다음 회의(없으면 마지막 회의), 멤버 얼굴. 카드를 누르면 폴더로 간다
  */
-export default function WorkspaceFolderCard({ folder, workspaceId, activity, members, menu, onError }: WorkspaceFolderCardProps) {
+export default function WorkspaceFolderCard({
+  folder,
+  workspaceId,
+  activity,
+  members,
+  menu,
+  onError,
+  isFavorite,
+  onFavoriteChange,
+}: WorkspaceFolderCardProps) {
   const navigate = useNavigate();
   const open = () => navigate(`/folders/${folder.folderId}`);
 
@@ -64,6 +76,8 @@ export default function WorkspaceFolderCard({ folder, workspaceId, activity, mem
             target={{ type: 'folder', workspaceId, folderId: folder.folderId }}
             name={folder.name}
             onError={onError}
+            isFavorite={isFavorite}
+            onChange={onFavoriteChange}
           />
         </span>
       </div>

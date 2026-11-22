@@ -8,6 +8,8 @@ interface MyProfileResponse {
   name: string;
   affiliation: string | null;
   profileImageUrl: string | null;
+  /** 비밀번호를 마지막으로 정한 때 (user-service SCRUM-350). 예전 서버면 없다 */
+  passwordChangedAt?: string | null;
 }
 
 export type Me = Member & { email: string };
@@ -39,12 +41,14 @@ export interface MyProfile {
   email: string;
   name: string;
   profileImageUrl?: string;
+  passwordChangedAt?: string;
 }
 
-const toMyProfile = ({ email, name, profileImageUrl }: MyProfileResponse): MyProfile => ({
+const toMyProfile = ({ email, name, profileImageUrl, passwordChangedAt }: MyProfileResponse): MyProfile => ({
   email,
   name,
   profileImageUrl: profileImageUrl ?? undefined,
+  passwordChangedAt: passwordChangedAt ?? undefined,
 });
 
 /** 계정 프로필이 바뀌면 상단 바 등이 새 값을 받도록 getMe 캐시를 비운다 */

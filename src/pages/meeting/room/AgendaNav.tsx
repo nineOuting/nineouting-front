@@ -1,8 +1,10 @@
+import { useRef, useState } from 'react';
 import addIcon from '../../../assets/icons/add-sm.svg';
 import deleteIcon from '../../../assets/icons/delete-sm.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, RoomAgenda } from '../../../types/meetingRoom';
+import ActionMenu from '../../workspace/ActionMenu';
 import styles from './AgendaNav.module.css';
 
 const ICON_SIZE = 16;
@@ -26,7 +28,10 @@ interface AgendaNavProps {
   onDelete?: (agendaId: string) => void;
 }
 
-/** 디자인 Version02 Live 왼쪽 "오늘의 안건": 안건마다 진행 상태를 세로 줄로 보여 주고, 누르면 가운데에 그 안건을 연다 */
+/**
+ * 디자인 Version02 Live 왼쪽 "오늘의 안건": 안건마다 진행 상태를 세로 줄로 보여 주고, 누르면 가운데에 그 안건을 연다.
+ * 피그마 프론트 "회의 중 안건 메뉴" (REQ-173): 회의록 작성자가 안건을 누르면 [안건 수정하기] [안건 삭제] 메뉴도 열린다
+ */
 export default function AgendaNav({
   agendas,
   selectedAgendaId,
@@ -37,6 +42,9 @@ export default function AgendaNav({
   onDelete,
 }: AgendaNavProps) {
   const decidedCount = agendas.filter(({ status }) => status === 'decided').length;
+  const [menuAgendaId, setMenuAgendaId] = useState<string | null>(null);
+  const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const hasMenu = Boolean(onRename || onDelete);
 
   return (
     <nav className={styles.nav} aria-labelledby="agenda-status-title">
@@ -69,34 +77,38 @@ export default function AgendaNav({
                 type="button"
                 className={styles.button}
                 aria-current={agenda.id === selectedAgendaId ? 'true' : undefined}
-                onClick={() => onSelect(agenda.id)}
+                ref={menuAgendaId === agenda.id ? menuAnchorRef : undefined}
+                aria-haspopup={hasMenu ? 'menu' : undefined}
+                aria-expanded={hasMenu ? menuAgendaId === agenda.id : undefined}
+                onClick={() => {
+                  onSelect(agenda.id);
+                  if (hasMenu) {
+                    setMenuAgendaId((current) => (current === agenda.id ? null : agenda.id));
+                  }
+                }}
               >
                 <span className={styles.status}>{STATUS_LABELS[status]}</span>
                 <span className={styles.agendaTitle}>{agenda.title}</span>
               </button>
-              {(onRename || onDelete) && (
-                <span className={styles.actions}>
-                  {onRename && (
-                    <button
-                      type="button"
-                      className={styles.iconButton}
-                      aria-label={`${agenda.title} 이름 바꾸기`}
-                      onClick={() => onRename(agenda.id)}
-                    >
-                      <Icon src={editIcon} size={ICON_SIZE} />
-                    </button>
-                  )}
-                  {onDelete && agendas.length > 1 && (
-                    <button
-                      type="button"
-                      className={styles.iconButton}
-                      aria-label={`${agenda.title} 삭제`}
-                      onClick={() => onDelete(agenda.id)}
-                    >
-                      <Icon src={deleteIcon} size={ICON_SIZE} />
-                    </button>
-                  )}
-                </span>
+              {menuAgendaId === agenda.id && (
+                <ActionMenu
+                  label={`${agenda.title} 메뉴`}
+                  anchorRef={menuAnchorRef}
+                  className={styles.menu}
+                  onClose={() => setMenuAgendaId(null)}
+                  items={[
+                    ...(onRename ? [{ label: '안건 수정하기', icon: editIcon, onSelect: () => onRename(agenda.id) }] : []),
+                    ...(onDelete && agendas.length > 1
+                      ? [{ label: '안건 삭제', icon: deleteIcon, isDanger: true, onSelect: () => onDelete(agenda.id) }]
+                      : []),
+                  ].map((item) => ({
+                    ...item,
+                    onSelect: () => {
+                      setMenuAgendaId(null);
+                      item.onSelect();
+                    },
+                  }))}
+                />
               )}
             </li>
           );

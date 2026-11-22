@@ -380,7 +380,10 @@ export default function MeetingCreatePage() {
                         onClose={closeMenu}
                       />
                     )}
-                    {!isEdit && <span className={styles.helper}>프로젝트 화면에서 만들면 자동으로 채워져요</span>}
+                    {/* 피그마 프론트 "회의 정보 수정 창": 폴더 칸은 흐리게, 아래에 "폴더는 바꿀 수 없어요" */}
+                    <span className={styles.helper}>
+                      {isEdit ? '폴더는 바꿀 수 없어요' : '프로젝트 화면에서 만들면 자동으로 채워져요'}
+                    </span>
                   </div>
                 )}
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import addIcon from '../../assets/icons/add-sm.svg';
 import emptyCharacter from '../../assets/characters/empty.svg';
 import archiveIcon from '../../assets/icons/archive.svg';
@@ -37,6 +37,8 @@ interface AgendaBoardProps {
   onCarryOver: (agenda: Agenda, undo: () => void) => void;
   /** 남은 안건 휴지통 (폴더의 남은 안건에서 버린다) */
   onDiscardPending: (pending: PendingAgenda) => void;
+  /** 수정 모드에 들어가고 나올 때 (피그마 MeetingWaiting_EditAgenda: 수정 중에는 [회의 시작하기]를 막는다) */
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
 function totalDecisionPoints(agendas: Agenda[]) {
@@ -94,6 +96,7 @@ export default function AgendaBoard({
   onSave,
   onCarryOver,
   onDiscardPending,
+  onEditingChange,
 }: AgendaBoardProps) {
   const [draft, setDraft] = useState<Agenda[] | null>(null);
   const [errors, setErrors] = useState<DraftErrors>({});
@@ -102,6 +105,9 @@ export default function AgendaBoard({
   const [focusId, setFocusId] = useState<string>();
   const dragRef = useRef<DragTarget | null>(null);
   const isEditing = draft !== null;
+  useEffect(() => {
+    onEditingChange?.(isEditing);
+  }, [isEditing, onEditingChange]);
   const shown = draft ?? agendas;
   const isDirty = isEditing && JSON.stringify(draft) !== JSON.stringify(agendas);
   // 같은 남은 안건을 두 번 불러오지 않게 이미 들어간 것은 뺀다

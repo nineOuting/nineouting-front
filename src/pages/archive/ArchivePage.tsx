@@ -3,12 +3,14 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
   ARCHIVE_PAGE_SIZE,
+  downloadMinutes,
   listArchiveFolderCounts,
   listMinutesLocations,
   listViewedMinutes,
   listWorkspaceMinutes,
   type ArchiveMinutes,
   type ArchiveQuery,
+  type ExportFormat,
   type ViewedMinutes,
 } from '../../api/minutes';
 import {
@@ -321,7 +323,14 @@ export default function ArchivePage() {
   const toggleFilter = (key: FilterKey) => setOpenFilter((open) => (open === key ? null : key));
   // REQ-175 아카이브에서 열어도 회의록 확인 화면 (끝난 회의의 대기 화면)
   const openMinutes = (meetingId: number) => navigate(`/meetings/${meetingId}`);
-  const download = (item: ArchiveMinutes) => navigate(`/meetings/${item.meetingId}/minutes?download=1`);
+  // 피그마 프론트 "다운로드 메뉴": 형식을 고르면 그 자리에서 받는다. 실패하면 MSG-040
+  const download = async (item: ArchiveMinutes, format: ExportFormat) => {
+    try {
+      await downloadMinutes(item.minutesId, format);
+    } catch {
+      setToast({ text: '파일을 다운로드하지 못했어요. 잠시 후 다시 시도해 주세요.', variant: 'error' });
+    }
+  };
   const reload = () => setReloadToken((value) => value + 1);
 
   // REQ-160 링크 복사 (MSG-064)
@@ -586,11 +595,11 @@ export default function ArchivePage() {
             items={items}
             folderColors={folderColors}
             onOpen={(item) => openMinutes(item.meetingId)}
-            onDownload={download}
-            rowMenu={(item) => [
+            onDownload={(item, format) => void download(item, format)}
+            rowMenu={(item, openDownload) => [
               // 디자인 MenuItem ViewIcon (디자인 체크 2026-11-19)
               { label: '회의록 보기', icon: viewIcon, onSelect: () => openMinutes(item.meetingId) },
-              { label: '다운로드', icon: downloadIcon, onSelect: () => download(item) },
+              { label: '다운로드', icon: downloadIcon, onSelect: openDownload },
               { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
               { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
               ...(isFolderOwner(item.folderId)

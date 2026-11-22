@@ -103,7 +103,8 @@
   background: var(--neutral-ghost-hover);
 }
 
-.menuAnchor {
+.menuAnchor,
+.downloadAnchor {
   position: relative;
   display: inline-flex;
 }
