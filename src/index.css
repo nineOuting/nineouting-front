@@ -134,6 +134,8 @@ body {
   --project-sky-icon: #7eb8f5;
   --warning-default: #fb923c;
   --warning-subtle: #431407;
+  /* 피그마 bg/sidebar 어두운 값. 없으면 홈 달력 요일 줄 등이 다크 모드에서 하얗게 보인다 */
+  --bg-sidebar: var(--gray-900);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -168,6 +170,7 @@ body {
     --project-sky-icon: #7eb8f5;
     --warning-default: #fb923c;
     --warning-subtle: #431407;
+    --bg-sidebar: var(--gray-900);
   }
 }
 

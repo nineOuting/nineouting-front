@@ -10,3 +10,16 @@
   color: var(--text-primary);
   list-style: decimal;
 }
+
+/* 권한 요청 안내 두 줄 (MSG-065) */
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  background: var(--bg-surface-muted);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}

@@ -337,6 +337,33 @@
   cursor: default;
 }
 
+/* MSG-088 결정할 사항 5개: 흐린 버튼에 마우스를 올리면 아래에 말풍선 (디자인 Tooltip과 같은 모양) */
+.addDecisionWrap {
+  position: relative;
+  align-self: flex-start;
+}
+
+.limitTooltip {
+  position: absolute;
+  top: calc(100% + var(--spacing-1));
+  left: 0;
+  z-index: 10;
+  display: none;
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--gray-900);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--gray-0);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.addDecisionWrap:hover .limitTooltip {
+  display: block;
+}
+
 .addAgenda {
   display: flex;
   align-items: center;

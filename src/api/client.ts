@@ -143,16 +143,28 @@ export async function downloadFile(path: string): Promise<{ blob: Blob; fileName
 
 /**
  * 서버가 준 업로드 주소(presigned URL)로 파일을 저장소(S3)에 바로 올린다.
- * 인증 머리글은 붙이지 않는다 (주소 자체에 권한이 들어 있다). Content-Type은 주소를 받을 때 알린 값과 같아야 한다
+ * 인증 머리글은 붙이지 않는다 (주소 자체에 권한이 들어 있다). Content-Type은 주소를 받을 때 알린 값과 같아야 한다.
+ * onProgress를 주면 올린 바이트 수를 알려 준다 (fetch는 올리기 진행률을 주지 않아 XMLHttpRequest를 쓴다)
  */
-export async function putToStorage(uploadUrl: string, file: Blob, contentType: string) {
-  let response: Response;
-  try {
-    response = await fetch(uploadUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file });
-  } catch {
-    throw new ApiError(NETWORK_ERROR, '파일을 올리지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.', 0);
-  }
-  if (!response.ok) {
-    throw new ApiError('UPLOAD_FAILED', '파일을 올리지 못했어요. 다시 시도해 주세요.', response.status);
-  }
+export function putToStorage(uploadUrl: string, file: Blob, contentType: string,
+  onProgress?: (loaded: number, total: number) => void) {
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl);
+    xhr.setRequestHeader('Content-Type', contentType);
+    if (onProgress) {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          onProgress(event.loaded, event.total);
+        }
+      };
+    }
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new ApiError('UPLOAD_FAILED', '파일을 올리지 못했어요. 다시 시도해 주세요.', xhr.status));
+    xhr.onerror = () =>
+      reject(new ApiError(NETWORK_ERROR, '파일을 올리지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.', 0));
+    xhr.send(file);
+  });
 }
