@@ -45,7 +45,11 @@ export default function FolderNameModal({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed || isSubmitting) {
+    if (isSubmitting) {
+      return;
+    }
+    if (!trimmed) {
+      setError('폴더명을 입력해 주세요.');
       return;
     }
     // 대소문자는 구분하지 않는다 (workspace-service 결정 사항)
@@ -74,8 +78,8 @@ export default function FolderNameModal({
             <Button variant="secondary" size="md" onClick={requestClose}>
               취소
             </Button>
-            {/* REQ-040 폴더명을 입력하기 전에는 누를 수 없다 */}
-            <Button isLoading={isSubmitting} type="submit" size="md" disabled={!name.trim() || isSubmitting}>
+            {/* REQ-040 레거시 (2026-11-22, 피그마 프론트는 입력 전에도 버튼이 활성이고 누르면 칸 아래 오류): disabled={!name.trim() || isSubmitting} */}
+            <Button isLoading={isSubmitting} type="submit" size="md" disabled={isSubmitting}>
               {submitLabel}
             </Button>
           </>

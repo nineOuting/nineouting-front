@@ -12,6 +12,7 @@ import Modal from '../../components/Modal';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
 import clockIcon from '../../assets/icons/clock.svg';
+import folderIcon from '../../assets/icons/folder-sm.svg';
 import groupAddIcon from '../../assets/icons/group-add.svg';
 import historyIcon from '../../assets/icons/history.svg';
 import pinIcon from '../../assets/icons/pin.svg';
@@ -22,7 +23,6 @@ import type { Agenda, Meeting, MeetingBasicInfo, Member } from '../../types/meet
 import FolderPage from '../folder/FolderPage';
 import LoadPreviousSettings, { type PreviousSettings } from './LoadPreviousSettings';
 import MeetingWaitingPage from './MeetingWaitingPage';
-import MemberChips from './MemberChips';
 import styles from './MeetingCreatePage.module.css';
 
 const ICON_SIZE = 20;
@@ -170,8 +170,9 @@ export default function MeetingCreatePage() {
   // REQ-199 워크스페이스 회의록 기본 양식 (null이면 서비스 기본 양식이라 따로 고르지 않는다)
   const [defaultTemplateId, setDefaultTemplateId] = useState<number | null>(null);
 
+  // 수정 창에서도 폴더 칸을 보인다 (바꿀 수는 없다. 디자인 EditMeetingModal)
   useEffect(() => {
-    if (isEdit || !Number.isInteger(routeFolderId)) {
+    if (!Number.isInteger(routeFolderId)) {
       return undefined;
     }
     let isCurrent = true;
@@ -242,7 +243,10 @@ export default function MeetingCreatePage() {
   };
 
   const selectStartTime = (startTime: string) => {
-    update({ startTime, endTime: endFor(startTime, duration, form.endTime) });
+    // 종료 시간을 직접 골랐으면 그 회의 길이를 그대로 두고 종료 시간을 함께 옮긴다 (디자인 체크 2026-11-19)
+    const length = form.startTime && form.endTime ? toMinutes(form.endTime) - toMinutes(form.startTime) : 0;
+    const keepsLength = duration === 'custom' && length > 0 && toMinutes(startTime) + length < MINUTES_PER_DAY;
+    update({ startTime, endTime: keepsLength ? toTime(toMinutes(startTime) + length) : endFor(startTime, duration, form.endTime) });
     closeMenu();
   };
 
@@ -322,7 +326,7 @@ export default function MeetingCreatePage() {
                 </h1>
                 <p className={styles.subtitle}>
                   {isEdit
-                    ? '바꾼 내용은 참석자에게 알림으로 가요'
+                    ? '바꾸면 참석자에게 알림이 가요. 회의를 시작하기 전까지만 바꿀 수 있어요'
                     : '기본 정보만 입력하면 돼요. 안건과 자료는 다음 화면에서 준비해요'}
                 </p>
               </div>
@@ -335,7 +339,7 @@ export default function MeetingCreatePage() {
               )}
 
               <div className={styles.fields}>
-                {!isEdit && folderOptions.length > 0 && (
+                {folderOptions.length > 0 && (
                   <div className={`${styles.field} ${styles.menuAnchor}`}>
                     <span className={styles.label}>프로젝트 폴더</span>
                     <button
@@ -345,14 +349,16 @@ export default function MeetingCreatePage() {
                       aria-label="프로젝트 폴더 선택"
                       aria-haspopup="listbox"
                       aria-expanded={openMenu === 'folder'}
+                      disabled={isEdit}
                       onClick={() => setOpenMenu((menu) => (menu === 'folder' ? null : 'folder'))}
                     >
+                      <Icon src={folderIcon} size={ICON_SIZE} className={styles.leadingIcon} />
                       <span className={styles.value}>
-                        {[workspaceName, folderOptions.find(({ folderId: id }) => id === selectedFolderId)?.name]
+                        {[workspaceName, folderOptions.find(({ folderId: id }) => id === folderId)?.name]
                           .filter(Boolean)
                           .join(' / ')}
                       </span>
-                      <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.trailingIcon} />
+                      {!isEdit && <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.trailingIcon} />}
                     </button>
                     {openMenu === 'folder' && (
                       <DropdownMenu
@@ -374,7 +380,10 @@ export default function MeetingCreatePage() {
                         onClose={closeMenu}
                       />
                     )}
-                    <span className={styles.helper}>프로젝트 화면에서 만들면 자동으로 채워져요</span>
+                    {/* 피그마 프론트 "회의 정보 수정 창": 폴더 칸은 흐리게, 아래에 "폴더는 바꿀 수 없어요" */}
+                    <span className={styles.helper}>
+                      {isEdit ? '폴더는 바꿀 수 없어요' : '프로젝트 화면에서 만들면 자동으로 채워져요'}
+                    </span>
                   </div>
                 )}
 
@@ -510,7 +519,12 @@ export default function MeetingCreatePage() {
                     onClick={() => setOpenMenu((menu) => (menu === 'attendee' ? null : 'attendee'))}
                   >
                     <Icon src={groupAddIcon} size={ICON_SIZE} className={styles.leadingIcon} />
-                    <span className={styles.placeholderText}>참석자 선택</span>
+                    {/* 디자인 ParticipantsField: 고른 사람은 칸 안에 이름을 쉼표로 이어 보인다 (칩 대신) */}
+                    {form.attendees.length > 0 ? (
+                      <span className={styles.value}>{form.attendees.map(({ name }) => name).join(', ')}</span>
+                    ) : (
+                      <span className={styles.placeholderText}>참석자 선택</span>
+                    )}
                     <Icon src={chevronRightIcon} size={ICON_SIZE} className={styles.trailingIcon} />
                   </button>
                   {openMenu === 'attendee' && (
@@ -535,7 +549,6 @@ export default function MeetingCreatePage() {
                     />
                   )}
                   <span className={styles.helper}>프로젝트 멤버 중에서 골라요</span>
-                  <MemberChips members={form.attendees} onRemove={toggleAttendee} />
                 </div>
 
                 <TextField
@@ -556,7 +569,7 @@ export default function MeetingCreatePage() {
               </Button>
               {/* REQ-070 만드는 동안 버튼이 로딩 표시로 바뀌고 다시 누를 수 없다 */}
               <Button type="submit" size="md" isLoading={isSubmitting}>
-                {isEdit ? '저장' : '회의 만들기'}
+                {isEdit ? '저장' : isSubmitting ? '만드는 중' : '회의 만들기'}
               </Button>
             </div>
           </form>

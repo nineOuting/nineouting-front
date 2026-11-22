@@ -20,16 +20,19 @@
   min-width: 0;
 }
 
+/* 디자인 StatsRow: 결정률 284px, 남은 안건은 남는 폭, 예정 시간 초과 카드 326px (디자인 체크 2026-11-19) */
 .overrunCard {
   flex-direction: column;
   flex-shrink: 0;
   gap: var(--spacing-3);
+  width: 326px;
 }
 
 .block {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
+  width: 284px;
   gap: var(--spacing-3);
 }
 
@@ -199,6 +202,8 @@
   flex-direction: column;
   gap: var(--spacing-1);
   min-width: 0;
+  text-align: left;
+  cursor: pointer;
 }
 
 .pendingTitle {
@@ -208,6 +213,21 @@
   color: var(--text-secondary);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pendingTitleOpen {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  word-break: keep-all;
+}
+
+.pendingPoints {
+  padding-left: var(--spacing-4);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+  list-style: disc;
 }
 
 .pendingMeta {
@@ -233,8 +253,13 @@
   color: var(--neutral-default);
 }
 
-.discard:hover {
+.discard:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
+}
+
+.discard:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .empty {

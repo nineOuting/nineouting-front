@@ -45,6 +45,11 @@ function formatDate(dateTime: string) {
  * REQ-114~116 프로필 (디자인 11 Profile_Modal, 설정 창 안): 사진, 이름, 비밀번호 변경, 로그아웃. 모든 워크스페이스에 공통.
  * 사진은 고르거나 올려도 바로 저장하지 않고 미리 보여 주다가 [저장]을 누르면 저장한다 (디자인 11 상태 모음 프로필 사진)
  */
+/** 사진 자리에 넣을 수 있는 주소만 쓴다: 고른 파일(blob:), 저장소 주소(https:), 기본 캐릭터(/avatars/) */
+function safeImageUrl(url: string | undefined) {
+  return url && /^(blob:|https:\/\/|http:\/\/localhost[:/]|\/avatars\/)/.test(url) ? url : undefined;
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const photoButtonsRef = useRef<HTMLDivElement>(null);
@@ -90,7 +95,7 @@ export default function ProfilePage() {
   // 원 안에 보이는 사진: 고른 사진 > 저장된 사진 > 기본 캐릭터 01
   const shownUrl =
     photo.kind === 'set' ? photo.url : photo.kind === 'remove' ? undefined : profile?.profileImageUrl;
-  const avatarUrl = shownUrl ?? FALLBACK_AVATAR.url;
+  const avatarUrl = safeImageUrl(shownUrl) ?? FALLBACK_AVATAR.url;
   const selectedDefaultKey = DEFAULT_AVATARS.find(({ url }) => url === avatarUrl)?.key;
 
   const selectDefault = (key: string, url: string) => {

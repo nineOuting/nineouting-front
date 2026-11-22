@@ -49,7 +49,10 @@
   background: var(--neutral-ghost-hover);
 }
 
+/* 디자인 RangeTitle 187px: 날짜 길이가 바뀌어도 다음 버튼이 움직이지 않게 폭을 둔다 */
 .rangeLabel {
+  min-width: 187px;
+  text-align: center;
   font-size: var(--font-size-heading-sm);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-heading-sm);
@@ -219,7 +222,8 @@
   padding: var(--spacing-1) var(--spacing-2);
   background: var(--primary-subtle);
   border-left: var(--border-width-focus) solid var(--primary-default);
-  border-radius: var(--radius-sm);
+  /* 디자인: 왼쪽 색 줄 쪽은 각지게 */
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   text-align: left;
 }
 
@@ -304,9 +308,18 @@
   color: var(--text-disabled);
 }
 
+/* 피그마 월간 칸: 시작 시간 아래 회의명 */
 .monthEvent {
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
-  height: 22px;
+  gap: 0;
+  height: auto;
+  padding-block: 2px;
+}
+
+.monthEvent > span {
+  max-width: 100%;
 }
 
 .more {

@@ -122,6 +122,11 @@
   color: var(--neutral-default);
 }
 
+.missed {
+  background: var(--bg-surface-muted);
+  color: var(--text-disabled);
+}
+
 .inProgress {
   background: var(--primary-subtle);
   color: var(--primary-default);
@@ -149,9 +154,9 @@
   flex-shrink: 0;
   width: var(--profile-sm);
   height: var(--profile-sm);
-  border: var(--border-width-default) solid var(--border-default);
+  border: var(--border-width-default) solid var(--avatar-empty-border);
   border-radius: var(--radius-full);
-  background: var(--bg-surface-muted);
+  background: var(--avatar-empty-bg);
   object-fit: cover;
 }
 

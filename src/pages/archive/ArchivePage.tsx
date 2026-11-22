@@ -3,12 +3,14 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
   ARCHIVE_PAGE_SIZE,
+  downloadMinutes,
   listArchiveFolderCounts,
   listMinutesLocations,
   listViewedMinutes,
   listWorkspaceMinutes,
   type ArchiveMinutes,
   type ArchiveQuery,
+  type ExportFormat,
   type ViewedMinutes,
 } from '../../api/minutes';
 import {
@@ -23,8 +25,6 @@ import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
-import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
-import minutesIcon from '../../assets/icons/minutes-doc.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
 import searchIcon from '../../assets/icons/search.svg';
@@ -35,9 +35,12 @@ import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
 import moveIcon from '../../assets/icons/folder-sm.svg';
 import MoveMeetingModal from '../../components/MoveMeetingModal';
+import emptyCharacter from '../../assets/characters/empty.svg';
+import viewIcon from '../../assets/icons/visibility.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
-import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
 import Popover from '../../components/Popover';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
@@ -186,7 +189,8 @@ export default function ArchivePage() {
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
-  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+  // const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const switcherRef = useRef<HTMLButtonElement>(null);
   const sortRef = useRef<HTMLButtonElement>(null);
@@ -321,7 +325,14 @@ export default function ArchivePage() {
   const toggleFilter = (key: FilterKey) => setOpenFilter((open) => (open === key ? null : key));
   // REQ-175 아카이브에서 열어도 회의록 확인 화면 (끝난 회의의 대기 화면)
   const openMinutes = (meetingId: number) => navigate(`/meetings/${meetingId}`);
-  const download = (item: ArchiveMinutes) => navigate(`/meetings/${item.meetingId}/minutes?download=1`);
+  // 피그마 프론트 "다운로드 메뉴": 형식을 고르면 그 자리에서 받는다. 실패하면 MSG-040
+  const download = async (item: ArchiveMinutes, format: ExportFormat) => {
+    try {
+      await downloadMinutes(item.minutesId, format);
+    } catch {
+      setToast({ text: '파일을 다운로드하지 못했어요. 잠시 후 다시 시도해 주세요.', variant: 'error' });
+    }
+  };
   const reload = () => setReloadToken((value) => value + 1);
 
   // REQ-160 링크 복사 (MSG-064)
@@ -374,14 +385,6 @@ export default function ArchivePage() {
     { id: null, name: '전체', count: folderTabs.reduce((sum, folder) => sum + folder.minutesCount, 0) },
     ...folderTabs.map((folder) => ({ id: folder.folderId, name: folder.name, count: folder.minutesCount })),
   ];
-  const removeChip = (label: string, onRemove: () => void, key: string) => (
-    <li key={key} className={styles.appliedChip}>
-      {label}
-      <button type="button" className={styles.iconButton} aria-label={`${label} 필터 지우기`} onClick={onRemove}>
-        <Icon src={chipRemoveIcon} size={ICON_SIZE} />
-      </button>
-    </li>
-  );
 
   return (
     <AppLayout className={styles.page} workspaceId={id}>
@@ -410,10 +413,6 @@ export default function ArchivePage() {
                 closeSwitcher();
                 setKeyword('');
                 navigate(`/workspaces/${selectedId}/archive`);
-              }}
-              onCreate={() => {
-                closeSwitcher();
-                setIsCreatingWorkspace(true);
               }}
               onClose={closeSwitcher}
             />
@@ -557,28 +556,7 @@ export default function ArchivePage() {
           </span>
         </div>
 
-        {/* REQ-055 적용된 조건 칩: 하나씩 지운다 */}
-        {hasFilters && (
-          <ul className={styles.appliedChips} aria-label="적용된 필터">
-            {filters.period &&
-              removeChip(periodText(filters.period), () => changeFilters({ ...filters, period: null }), 'period')}
-            {filters.locations.map((location) =>
-              removeChip(
-                location,
-                () => changeFilters({ ...filters, locations: filters.locations.filter((value) => value !== location) }),
-                `location-${location}`,
-              ),
-            )}
-            {filters.attendeeIds.map((attendeeId) =>
-              removeChip(
-                memberName(attendeeId),
-                () => changeFilters({ ...filters, attendeeIds: filters.attendeeIds.filter((value) => value !== attendeeId) }),
-                `attendee-${attendeeId}`,
-              ),
-            )}
-          </ul>
-        )}
-
+        {/* 적용된 조건 칩 줄은 뺐다 (디자인 체크 2026-11-19). 필터 버튼에 고른 값이 보이고 [필터 초기화]로 지운다 */}
         {isLoading ? (
           <div className={styles.loadingRows}>
             {Array.from({ length: LOADING_ROWS }, (_, index) => (
@@ -598,6 +576,7 @@ export default function ArchivePage() {
         ) : items.length === 0 ? (
           query || hasFilters ? (
             <EmptyState
+              character={emptyCharacter}
               title="검색 결과가 없어요"
               description="다른 검색어를 입력하거나 필터를 줄여 보세요"
               action={
@@ -614,10 +593,11 @@ export default function ArchivePage() {
             items={items}
             folderColors={folderColors}
             onOpen={(item) => openMinutes(item.meetingId)}
-            onDownload={download}
-            rowMenu={(item) => [
-              { label: '회의록 보기', icon: minutesIcon, onSelect: () => openMinutes(item.meetingId) },
-              { label: '다운로드', icon: downloadIcon, onSelect: () => download(item) },
+            onDownload={(item, format) => void download(item, format)}
+            rowMenu={(item, openDownload) => [
+              // 디자인 MenuItem ViewIcon (디자인 체크 2026-11-19)
+              { label: '회의록 보기', icon: viewIcon, onSelect: () => openMinutes(item.meetingId) },
+              { label: '다운로드', icon: downloadIcon, onSelect: openDownload },
               { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
               { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
               ...(isFolderOwner(item.folderId)
@@ -631,9 +611,8 @@ export default function ArchivePage() {
         {!isLoading && !isFailed && items.length > 0 && (
           <div className={styles.footer}>
             <span className={styles.count}>
-              {pageCount > 1
-                ? `${totalCount}개 중 ${page * ARCHIVE_PAGE_SIZE + 1}–${page * ARCHIVE_PAGE_SIZE + items.length}번째 회의록`
-                : `${totalCount}개의 회의록`}
+              {/* 디자인 TableFooter RangeText: 한 쪽이어도 같은 문구 (디자인 체크 2026-11-19) */}
+              {`${totalCount}개 중 ${page * ARCHIVE_PAGE_SIZE + 1}–${page * ARCHIVE_PAGE_SIZE + items.length}번째 회의록`}
             </span>
             {pageCount > 1 && (
               <nav className={styles.pager} aria-label="페이지">
@@ -677,7 +656,9 @@ export default function ArchivePage() {
           </div>
         )}
       </section>
+      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {isCreatingWorkspace && <CreateWorkspaceModal onClose={() => setIsCreatingWorkspace(false)} />}
+      */}
       {moving && (
         <MoveMeetingModal
           meetingId={moving.meetingId}

@@ -89,7 +89,7 @@
 }
 
 .text:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
   color: var(--text-link-hover);
 }
 
@@ -103,4 +103,21 @@
 .text:disabled,
 .text:disabled:hover {
   background: none;
+}
+
+/* 처리 중: 회색 비활성 대신 원래 색을 두고 도는 표시만 더한다 (디자인 CreateMeetingModal_Creating) */
+.primary[aria-busy='true']:disabled {
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+  cursor: progress;
+}
+
+.secondary[aria-busy='true']:disabled {
+  background: var(--secondary-default);
+  color: var(--text-on-secondary);
+  cursor: progress;
+}
+
+.button .busySpinner {
+  color: currentcolor;
 }

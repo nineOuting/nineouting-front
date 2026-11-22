@@ -4,12 +4,14 @@ import { errorMessage, isApiError } from '../../api/client';
 import {
   discardPendingAgenda,
   getFolderMeetingStats,
+  getMeetingDetail,
   listFolderMeetingRows,
   listFolderPendingAgendas,
   MEETING_ERROR_CODES,
   PENDING_AGENDA_UNAVAILABLE_MESSAGE,
   restoreMeeting,
   restorePendingAgenda,
+  toMeeting,
   trashMeeting,
   type FolderMeetingStat,
 } from '../../api/meeting';
@@ -34,17 +36,11 @@ import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
 import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
 import Icon from '../../components/Icon';
+import MemberListPopover from '../../components/MemberListPopover';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderMeeting, FolderMember, FolderPendingAgenda, WorkspaceMember } from '../../types/workspace';
-import copyIcon from '../../assets/icons/copy.svg';
-import deleteIcon from '../../assets/icons/delete-sm.svg';
-import editIcon from '../../assets/icons/create-sm.svg';
-import groupIcon from '../../assets/icons/group-add-sm.svg';
-import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
-import paletteIcon from '../../assets/icons/palette.svg';
-import moveIcon from '../../assets/icons/folder-sm.svg';
 import MoveMeetingModal from '../../components/MoveMeetingModal';
 import ActionMenu from '../workspace/ActionMenu';
 import FolderCalendar from './FolderCalendar';
@@ -101,6 +97,8 @@ export default function FolderPage() {
   const page = Math.max(0, Number(searchParams.get('page') ?? '1') - 1);
   const [isFolderMenuOpen, setIsFolderMenuOpen] = useState(false);
   const folderMenuRef = useRef<HTMLButtonElement>(null);
+  const memberListRef = useRef<HTMLButtonElement>(null);
+  const [isMemberListOpen, setIsMemberListOpen] = useState(false);
   // 즐겨찾기 버튼은 스스로 상태를 불러오므로 메뉴에서 바꾸면 다시 그린다
   const [folder, setFolder] = useState<FolderInfo | null>(null);
   const [meetings, setMeetings] = useState<FolderMeeting[]>([]);
@@ -263,16 +261,27 @@ export default function FolderPage() {
     }
   };
 
+  // 수정 창은 회의 정보를 넘겨받아 연다 (없으면 대기 화면으로 돌아간다)
+  const openEdit = async (meeting: FolderMeeting) => {
+    try {
+      const detail = toMeeting(await getMeetingDetail(String(meeting.meetingId)));
+      navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting: detail } });
+    } catch (error) {
+      showError(error);
+    }
+  };
+
   const meetingMenu = (meeting: FolderMeeting) => [
     // REQ-064 회의 정보 수정은 시작 전에만
     ...(meeting.status === 'scheduled'
-      ? [{ label: '회의 정보 수정', icon: editIcon, onSelect: () => navigate(`/meetings/${meeting.meetingId}/edit`) }]
+      ? [{ label: '회의 정보 수정', onSelect: () => void openEdit(meeting) }]
       : []),
-    { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setDialog({ type: 'move', meeting }) },
-    { label: '링크 복사', icon: copyIcon, onSelect: () => void copyMeetingLink(meeting) },
+    { label: '다른 폴더로 이동', onSelect: () => setDialog({ type: 'move', meeting }) },
+    { label: '링크 복사', onSelect: () => void copyMeetingLink(meeting) },
+    // 디자인 체크 2026-11-19: 아이콘 없이, 삭제 앞에 선
     ...(meeting.status === 'inProgress'
       ? []
-      : [{ label: '회의 삭제', icon: deleteIcon, isDanger: true, onSelect: () => void removeMeeting(meeting) }]),
+      : [{ label: '회의 삭제', isDanger: true, hasDividerBefore: true, onSelect: () => void removeMeeting(meeting) }]),
   ];
 
   // REQ-153 폴더 메뉴의 [즐겨찾기에 추가]
@@ -387,15 +396,15 @@ export default function FolderPage() {
                   items={[
                     // 2026-11-17 기획: 이름 바꾸기, 즐겨찾기, 삭제는 워크스페이스 화면의 폴더 카드 ⋮ 메뉴로 옮겼다
                     ...(canManageMembers
-                      ? [{ label: '멤버 관리', icon: groupIcon, onSelect: () => void openMembers() }]
+                      ? [{ label: '멤버 관리', onSelect: () => void openMembers() }]
                       : []),
                     // REQ-202 프로젝트 색 설정 (프로젝트 소유자, 워크스페이스 소유자)
                     ...(folder.isOwner || isWorkspaceOwner
-                      ? [{ label: '프로젝트 색 설정', icon: paletteIcon, onSelect: () => setDialog({ type: 'color' }) }]
+                      ? [{ label: '프로젝트 색 설정', onSelect: () => setDialog({ type: 'color' }) }]
                       : []),
                     // 폴더 나가기는 모두에게 보인다. 소유자는 누르면 소유권 양도 안내 (MSG-045, MSG-101)
                     ...(!folder.isDefault
-                      ? [{ label: '폴더 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) }]
+                      ? [{ label: '폴더 나가기', onSelect: () => setDialog({ type: 'leave' }) }]
                       : []),
                   ].map((item) => ({
                     ...item,
@@ -421,9 +430,22 @@ export default function FolderPage() {
 
       {/* 피그마 Page 8 MetaLine: 멤버 수(REQ-203), 회의 수, 내 권한 */}
       <div className={styles.metaLine}>
-        <button type="button" className={styles.linkButton} onClick={openMembers}>
-          멤버 {members.length}명
-        </button>
+        {/* 피그마 프론트 "프로젝트 멤버 목록 보기": [멤버 N명]은 보기 전용, 관리는 ⋮ [멤버 관리] */}
+        <span className={styles.memberAnchor}>
+          <button
+            ref={memberListRef}
+            type="button"
+            className={styles.linkButton}
+            aria-haspopup="dialog"
+            aria-expanded={isMemberListOpen}
+            onClick={() => setIsMemberListOpen((value) => !value)}
+          >
+            멤버 {members.length}명
+          </button>
+          {isMemberListOpen && (
+            <MemberListPopover anchorRef={memberListRef} members={members} onClose={() => setIsMemberListOpen(false)} />
+          )}
+        </span>
         <span className={styles.metaDivider} aria-hidden="true" />
         <span className={styles.metaText}>회의 {meetings.length}개</span>
         <span className={styles.metaDivider} aria-hidden="true" />
@@ -474,16 +496,23 @@ export default function FolderPage() {
               onPageChange={(next) => changeView({ page: next })}
               rowMenu={meetingMenu}
               empty={
-                // MSG-034 (와이어프레임 ProjectEmptyPage 문구)
-                <EmptyState
-                  title="아직 회의가 없어요"
-                  description="첫 회의를 만들고 안건을 정리해 보세요"
-                  action={
-                    <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
-                      새 회의 만들기
-                    </Button>
-                  }
-                />
+                selectedDay ? (
+                  <EmptyState
+                    title={`${Number(selectedDay.slice(5, 7))}월 ${Number(selectedDay.slice(8, 10))}일에는 회의가 없어요`}
+                    description="다른 날짜를 고르거나 날짜 선택을 풀어 보세요"
+                  />
+                ) : (
+                  // MSG-034 (와이어프레임 ProjectEmptyPage 문구)
+                  <EmptyState
+                    title="아직 회의가 없어요"
+                    description="첫 회의를 만들고 안건을 정리해 보세요"
+                    action={
+                      <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
+                        새 회의 만들기
+                      </Button>
+                    }
+                  />
+                )
               }
             />
           </div>

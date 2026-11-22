@@ -107,6 +107,8 @@ function Avatar({ member }: { member: Member }) {
 export default function MeetingWaitingPage() {
   const navigate = useNavigate();
   const { meetingId } = useParams();
+  // 피그마 MeetingWaiting_EditAgenda: 안건을 고치는 동안에는 [회의 시작하기]를 막는다
+  const [isEditingAgenda, setIsEditingAgenda] = useState(false);
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [myId, setMyId] = useState<number>();
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
@@ -160,7 +162,7 @@ export default function MeetingWaitingPage() {
       const usable = pendingAgendasFor(pending, loaded.meetingId);
       setFolderMembers(members);
       setPendingAgendas(usable);
-      setTemplates(templateList.map(({ templateId, name, favorite }) => ({ templateId, name, isFavorite: favorite })));
+      setTemplates(templateList.map(({ templateId, name, description, favorite }) => ({ templateId, name, description, isFavorite: favorite })));
       setMeeting({ ...loaded, agendas: withCarriedOverDates(loaded.agendas, usable) });
     };
     load().catch((error: unknown) => {
@@ -206,7 +208,7 @@ export default function MeetingWaitingPage() {
   const isReady = isScheduled && meeting.agendas.length > 0 && Boolean(meeting.writer);
   // REQ-076 회의록 작성자만 시작한다. 다른 참석자는 버튼을 막고 이유를 보여 준다
   const isWriter = meeting.writer?.userId === myId;
-  const canStart = isReady && isWriter;
+  const canStart = isReady && isWriter && !isEditingAgenda;
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
 
   /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
@@ -479,6 +481,7 @@ export default function MeetingWaitingPage() {
               setToast({ text: '이번 회의 안건에 추가했어요', variant: 'success', action: { label: '되돌리기', onClick: undo } })
             }
             onDiscardPending={discardPending}
+            onEditingChange={setIsEditingAgenda}
           />
             </>
           )}
@@ -553,7 +556,11 @@ export default function MeetingWaitingPage() {
                 className={styles.settingRow}
                 onClick={() => setTemplateModal({ view: 'gallery' })}
               >
-                <span className={styles.templateName}>{selectedTemplate?.name ?? '회의록 양식 고르기'}</span>
+                {/* 디자인 SettingRow: 라벨 "회의록 양식" + 고른 양식 이름 (작성자 줄과 같은 모양) */}
+                <span className={styles.settingLabel}>회의록 양식</span>
+                <span className={selectedTemplate ? styles.settingValue : styles.settingPlaceholder}>
+                  {selectedTemplate?.name ?? '선택해 주세요'}
+                </span>
                 <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
               </button>
               <div className={styles.menuAnchor}>
@@ -624,6 +631,14 @@ export default function MeetingWaitingPage() {
           onOpenDetail={(index) => setTemplateModal({ view: 'detail', index })}
           onToggleFavorite={(templateId) => void toggleFavorite(templateId)}
           onCreateTemplate={() => navigate('/templates/new')}
+          onUse={
+            canEdit
+              ? (templateId) => {
+                  void chooseTemplate(templateId);
+                  setTemplateModal(null);
+                }
+              : undefined
+          }
           onClose={() => setTemplateModal(null)}
         />
       )}
@@ -640,7 +655,8 @@ export default function MeetingWaitingPage() {
                 }
               : undefined
           }
-          onClose={() => setTemplateModal({ view: 'gallery' })}
+          onClose={() => setTemplateModal(null)}
+          onBack={() => setTemplateModal({ view: 'gallery' })}
         />
       )}
       {isConsentOpen && <ConsentModal onCancel={() => setIsConsentOpen(false)} onAgree={start} />}

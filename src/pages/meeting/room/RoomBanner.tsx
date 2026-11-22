@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import clockIcon from '../../../assets/icons/clock.svg';
 import errorIcon from '../../../assets/icons/error.svg';
 import infoIcon from '../../../assets/icons/info.svg';
+import micSilentIcon from '../../../assets/icons/mic-silent.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
 import Icon from '../../../components/Icon';
 import styles from './RoomBanner.module.css';
@@ -45,7 +46,8 @@ export function SilenceNotice({ seconds, onDismiss, onCheckMic }: SilenceNoticeP
   return (
     <div className={styles.popover} role="alertdialog" aria-labelledby="silence-title">
       <p id="silence-title" className={styles.popoverTitle}>
-        <Icon src={errorIcon} size={ICON_SIZE} />
+        {/* 디자인 Card 마이크 소리 없음: MicSilentIcon */}
+        <Icon src={micSilentIcon} size={ICON_SIZE} />
         {seconds}초째 소리가 들리지 않아요
       </p>
       <p className={styles.popoverText}>

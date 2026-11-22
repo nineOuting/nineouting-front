@@ -2,13 +2,10 @@ import { useEffect, useState } from 'react';
 import { errorMessage } from '../api/client';
 import { moveMeeting } from '../api/meeting';
 import { listFolders } from '../api/workspace';
-import folderIcon from '../assets/icons/folder-meta.svg';
 import Button from './Button';
 import Dialog from './Dialog';
-import Icon from './Icon';
 import styles from './MoveMeetingModal.module.css';
 
-const ICON_SIZE = 16;
 
 interface MoveMeetingModalProps {
   meetingId: number;
@@ -86,7 +83,8 @@ export default function MoveMeetingModal({ meetingId, title, workspaceId, curren
                 className={target === folder.folderId ? `${styles.option} ${styles.selected}` : styles.option}
                 onClick={() => setTarget(folder.folderId)}
               >
-                <Icon src={folderIcon} size={ICON_SIZE} className={styles.icon} />
+                {/* 디자인 FolderRadioList: 동그라미 라디오 + 이름 (디자인 체크 2026-11-19) */}
+                <span className={styles.radio} aria-hidden="true" />
                 {folder.name}
               </button>
             </li>

@@ -53,7 +53,7 @@
   gap: var(--spacing-3);
   width: 100%;
   padding: var(--spacing-3) var(--spacing-4);
-  background: var(--primary-subtle);
+  background: var(--secondary-ghost-hover);
   text-align: left;
 }
 

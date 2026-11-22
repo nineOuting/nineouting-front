@@ -124,7 +124,6 @@
   gap: var(--gap-inline);
   padding: var(--spacing-3) var(--spacing-4);
   background: var(--info-subtle);
-  border: var(--border-width-default) solid var(--info-default);
   border-radius: var(--radius-md);
   font-size: var(--font-size-body-md);
   font-weight: var(--font-weight-semibold);

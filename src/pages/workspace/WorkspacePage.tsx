@@ -13,12 +13,15 @@ import {
   issueInviteLink,
   leaveWorkspace,
   listFolderMembers,
+  listFavorites,
   listFolders,
   listMyWorkspaces,
+  listPendingInvitations,
   listWorkspaceMembers,
   markLastVisited,
   removeWorkspaceMember,
   renameFolder,
+  setFavorite,
   transferWorkspaceOwnership,
   updateWorkspace,
   WORKSPACE_ERROR_CODES,
@@ -31,16 +34,20 @@ import moreIcon from '../../assets/icons/more-vert.svg';
 import settingsIcon from '../../assets/icons/settings.svg';
 import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import FavoriteButton from '../../components/FavoriteButton';
+import MemberListPopover, { type MemberListItem } from '../../components/MemberListPopover';
+import TextField from '../../components/TextField';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Member } from '../../types/meeting';
 import type { FolderAccess, FolderMeeting, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
 import deleteIcon from '../../assets/icons/delete.svg';
+import groupIcon from '../../assets/icons/group-add-sm.svg';
+import starOutlineIcon from '../../assets/icons/star-outline.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import ActionMenu from './ActionMenu';
-import CreateWorkspaceModal from './CreateWorkspaceModal';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import CreateWorkspaceModal from './CreateWorkspaceModal';
 import DefaultTemplateCard from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
 import OnboardingBar from './OnboardingBar';
@@ -102,6 +109,13 @@ export default function WorkspacePage() {
   const [folderMembers, setFolderMembers] = useState<Record<number, Member[]>>({});
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreAnchorRef = useRef<HTMLButtonElement>(null);
+  // 피그마 "멤버 목록 팝오버": [멤버 N명]은 보기 전용 목록, 관리는 ⋮ [멤버 권한 관리]
+  const membersAnchorRef = useRef<HTMLButtonElement>(null);
+  const [memberList, setMemberList] = useState<{ members: MemberListItem[] | null; pendingEmails: string[] } | null>(null);
+  // 폴더 카드의 별과 ⋮ [즐겨찾기에 추가]가 같이 쓰는 즐겨찾기 폴더
+  const [favoriteFolderIds, setFavoriteFolderIds] = useState<Set<number>>(new Set());
+  // 피그마 "워크스페이스 삭제 확인": 이름을 똑같이 써야 [삭제하기]
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [myUserId, setMyUserId] = useState<number | null>(null);
   const location = useLocation();
   // MSG-101 폴더 화면의 [소유권 양도]로 오면 멤버 관리 창(소유권 넘기기)을 바로 연다
@@ -121,6 +135,20 @@ export default function WorkspacePage() {
   const isOwner = Boolean(workspace?.isOwner);
   const notice = (text: string) => setToast({ text, variant: 'info' });
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
+
+  useEffect(() => {
+    let isCurrent = true;
+    listFavorites()
+      .then((items) => {
+        if (isCurrent) {
+          setFavoriteFolderIds(new Set(items.flatMap((item) => (item.folderId ? [item.folderId] : []))));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      isCurrent = false;
+    };
+  }, [id]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -261,6 +289,44 @@ export default function WorkspacePage() {
     }
   };
 
+  const markFavorite = (folderId: number, isFavorite: boolean) =>
+    setFavoriteFolderIds((prev) => {
+      const next = new Set(prev);
+      if (isFavorite) {
+        next.add(folderId);
+      } else {
+        next.delete(folderId);
+      }
+      return next;
+    });
+
+  const toggleFavorite = async (folder: FolderSummary) => {
+    const isFavorite = !favoriteFolderIds.has(folder.folderId);
+    try {
+      await setFavorite({ type: 'folder', workspaceId: id, folderId: folder.folderId }, isFavorite);
+      markFavorite(folder.folderId, isFavorite);
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  const openMemberList = async () => {
+    setMemberList({ members: null, pendingEmails: [] });
+    try {
+      const [members, pending] = await Promise.all([
+        listWorkspaceMembers(id),
+        isOwner ? listPendingInvitations(id) : Promise.resolve([]),
+      ]);
+      setMemberList({
+        members,
+        pendingEmails: pending.filter((invitation) => !invitation.expired).map((invitation) => invitation.email),
+      });
+    } catch (error) {
+      setMemberList(null);
+      showError(error);
+    }
+  };
+
   const removeWorkspace = async () => {
     closeDialog();
     try {
@@ -303,10 +369,6 @@ export default function WorkspacePage() {
                     closeSwitcher();
                     navigate(`/workspaces/${selectedId}`);
                   }}
-                  onCreate={() => {
-                    closeSwitcher();
-                    setDialog({ type: 'createWorkspace' });
-                  }}
                   onSettings={() => {
                     closeSwitcher();
                     setDialog({ type: 'settings' });
@@ -315,11 +377,7 @@ export default function WorkspacePage() {
                 />
               )}
             </span>
-            <FavoriteButton
-              target={{ type: 'workspace', workspaceId: workspace.workspaceId }}
-              name={workspace.name}
-              onError={(text) => setToast({ text, variant: 'error' })}
-            />
+            {/* REQ-151 즐겨찾기는 폴더만. 워크스페이스 별은 뺐다 (디자인 체크 2026-11-19) */}
           </div>
           {workspace.description && <p className={styles.workspaceDescription}>{workspace.description}</p>}
         </div>
@@ -345,9 +403,29 @@ export default function WorkspacePage() {
                 label="워크스페이스 메뉴"
                 anchorRef={moreAnchorRef}
                 onClose={() => setIsMoreOpen(false)}
+                // 피그마 프론트 "워크스페이스 ⋮ 메뉴" (REQ-163): 멤버 권한 관리, 설정, 삭제는 소유자만. 멤버에게는 나가기만
                 items={[
-                  { label: '워크스페이스 설정', icon: settingsIcon, onSelect: () => setDialog({ type: 'settings' }) },
+                  ...(isOwner
+                    ? [
+                        { label: '멤버 권한 관리', icon: groupIcon, onSelect: () => setDialog({ type: 'members' }) },
+                        { label: '워크스페이스 설정', icon: settingsIcon, onSelect: () => setDialog({ type: 'settings' }) },
+                      ]
+                    : []),
                   { label: '워크스페이스 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) },
+                  ...(isOwner
+                    ? [
+                        {
+                          label: '워크스페이스 삭제',
+                          icon: deleteIcon,
+                          isDanger: true,
+                          hasDividerBefore: true,
+                          onSelect: () => {
+                            setDeleteConfirmName('');
+                            setDialog({ type: 'deleteWorkspace' });
+                          },
+                        },
+                      ]
+                    : []),
                 ].map((item) => ({
                   ...item,
                   onSelect: () => {
@@ -363,9 +441,26 @@ export default function WorkspacePage() {
 
       {/* 피그마 Page 8 SummaryBar: 멤버 수, 내 권한, 회의록 기본 양식(REQ-199) */}
       <div className={styles.summaryBar}>
-        <button type="button" className={styles.linkButton} onClick={() => setDialog({ type: 'members' })}>
-          멤버 {workspace.memberCount}명
-        </button>
+        <span className={styles.anchor}>
+          <button
+            ref={membersAnchorRef}
+            type="button"
+            className={styles.linkButton}
+            aria-haspopup="dialog"
+            aria-expanded={memberList !== null}
+            onClick={() => (memberList ? setMemberList(null) : void openMemberList())}
+          >
+            멤버 {workspace.memberCount}명
+          </button>
+          {memberList && (
+            <MemberListPopover
+              anchorRef={membersAnchorRef}
+              members={memberList.members}
+              pendingEmails={memberList.pendingEmails}
+              onClose={() => setMemberList(null)}
+            />
+          )}
+        </span>
         <span className={styles.summaryDivider} aria-hidden="true" />
         <span className={styles.summaryLabel}>내 권한</span>
         <span className={styles.roleBadge}>{isOwner ? '소유자' : '멤버'}</span>
@@ -392,8 +487,9 @@ export default function WorkspacePage() {
             {
               label: '회의록 기본 양식 정하기',
               done: workspace.defaultTemplateId !== null,
-              actionLabel: '양식 정하기',
-              onAction: () => document.getElementById('default-template-change')?.click(),
+              // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 회의록 기본 양식 고르기 창
+              // actionLabel: '양식 정하기',
+              // onAction: () => document.getElementById('default-template-change')?.click(),
             },
             {
               // 멤버 권한 관리에서 멤버의 폴더 접근 권한(모든 폴더 / 초대된 폴더만)을 한 번이라도 정하면 끝 (2026-11-17 결정)
@@ -423,9 +519,16 @@ export default function WorkspacePage() {
               activity={activities[folder.folderId]}
               members={folderMembers[folder.folderId] ?? []}
               onError={(text) => setToast({ text, variant: 'error' })}
+              isFavorite={favoriteFolderIds.has(folder.folderId)}
+              onFavoriteChange={(isFavorite) => markFavorite(folder.folderId, isFavorite)}
               menu={
                 <FolderMenu
                   folder={folder}
+                  isFavorite={favoriteFolderIds.has(folder.folderId)}
+                  onToggleFavorite={() => {
+                    closeFolderMenu();
+                    void toggleFavorite(folder);
+                  }}
                   // REQ-165 (2026-11-17 시트): 이름 바꾸기는 프로젝트 소유자(기본 폴더는 워크스페이스 소유자), 삭제는 프로젝트 소유자와 워크스페이스 소유자
                   canRename={folder.isDefault ? isOwner : myUserId !== null && folder.ownerUserId === myUserId}
                   canDelete={!folder.isDefault && (isOwner || (myUserId !== null && folder.ownerUserId === myUserId))}
@@ -441,7 +544,9 @@ export default function WorkspacePage() {
         </ul>
       </section>
 
+      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {dialog?.type === 'createWorkspace' && <CreateWorkspaceModal onClose={closeDialog} />}
+      */}
       {dialog?.type === 'settings' && (
         <WorkspaceSettingsModal
           name={workspace.name}
@@ -455,7 +560,10 @@ export default function WorkspacePage() {
             setToast({ text: '워크스페이스 설정을 저장했어요', variant: 'success' });
           }}
           onLeave={() => setDialog({ type: 'leave' })}
-          onDelete={() => setDialog({ type: 'deleteWorkspace' })}
+          onDelete={() => {
+            setDeleteConfirmName('');
+            setDialog({ type: 'deleteWorkspace' });
+          }}
           onClose={closeDialog}
         />
       )}
@@ -499,6 +607,7 @@ export default function WorkspacePage() {
           workspaceId={id}
           members={members}
           canManage={isOwner}
+          myUserId={myUserId}
           onInvite={invite}
           onCopyInviteLink={copyInviteLink}
           onAccessChange={updateAccess}
@@ -522,8 +631,9 @@ export default function WorkspacePage() {
         ) : (
           // MSG-041
           <ConfirmDialog
-            title="워크스페이스에서 나갈까요?"
-            message={'나가면 이 워크스페이스의 폴더와 회의록을 더 이상 볼 수 없어요.\n다시 참여하려면 초대를 받아야 해요.'}
+            title={`${workspace.name}에서 나갈까요?`}
+            // 디자인 LeaveConfirmModal 문구 (강제 줄바꿈 없이)
+            message="나가면 이 워크스페이스의 폴더와 회의록을 볼 수 없어요. 다시 들어오려면 초대를 받아야 해요."
             cancelLabel="취소"
             confirmLabel="나가기"
             onCancel={closeDialog}
@@ -531,16 +641,25 @@ export default function WorkspacePage() {
           />
         ))}
       {dialog?.type === 'deleteWorkspace' && (
-        // MSG-043
+        // MSG-043, 피그마 프론트 "워크스페이스 삭제 확인": 이름을 입력해야 [삭제하기]
         <ConfirmDialog
-          title="워크스페이스를 삭제할까요?"
-          message={'워크스페이스 안의 모든 폴더, 회의, 회의록이 함께 삭제되고\n되돌릴 수 없어요.'}
+          title={`${workspace.name}를 삭제할까요?`}
+          message={`안의 폴더 ${folders.length}개와 회의록이 모두 삭제돼요. 삭제한 워크스페이스는 되돌릴 수 없어요`}
           cancelLabel="취소"
           confirmLabel="삭제하기"
           isDanger
+          isConfirmDisabled={deleteConfirmName.trim() !== workspace.name}
           onCancel={closeDialog}
           onConfirm={removeWorkspace}
-        />
+        >
+          <TextField
+            label="확인을 위해 워크스페이스 이름을 입력해 주세요"
+            placeholder={workspace.name}
+            value={deleteConfirmName}
+            onChange={(event) => setDeleteConfirmName(event.target.value)}
+            autoFocus
+          />
+        </ConfirmDialog>
       )}
     </AppLayout>
   );
@@ -548,6 +667,8 @@ export default function WorkspacePage() {
 
 interface FolderMenuProps {
   folder: FolderSummary;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
   canRename: boolean;
   /** 기본 폴더는 지울 수 없다 (REQ-044) */
   canDelete: boolean;
@@ -559,18 +680,27 @@ interface FolderMenuProps {
 }
 
 /**
- * REQ-165 폴더 카드 오른쪽 위 더보기: 이름 바꾸기, 폴더 삭제. 즐겨찾기는 카드의 별로 한다 (2026-11-17).
- * 할 수 있는 것이 없으면 더보기를 숨긴다
+ * REQ-165 폴더 카드 오른쪽 위 더보기. 피그마 프론트 "폴더 카드 ⋮ 메뉴": 즐겨찾기에 추가(해제), 이름 바꾸기, 폴더 삭제.
+ * 즐겨찾기는 누구나 할 수 있어 메뉴는 늘 보인다
  */
-function FolderMenu({ folder, canRename, canDelete, isOpen, onToggle, onClose, onRename, onDelete }: FolderMenuProps) {
+function FolderMenu({
+  folder,
+  isFavorite,
+  onToggleFavorite,
+  canRename,
+  canDelete,
+  isOpen,
+  onToggle,
+  onClose,
+  onRename,
+  onDelete,
+}: FolderMenuProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const items = [
+    { label: isFavorite ? '즐겨찾기 해제' : '즐겨찾기에 추가', icon: starOutlineIcon, onSelect: onToggleFavorite, isDanger: false },
     ...(canRename ? [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }] : []),
     ...(canDelete ? [{ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true }] : []),
   ];
-  if (items.length === 0) {
-    return null;
-  }
 
   return (
     <span className={styles.anchor}>

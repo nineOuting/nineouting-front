@@ -58,6 +58,12 @@ export default function RecordingBar({ elapsedSeconds, plannedMinutes, isPaused,
           {overMinutes > 0 ? `+${overMinutes}분 초과` : `/ ${plannedMinutes}분`}
         </span>
       )}
+      {/* 디자인 MicLevel: 녹음 중이면 움직이는 막대 3개 (디자인 체크 2026-11-19 "웨이브 아이콘") */}
+      <span className={[styles.level, isPaused || isFinished ? '' : styles.levelLive].filter(Boolean).join(' ')} aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
       {onMore && (
         <button type="button" className={styles.more} aria-label="녹음 더보기" onClick={onMore}>
           <Icon src={moreIcon} size={ICON_SIZE} />

@@ -79,7 +79,7 @@
 .selected,
 .selected:hover {
   color: var(--primary-default);
-  background: var(--interactive-selected);
+  background: var(--primary-subtle);
   border-right-color: var(--primary-default);
 }
 

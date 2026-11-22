@@ -128,6 +128,10 @@ export default function SignupPage() {
 
   /** 1단계 [인증 번호 받기], 2단계 [인증 번호 다시 받기] */
   const sendCode = async () => {
+    if (!email) {
+      setEmailError(MESSAGES.emptyEmail);
+      return;
+    }
     if (!EMAIL_REGEX.test(email)) {
       setEmailError(MESSAGES.invalidEmail);
       return;
@@ -237,7 +241,8 @@ export default function SignupPage() {
                 setEmailError(undefined);
               }}
             />
-            <Button isLoading={isSubmitting} type="submit" disabled={isSubmitting || !email}>
+            {/* 레거시 (2026-11-22, 피그마 프론트는 입력 전에도 버튼이 활성이고 누르면 칸 아래 오류): disabled={isSubmitting || !email} */}
+            <Button isLoading={isSubmitting} type="submit" disabled={isSubmitting}>
               인증 번호 받기
             </Button>
           </>

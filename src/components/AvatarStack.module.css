@@ -22,9 +22,9 @@
   display: block;
   width: 24px;
   height: 24px;
-  border: var(--border-width-default) solid var(--border-default);
+  border: var(--border-width-default) solid var(--avatar-empty-border);
   border-radius: var(--radius-full);
-  background: var(--bg-surface-muted);
+  background: var(--avatar-empty-bg);
   object-fit: cover;
 }
 

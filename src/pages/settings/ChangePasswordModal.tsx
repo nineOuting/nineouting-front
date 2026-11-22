@@ -18,6 +18,11 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<{ current?: string; next?: string; confirm?: string }>({});
+  const [isNextTouched, setIsNextTouched] = useState(false);
+  // 비밀번호 재설정 화면처럼 입력하는 동안 형식, 일치 여부를 바로 알려 준다
+  const nextError =
+    errors.next ?? (isNextTouched && next && !PASSWORD_REGEX.test(next) ? MESSAGES.invalidPassword : undefined);
+  const confirmError = errors.confirm ?? (confirm && next !== confirm ? MESSAGES.passwordMismatch : undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // REQ-179 입력한 내용이 있으면 닫기 전에 묻는다
   const { requestClose, confirmElement } = useCloseGuard(Boolean(current || next || confirm), onClose);
@@ -32,7 +37,7 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
       return;
     }
     if (next !== confirm) {
-      setErrors({ confirm: '새 비밀번호가 서로 달라요.' });
+      setErrors({ confirm: MESSAGES.passwordMismatch });
       return;
     }
     setIsSubmitting(true);
@@ -79,9 +84,13 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
           required
           autoComplete="new-password"
           value={next}
-          error={errors.next}
+          error={nextError}
           helper="8자 이상, 영문과 숫자를 함께 써 주세요"
-          onChange={(event) => setNext(event.target.value)}
+          onBlur={() => setIsNextTouched(true)}
+          onChange={(event) => {
+            setNext(event.target.value);
+            setErrors(({ next: _next, confirm: _confirm, ...rest }) => rest);
+          }}
         />
         <PasswordField
           label="새 비밀번호 확인"
@@ -89,8 +98,11 @@ export default function ChangePasswordModal({ onDone, onClose }: ChangePasswordM
           required
           autoComplete="new-password"
           value={confirm}
-          error={errors.confirm}
-          onChange={(event) => setConfirm(event.target.value)}
+          error={confirmError}
+          onChange={(event) => {
+            setConfirm(event.target.value);
+            setErrors(({ confirm: _confirm, ...rest }) => rest);
+          }}
         />
       </Dialog>
       {confirmElement}

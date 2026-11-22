@@ -9,8 +9,9 @@ const DISMISS_KEY = 'nepnep-workspace-onboarding-closed';
 export interface OnboardingStep {
   label: string;
   done: boolean;
-  actionLabel: string;
-  onAction: () => void;
+  /** 없으면 버튼을 그리지 않는다 */
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 interface OnboardingBarProps {
@@ -70,9 +71,11 @@ export default function OnboardingBar({ workspaceId, steps }: OnboardingBarProps
         <span className={styles.nextLabel}>남은 할 일</span>
         {next.label}
       </p>
-      <button type="button" className={styles.action} onClick={next.onAction}>
-        {next.actionLabel}
-      </button>
+      {next.actionLabel && next.onAction && (
+        <button type="button" className={styles.action} onClick={next.onAction}>
+          {next.actionLabel}
+        </button>
+      )}
       <button type="button" className={styles.close} aria-label="워크스페이스 시작하기 닫기" onClick={close}>
         <Icon src={closeIcon} size={CLOSE_ICON_SIZE} />
       </button>

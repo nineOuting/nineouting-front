@@ -92,9 +92,9 @@
   flex-shrink: 0;
   width: var(--profile-md);
   height: var(--profile-md);
-  border: var(--border-width-default) solid var(--border-default);
+  border: var(--border-width-default) solid var(--avatar-empty-border);
   border-radius: var(--radius-full);
-  background: var(--bg-surface-muted);
+  background: var(--avatar-empty-bg);
   object-fit: cover;
 }
 
@@ -160,7 +160,7 @@
 }
 
 .transfer:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 /* 전체선택 줄 (폴더 멤버) */
@@ -266,7 +266,19 @@
 }
 
 .accessButton:disabled {
+  background: var(--bg-surface-muted);
+  border-color: var(--border-default);
+  color: var(--text-disabled);
   cursor: default;
+}
+
+.accessText {
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .flipped {

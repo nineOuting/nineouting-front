@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { listMyWorkspaces } from '../api/workspace';
-import addIcon from '../assets/icons/add.svg';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/archive.svg';
 import homeIcon from '../assets/icons/home.svg';
 import settingsIcon from '../assets/icons/settings.svg';
@@ -9,7 +10,8 @@ import expandIcon from '../assets/icons/sidebar-collapse.svg';
 import templateIcon from '../assets/icons/template.svg';
 import workspaceIcon from '../assets/icons/workspace.svg';
 import { useSettingsModal } from '../pages/settings/useSettingsModal';
-import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
 import type { WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
 import styles from './SidebarRail.module.css';
@@ -30,7 +32,8 @@ interface SidebarRailProps {
 export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps) {
   const settings = useSettingsModal();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
+  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+  // const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -58,9 +61,11 @@ export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps)
             <Icon src={workspaceIcon} size={ICON_SIZE} />
           </NavLink>
         )}
+        {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
         <button type="button" className={styles.item} aria-label="새 워크스페이스" onClick={() => setIsCreating(true)}>
           <Icon src={addIcon} size={ICON_SIZE} />
         </button>
+        */}
         {currentWorkspace && (
           <NavLink to={`/workspaces/${currentWorkspace.workspaceId}/archive`} className={railClass} aria-label="회의록 아카이브">
             <Icon src={archiveIcon} size={ICON_SIZE} />
@@ -80,7 +85,9 @@ export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps)
           <Icon src={settingsIcon} size={ICON_SIZE} />
         </button>
       </div>
+      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {isCreating && <CreateWorkspaceModal onClose={() => setIsCreating(false)} />}
+      */}
     </nav>
   );
 }

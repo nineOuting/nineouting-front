@@ -172,21 +172,17 @@ export default function TemplateListPage() {
     }
   };
 
-  /** 디자인 TemplateListPage_Duplicated: 바로 "OOO 복사본"을 내 양식으로 만든다 */
+  /** 피그마 프론트 "양식 복제 완료": 바로 "OOO (사본)"을 내 양식으로 만들고 토스트만 띄운다 */
   const duplicate = async (template: MinutesTemplate) => {
     try {
       const copied = await createMinutesTemplate({
-        name: `${template.name} 복사본`.slice(0, NAME_MAX_LENGTH),
+        name: `${template.name} (사본)`.slice(0, NAME_MAX_LENGTH),
         description: template.description,
         items: template.items,
         layout: template.layout,
       });
       setTemplates((prev) => prev && [...prev, copied]);
-      setToast({
-        text: `'${copied.name}'을 만들었어요`,
-        variant: 'success',
-        action: { label: '수정하기', onClick: () => navigate(`/templates/${copied.templateId}/edit`) },
-      });
+      setToast({ text: `'${copied.name}'을 만들었어요`, variant: 'success' });
     } catch (error) {
       setToast({ text: errorMessage(error), variant: 'error' });
     }

@@ -45,6 +45,15 @@ export default function MinutesDocument({
   onChangeSection,
 }: MinutesDocumentProps) {
   const [zoom, setZoom] = useState(100);
+  // 확대 비율은 숫자로도 입력한다. 입력하는 동안의 글자는 따로 두고, Enter나 칸을 벗어나면 범위 안으로 맞춰 반영한다
+  const [zoomDraft, setZoomDraft] = useState<string | null>(null);
+  const commitZoom = () => {
+    const value = Number.parseInt(zoomDraft ?? '', 10);
+    if (Number.isFinite(value)) {
+      setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value)));
+    }
+    setZoomDraft(null);
+  };
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -76,7 +85,6 @@ export default function MinutesDocument({
 
   return (
     <section className={styles.canvas} aria-label="회의록 문서">
-      {notice}
       <div
         ref={viewportRef}
         className={styles.viewport}
@@ -88,11 +96,13 @@ export default function MinutesDocument({
             <span className={styles.pageNumber}>{page} 페이지</span>
             <span className={styles.pageTitle}>{minutes.title}</span>
           </p>
+          {/* 디자인 Banner: 쪽 라벨과 문서 사이, 문서 폭 (디자인 체크 2026-11-19) */}
+          {notice}
           <div
             ref={paperRef}
             className={styles.paper}
-            // 다크 모드에서도 문서 종이는 인쇄물처럼 밝게 보인다
-            data-theme="light"
+            // 피그마 다크 모드처럼 종이도 테마를 따른다. 양식에서 고른 글자색, 표 머리 색은 다크에서 index.css가 토큰 색으로 바꾼다
+            data-paper
             style={{
               zoom: zoom / 100,
               gap: layout.sectionGap,
@@ -179,7 +189,25 @@ export default function MinutesDocument({
           >
             <Icon src={zoomOutIcon} size={ICON_SIZE} />
           </button>
-          <span className={styles.zoomValue}>{zoom}%</span>
+          <input
+            className={styles.zoomValue}
+            aria-label="확대 비율 (%)"
+            inputMode="numeric"
+            value={zoomDraft ?? `${zoom}%`}
+            onFocus={(event) => {
+              const input = event.currentTarget;
+              setZoomDraft(String(zoom));
+              // 값이 "100%"에서 "100"으로 바뀐 뒤에 전부 골라 둔다 (바로 덮어 쓰게)
+              window.requestAnimationFrame(() => input.select());
+            }}
+            onChange={(event) => setZoomDraft(event.target.value.replace(/[^0-9]/g, ''))}
+            onBlur={commitZoom}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.currentTarget.blur();
+              }
+            }}
+          />
           <button
             type="button"
             className={styles.iconButton}

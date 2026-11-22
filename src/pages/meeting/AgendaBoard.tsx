@@ -1,17 +1,18 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import addIcon from '../../assets/icons/add-sm.svg';
+import emptyCharacter from '../../assets/characters/empty.svg';
 import archiveIcon from '../../assets/icons/archive.svg';
 import closeIcon from '../../assets/icons/close-sm.svg';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import dragIcon from '../../assets/icons/drag.svg';
 import editIcon from '../../assets/icons/edit.svg';
-import errorIcon from '../../assets/icons/error.svg';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icon from '../../components/Icon';
 import type { Agenda, PendingAgenda } from '../../types/meeting';
 import styles from './AgendaBoard.module.css';
 
+const EMPTY_CHARACTER_SIZE = 64;
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
 // meeting-service AgendaRequest 제한과 같다
@@ -36,6 +37,8 @@ interface AgendaBoardProps {
   onCarryOver: (agenda: Agenda, undo: () => void) => void;
   /** 남은 안건 휴지통 (폴더의 남은 안건에서 버린다) */
   onDiscardPending: (pending: PendingAgenda) => void;
+  /** 수정 모드에 들어가고 나올 때 (피그마 MeetingWaiting_EditAgenda: 수정 중에는 [회의 시작하기]를 막는다) */
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
 function totalDecisionPoints(agendas: Agenda[]) {
@@ -93,6 +96,7 @@ export default function AgendaBoard({
   onSave,
   onCarryOver,
   onDiscardPending,
+  onEditingChange,
 }: AgendaBoardProps) {
   const [draft, setDraft] = useState<Agenda[] | null>(null);
   const [errors, setErrors] = useState<DraftErrors>({});
@@ -101,6 +105,9 @@ export default function AgendaBoard({
   const [focusId, setFocusId] = useState<string>();
   const dragRef = useRef<DragTarget | null>(null);
   const isEditing = draft !== null;
+  useEffect(() => {
+    onEditingChange?.(isEditing);
+  }, [isEditing, onEditingChange]);
   const shown = draft ?? agendas;
   const isDirty = isEditing && JSON.stringify(draft) !== JSON.stringify(agendas);
   // 같은 남은 안건을 두 번 불러오지 않게 이미 들어간 것은 뺀다
@@ -236,7 +243,8 @@ export default function AgendaBoard({
 
       {!isEditing && agendas.length === 0 && (
         <div className={styles.empty}>
-          <Icon src={errorIcon} size={ICON_SIZE} className={styles.emptyIcon} />
+          {/* 디자인 체크 2026-11-19: 느낌표 대신 넵넵 캐릭터 */}
+          <img src={emptyCharacter} alt="" width={EMPTY_CHARACTER_SIZE} height={EMPTY_CHARACTER_SIZE} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>아직 안건이 없어요</p>
           <p className={styles.emptyText}>
             {canEdit ? '[안건 수정]에서 추가하거나 아래 남은 안건을 체크해 가져와요' : '회의 참석자가 안건을 추가하면 여기에 보여요'}

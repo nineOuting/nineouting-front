@@ -103,10 +103,17 @@
   line-height: 1.4;
 }
 
+/* 디자인 DocTable: 칸 안쪽 8px, 선 border/default, 머리 줄은 12px 굵은 회색 글씨 (디자인 체크 2026-11-19) */
 .table td {
   height: 22px;
-  padding: 4px;
-  border: 1px solid var(--grey-10);
+  padding: 8px;
+  border: 1px solid var(--border-default);
+}
+
+.table tr:first-child td {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
 }
 
 .borderNONE td {
@@ -135,5 +142,5 @@
 
 .cellInput:focus {
   background: var(--color-white);
-  outline: 1px solid var(--blue-70);
+  outline: 1px solid var(--border-focus);
 }

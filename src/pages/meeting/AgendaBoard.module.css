@@ -8,9 +8,10 @@
   border-radius: var(--radius-lg);
 }
 
+/* 디자인 AgendaContentPanel(편집): border/selected 2px, 보라 그림자 0 6 16 (디자인 체크 2026-11-19) */
 .editing {
-  border-color: var(--interactive-selected-border);
-  box-shadow: 0 0 0 1px var(--interactive-selected-border), var(--shadow-sm);
+  border: 2px solid var(--border-selected);
+  box-shadow: 0 6px 16px rgb(54 26 214 / 14%);
 }
 
 .header {
@@ -122,9 +123,9 @@
 }
 
 .viewTitle {
-  font-size: var(--font-size-heading-sm);
+  font-size: var(--font-size-body-lg);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-heading-sm);
+  line-height: var(--line-height-body-lg);
   letter-spacing: var(--letter-spacing-base);
   color: var(--text-primary);
 }
@@ -220,7 +221,7 @@
   flex-shrink: 0;
   justify-content: center;
   width: 40px;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   cursor: grab;
 }
 
@@ -349,7 +350,7 @@
   z-index: 10;
   display: none;
   padding: var(--spacing-1) var(--spacing-2);
-  background: var(--gray-900);
+  background: var(--bg-floating-dark);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
@@ -374,11 +375,11 @@
   border-radius: var(--radius-lg);
   font-size: var(--font-size-body-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--primary-default);
+  color: var(--text-link);
 }
 
 .addAgenda:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 /* 이전 회의에서 남은 안건 */

@@ -1,5 +1,21 @@
-/* 디자인 Version02 Live RecordingBar: 진한 남색 알약, 화면 아래 가운데 */
+/*
+ * 디자인 Version02 Live RecordingBar: 화면 아래 가운데 알약.
+ * 피그마 RecordingDock은 bg/inverse라 라이트는 진한 알약, 다크는 흰 알약이다. 색은 아래 변수로 모아 다크에서 바꾼다
+ */
 .bar {
+  --rb-bg: #0b0f2a;
+  --rb-text: #fff;
+  --rb-rec: #ff6b6b;
+  --rb-dot: #ff3b3b;
+  --rb-muted: #c9cbd6;
+  --rb-muted-dot: #8a8fa3;
+  --rb-over: #ffb44d;
+  --rb-subtle: #6f7389;
+  --rb-line: #3a3e55;
+  --rb-button: #3a3e55;
+  --rb-button-hover: #4a4f6a;
+  --rb-hover: #2a2e45;
+
   position: fixed;
   bottom: var(--spacing-6);
   left: 50%;
@@ -9,10 +25,10 @@
   gap: var(--spacing-3);
   height: 52px;
   padding: 0 var(--spacing-2) 0 var(--spacing-5, 20px);
-  background: #0b0f2a;
+  background: var(--rb-bg);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
-  color: #fff;
+  color: var(--rb-text);
   transform: translateX(-50%);
 }
 
@@ -21,22 +37,22 @@
   align-items: center;
   gap: var(--spacing-2);
   font-size: var(--font-size-caption);
-  color: #ff6b6b;
+  color: var(--rb-rec);
 }
 
 .dot {
   width: 10px;
   height: 10px;
   border-radius: var(--radius-full);
-  background: #ff3b3b;
+  background: var(--rb-dot);
 }
 
 .paused {
-  color: #c9cbd6;
+  color: var(--rb-muted);
 }
 
 .paused .dot {
-  background: #8a8fa3;
+  background: var(--rb-muted-dot);
 }
 
 .time {
@@ -46,19 +62,19 @@
 }
 
 .overtime {
-  color: #ffb44d;
+  color: var(--rb-over);
 }
 
 .planned {
   margin-right: var(--spacing-3);
   font-size: var(--font-size-caption);
-  color: #6f7389;
+  color: var(--rb-subtle);
 }
 
 .divider {
   width: 1px;
   height: 24px;
-  background: #3a3e55;
+  background: var(--rb-line);
 }
 
 .pauseButton {
@@ -67,21 +83,21 @@
   gap: var(--spacing-2);
   height: 36px;
   padding: 0 var(--spacing-5, 20px);
-  background: #3a3e55;
+  background: var(--rb-button);
   border-radius: var(--radius-full);
   font-size: var(--font-size-body-md);
   font-weight: var(--font-weight-semibold);
-  color: #fff;
+  color: var(--rb-text);
 }
 
 .pauseButton:hover {
-  background: #4a4f6a;
+  background: var(--rb-button-hover);
 }
 
 .handle {
   display: flex;
   margin-left: calc(-1 * var(--spacing-2));
-  color: #6f7389;
+  color: var(--rb-subtle);
   cursor: grab;
 }
 
@@ -89,11 +105,11 @@
   display: flex;
   padding: var(--spacing-1);
   border-radius: var(--radius-full);
-  color: #c9cbd6;
+  color: var(--rb-muted);
 }
 
 .more:hover {
-  background: #2a2e45;
+  background: var(--rb-hover);
 }
 
 .resumeButton {
@@ -105,5 +121,80 @@
 }
 
 .barPaused .time {
-  color: #c9cbd6;
+  color: var(--rb-muted);
+}
+
+/* 디자인 MicLevel 24px: 3px 막대 3개 */
+.level {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5px;
+  width: 24px;
+  height: 24px;
+}
+
+.level span {
+  width: 3px;
+  height: 3px;
+  /* 피그마 MicLevel 막대 bg/surface-muted (다크는 gray-900) */
+  background: var(--bg-surface-muted);
+  border-radius: 1.5px;
+}
+
+.levelLive span {
+  animation: level 1s ease-in-out infinite;
+}
+
+.levelLive span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.levelLive span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes level {
+  50% {
+    height: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .levelLive span {
+    animation: none;
+  }
+}
+
+/* 피그마 다크 RecordingDock: bg/inverse(gray-50), text/on-inverse(gray-950), danger, neutral/default(gray-400) */
+:global([data-theme='dark']) .bar {
+  --rb-bg: var(--gray-50);
+  --rb-text: var(--gray-950);
+  --rb-rec: var(--danger-hover);
+  --rb-dot: var(--danger-default);
+  --rb-muted: var(--gray-500);
+  --rb-muted-dot: var(--gray-400);
+  --rb-over: var(--warning-default);
+  --rb-subtle: var(--gray-400);
+  --rb-line: var(--gray-300);
+  --rb-button: var(--gray-400);
+  --rb-button-hover: var(--gray-300);
+  --rb-hover: var(--gray-200);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .bar {
+    --rb-bg: var(--gray-50);
+    --rb-text: var(--gray-950);
+    --rb-rec: var(--danger-hover);
+    --rb-dot: var(--danger-default);
+    --rb-muted: var(--gray-500);
+    --rb-muted-dot: var(--gray-400);
+    --rb-over: var(--warning-default);
+    --rb-subtle: var(--gray-400);
+    --rb-line: var(--gray-300);
+    --rb-button: var(--gray-400);
+    --rb-button-hover: var(--gray-300);
+    --rb-hover: var(--gray-200);
+  }
 }
