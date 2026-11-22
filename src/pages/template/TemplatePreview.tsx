@@ -133,8 +133,8 @@ export default function TemplatePreview({
         <div
           ref={paperRef}
           className={styles.paper}
-          // 다크 모드에서도 문서 종이는 인쇄물처럼 밝게 보인다
-          data-theme="light"
+          // 피그마 다크 모드처럼 종이도 테마를 따른다. 양식에서 고른 글자색, 표 머리 색은 다크에서 index.css가 토큰 색으로 바꾼다
+          data-paper
           style={{
             zoom: zoom / 100,
             padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
