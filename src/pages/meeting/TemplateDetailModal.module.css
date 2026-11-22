@@ -1,15 +1,41 @@
 .previewRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
+  justify-content: center;
+  gap: var(--spacing-4);
 }
 
 .preview {
-  flex: 1;
-  height: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 260px;
+  height: 340px;
+  padding: var(--spacing-5);
   background: var(--bg-surface-muted);
   border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-md);
+}
+
+.line {
+  height: 8px;
+  max-width: 100%;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+
+.pageBadgeRow {
+  display: flex;
+  justify-content: center;
+}
+
+.pageBadge {
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
 }
 
 .iconButton {

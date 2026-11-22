@@ -32,6 +32,8 @@ interface WorkspaceMembersModalProps {
   workspaceId: number;
   members: WorkspaceMember[];
   canManage: boolean;
+  /** 내 줄에는 권한 버튼을 두지 않는다 */
+  myUserId?: number | null;
   /** 실패하면 던진다. 메시지를 입력 칸 아래에 보여 준다 */
   onInvite: (email: string) => Promise<void>;
   /** REQ-034 초대 링크를 새로 받아 복사한다 */
@@ -49,6 +51,7 @@ export default function WorkspaceMembersModal({
   workspaceId,
   members,
   canManage,
+  myUserId,
   onInvite,
   onCopyInviteLink,
   onAccessChange,
@@ -169,6 +172,7 @@ export default function WorkspaceMembersModal({
               key={member.userId}
               member={member}
               canManage={canManage}
+              isMe={member.userId === myUserId}
               onAccessChange={(folderAccess) => onAccessChange(member.userId, folderAccess)}
               onRemove={() => setRemoving(member)}
             />
@@ -250,11 +254,12 @@ export default function WorkspaceMembersModal({
 interface MemberRowProps {
   member: WorkspaceMember;
   canManage: boolean;
+  isMe: boolean;
   onAccessChange: (access: FolderAccess) => void;
   onRemove: () => void;
 }
 
-function MemberRow({ member, canManage, onAccessChange, onRemove }: MemberRowProps) {
+function MemberRow({ member, canManage, isMe, onAccessChange, onRemove }: MemberRowProps) {
   const [openMenu, setOpenMenu] = useState<'more' | 'access' | null>(null);
   const moreRef = useRef<HTMLButtonElement>(null);
   const accessRef = useRef<HTMLButtonElement>(null);
@@ -300,39 +305,44 @@ function MemberRow({ member, canManage, onAccessChange, onRemove }: MemberRowPro
         )}
         <MemberIdentity member={member} email={member.email} />
       </span>
-      <span className={styles.anchor}>
-        <button
-          ref={accessRef}
-          type="button"
-          className={styles.accessButton}
-          aria-label={`${member.name} 폴더 접근 권한: ${ACCESS_LABELS[member.folderAccess]}`}
-          aria-haspopup="listbox"
-          aria-expanded={openMenu === 'access'}
-          disabled={!canManage}
-          onClick={() => toggle('access')}
-        >
-          {ACCESS_LABELS[member.folderAccess]}
-          <Icon src={chevronIcon} size={ICON_SIZE} className={openMenu === 'access' ? undefined : styles.flipped} />
-        </button>
-        {openMenu === 'access' && (
-          <DropdownMenu
-            label="폴더 접근 권한"
-            emptyText=""
-            anchorRef={accessRef}
-            className={styles.accessMenu}
-            items={(Object.keys(ACCESS_LABELS) as FolderAccess[]).map((access) => ({
-              id: access,
-              label: ACCESS_LABELS[access],
-              isSelected: access === member.folderAccess,
-            }))}
-            onSelect={(id) => {
-              onAccessChange(id as FolderAccess);
-              closeMenu();
-            }}
-            onClose={closeMenu}
-          />
-        )}
-      </span>
+      {/* 디자인 체크 2026-11-19: 내 줄은 버튼 없이 글자만, 관리할 수 없으면 흐린 버튼 */}
+      {isMe ? (
+        <span className={styles.accessText}>{ACCESS_LABELS[member.folderAccess]}</span>
+      ) : (
+        <span className={styles.anchor}>
+          <button
+            ref={accessRef}
+            type="button"
+            className={styles.accessButton}
+            aria-label={`${member.name} 폴더 접근 권한: ${ACCESS_LABELS[member.folderAccess]}`}
+            aria-haspopup="listbox"
+            aria-expanded={openMenu === 'access'}
+            disabled={!canManage}
+            onClick={() => toggle('access')}
+          >
+            {ACCESS_LABELS[member.folderAccess]}
+            {canManage && <Icon src={chevronIcon} size={ICON_SIZE} className={openMenu === 'access' ? undefined : styles.flipped} />}
+          </button>
+          {openMenu === 'access' && (
+            <DropdownMenu
+              label="폴더 접근 권한"
+              emptyText=""
+              anchorRef={accessRef}
+              className={styles.accessMenu}
+              items={(Object.keys(ACCESS_LABELS) as FolderAccess[]).map((access) => ({
+                id: access,
+                label: ACCESS_LABELS[access],
+                isSelected: access === member.folderAccess,
+              }))}
+              onSelect={(id) => {
+                onAccessChange(id as FolderAccess);
+                closeMenu();
+              }}
+              onClose={closeMenu}
+            />
+          )}
+        </span>
+      )}
     </li>
   );
 }

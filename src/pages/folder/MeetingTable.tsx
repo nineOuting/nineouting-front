@@ -21,6 +21,11 @@ const STATUS_LABELS: Record<FolderMeetingStatus, string> = {
   confirmed: '회의록 확정',
 };
 
+// 예정 시간이 지나도록 시작하지 않은 회의는 "예정" 대신 "지난 회의"로 보인다 (디자인 체크 2026-11-19)
+const MISSED_LABEL = '지난 회의';
+const isMissed = (meeting: FolderMeeting) =>
+  meeting.status === 'scheduled' && meeting.endAt !== undefined && new Date(meeting.endAt).getTime() < Date.now();
+
 const STATUS_ORDER: FolderMeetingStatus[] = ['scheduled', 'inProgress', 'writing', 'reviewing', 'confirmed'];
 
 export type SortKey = 'title' | 'date' | 'status' | 'writer';
@@ -133,7 +138,9 @@ export default function MeetingTable({
               </td>
               <td className={styles.date}>{meeting.date.replaceAll('-', '.')}</td>
               <td className={styles.status}>
-                <span className={`${styles.badge} ${styles[meeting.status]}`}>{STATUS_LABELS[meeting.status]}</span>
+                <span className={`${styles.badge} ${isMissed(meeting) ? styles.missed : styles[meeting.status]}`}>
+                  {isMissed(meeting) ? MISSED_LABEL : STATUS_LABELS[meeting.status]}
+                </span>
               </td>
               <td className={styles.writer}>
                 <span className={styles.writerCell}>

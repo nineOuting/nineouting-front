@@ -494,6 +494,7 @@ export default function WorkspacePage() {
           workspaceId={id}
           members={members}
           canManage={isOwner}
+          myUserId={myUserId}
           onInvite={invite}
           onCopyInviteLink={copyInviteLink}
           onAccessChange={updateAccess}

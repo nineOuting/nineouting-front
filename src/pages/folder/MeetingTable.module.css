@@ -122,6 +122,11 @@
   color: var(--neutral-default);
 }
 
+.missed {
+  background: var(--bg-surface-muted);
+  color: var(--text-disabled);
+}
+
 .inProgress {
   background: var(--primary-subtle);
   color: var(--primary-default);

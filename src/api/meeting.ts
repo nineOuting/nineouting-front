@@ -408,6 +408,7 @@ export async function listFolderMeetingRows(folderId: number): Promise<FolderMee
     title: item.title,
     date: item.startAt.slice(0, 10),
     startAt: item.startAt,
+    endAt: item.endAt,
     status: toFolderMeetingStatus(item.status, item.minutesStatus),
     writer: toMember(item.writer),
     attendees: item.attendees.map(toMember),
@@ -422,11 +423,13 @@ export async function countFolderMeetings(folderId: number) {
 /** REQ-051 폴더 화면의 남은 안건 (다른 회의가 불러간 안건은 빠진다) */
 export async function listFolderPendingAgendas(folderId: number): Promise<FolderPendingAgenda[]> {
   const items = await request<PendingAgendaResponse[]>('GET', `/api/folders/${folderId}/pending-agendas`);
-  return items.map(({ pendingAgendaId, title, fromMeetingTitle, carriedAt }) => ({
+  return items.map(({ pendingAgendaId, title, fromMeetingTitle, carriedAt, decisionPoints, takenMeetingId }) => ({
     pendingAgendaId,
     title,
     fromMeetingTitle,
     carriedAt: carriedAt.slice(0, 10),
+    decisionPoints,
+    isTaken: takenMeetingId !== null,
   }));
 }
 

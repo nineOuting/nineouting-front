@@ -8,7 +8,7 @@ export const DEFAULT_TABLE: TableSettings = {
   autoWidth: true,
   align: 'LEFT',
   border: 'BASIC',
-  headerColor: '#e9e8f2',
+  headerColor: '#f4f4f4',
 };
 
 export const DEFAULT_ITEM_SETTINGS: ItemSettings = {
