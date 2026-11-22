@@ -39,7 +39,8 @@ import emptyCharacter from '../../assets/characters/empty.svg';
 import viewIcon from '../../assets/icons/visibility.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
-import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
 import Popover from '../../components/Popover';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
@@ -188,7 +189,8 @@ export default function ArchivePage() {
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
-  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+  // const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const switcherRef = useRef<HTMLButtonElement>(null);
   const sortRef = useRef<HTMLButtonElement>(null);
@@ -411,10 +413,6 @@ export default function ArchivePage() {
                 closeSwitcher();
                 setKeyword('');
                 navigate(`/workspaces/${selectedId}/archive`);
-              }}
-              onCreate={() => {
-                closeSwitcher();
-                setIsCreatingWorkspace(true);
               }}
               onClose={closeSwitcher}
             />
@@ -658,7 +656,9 @@ export default function ArchivePage() {
           </div>
         )}
       </section>
+      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {isCreatingWorkspace && <CreateWorkspaceModal onClose={() => setIsCreatingWorkspace(false)} />}
+      */}
       {moving && (
         <MoveMeetingModal
           meetingId={moving.meetingId}

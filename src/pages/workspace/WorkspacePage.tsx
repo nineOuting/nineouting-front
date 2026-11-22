@@ -46,7 +46,8 @@ import groupIcon from '../../assets/icons/group-add-sm.svg';
 import starOutlineIcon from '../../assets/icons/star-outline.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import ActionMenu from './ActionMenu';
-import CreateWorkspaceModal from './CreateWorkspaceModal';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import CreateWorkspaceModal from './CreateWorkspaceModal';
 import DefaultTemplateCard from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
 import OnboardingBar from './OnboardingBar';
@@ -368,10 +369,6 @@ export default function WorkspacePage() {
                     closeSwitcher();
                     navigate(`/workspaces/${selectedId}`);
                   }}
-                  onCreate={() => {
-                    closeSwitcher();
-                    setDialog({ type: 'createWorkspace' });
-                  }}
                   onSettings={() => {
                     closeSwitcher();
                     setDialog({ type: 'settings' });
@@ -490,8 +487,9 @@ export default function WorkspacePage() {
             {
               label: '회의록 기본 양식 정하기',
               done: workspace.defaultTemplateId !== null,
-              actionLabel: '양식 정하기',
-              onAction: () => document.getElementById('default-template-change')?.click(),
+              // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 회의록 기본 양식 고르기 창
+              // actionLabel: '양식 정하기',
+              // onAction: () => document.getElementById('default-template-change')?.click(),
             },
             {
               // 멤버 권한 관리에서 멤버의 폴더 접근 권한(모든 폴더 / 초대된 폴더만)을 한 번이라도 정하면 끝 (2026-11-17 결정)
@@ -546,7 +544,9 @@ export default function WorkspacePage() {
         </ul>
       </section>
 
+      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {dialog?.type === 'createWorkspace' && <CreateWorkspaceModal onClose={closeDialog} />}
+      */}
       {dialog?.type === 'settings' && (
         <WorkspaceSettingsModal
           name={workspace.name}

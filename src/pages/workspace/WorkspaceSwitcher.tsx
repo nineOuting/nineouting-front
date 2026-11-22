@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import addIcon from '../../assets/icons/menu-add.svg';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import addIcon from '../../assets/icons/menu-add.svg';
 import settingsIcon from '../../assets/icons/menu-settings.svg';
 import workspaceIcon from '../../assets/icons/menu-workspace.svg';
 import Icon from '../../components/Icon';
@@ -14,7 +15,8 @@ interface WorkspaceSwitcherProps {
   currentId: number;
   anchorRef: RefObject<HTMLElement | null>;
   onSelect: (workspaceId: number) => void;
-  onCreate: () => void;
+  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+  // onCreate: () => void;
   /** 워크스페이스 설정 (소유자만. 없으면 메뉴를 숨긴다) */
   onSettings?: () => void;
   onClose: () => void;
@@ -26,7 +28,8 @@ export default function WorkspaceSwitcher({
   currentId,
   anchorRef,
   onSelect,
-  onCreate,
+  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+  // onCreate,
   onSettings,
   onClose,
 }: WorkspaceSwitcherProps) {
@@ -79,9 +82,11 @@ export default function WorkspaceSwitcher({
           워크스페이스 설정
         </button>
       )}
+      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       <button type="button" className={menu.item} onClick={onCreate}>
         <Icon src={addIcon} size={ICON_SIZE} className={menu.itemIcon} />새 워크스페이스 만들기
       </button>
+      */}
     </div>
   );
 }
