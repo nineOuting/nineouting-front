@@ -984,7 +984,6 @@ export default function MeetingRoomPage() {
         <Dialog
           title="회의 화면에서 나갈까요?"
           description="나가도 다른 참여자와 녹음·전사는 계속돼요. 언제든 다시 들어올 수 있어요."
-          onBack={() => setIsLeaveOpen(false)}
           onClose={() => setIsLeaveOpen(false)}
           footer={
             <>

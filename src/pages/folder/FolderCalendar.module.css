@@ -12,11 +12,12 @@
 .head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--spacing-1);
 }
 
 .month {
-  font-size: var(--font-size-body-md);
+  flex: 1;
+  font-size: var(--font-size-body-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
@@ -25,9 +26,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
+  color: var(--neutral-default);
 }
 
 .navButton:hover {
@@ -43,7 +45,7 @@
 
 .weekday {
   font-size: var(--font-size-caption);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
 .day {
@@ -85,6 +87,11 @@ button.day {
   width: 24px;
   height: 24px;
   border-radius: 50%;
+}
+
+/* 디자인: 오늘은 테두리 동그라미 */
+.today .dayNumber {
+  border: var(--border-width-default) solid var(--primary-default);
 }
 
 button.day:hover .dayNumber {

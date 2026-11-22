@@ -22,7 +22,6 @@ import type { Agenda, Meeting, MeetingBasicInfo, Member } from '../../types/meet
 import FolderPage from '../folder/FolderPage';
 import LoadPreviousSettings, { type PreviousSettings } from './LoadPreviousSettings';
 import MeetingWaitingPage from './MeetingWaitingPage';
-import MemberChips from './MemberChips';
 import styles from './MeetingCreatePage.module.css';
 
 const ICON_SIZE = 20;
@@ -322,7 +321,7 @@ export default function MeetingCreatePage() {
                 </h1>
                 <p className={styles.subtitle}>
                   {isEdit
-                    ? '바꾼 내용은 참석자에게 알림으로 가요'
+                    ? '바꾸면 참석자에게 알림이 가요. 회의를 시작하기 전까지만 바꿀 수 있어요'
                     : '기본 정보만 입력하면 돼요. 안건과 자료는 다음 화면에서 준비해요'}
                 </p>
               </div>
@@ -510,7 +509,12 @@ export default function MeetingCreatePage() {
                     onClick={() => setOpenMenu((menu) => (menu === 'attendee' ? null : 'attendee'))}
                   >
                     <Icon src={groupAddIcon} size={ICON_SIZE} className={styles.leadingIcon} />
-                    <span className={styles.placeholderText}>참석자 선택</span>
+                    {/* 디자인 ParticipantsField: 고른 사람은 칸 안에 이름을 쉼표로 이어 보인다 (칩 대신) */}
+                    {form.attendees.length > 0 ? (
+                      <span className={styles.value}>{form.attendees.map(({ name }) => name).join(', ')}</span>
+                    ) : (
+                      <span className={styles.placeholderText}>참석자 선택</span>
+                    )}
                     <Icon src={chevronRightIcon} size={ICON_SIZE} className={styles.trailingIcon} />
                   </button>
                   {openMenu === 'attendee' && (
@@ -535,7 +539,6 @@ export default function MeetingCreatePage() {
                     />
                   )}
                   <span className={styles.helper}>프로젝트 멤버 중에서 골라요</span>
-                  <MemberChips members={form.attendees} onRemove={toggleAttendee} />
                 </div>
 
                 <TextField

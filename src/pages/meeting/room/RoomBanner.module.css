@@ -111,11 +111,11 @@
 }
 
 .textButton {
-  color: var(--primary-default);
+  color: var(--text-link);
 }
 
 .textButton:hover {
-  background: var(--primary-ghost-hover);
+  background: var(--secondary-ghost-hover);
 }
 
 .secondaryButton {

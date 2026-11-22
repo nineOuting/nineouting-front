@@ -262,9 +262,13 @@
 }
 
 /* 결정 내용 수정 (카드 안) */
+/* 디자인 DecisionEditor: status/discussing-border 2px, 둥근 8px (디자인 체크 2026-11-19) */
 .editingCard {
   gap: var(--spacing-3);
   padding: var(--spacing-4);
+  background: var(--bg-page);
+  border: 2px solid var(--status-discussing-border);
+  border-radius: var(--radius-md);
 }
 
 .editHeading {

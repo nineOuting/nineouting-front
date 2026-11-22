@@ -179,18 +179,19 @@
   flex-direction: column;
   width: 360px;
   padding: var(--spacing-6);
-  background: var(--bg-page);
+  background: var(--bg-panel);
   border-left: var(--border-width-default) solid var(--border-default);
 }
 
+/* 디자인 SettingsPanel: 사방 24px, 묶음 사이 24px + 선 + 24px (디자인 체크 2026-11-19) */
 .sideSection {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
-  padding: var(--spacing-3) 0 var(--spacing-6);
 }
 
 .sideSection + .sideSection {
+  margin-top: var(--spacing-6);
   padding-top: var(--spacing-6);
   border-top: var(--border-width-default) solid var(--border-default);
 }
@@ -225,18 +226,22 @@
   text-decoration: underline;
 }
 
+/* 디자인 ParticipantsSection Box: 테두리 상자 안에 한 줄 24px, 사이 16px */
 .attendeeList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
-  padding-left: var(--spacing-4);
+  gap: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--bg-page);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
 }
 
 .attendeeRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-3);
-  min-height: 32px;
+  gap: var(--spacing-2);
+  min-height: 24px;
 }
 
 .attendeeName {

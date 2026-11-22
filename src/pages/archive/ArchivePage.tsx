@@ -23,8 +23,6 @@ import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
-import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
-import minutesIcon from '../../assets/icons/minutes-doc.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
 import searchIcon from '../../assets/icons/search.svg';
@@ -35,6 +33,8 @@ import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
 import moveIcon from '../../assets/icons/folder-sm.svg';
 import MoveMeetingModal from '../../components/MoveMeetingModal';
+import emptyCharacter from '../../assets/characters/empty.svg';
+import viewIcon from '../../assets/icons/visibility.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
 import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
@@ -374,14 +374,6 @@ export default function ArchivePage() {
     { id: null, name: '전체', count: folderTabs.reduce((sum, folder) => sum + folder.minutesCount, 0) },
     ...folderTabs.map((folder) => ({ id: folder.folderId, name: folder.name, count: folder.minutesCount })),
   ];
-  const removeChip = (label: string, onRemove: () => void, key: string) => (
-    <li key={key} className={styles.appliedChip}>
-      {label}
-      <button type="button" className={styles.iconButton} aria-label={`${label} 필터 지우기`} onClick={onRemove}>
-        <Icon src={chipRemoveIcon} size={ICON_SIZE} />
-      </button>
-    </li>
-  );
 
   return (
     <AppLayout className={styles.page} workspaceId={id}>
@@ -557,28 +549,7 @@ export default function ArchivePage() {
           </span>
         </div>
 
-        {/* REQ-055 적용된 조건 칩: 하나씩 지운다 */}
-        {hasFilters && (
-          <ul className={styles.appliedChips} aria-label="적용된 필터">
-            {filters.period &&
-              removeChip(periodText(filters.period), () => changeFilters({ ...filters, period: null }), 'period')}
-            {filters.locations.map((location) =>
-              removeChip(
-                location,
-                () => changeFilters({ ...filters, locations: filters.locations.filter((value) => value !== location) }),
-                `location-${location}`,
-              ),
-            )}
-            {filters.attendeeIds.map((attendeeId) =>
-              removeChip(
-                memberName(attendeeId),
-                () => changeFilters({ ...filters, attendeeIds: filters.attendeeIds.filter((value) => value !== attendeeId) }),
-                `attendee-${attendeeId}`,
-              ),
-            )}
-          </ul>
-        )}
-
+        {/* 적용된 조건 칩 줄은 뺐다 (디자인 체크 2026-11-19). 필터 버튼에 고른 값이 보이고 [필터 초기화]로 지운다 */}
         {isLoading ? (
           <div className={styles.loadingRows}>
             {Array.from({ length: LOADING_ROWS }, (_, index) => (
@@ -598,6 +569,7 @@ export default function ArchivePage() {
         ) : items.length === 0 ? (
           query || hasFilters ? (
             <EmptyState
+              character={emptyCharacter}
               title="검색 결과가 없어요"
               description="다른 검색어를 입력하거나 필터를 줄여 보세요"
               action={
@@ -616,7 +588,8 @@ export default function ArchivePage() {
             onOpen={(item) => openMinutes(item.meetingId)}
             onDownload={download}
             rowMenu={(item) => [
-              { label: '회의록 보기', icon: minutesIcon, onSelect: () => openMinutes(item.meetingId) },
+              // 디자인 MenuItem ViewIcon (디자인 체크 2026-11-19)
+              { label: '회의록 보기', icon: viewIcon, onSelect: () => openMinutes(item.meetingId) },
               { label: '다운로드', icon: downloadIcon, onSelect: () => download(item) },
               { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
               { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
@@ -631,9 +604,8 @@ export default function ArchivePage() {
         {!isLoading && !isFailed && items.length > 0 && (
           <div className={styles.footer}>
             <span className={styles.count}>
-              {pageCount > 1
-                ? `${totalCount}개 중 ${page * ARCHIVE_PAGE_SIZE + 1}–${page * ARCHIVE_PAGE_SIZE + items.length}번째 회의록`
-                : `${totalCount}개의 회의록`}
+              {/* 디자인 TableFooter RangeText: 한 쪽이어도 같은 문구 (디자인 체크 2026-11-19) */}
+              {`${totalCount}개 중 ${page * ARCHIVE_PAGE_SIZE + 1}–${page * ARCHIVE_PAGE_SIZE + items.length}번째 회의록`}
             </span>
             {pageCount > 1 && (
               <nav className={styles.pager} aria-label="페이지">

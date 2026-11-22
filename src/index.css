@@ -49,12 +49,13 @@
  */
 :root,
 [data-theme] {
-  --bg-panel: var(--bg-page);
+  --bg-panel: var(--brand-10);
   --bg-sidebar: var(--gray-50);
   --text-tertiary: var(--gray-500);
   --border-selected: var(--blue-400);
   --status-undecided: #ea580c;
   --status-undecided-subtle: #fff4e6;
+  --status-discussing-border: var(--brand-300);
   /* 피그마 warning/default, warning/subtle (orange 600, 50) */
   --warning-default: #ea580c;
   --warning-subtle: #fff7ed;
@@ -68,27 +69,27 @@
   --project-indigo-default: #5b67be;
   --project-sky-default: #7eb8f5;
 
-  --project-red-subtle: color-mix(in srgb, var(--project-red-default) 12%, white);
-  --project-orange-subtle: color-mix(in srgb, var(--project-orange-default) 12%, white);
-  --project-yellow-subtle: color-mix(in srgb, var(--project-yellow-default) 12%, white);
+  --project-red-subtle: #fdeae8;
+  --project-orange-subtle: #fff4e3;
+  --project-yellow-subtle: #fffbe7;
   --project-green-subtle: #edf5ee;
   --project-pink-subtle: #fef1f9;
   --project-purple-subtle: #f3effa;
-  --project-indigo-subtle: color-mix(in srgb, var(--project-indigo-default) 12%, white);
+  --project-indigo-subtle: #ebedf7;
   --project-sky-subtle: #f0f6fe;
 
-  --project-red-border: color-mix(in srgb, var(--project-red-default) 30%, white);
-  --project-orange-border: color-mix(in srgb, var(--project-orange-default) 30%, white);
-  --project-yellow-border: color-mix(in srgb, var(--project-yellow-default) 30%, white);
+  --project-red-border: #f9cbc6;
+  --project-orange-border: #ffe3ba;
+  --project-yellow-border: #fff5c4;
   --project-green-border: #d3e5d6;
   --project-pink-border: #fcdbf0;
   --project-purple-border: #e0d6f2;
-  --project-indigo-border: color-mix(in srgb, var(--project-indigo-default) 30%, white);
+  --project-indigo-border: #ced1eb;
   --project-sky-border: #d8eafc;
 
-  --project-red-icon: #d0402f;
-  --project-orange-icon: #d98200;
-  --project-yellow-icon: #c9a800;
+  --project-red-icon: #eb5342;
+  --project-orange-icon: #bf7a13;
+  --project-yellow-icon: #a69025;
   --project-green-icon: #609969;
   --project-pink-icon: #c46da3;
   --project-purple-icon: #9877d5;
@@ -101,8 +102,36 @@ body {
   min-width: 600px;
 }
 
-/* 피그마 warning 어두운 테마 (orange 400, 950) */
+/* 피그마 변수의 어두운 테마 값 (위 블록의 새 변수) */
 [data-theme='dark'] {
+  --status-discussing-border: var(--brand-700);
+  --bg-panel: var(--gray-900);
+  --bg-sidebar: var(--gray-900);
+  --border-selected: var(--blue-100);
+  --project-red-subtle: #38232c;
+  --project-red-border: #683032;
+  --project-red-icon: #eb5342;
+  --project-orange-subtle: #3c3124;
+  --project-orange-border: #704f21;
+  --project-orange-icon: #ffa219;
+  --project-yellow-subtle: #3c3c2a;
+  --project-yellow-border: #70672e;
+  --project-yellow-icon: #ffde39;
+  --project-green-subtle: #213235;
+  --project-green-border: #355246;
+  --project-green-icon: #6baa75;
+  --project-pink-subtle: #3a2c45;
+  --project-pink-border: #6c4569;
+  --project-pink-icon: #f588cc;
+  --project-purple-subtle: #292946;
+  --project-purple-border: #473e6d;
+  --project-purple-icon: #9877d5;
+  --project-indigo-subtle: #1e2642;
+  --project-indigo-border: #2f3863;
+  --project-indigo-icon: #636fc1;
+  --project-sky-subtle: #25354c;
+  --project-sky-border: #3d5879;
+  --project-sky-icon: #7eb8f5;
   --warning-default: #fb923c;
   --warning-subtle: #431407;
   /* 피그마 bg/sidebar 어두운 값. 없으면 홈 달력 요일 줄 등이 다크 모드에서 하얗게 보인다 */
@@ -111,6 +140,34 @@ body {
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
+    --status-discussing-border: var(--brand-700);
+    --bg-panel: var(--gray-900);
+    --bg-sidebar: var(--gray-900);
+    --border-selected: var(--blue-100);
+    --project-red-subtle: #38232c;
+    --project-red-border: #683032;
+    --project-red-icon: #eb5342;
+    --project-orange-subtle: #3c3124;
+    --project-orange-border: #704f21;
+    --project-orange-icon: #ffa219;
+    --project-yellow-subtle: #3c3c2a;
+    --project-yellow-border: #70672e;
+    --project-yellow-icon: #ffde39;
+    --project-green-subtle: #213235;
+    --project-green-border: #355246;
+    --project-green-icon: #6baa75;
+    --project-pink-subtle: #3a2c45;
+    --project-pink-border: #6c4569;
+    --project-pink-icon: #f588cc;
+    --project-purple-subtle: #292946;
+    --project-purple-border: #473e6d;
+    --project-purple-icon: #9877d5;
+    --project-indigo-subtle: #1e2642;
+    --project-indigo-border: #2f3863;
+    --project-indigo-icon: #636fc1;
+    --project-sky-subtle: #25354c;
+    --project-sky-border: #3d5879;
+    --project-sky-icon: #7eb8f5;
     --warning-default: #fb923c;
     --warning-subtle: #431407;
     --bg-sidebar: var(--gray-900);

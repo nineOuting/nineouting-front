@@ -74,19 +74,18 @@ export default function Coachmark({ steps, onFinish }: CoachmarkProps) {
         }}
       />
       <div className={styles.card} style={{ left, top: Math.max(GAP_PX, top), width: CARD_WIDTH }}>
+        {/* 디자인 Coachmark: 맨 위 단계 표시, 아래 줄 왼쪽 [건너뛰기] 오른쪽 [다음] (디자인 체크 2026-11-19) */}
+        <span className={styles.progress}>
+          {index + 1} / {steps.length}
+        </span>
         <p className={styles.text}>{step.text}</p>
         <div className={styles.footer}>
-          <span className={styles.progress}>
-            {index + 1}/{steps.length}
-          </span>
-          <span className={styles.buttons}>
-            <Button variant="text" size="md" onClick={onFinish}>
-              건너뛰기
-            </Button>
-            <Button variant="primary" size="md" onClick={() => (isLast ? onFinish() : setIndex(index + 1))}>
-              {isLast ? '시작하기' : '다음'}
-            </Button>
-          </span>
+          <Button variant="text" size="md" onClick={onFinish}>
+            건너뛰기
+          </Button>
+          <Button variant="primary" size="md" onClick={() => (isLast ? onFinish() : setIndex(index + 1))}>
+            {isLast ? '시작하기' : '다음'}
+          </Button>
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ import Icon from '../../components/Icon';
 import { monthGridDays, toIsoDate } from '../../utils/calendar';
 import styles from './FolderCalendar.module.css';
 
-const ICON_SIZE = 16;
+const ICON_SIZE = 20;
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
 interface FolderCalendarProps {
@@ -54,13 +54,14 @@ export default function FolderCalendar({ folderId, color, selectedDay, onSelectD
 
   return (
     <section className={styles.calendar} aria-label="회의 달력">
+      {/* 디자인 MiniCalendar Header: 왼쪽 달 이름, 오른쪽 이전/다음 */}
       <div className={styles.head}>
-        <button type="button" className={styles.navButton} aria-label="이전 달" onClick={() => move(-1)}>
-          <Icon src={chevronLeftIcon} size={ICON_SIZE} />
-        </button>
         <span className={styles.month}>
           {month.year}년 {month.month + 1}월
         </span>
+        <button type="button" className={styles.navButton} aria-label="이전 달" onClick={() => move(-1)}>
+          <Icon src={chevronLeftIcon} size={ICON_SIZE} />
+        </button>
         <button type="button" className={styles.navButton} aria-label="다음 달" onClick={() => move(1)}>
           <Icon src={chevronRightIcon} size={ICON_SIZE} />
         </button>

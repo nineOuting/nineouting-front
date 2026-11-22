@@ -51,11 +51,15 @@ function InfoNote({ children }: { children: ReactNode }) {
   );
 }
 
-/** MSG-083 회의록 양식 확인 */
+/** MSG-083 회의록 양식 확인. 디자인 Card 회의록 양식 확인: 양식 이름은 제목에, 설명은 한 줄 (디자인 체크 2026-11-19) */
+function confirmTitle(templateName: string | null) {
+  return templateName ? `'${templateName}' 양식으로 회의록을 만들어요` : TITLES.confirm.title;
+}
+
 function confirmMessage(templateName: string | null) {
   return templateName
-    ? `'${templateName}' 양식으로 회의록을 만들어요. [확인]을 누르면 녹음이 멈추고 회의록 작성 화면으로 이동해요.`
-    : '[확인]을 누르면 녹음이 멈추고 회의록 작성 화면으로 이동해요. 양식은 회의록 작성 화면에서 골라 주세요.';
+    ? '[확인]을 누르면 녹음이 멈추고 회의록을 만들기 시작해요'
+    : '[확인]을 누르면 녹음이 멈추고 회의록을 만들기 시작해요. 양식은 회의록 작성 화면에서 골라 주세요.';
 }
 
 /**
@@ -97,7 +101,7 @@ export default function EndMeetingModal({
       <>
         {continueButton('이어서 논의하기')}
         <Button isLoading={isBusy} type="button" variant="primary" size="md" disabled={isBusy} onClick={() => onCarryOver(selected)}>
-          다음
+          회의 끝내기
         </Button>
       </>
     ),
@@ -136,7 +140,7 @@ export default function EndMeetingModal({
 
   return (
     <Dialog
-      title={TITLES[step].title}
+      title={step === 'confirm' ? confirmTitle(templateName) : TITLES[step].title}
       description={
         step === 'leftover'
           ? `결론이 나지 않은 안건이 ${leftover.length}개 있어요. 다음 회의로 넘길 안건을 골라 주세요.`
@@ -144,7 +148,7 @@ export default function EndMeetingModal({
             ? confirmMessage(templateName)
             : TITLES[step].description
       }
-      onBack={!isBusy ? onContinue : undefined}
+      // 디자인 EndMeetingModal: 뒤로가기 없이 X와 [이어서 논의하기]로 돌아간다 (디자인 체크 2026-11-19)
       width="md"
       hideClose={isBusy}
       onClose={isBusy ? () => undefined : onContinue}
@@ -163,6 +167,7 @@ export default function EndMeetingModal({
             <>
               <ul className={styles.agendaList}>
                 {leftover.map((agenda) => (
+                  // 디자인 AgendaCheckItem: 체크, 제목과 한 줄 설명, 오른쪽 상태 배지
                   <li key={agenda.id} className={styles.agenda}>
                     <Checkbox
                       className={styles.agendaHead}
@@ -170,10 +175,14 @@ export default function EndMeetingModal({
                       disabled={isBusy}
                       onChange={() => toggle(agenda.id)}
                     >
-                      <span className={styles.agendaTitle}>{agenda.title}</span>
+                      <span className={styles.agendaText}>
+                        <span className={styles.agendaTitle}>{agenda.title}</span>
+                        <span className={styles.agendaSummary}>
+                          {agenda.summary.length > 0 ? agenda.summary.join(' ') : '아직 이야기하지 않았어요'}
+                        </span>
+                      </span>
                       <StatusPill status={agenda.status} soft />
                     </Checkbox>
-                    {agenda.summary.length > 0 && <p className={styles.agendaSummary}>{agenda.summary.join(' ')}</p>}
                   </li>
                 ))}
               </ul>

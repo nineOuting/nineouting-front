@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { askChat, getChat, type ChatBasis, type ChatCitation, type ChatMessage } from '../../../api/chat';
 import { errorMessage } from '../../../api/client';
+import errorIcon from '../../../assets/icons/error.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
 import sendIcon from '../../../assets/icons/send.svg';
 import summaryIcon from '../../../assets/icons/summary.svg';
@@ -199,7 +200,12 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
           </div>
         )}
         {failed && !asking && (
+          // 디자인 Card 넵넵이가 답을 못 만듦: 흰 카드, 위에 작은 아이콘과 "답을 만들지 못했어요" (디자인 체크 2026-11-19)
           <div className={`${styles.answer} ${styles.failed}`} role="alert">
+            <span className={styles.failedHead}>
+              <Icon src={errorIcon} size={14} />
+              답을 만들지 못했어요
+            </span>
             <p className={side.text}>{FAILED_MESSAGE}</p>
             <button type="button" className={styles.retry} onClick={() => void ask(failed)}>
               다시 묻기

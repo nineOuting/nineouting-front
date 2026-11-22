@@ -107,3 +107,44 @@
 .barPaused .time {
   color: #c9cbd6;
 }
+
+/* 디자인 MicLevel 24px: 3px 막대 3개 */
+.level {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5px;
+  width: 24px;
+  height: 24px;
+}
+
+.level span {
+  width: 3px;
+  height: 3px;
+  background: var(--gray-100);
+  border-radius: 1.5px;
+}
+
+.levelLive span {
+  animation: level 1s ease-in-out infinite;
+}
+
+.levelLive span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.levelLive span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes level {
+  50% {
+    height: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .levelLive span {
+    animation: none;
+  }
+}

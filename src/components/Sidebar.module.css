@@ -56,7 +56,8 @@
 .subItem:hover {
   color: var(--text-primary);
   text-decoration: none;
-  background: var(--interactive-hover);
+  /* 메뉴 바탕(bg-sidebar)과 같은 색이 되지 않게 한 단계 진하게 */
+  background: var(--neutral-subtle);
 }
 
 .selected,

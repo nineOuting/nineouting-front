@@ -51,13 +51,13 @@
   line-height: var(--line-height-caption);
 }
 
+/* 디자인: 나가기는 바탕 없는 버튼(ghost) */
 .leave {
-  background: var(--secondary-default);
-  color: var(--text-on-secondary);
+  color: var(--primary-default);
 }
 
 .leave:hover {
-  background: var(--secondary-hover);
+  background: var(--primary-ghost-hover);
 }
 
 .delete {
