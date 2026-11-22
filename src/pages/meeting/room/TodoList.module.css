@@ -84,7 +84,7 @@
 
 .save {
   background: var(--primary-default);
-  color: #fff;
+  color: var(--text-on-primary);
 }
 
 .cancel {

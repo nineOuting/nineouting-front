@@ -127,3 +127,32 @@ body {
     filter: brightness(0) invert(1);
   }
 }
+
+/*
+ * 다크 모드 대비 보완 (피그마에 다크 값이 없어 여기서 정한다). 라이트 값은 예전과 같다
+ * --avatar-empty-*: 프로필 사진이 없는 빈 동그라미. 다크에서는 페이지 바탕(gray-1000)과 구분되게 한 단계 밝힌다
+ * --bg-floating-dark: 툴팁, 토스트처럼 두 테마 모두 어두운 바탕. 다크에서는 페이지와 구분되게 gray-700
+ */
+:root,
+[data-theme] {
+  --avatar-empty-bg: var(--bg-surface-muted);
+  --avatar-empty-border: var(--border-default);
+  --bg-floating-dark: var(--gray-900);
+  --bg-floating-dark-hover: var(--gray-800);
+}
+
+[data-theme='dark'] {
+  --avatar-empty-bg: var(--gray-800);
+  --avatar-empty-border: var(--gray-600);
+  --bg-floating-dark: var(--gray-700);
+  --bg-floating-dark-hover: var(--gray-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --avatar-empty-bg: var(--gray-800);
+    --avatar-empty-border: var(--gray-600);
+    --bg-floating-dark: var(--gray-700);
+    --bg-floating-dark-hover: var(--gray-600);
+  }
+}
