@@ -1,16 +1,11 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react';
-import dividerTemplateMeta from '../../assets/divider-template-meta.svg';
 import addIcon from '../../assets/icons/add-plain.svg';
-import arrowDownIcon from '../../assets/icons/arrow-down.svg';
-import arrowUpIcon from '../../assets/icons/arrow-up.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
 import copyIcon from '../../assets/icons/copy.svg';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import dragIcon from '../../assets/icons/drag.svg';
 import editIcon from '../../assets/icons/create-sm.svg';
-import personIcon from '../../assets/icons/person-sm.svg';
-import summaryIcon from '../../assets/icons/summary.svg';
 import zoomInIcon from '../../assets/icons/zoom-in.svg';
 import zoomOutIcon from '../../assets/icons/zoom-out.svg';
 import Icon from '../../components/Icon';
@@ -20,15 +15,28 @@ import { CELL_SEPARATOR, PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templat
 import styles from './TemplatePreview.module.css';
 
 const ICON_SIZE = 16;
-const AI_ICON_SIZE = 12;
 const PAGE_HEIGHT = 675;
+const PAPER_WIDTH = 456;
 // 캔버스가 넓어져 문서를 조금 키워 보여 준다 (디자인 종이 너비 560px 정도)
 const DEFAULT_ZOOM = 120;
 const ZOOM_STEP = 10;
 const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;
-// 디자인 23:419 표 미리보기의 머리 행
+// 피그마 프론트 TemplateEditorPage: 미리보기는 실제 회의록처럼 예시 내용으로 채운다
 const SAMPLE_TABLE_HEADERS = ['No.', '안건', '논의 내용', '비고'];
+const SAMPLE_TABLE_ROWS = [
+  ['1', '신규 기능 기획', '주요 기능 범위와 우선순위 논의', '-'],
+  ['2', '마케팅 전략', '런칭 일정 및 채널별 전략 논의', '-'],
+  ['3', '기타 안건', '추가 논의 사항 정리', '-'],
+];
+const SAMPLE_TEXT = '신규 기능의 1차 범위와 마케팅 런칭 일정을 확정하기 위한 정기 회의입니다.';
+const SAMPLE_LIST = ['신규 기능은 1차 MVP 범위로 우선 개발을 진행한다.', '마케팅 런칭 일정은 11월 첫째 주로 확정한다.'];
+const SAMPLE_CHECKLIST = ['기능 기획서 초안 작성 (김민지 · 10/23)', '마케팅 제안서 준비 (이준호 · 10/25)'];
+const SAMPLE_MEETING_INFO = [
+  ['일시', '2026. 10. 19 (월) 14:00 – 15:00'],
+  ['장소', '회의실 A'],
+  ['참석자', '김민지, 이준호, 박서연, 최지호, 김민솔 (5명)'],
+];
 // 오른쪽 섹션 설정의 섹션 이름 칸과 같다
 const MAX_TITLE_LENGTH = 100;
 
@@ -48,22 +56,31 @@ interface TemplatePreviewProps {
   onRemove: (index: number) => void;
 }
 
-/** 미리보기 칸 내용: 표는 머리 행, 나머지는 항목 설명 */
+/** 미리보기 칸 예시 내용 (기록 방식별). 표는 양식의 행, 열 수에 맞춰 자른다 */
 function sampleContent(item: TemplateItem) {
-  if (item.settings.recordType === 'TABLE') {
-    return Array.from({ length: item.settings.table.cols }, (_, col) => SAMPLE_TABLE_HEADERS[col] ?? `열 ${col + 1}`).join(
-      CELL_SEPARATOR,
+  const { recordType, table } = item.settings;
+  if (recordType === 'TABLE') {
+    const head = Array.from({ length: table.cols }, (_, col) => SAMPLE_TABLE_HEADERS[col] ?? `열 ${col + 1}`);
+    const rows = Array.from({ length: Math.max(0, table.rows - 1) }, (_, row) =>
+      Array.from({ length: table.cols }, (_, col) => SAMPLE_TABLE_ROWS[row]?.[col] ?? ''),
     );
+    return [head, ...rows].map((cells) => cells.join(CELL_SEPARATOR)).join('\n');
   }
-  return item.description;
+  if (recordType === 'LIST') {
+    return SAMPLE_LIST.join('\n');
+  }
+  if (recordType === 'CHECKLIST') {
+    return SAMPLE_CHECKLIST.join('\n');
+  }
+  return SAMPLE_TEXT;
 }
 
 /** 표는 머리 행만 보여 주므로 미리보기에서 고치지 않는다 (오른쪽 설정에서 행·열을 바꾼다) */
 const canEditBody = (item: TemplateItem) => item.settings.recordType !== 'TABLE';
 
 /**
- * 양식 미리보기 (디자인 23:185·23:373). 섹션을 눌러 고르고, 왼쪽 손잡이를 끌어 순서를 바꾼다.
- * 고른 섹션은 제목과 설명을 이 자리에서 바로 고친다 (오른쪽 섹션 설정에서도 고칠 수 있다)
+ * 양식 미리보기 (피그마 프론트 TemplateEditorPage). 실제 회의록 종이처럼 양식 이름, 회의 기본 정보, 섹션마다 예시 내용을 보여 준다.
+ * 섹션을 눌러 고르고, 왼쪽 손잡이를 끌어 순서를 바꾼다. 고른 섹션은 제목과 설명을 이 자리에서 바로 고친다
  */
 export default function TemplatePreview({
   name,
@@ -130,6 +147,10 @@ export default function TemplatePreview({
         className={styles.viewport}
         onScroll={(event) => setPage(Math.min(pageCount, Math.floor(event.currentTarget.scrollTop / pageHeight + 0.5) + 1))}
       >
+        <p className={styles.paperLabel} style={{ width: `${(PAPER_WIDTH * zoom) / 100}px` }}>
+          <span className={styles.paperLabelPage}>1 페이지</span>
+          <span className={styles.paperLabelName}>{name || '양식 이름'}</span>
+        </p>
         <div
           ref={paperRef}
           className={styles.paper}
@@ -145,25 +166,22 @@ export default function TemplatePreview({
           }}
         >
           {layout.header.enabled && layout.header.text && <p className={styles.edge}>{layout.header.text}</p>}
-          <div className={styles.head} style={{ justifyContent: layout.align === 'CENTER' ? 'center' : undefined }}>
-            <div className={styles.names} style={{ textAlign: layout.align.toLowerCase() as 'left' | 'center' | 'right' }}>
-              <p className={styles.brand}>Sync</p>
-              <p className={styles.name}>{name || '양식 이름'}</p>
-            </div>
-            {layout.showMeetingInfo && (
-              <div className={styles.metaBlock}>
-                <img src={dividerTemplateMeta} alt="" width={32} height={72} className={styles.metaDivider} />
-                <div className={styles.meta}>
-                  <p>일시 : 2026. 10. 19 (월) 14:00 - 15:00</p>
-                  <p>장소 : 회의실 A</p>
-                  <p className={styles.attendees}>
-                    <Icon src={personIcon} size={ICON_SIZE} />
-                    참석자 이름 (총 5명)
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          <h2 className={styles.docTitle} style={{ textAlign: layout.align.toLowerCase() as 'left' | 'center' | 'right' }}>
+            {name || '양식 이름'}
+          </h2>
+          {layout.showMeetingInfo && (
+            <section className={styles.meetingInfo} aria-label="회의 기본 정보">
+              <h3 className={styles.meetingInfoTitle}>회의 기본 정보</h3>
+              <dl className={styles.meetingInfoList}>
+                {SAMPLE_MEETING_INFO.map(([label, value]) => (
+                  <div key={label} className={styles.meetingInfoRow}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
 
           <ol className={styles.sections} style={{ gap: layout.sectionGap }}>
             {items.map((item, index) => {
@@ -207,7 +225,6 @@ export default function TemplatePreview({
                     <div className={styles.cardHead}>
                       {isSelected ? (
                         <span className={styles.cardTitle} style={titleStyle}>
-                          <Icon src={editIcon} size={ICON_SIZE} />
                           <input
                             data-edit="title"
                             className={styles.titleInput}
@@ -227,55 +244,36 @@ export default function TemplatePreview({
                             focusFieldRef.current = 'title';
                           }}
                         >
-                          <Icon src={editIcon} size={ICON_SIZE} />
                           {item.title}
                         </button>
                       )}
-                      {isSelected ? (
+                      {isSelected && (
+                        // 피그마: 고른 섹션 오른쪽 위 연필(이름 고치기), 휴지통
                         <span className={styles.cardTools}>
                           <button
                             type="button"
                             className={styles.iconButton}
-                            aria-label={`${item.title} 위로`}
-                            disabled={index === 0}
+                            aria-label={`${item.title} 이름 고치기`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              onMove(index, index - 1);
+                              selectedCardRef.current?.querySelector<HTMLElement>('[data-edit="title"]')?.focus();
                             }}
                           >
-                            <Icon src={arrowUpIcon} size={ICON_SIZE} />
+                            <Icon src={editIcon} size={ICON_SIZE} />
                           </button>
                           <button
                             type="button"
                             className={styles.iconButton}
-                            aria-label={`${item.title} 아래로`}
-                            disabled={index === items.length - 1}
+                            aria-label={`${item.title} 삭제`}
+                            disabled={items.length <= 1}
                             onClick={(event) => {
                               event.stopPropagation();
-                              onMove(index, index + 1);
+                              onRemove(index);
                             }}
                           >
-                            <Icon src={arrowDownIcon} size={ICON_SIZE} />
-                          </button>
-                          {/* REQ-101 AI 초안이 생기면 연결한다 (docs/backlog.md) */}
-                          <button type="button" className={styles.ai} disabled title="AI 정리는 준비 중이에요">
-                            <Icon src={summaryIcon} size={AI_ICON_SIZE} />
-                            AI 정리
+                            <Icon src={deleteIcon} size={ICON_SIZE} />
                           </button>
                         </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className={styles.iconButton}
-                          aria-label={`${item.title} 삭제`}
-                          disabled={items.length <= 1}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onRemove(index);
-                          }}
-                        >
-                          <Icon src={deleteIcon} size={ICON_SIZE} />
-                        </button>
                       )}
                     </div>
                     <div className={styles.cardBody} onClick={() => {
@@ -286,7 +284,7 @@ export default function TemplatePreview({
                     >
                       <SectionContent
                         settings={item.settings}
-                        content={sampleContent(item)}
+                        content={isSelected && canEditBody(item) ? item.description : sampleContent(item)}
                         label={item.title}
                         editable={isSelected && canEditBody(item)}
                         placeholder="설명을 적으면 이곳에 보여요"
