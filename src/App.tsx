@@ -131,7 +131,7 @@ const router = createBrowserRouter(
             </RequireAuth>
           }
         />
-        {/* REQ-131~137 회의록 작성·보기 (다운로드 버튼에서 오면 ?download=1) */}
+        {/* REQ-131~137 회의록 작성, 보기 */}
         <Route
           path="/meetings/:meetingId/minutes"
           element={

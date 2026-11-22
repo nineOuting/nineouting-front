@@ -45,7 +45,16 @@ export default function WorkspaceSettingsModal({
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isOwner || isSaving) {
+      return;
+    }
+    if (!trimmed) {
+      setError('워크스페이스 이름을 입력해 주세요');
+      return;
+    }
     if (!canSave) {
+      // 바꾼 것이 없으면 그냥 닫는다
+      onClose();
       return;
     }
     setIsSaving(true);
@@ -72,7 +81,13 @@ export default function WorkspaceSettingsModal({
               {isOwner ? '취소' : '닫기'}
             </Button>
             {isOwner && (
-              <Button type="submit" variant="primary" size="md" disabled={!canSave}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                // 레거시 (2026-11-22, 피그마 프론트는 입력 전에도 버튼이 활성이고 누르면 칸 아래 오류): disabled={!canSave}
+                disabled={!isOwner || isSaving}
+              >
                 {isSaving ? '저장 중' : '저장'}
               </Button>
             )}
@@ -85,7 +100,9 @@ export default function WorkspaceSettingsModal({
           maxLength={MAX_NAME_LENGTH}
           disabled={!isOwner || isSaving}
           error={error ?? (isOwner && draft.length > 0 && trimmed.length === 0 ? '워크스페이스 이름을 입력해 주세요' : undefined)}
-          helper={isOwner ? `${draft.length} / ${MAX_NAME_LENGTH}` : '이름은 소유자만 바꿀 수 있어요'}
+          // 레거시 (2026-11-22, 피그마 프론트 워크스페이스 설정에 없음): 글자 수
+          // helper={isOwner ? `${draft.length} / ${MAX_NAME_LENGTH}` : '이름은 소유자만 바꿀 수 있어요'}
+          helper={isOwner ? undefined : '이름은 소유자만 바꿀 수 있어요'}
           onChange={(event) => setDraft(event.target.value)}
         />
         <TextField
@@ -94,7 +111,8 @@ export default function WorkspaceSettingsModal({
           maxLength={MAX_DESCRIPTION_LENGTH}
           disabled={!isOwner || isSaving}
           placeholder={isOwner ? '어떤 팀의 워크스페이스인지 적어 주세요' : '설명이 없어요'}
-          helper={isOwner ? `${descriptionDraft.length} / ${MAX_DESCRIPTION_LENGTH}` : undefined}
+          // 레거시 (2026-11-22, 피그마 프론트 워크스페이스 설정에 없음): 글자 수
+          // helper={isOwner ? `${descriptionDraft.length} / ${MAX_DESCRIPTION_LENGTH}` : undefined}
           onChange={(event) => setDescriptionDraft(event.target.value)}
         />
         <div className={styles.zone}>

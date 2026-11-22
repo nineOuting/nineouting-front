@@ -29,9 +29,11 @@ export default function PlanPage() {
               </li>
             ))}
           </ul>
+          {/* 레거시 (2026-11-22, 피그마 프론트 요금제에 없음): [현재 요금제] 버튼
           <button type="button" className={styles.currentButton} disabled>
             현재 요금제
           </button>
+          */}
         </section>
         <section className={`${styles.plan} ${styles.upcoming}`} aria-labelledby="plan-paid-title">
           <span className={styles.upcomingBadge}>추후 예정</span>

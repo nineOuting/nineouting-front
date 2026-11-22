@@ -13,7 +13,8 @@ import { listWritingMinutes, type WritingMinutes } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import { listFavorites, listMyWorkspaces, setFavorite } from '../../api/workspace';
 import AppLayout from '../../components/AppLayout';
-import Button from '../../components/Button';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
@@ -23,7 +24,8 @@ import FavoritesCard from './FavoritesCard';
 import HomeCalendar from './HomeCalendar';
 import styles from './HomePage.module.css';
 import UpcomingMeetingCard from './UpcomingMeetingCard';
-import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
+// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+// import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
 import MyTodosCard from './MyTodosCard';
 import WritingMinutesCard from './WritingMinutesCard';
 
@@ -40,7 +42,8 @@ export default function HomePage() {
   const [myName, setMyName] = useState('');
   // null이면 아직 불러오는 중
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[] | null>(null);
-  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+  // const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [weekCount, setWeekCount] = useState<number>();
   const [upcoming, setUpcoming] = useState<MeetingDetailResponse | null>();
   const [writing, setWriting] = useState<WritingMinutes[]>([]);
@@ -145,14 +148,17 @@ export default function HomePage() {
           className={styles.newUser}
           title="첫 워크스페이스를 만들어 보세요"
           description="워크스페이스에서 팀과 프로젝트 폴더, 회의록을 함께 관리해요"
-          action={
-            <Button variant="primary" size="md" onClick={() => setIsCreatingWorkspace(true)}>
-              새 워크스페이스 만들기
-            </Button>
-          }
+          // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+          // action={
+          //   <Button variant="primary" size="md" onClick={() => setIsCreatingWorkspace(true)}>
+          //     새 워크스페이스 만들기
+          //   </Button>
+          // }
           note="초대를 받았다면 메일 속 링크를 눌러 주세요"
         />
+        {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
         {isCreatingWorkspace && <CreateWorkspaceModal onClose={() => setIsCreatingWorkspace(false)} />}
+        */}
       </AppLayout>
     );
   }

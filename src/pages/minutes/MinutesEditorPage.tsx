@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import { getAgendaBoard, getMeetingDetail, listTranscripts, type MeetingDetailResponse } from '../../api/meeting';
 import {
@@ -45,7 +45,8 @@ import type { MinutesTemplate } from '../../types/template';
 import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import { toTranscriptLine } from '../meeting/room/roomData';
 import ActionMenu from '../workspace/ActionMenu';
-import DownloadModal from './DownloadModal';
+// 레거시 (2026-11-22, 피그마 프론트는 [다운로드] 아래 형식 메뉴라 막음): 회의록 다운로드 창
+// import DownloadModal from './DownloadModal';
 import MinutesDocument, { type DocInfo } from './MinutesDocument';
 import MinutesSidePanels, { type AgendaSummary } from './MinutesSidePanels';
 import { fetchMinutes, scheduleLabel } from './minutesData';
@@ -115,7 +116,8 @@ function failMessage(error: unknown, fallback: string) {
 /** REQ-131~137, 140 회의록 작성 화면 (Figma 23-2 회의록 편집 및 공유) */
 export default function MinutesEditorPage() {
   const { meetingId } = useParams();
-  const [searchParams] = useSearchParams();
+  // 레거시 (2026-11-22, 피그마 프론트는 [다운로드] 아래 형식 메뉴라 막음): 회의록 다운로드 창
+  // const [searchParams] = useSearchParams();
   const id = Number(meetingId);
   const [state, setState] = useState<LoadState>({ type: 'loading' });
   const [minutes, setMinutes] = useState<MinutesDetail | null>(null);
@@ -135,7 +137,9 @@ export default function MinutesEditorPage() {
   const [isSharing, setIsSharing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isRetryingDraft, setIsRetryingDraft] = useState(false);
-  const [dialog, setDialog] = useState<'download' | 'share' | null>(searchParams.get('download') ? 'download' : null);
+  // 레거시 (2026-11-22, 피그마 프론트는 [다운로드] 아래 형식 메뉴라 막음): 회의록 다운로드 창. 아카이브에서 오던 ?download=1도 받지 않는다
+  // const [dialog, setDialog] = useState<'download' | 'share' | null>(searchParams.get('download') ? 'download' : null);
+  const [dialog, setDialog] = useState<'share' | null>(null);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
   // 서식은 줄글 칸(RichTextField)에만 넣을 수 있다. 커서가 그 칸에 있을 때만 서식 버튼을 켠다
   const [canFormat, setCanFormat] = useState(false);
@@ -739,7 +743,9 @@ export default function MinutesEditorPage() {
           }
         />
       )}
+      {/* 레거시 (2026-11-22, 피그마 프론트는 [다운로드] 아래 형식 메뉴라 막음): 회의록 다운로드 창
       {dialog === 'download' && <DownloadModal isDownloading={isDownloading} onDownload={download} onClose={closeDialog} />}
+      */}
       {dialog === 'share' && <ShareConfirmModal isSharing={isSharing} onShare={share} onClose={closeDialog} />}
     </div>
   );
