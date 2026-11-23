@@ -45,7 +45,6 @@ import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
-import { useHideChannelButton } from '../../hooks/useHideChannelButton';
 import { useMeetingRoomSocket, type RoomMessage } from '../../hooks/useMeetingRoomSocket';
 import { SttStream } from '../../meeting/SttStream';
 import { ROOM_SUGGESTION } from '../../mocks/meetingRoom';
@@ -100,8 +99,6 @@ function toLineAgendaId(agendaId: number | null) {
 
 /** REQ-079~093, 124~126 회의 진행 화면 */
 export default function MeetingRoomPage() {
-  // 회의 중에는 채널톡 상담 버튼을 숨긴다 (녹음 바, 안건과 겹치지 않게)
-  useHideChannelButton();
   const navigate = useNavigate();
   const { meetingId } = useParams();
   const [searchParams] = useSearchParams();
