@@ -9,6 +9,21 @@
       href="https://cdn.jsdelivr.net/gh/poposnail61/min-sans@1.4.2/web/css/minsans-dynamic-subset.css"
     />
     <title>nep!nep!</title>
+    <!-- 구글 태그 매니저 (2026-11-23). 앱 화면은 모두 이 파일로 시작해 한 곳에만 둔다 (랜딩은 이 안의 iframe이라 따로 넣지 않는다) -->
+    <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-WSVR5WFF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    </script>
+    <!-- 채널톡 (2026-11-23). 회의 중 화면에서는 useHideChannelButton으로 버튼을 숨긴다 -->
+    <script>
+      (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
+
+      ChannelIO('boot', {
+        "pluginKey": "ebbc7f1f-b71a-4bf7-bb95-2d3ef27b6a5c"
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
