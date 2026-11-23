@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { errorMessage } from '../api/client';
 import { listFavorites, setFavorite } from '../api/workspace';
-import starIcon from '../assets/star.svg';
+import starFillIcon from '../assets/icons/star-fill.svg';
+import starOutlineIcon from '../assets/icons/star-outline.svg';
+import Icon from './Icon';
 import styles from './FavoriteButton.module.css';
 
 const STAR_SIZE = 20;
@@ -15,7 +17,7 @@ interface FavoriteButtonProps {
   onChange?: (isFavorite: boolean) => void;
 }
 
-/** REQ-153 워크스페이스·폴더 즐겨찾기 등록·해제. 디자인이 없어 회의록 양식 즐겨찾기 별을 따랐다 */
+/** REQ-153 워크스페이스·폴더 즐겨찾기 등록·해제. 안 한 상태는 속이 빈 회색 별, 한 상태는 노란 별 */
 export default function FavoriteButton({ target, name, onError, isFavorite: controlled, onChange }: FavoriteButtonProps) {
   const [loaded, setIsFavorite] = useState(false);
   const isFavorite = controlled ?? loaded;
@@ -65,7 +67,7 @@ export default function FavoriteButton({ target, name, onError, isFavorite: cont
       disabled={isSaving}
       onClick={toggle}
     >
-      <img src={starIcon} alt="" width={STAR_SIZE} height={STAR_SIZE} />
+      <Icon src={isFavorite ? starFillIcon : starOutlineIcon} size={STAR_SIZE} />
     </button>
   );
 }

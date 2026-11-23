@@ -3,12 +3,12 @@ import { NavLink } from 'react-router-dom';
 import { listMyWorkspaces } from '../api/workspace';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import addIcon from '../assets/icons/add.svg';
-import archiveIcon from '../assets/icons/archive.svg';
+import archiveIcon from '../assets/icons/nav-archive.svg';
 import homeIcon from '../assets/icons/home.svg';
 import settingsIcon from '../assets/icons/settings.svg';
 import expandIcon from '../assets/icons/sidebar-collapse.svg';
-import templateIcon from '../assets/icons/template.svg';
-import workspaceIcon from '../assets/icons/workspace.svg';
+import templateIcon from '../assets/icons/nav-template.svg';
+import workspaceIcon from '../assets/icons/nav-workspace.svg';
 import { useSettingsModal } from '../pages/settings/useSettingsModal';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';

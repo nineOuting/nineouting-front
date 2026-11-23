@@ -184,11 +184,11 @@
   display: flex;
   padding: var(--spacing-1);
   border-radius: var(--radius-sm);
-  color: var(--neutral-default);
+  color: var(--text-tertiary);
 }
 
 .favorite[aria-pressed='true'] {
-  color: var(--primary-default);
+  color: var(--project-yellow-default);
 }
 
 .favorite:hover {

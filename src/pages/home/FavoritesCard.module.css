@@ -45,10 +45,11 @@
   min-width: 0;
 }
 
+/* 즐겨찾기한 것만 모이는 곳이라 별은 늘 노랑 */
 .star {
   display: flex;
   flex-shrink: 0;
-  color: var(--neutral-default);
+  color: var(--project-yellow-default);
 }
 
 /* 디자인 Card 즐겨찾기 없음: 높이 120, 가운데 정렬 */
