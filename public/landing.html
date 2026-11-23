@@ -398,9 +398,9 @@ body.flip{background:#fff}
 .dotwave{left:0;right:0;bottom:0}
 
 /* 맨 위로 버튼 */
-/* 채널톡 원래 버튼(앱 화면 오른쪽 아래 24px, 56px) 바로 위: 아래 24 + 56 + 12 (2026-11-23).
-   랜딩은 iframe이라 오른쪽 여백에서 이 안의 스크롤바 폭(100vw - 100%)을 빼 바깥 화면 기준 24px에 맞춘다 */
-.totop{position:fixed;right:calc(24px - (100vw - 100%));bottom:92px;z-index:60;width:56px;height:56px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .3s,transform .4s var(--ease),border-color .2s,color .2s}
+/* 채널톡 원래 버튼(앱 화면 오른쪽 아래 24px, 56px) 위: 아래 24 + 56 + 12, 오른쪽은 14px 더 안쪽 38px (2026-11-23).
+   랜딩은 iframe이라 오른쪽 여백에서 이 안의 스크롤바 폭(100vw - 100%)을 빼 바깥 화면 기준으로 맞춘다 */
+.totop{position:fixed;right:calc(38px - (100vw - 100%));bottom:92px;z-index:60;width:56px;height:56px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .3s,transform .4s var(--ease),border-color .2s,color .2s}
 .totop span{font-size:10px;font-weight:800;letter-spacing:.08em}
 .totop.on{opacity:1;transform:none;pointer-events:auto}
 .totop:hover{border-color:var(--p);color:var(--p)}
