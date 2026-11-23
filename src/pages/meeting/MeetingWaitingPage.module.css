@@ -67,21 +67,31 @@
   color: var(--warning-default, #e8590c);
 }
 
+/* 디자인 Body: 본문 칸은 남는 폭을 다 차지하고, 오른쪽 패널은 화면 오른쪽 끝에 붙는다. 사이 32px */
 .columns {
   display: flex;
   flex: 1;
   align-items: stretch;
+  gap: var(--spacing-8);
   min-height: calc(100vh - var(--layout-header-height));
 }
 
+/* 디자인 MainArea: 위아래 56px, 좌우 24px. 폭 제한은 본문 칸이 아니라 안쪽 내용에 건다 (SCRUM-364) */
 .main {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--spacing-6);
+  align-items: center;
+  /* 디자인 MainContent: 제목과 안건 카드 사이 32px */
+  gap: var(--spacing-8);
   min-width: 0;
-  max-width: 1000px;
-  padding: var(--spacing-12, 48px) var(--spacing-12, 48px) var(--spacing-12, 48px) 48px;
+  padding: var(--spacing-14) var(--spacing-6);
+}
+
+/* 디자인 MainContent: 폭 886px, 본문 칸 가운데. 넓은 화면에서는 양옆이 여백이 된다 */
+.main > * {
+  width: 100%;
+  max-width: 886px;
 }
 
 .head {
@@ -276,11 +286,11 @@
   object-fit: cover;
 }
 
-/* 회의록 설정 카드: 양식 줄 + 작성자 줄 */
+/* 회의록 설정 카드: 양식 줄 + 작성자 줄. 디자인 Box: 위아래 4px, 좌우 16px */
 .settingsCard {
   display: flex;
   flex-direction: column;
-  padding: 0 var(--spacing-4);
+  padding: var(--spacing-1) var(--spacing-4);
   background: var(--bg-surface);
   border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-lg);
@@ -290,13 +300,19 @@
   border-top: var(--border-width-default) solid var(--border-default);
 }
 
+/* 디자인 SettingRow: 위아래 12px(높이 44px), 라벨 폭 96px, 사이 8px */
 .settingRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-6);
+  gap: var(--spacing-2);
   width: 100%;
-  min-height: 48px;
+  padding: var(--spacing-3) 0;
   text-align: left;
+}
+
+.settingRow .settingLabel {
+  flex-shrink: 0;
+  width: 96px;
 }
 
 .settingRow:disabled {
