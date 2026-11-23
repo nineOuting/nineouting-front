@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
   discardPendingAgenda,
@@ -114,7 +114,12 @@ export default function FolderPage() {
   // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
   const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const location = useLocation();
+  // 워크스페이스에서 새 폴더를 만들고 오면 MSG-093 안내를 띄운다
+  const [toast, setToast] = useState<ToastMessage | null>(() => {
+    const created = (location.state as { toast?: string } | null)?.toast;
+    return created ? { text: created, variant: 'success' } : null;
+  });
   const closeToast = useCallback(() => setToast(null), []);
   const closeDialog = () => setDialog(null);
   const notice = (text: string) => setToast({ text, variant: 'info' });

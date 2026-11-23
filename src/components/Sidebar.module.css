@@ -1,11 +1,11 @@
-/* 디자인 Sidebar: 240px, 안쪽 16px, 메뉴 한 줄 40px */
+/* 피그마 Sidebar (2172:133237): 240px, 메뉴 줄은 폭 전체, 한 줄 40px */
 .sidebar {
   display: flex;
   flex: 1;
   flex-direction: column;
   justify-content: space-between;
   gap: var(--spacing-4);
-  padding: var(--spacing-4);
+  padding: var(--spacing-4) 0;
 }
 
 .main {
@@ -66,6 +66,14 @@
   background: var(--interactive-selected);
 }
 
+/* 피그마 SideMenuItem 선택: 폭 전체 연보라 바탕, 오른쪽 보라 줄, 각진 모서리 */
+.item.selected,
+.item.selected:hover {
+  background: var(--primary-subtle);
+  border-right: var(--border-width-focus) solid var(--primary-default);
+  border-radius: 0;
+}
+
 .secondary {
   color: var(--text-secondary);
 }
@@ -91,13 +99,29 @@
   white-space: nowrap;
 }
 
+/* 워크스페이스 줄: 이름과 펼치기 버튼이 한 줄 (피그마 SideMenuItem) */
 .workspaceRow {
   display: flex;
   align-items: center;
+  height: 40px;
+  border-radius: var(--radius-md);
 }
 
 .workspaceRow .item {
   flex: 1;
+  min-width: 0;
+}
+
+.workspaceRow:has(> .item.selected) {
+  background: var(--primary-subtle);
+  border-right: var(--border-width-focus) solid var(--primary-default);
+  border-radius: 0;
+}
+
+.workspaceRow > .item.selected,
+.workspaceRow > .item.selected:hover {
+  background: none;
+  border-right: none;
 }
 
 .collapse,
@@ -110,14 +134,10 @@
   border-radius: var(--radius-sm);
 }
 
-.collapse {
+.collapse,
+.expand {
   width: 28px;
   height: 28px;
-}
-
-.expand {
-  width: 32px;
-  height: 32px;
 }
 
 .collapse:hover,
@@ -130,13 +150,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
-  padding: 0 var(--spacing-3) 0 var(--spacing-8);
+  padding: 0 0 0 var(--spacing-8);
 }
 
 .footer {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  padding: 0 var(--spacing-4);
 }
 
 .subItem:disabled .icon {
@@ -146,4 +167,9 @@
 /* REQ-202 폴더 아이콘을 프로젝트 색으로 */
 .folderColor {
   display: flex;
+}
+
+/* 메뉴 아이콘의 회색(.icon)이 폴더 색을 덮지 않게 (피그마 SubMenuItem 아이콘은 폴더 색) */
+.folderColor .icon {
+  color: inherit;
 }

@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { listCalendarMeetings, type CalendarMeeting } from '../../api/meeting';
+import nextIcon from '../../assets/icons/carousel-next.svg';
+import prevIcon from '../../assets/icons/carousel-prev.svg';
+import Icon from '../../components/Icon';
 import type { FolderSummary } from '../../types/workspace';
 import { folderIconColor, folderSubtleColor } from '../../utils/folderColor';
 import { addDays, startOfWeek, toIsoDate, toTime } from '../../utils/calendar';
 import styles from './WeekMeetings.module.css';
 
 const DAYS_IN_WEEK = 7;
+// 피그마 UpcomingSection: 카드 3개씩 보이고 좌우 버튼으로 하나씩 넘긴다 (QA 2026-11-23)
+const VISIBLE_COUNT = 3;
+const ARROW_ICON_SIZE = 24;
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 2026-11-17T09:00 → 화 */
@@ -31,12 +37,19 @@ function meetingPath(meeting: CalendarMeeting) {
 export default function WeekMeetings({ workspaceId, folders }: WeekMeetingsProps) {
   // null이면 불러오는 중
   const [meetings, setMeetings] = useState<CalendarMeeting[] | null>(null);
+  // 보이는 첫 카드 위치
+  const [start, setStart] = useState(0);
 
   useEffect(() => {
     let isCurrent = true;
     const monday = startOfWeek(new Date());
     listCalendarMeetings(toIsoDate(monday), toIsoDate(addDays(monday, DAYS_IN_WEEK - 1)))
-      .then((items) => isCurrent && setMeetings(items.filter((item) => item.workspaceId === workspaceId)))
+      .then((items) => {
+        if (isCurrent) {
+          setMeetings(items.filter((item) => item.workspaceId === workspaceId));
+          setStart(0);
+        }
+      })
       .catch(() => isCurrent && setMeetings([]));
     return () => {
       isCurrent = false;
@@ -59,9 +72,22 @@ export default function WeekMeetings({ workspaceId, folders }: WeekMeetingsProps
       {meetings.length === 0 ? (
         <p className={styles.empty}>이번 주에 예정된 회의가 없어요</p>
       ) : (
-        <ul className={styles.list}>
-          {meetings.map((meeting) => (
-            <li key={meeting.meetingId}>
+        <div className={styles.carousel}>
+        {/* 3개 이하면 넘길 것이 없어 두 버튼 모두 비활성 */}
+        <button
+          type="button"
+          className={styles.arrow}
+          aria-label="이전 회의"
+          disabled={start === 0}
+          onClick={() => setStart((value) => Math.max(0, value - 1))}
+        >
+          <Icon src={prevIcon} size={ARROW_ICON_SIZE} />
+        </button>
+        {/* 카드를 한 줄로 두고 보이는 칸만 옮겨 부드럽게 넘어간다. 화면 밖 카드는 inert로 키보드에서도 뺀다 */}
+        <div className={styles.viewport}>
+        <ul className={styles.list} style={{ '--start': start } as CSSProperties}>
+          {meetings.map((meeting, index) => (
+            <li key={meeting.meetingId} inert={index < start || index >= start + VISIBLE_COUNT}>
               {/* 피그마 Page 8 MeetingCard: 날짜 상자(프로젝트 색) + 회의명, 프로젝트 · 시간 */}
               <Link to={meetingPath(meeting)} className={styles.card}>
                 <span
@@ -81,6 +107,17 @@ export default function WeekMeetings({ workspaceId, folders }: WeekMeetingsProps
             </li>
           ))}
         </ul>
+        </div>
+        <button
+          type="button"
+          className={styles.arrow}
+          aria-label="다음 회의"
+          disabled={start + VISIBLE_COUNT >= meetings.length}
+          onClick={() => setStart((value) => Math.min(meetings.length - VISIBLE_COUNT, value + 1))}
+        >
+          <Icon src={nextIcon} size={ARROW_ICON_SIZE} />
+        </button>
+        </div>
       )}
     </section>
   );

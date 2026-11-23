@@ -21,7 +21,6 @@ import {
   markLastVisited,
   removeWorkspaceMember,
   renameFolder,
-  setFavorite,
   transferWorkspaceOwnership,
   updateWorkspace,
   WORKSPACE_ERROR_CODES,
@@ -43,7 +42,6 @@ import type { Member } from '../../types/meeting';
 import type { FolderAccess, FolderMeeting, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
 import deleteIcon from '../../assets/icons/delete.svg';
 import groupIcon from '../../assets/icons/group-add-sm.svg';
-import starOutlineIcon from '../../assets/icons/star-outline.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import ActionMenu from './ActionMenu';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
@@ -112,7 +110,7 @@ export default function WorkspacePage() {
   // 피그마 "멤버 목록 팝오버": [멤버 N명]은 보기 전용 목록, 관리는 ⋮ [멤버 권한 관리]
   const membersAnchorRef = useRef<HTMLButtonElement>(null);
   const [memberList, setMemberList] = useState<{ members: MemberListItem[] | null; pendingEmails: string[] } | null>(null);
-  // 폴더 카드의 별과 ⋮ [즐겨찾기에 추가]가 같이 쓰는 즐겨찾기 폴더
+  // 폴더 카드의 별이 쓰는 즐겨찾기 폴더
   const [favoriteFolderIds, setFavoriteFolderIds] = useState<Set<number>>(new Set());
   // 피그마 "워크스페이스 삭제 확인": 이름을 똑같이 써야 [삭제하기]
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
@@ -206,8 +204,8 @@ export default function WorkspacePage() {
     const created = await createFolder(id, name);
     setFolders((prev) => [...prev, { folderId: created.folderId, name: created.name, isDefault: false, meetingCount: 0, ownerUserId: myUserId }]);
     closeDialog();
-    // MSG-093
-    setToast({ text: `'${created.name}' 폴더를 만들었어요.`, variant: 'success' });
+    // 만들면 바로 그 폴더 화면으로 (QA 2026-11-23). MSG-093 안내는 폴더 화면이 띄운다
+    navigate(`/folders/${created.folderId}`, { state: { toast: `'${created.name}' 폴더를 만들었어요.` } });
   };
 
   const rename = async (folderId: number, name: string) => {
@@ -299,16 +297,6 @@ export default function WorkspacePage() {
       }
       return next;
     });
-
-  const toggleFavorite = async (folder: FolderSummary) => {
-    const isFavorite = !favoriteFolderIds.has(folder.folderId);
-    try {
-      await setFavorite({ type: 'folder', workspaceId: id, folderId: folder.folderId }, isFavorite);
-      markFavorite(folder.folderId, isFavorite);
-    } catch (error) {
-      showError(error);
-    }
-  };
 
   const openMemberList = async () => {
     setMemberList({ members: null, pendingEmails: [] });
@@ -524,11 +512,6 @@ export default function WorkspacePage() {
               menu={
                 <FolderMenu
                   folder={folder}
-                  isFavorite={favoriteFolderIds.has(folder.folderId)}
-                  onToggleFavorite={() => {
-                    closeFolderMenu();
-                    void toggleFavorite(folder);
-                  }}
                   // REQ-165 (2026-11-17 시트): 이름 바꾸기는 프로젝트 소유자(기본 폴더는 워크스페이스 소유자), 삭제는 프로젝트 소유자와 워크스페이스 소유자
                   canRename={folder.isDefault ? isOwner : myUserId !== null && folder.ownerUserId === myUserId}
                   canDelete={!folder.isDefault && (isOwner || (myUserId !== null && folder.ownerUserId === myUserId))}
@@ -667,8 +650,6 @@ export default function WorkspacePage() {
 
 interface FolderMenuProps {
   folder: FolderSummary;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
   canRename: boolean;
   /** 기본 폴더는 지울 수 없다 (REQ-044) */
   canDelete: boolean;
@@ -680,13 +661,11 @@ interface FolderMenuProps {
 }
 
 /**
- * REQ-165 폴더 카드 오른쪽 위 더보기. 피그마 프론트 "폴더 카드 ⋮ 메뉴": 즐겨찾기에 추가(해제), 이름 바꾸기, 폴더 삭제.
- * 즐겨찾기는 누구나 할 수 있어 메뉴는 늘 보인다
+ * REQ-165 폴더 카드 오른쪽 위 더보기: 이름 바꾸기, 폴더 삭제.
+ * 즐겨찾기는 카드의 별로만 한다 (QA 2026-11-23, 메뉴와 별에 같은 기능이 두 번 있었다). 고를 것이 없으면 ⋮도 숨긴다
  */
 function FolderMenu({
   folder,
-  isFavorite,
-  onToggleFavorite,
   canRename,
   canDelete,
   isOpen,
@@ -697,10 +676,12 @@ function FolderMenu({
 }: FolderMenuProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const items = [
-    { label: isFavorite ? '즐겨찾기 해제' : '즐겨찾기에 추가', icon: starOutlineIcon, onSelect: onToggleFavorite, isDanger: false },
     ...(canRename ? [{ label: '이름 바꾸기', icon: editIcon, onSelect: onRename, isDanger: false }] : []),
     ...(canDelete ? [{ label: '폴더 삭제', icon: deleteIcon, onSelect: onDelete, isDanger: true }] : []),
   ];
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <span className={styles.anchor}>

@@ -26,10 +26,60 @@
   color: var(--text-secondary);
 }
 
-.list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/* 피그마 MeetingCards (2172:133269): [<] 카드 3개 [>], 버튼 32px, 사이 16px */
+.carousel {
+  display: flex;
+  align-items: center;
   gap: var(--gap-content);
+}
+
+.arrow {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+}
+
+.arrow:hover:not(:disabled) {
+  background: var(--neutral-ghost-hover);
+}
+
+.arrow:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+/* 보이는 칸: 카드 3개 폭. 넘친 카드는 가린다 (카드 그림자가 잘리지 않게 위아래 여유) */
+.viewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 2px 0 4px;
+}
+
+/* 카드 한 줄. 한 칸 = (보이는 폭 + 간격) / 3 만큼 옮긴다 (--start: 보이는 첫 카드) */
+.list {
+  --card-gap: var(--gap-content);
+  display: flex;
+  gap: var(--card-gap);
+  transform: translateX(calc(var(--start, 0) * (100% + var(--card-gap)) / -3));
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.list > li {
+  flex: 0 0 calc((100% - 2 * var(--card-gap)) / 3);
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list {
+    transition: none;
+  }
 }
 
 .card {
