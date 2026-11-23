@@ -4,8 +4,8 @@ import { listFolders, listMyWorkspaces } from '../api/workspace';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/nav-archive.svg';
-import arrowDownIcon from '../assets/icons/arrow-down.svg';
-import arrowUpIcon from '../assets/icons/arrow-up.svg';
+import collapseFolderIcon from '../assets/icons/nav-collapse.svg';
+import expandFolderIcon from '../assets/icons/nav-expand.svg';
 import folderIcon from '../assets/icons/folder-sm.svg';
 import homeIcon from '../assets/icons/home.svg';
 import settingsIcon from '../assets/icons/settings.svg';
@@ -21,7 +21,8 @@ import { folderIconColor } from '../utils/folderColor';
 import styles from './Sidebar.module.css';
 
 const MENU_ICON_SIZE = 20;
-const ARROW_ICON_SIZE = 24;
+// 피그마 Sidebar ExpandButton: 28px 버튼 안 20px 화살표
+const ARROW_ICON_SIZE = 20;
 const SUB_ICON_SIZE = 16;
 
 interface SidebarProps {
@@ -91,6 +92,16 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
       });
   }, [expandedIds]);
 
+  // 워크스페이스 화면으로 오면 그 워크스페이스의 폴더를 펼친다 (QA 2026-11-23).
+  // 화면을 불러오는 동안 메뉴가 먼저 그려져 처음 값만으로는 펼치지 못해, 바뀔 때 렌더 중에 맞춘다
+  const [shownWorkspaceId, setShownWorkspaceId] = useState(workspaceId);
+  if (workspaceId !== shownWorkspaceId) {
+    setShownWorkspaceId(workspaceId);
+    if (workspaceId !== undefined && !expandedIds.includes(workspaceId)) {
+      setExpandedIds([...expandedIds, workspaceId]);
+    }
+  }
+
   const toggleWorkspace = (id: number) =>
     setExpandedIds((prev) => (prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id]));
 
@@ -122,7 +133,7 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
                     aria-expanded={isExpanded}
                     onClick={() => toggleWorkspace(workspace.workspaceId)}
                   >
-                    <MenuIcon src={isExpanded ? arrowUpIcon : arrowDownIcon} size={ARROW_ICON_SIZE} />
+                    <MenuIcon src={isExpanded ? collapseFolderIcon : expandFolderIcon} size={ARROW_ICON_SIZE} />
                   </button>
                 </div>
                 {isExpanded && (folders[workspace.workspaceId] ?? []).length > 0 && (
