@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { getUnreadCount } from '../api/notification';
-import { getMe, type Me } from '../api/user';
+import { getMe, ME_CHANGED_EVENT, type Me } from '../api/user';
 import logoutIcon from '../assets/icons/logout.svg';
 import settingsIcon from '../assets/icons/menu-settings.svg';
 import notificationsIcon from '../assets/icons/notifications.svg';
@@ -52,8 +52,16 @@ export default function TopBarUser() {
     getUnreadCount()
       .then((count) => isCurrent && setUnread(count))
       .catch(() => undefined);
+    // 설정 창에서 사진, 이름을 바꾸면 화면을 옮기지 않아도 바로 반영 (기본 프로필 고르기 포함)
+    const reloadMe = () => {
+      getMe()
+        .then((loaded) => isCurrent && setMe(loaded))
+        .catch(() => undefined);
+    };
+    window.addEventListener(ME_CHANGED_EVENT, reloadMe);
     return () => {
       isCurrent = false;
+      window.removeEventListener(ME_CHANGED_EVENT, reloadMe);
     };
   }, []);
 
