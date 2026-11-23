@@ -3,10 +3,10 @@
   padding: 0;
   background: none;
   border: none;
-  opacity: 0.35;
+  color: var(--text-tertiary);
 }
 
-/* 즐겨찾기한 상태는 별을 진하게 */
+/* 즐겨찾기한 상태는 노란 별 */
 .on {
-  opacity: 1;
+  color: var(--project-yellow-default);
 }

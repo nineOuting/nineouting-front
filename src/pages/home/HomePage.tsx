@@ -11,7 +11,7 @@ import {
 } from '../../api/meeting';
 import { listWritingMinutes, type WritingMinutes } from '../../api/minutes';
 import { getMe } from '../../api/user';
-import { listFavorites, listMyWorkspaces, setFavorite } from '../../api/workspace';
+import { listFavorites, listFolders, listMyWorkspaces, setFavorite } from '../../api/workspace';
 import AppLayout from '../../components/AppLayout';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import Button from '../../components/Button';
@@ -27,6 +27,7 @@ import UpcomingMeetingCard from './UpcomingMeetingCard';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
 import MyTodosCard from './MyTodosCard';
+import type { FolderOption } from './ProjectFilter';
 import WritingMinutesCard from './WritingMinutesCard';
 
 // 캘린더 API는 한 번에 42일까지 받는다. 이번 주 월요일부터 받아 이번 주 회의 수와 곧 다가오는 회의를 찾는다
@@ -47,6 +48,8 @@ export default function HomePage() {
   const [weekCount, setWeekCount] = useState<number>();
   const [upcoming, setUpcoming] = useState<MeetingDetailResponse | null>();
   const [writing, setWriting] = useState<WritingMinutes[]>([]);
+  // 달력 프로젝트 필터와 작성 중인 회의록의 폴더 색에 같이 쓴다
+  const [folders, setFolders] = useState<FolderOption[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [todos, setTodos] = useState<MyTodo[]>([]);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -96,6 +99,31 @@ export default function HomePage() {
       isCurrent = false;
     };
   }, [showError]);
+
+  useEffect(() => {
+    if (!workspaces) {
+      return;
+    }
+    let isCurrent = true;
+    // 워크스페이스가 여럿이면 같은 이름의 폴더를 구분하도록 워크스페이스 이름을 앞에 붙인다
+    const withWorkspaceName = workspaces.length > 1;
+    Promise.all(
+      workspaces.map(({ workspaceId, name }) =>
+        listFolders(workspaceId)
+          .then((items) =>
+            items.map((folder) => ({
+              folderId: folder.folderId,
+              label: withWorkspaceName ? `${name} · ${folder.name}` : folder.name,
+              color: folder.color,
+            })),
+          )
+          .catch(() => []),
+      ),
+    ).then((lists) => isCurrent && setFolders(lists.flat()));
+    return () => {
+      isCurrent = false;
+    };
+  }, [workspaces]);
 
   const removeFavorite = async (favorite: Favorite) => {
     try {
@@ -180,13 +208,13 @@ export default function HomePage() {
             {/* 피그마 HomeMonthViewPage_v6: 월간이면 "이번 달 일정" */}
             {isMonthView ? '이번 달 일정' : '이번 주 일정'}
           </h2>
-          <HomeCalendar workspaces={workspaces} />
+          <HomeCalendar folders={folders} />
         </section>
       </div>
       <aside className={styles.panel}>
         <FavoritesCard items={favorites} onRemove={removeFavorite} />
         <MyTodosCard items={todos} onComplete={completeTodos} />
-        <WritingMinutesCard items={writing} />
+        <WritingMinutesCard items={writing} folders={folders} />
       </aside>
     </AppLayout>
   );

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import folderIcon from '../../assets/icons/folder-md.svg';
 import starIcon from '../../assets/icons/star-fill.svg';
 import starOutlineIcon from '../../assets/icons/star-outline.svg';
-import workspaceIcon from '../../assets/icons/workspace.svg';
+import workspaceIcon from '../../assets/icons/nav-workspace.svg';
 import Icon from '../../components/Icon';
 import type { Favorite } from '../../types/workspace';
 import { folderIconColor, folderSubtleColor } from '../../utils/folderColor';

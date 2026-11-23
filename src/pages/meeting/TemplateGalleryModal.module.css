@@ -64,11 +64,11 @@
   right: 4px;
   display: flex;
   padding: var(--spacing-1);
-  color: var(--text-disabled);
+  color: var(--text-tertiary);
 }
 
 .starOn {
-  color: var(--primary-default);
+  color: var(--project-yellow-default);
 }
 
 .name {

@@ -1,15 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { listCalendarMeetings, type CalendarMeeting } from '../../api/meeting';
-import { listFolders } from '../../api/workspace';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right.svg';
 import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
-import DropdownMenu from '../../components/DropdownMenu';
-import type { WorkspaceSummary } from '../../types/workspace';
 import { addDays, minutesOfDay, monthGridDays, toIsoDate, toTime, weekDays } from '../../utils/calendar';
 import { meetingPath } from '../../utils/meetingFormat';
 import MeetingPreviewCard from './MeetingPreviewCard';
+import ProjectFilter, { type FolderOption } from './ProjectFilter';
 import { folderColor, folderSubtleColor } from '../../utils/folderColor';
 import styles from './HomeCalendar.module.css';
 
@@ -27,17 +25,10 @@ const MIN_EVENT_HEIGHT = 24;
 const ARROW_ICON_SIZE = 20;
 const FILTER_ICON_SIZE = 16;
 const MONTH_EVENT_LIMIT = 2;
-const ALL_FOLDERS = 'all';
 
 interface HomeCalendarProps {
-  workspaces: WorkspaceSummary[];
-}
-
-interface FolderOption {
-  folderId: number;
-  label: string;
-  /** REQ-202 프로젝트 색 번호 */
-  color?: number;
+  /** 내 워크스페이스들의 프로젝트 폴더 (홈이 불러와 작성 중인 회의록 카드와 같이 쓴다) */
+  folders: FolderOption[];
 }
 
 /** 주간: 2026년 10월 19일 ~ 25일 (달이 바뀌면 ~ 11월 1일), 월간: 2026년 10월 */
@@ -51,7 +42,7 @@ function rangeLabel(view: View, cursor: Date, days: Date[]) {
 }
 
 /** REQ-018~020 홈 캘린더 (주간·월간). 끝난 회의는 회색으로 구분한다 */
-export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
+export default function HomeCalendar({ folders }: HomeCalendarProps) {
   const navigate = useNavigate();
   // REQ-180 보기 방식(주간/월간)은 주소에 둬서 회의를 보고 뒤로 와도 그대로다
   const [searchParams, setSearchParams] = useSearchParams();
@@ -70,8 +61,8 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
   const [cursor, setCursor] = useState(() => new Date());
   const [today] = useState(() => toIsoDate(new Date()));
   // 프로젝트 = 프로젝트 폴더. 워크스페이스가 아니라 폴더 단위로 거른다
-  const [folderFilter, setFolderFilter] = useState(ALL_FOLDERS);
-  const [folders, setFolders] = useState<FolderOption[]>([]);
+  // REQ-147 체크박스로 여러 폴더를 고른다. null이면 전체
+  const [folderFilter, setFolderFilter] = useState<number[] | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [meetings, setMeetings] = useState<CalendarMeeting[]>([]);
   const [error, setError] = useState(false);
@@ -100,28 +91,6 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
     };
   }, [from, to]);
 
-  useEffect(() => {
-    let isCurrent = true;
-    // 워크스페이스가 여럿이면 같은 이름의 폴더를 구분하도록 워크스페이스 이름을 앞에 붙인다
-    const withWorkspaceName = workspaces.length > 1;
-    Promise.all(
-      workspaces.map(({ workspaceId, name }) =>
-        listFolders(workspaceId)
-          .then((items) =>
-            items.map((folder) => ({
-              folderId: folder.folderId,
-              label: withWorkspaceName ? `${name} · ${folder.name}` : folder.name,
-              color: folder.color,
-            })),
-          )
-          .catch(() => []),
-      ),
-    ).then((lists) => isCurrent && setFolders(lists.flat()));
-    return () => {
-      isCurrent = false;
-    };
-  }, [workspaces]);
-
   useLayoutEffect(() => {
     if (view === 'week' && scrollRef.current) {
       scrollRef.current.scrollTop = FIRST_VISIBLE_HOUR * HOUR_HEIGHT;
@@ -129,10 +98,16 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
   }, [view]);
 
   const shown = meetings.filter(
-    (meeting) => folderFilter === ALL_FOLDERS || String(meeting.folderId) === folderFilter,
+    (meeting) => folderFilter === null || folderFilter.includes(meeting.folderId),
   );
   const byDay = (day: Date) => shown.filter((meeting) => meeting.startAt.startsWith(toIsoDate(day)));
-  const filterLabel = folders.find(({ folderId }) => String(folderId) === folderFilter)?.label ?? '전체 프로젝트';
+  // 일부만 고르면 버튼에 고른 개수 (하나면 그 이름)
+  const filterLabel =
+    folderFilter === null
+      ? '전체 프로젝트'
+      : folderFilter.length === 1
+        ? (folders.find(({ folderId }) => folderId === folderFilter[0])?.label ?? '프로젝트 1개')
+        : `프로젝트 ${folderFilter.length}개`;
 
   const move = (direction: 1 | -1) =>
     setCursor((date) =>
@@ -191,7 +166,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
             ref={filterRef}
             type="button"
             className={styles.filterButton}
-            aria-haspopup="listbox"
+            aria-haspopup="dialog"
             aria-expanded={isFilterOpen}
             onClick={() => setIsFilterOpen((open) => !open)}
           >
@@ -205,21 +180,12 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
             />
           </button>
           {isFilterOpen && (
-            <DropdownMenu
-              label="프로젝트로 거르기"
-              emptyText="프로젝트 폴더가 없어요"
+            <ProjectFilter
+              folders={folders}
+              selected={folderFilter}
               anchorRef={filterRef}
-              className={styles.filterMenu}
-              items={[
-                { id: ALL_FOLDERS, label: '전체 프로젝트', isSelected: folderFilter === ALL_FOLDERS },
-                ...folders.map(({ folderId, label }) => ({
-                  id: String(folderId),
-                  label,
-                  isSelected: folderFilter === String(folderId),
-                })),
-              ]}
-              onSelect={(id) => {
-                setFolderFilter(id);
+              onApply={(selected) => {
+                setFolderFilter(selected);
                 setIsFilterOpen(false);
               }}
               onClose={() => setIsFilterOpen(false)}
@@ -309,7 +275,7 @@ export default function HomeCalendar({ workspaces }: HomeCalendarProps) {
                     aria-label={eventLabel(meeting)}
                     onClick={(event) => setPreview({ meeting, anchor: event.currentTarget.getBoundingClientRect() })}
                   >
-                    {/* 피그마 HomeMonthViewPage_v6: 칸마다 시작 시간과 회의명 두 줄 */}
+                    {/* 시작 시간과 회의명을 한 줄로. 두 줄이면 글자가 잘린다 (QA 2026-11-23) */}
                     <span className={styles.eventMeta}>{toTime(meeting.startAt)}</span>
                     <span className={styles.eventTitle}>{meeting.title}</span>
                   </button>

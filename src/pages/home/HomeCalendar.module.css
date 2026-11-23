@@ -107,12 +107,6 @@
   transform: rotate(180deg);
 }
 
-.filterMenu {
-  right: 0;
-  left: auto;
-  min-width: 180px;
-}
-
 .error {
   font-size: var(--font-size-body-md);
   color: var(--danger-default);
@@ -308,18 +302,23 @@
   color: var(--text-disabled);
 }
 
-/* 피그마 월간 칸: 시작 시간 아래 회의명 */
+/* 월간 칸: 시작 시간과 회의명 한 줄 (QA 2026-11-23) */
 .monthEvent {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
   height: auto;
   padding-block: 2px;
 }
 
-.monthEvent > span {
-  max-width: 100%;
+/* 한 줄: 시간은 그대로, 회의명이 길면 말줄임 */
+.monthEvent > .eventMeta {
+  flex-shrink: 0;
+}
+
+.monthEvent > .eventTitle {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .more {

@@ -48,6 +48,16 @@
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
+/* 색을 받은 상자: 테두리와 켠 바탕이 그 색 */
+.colored .box {
+  border-color: var(--checkbox-color);
+}
+
+.colored .input:checked + .box {
+  background: var(--checkbox-color);
+  border-color: var(--checkbox-color);
+}
+
 .input:disabled + .box {
   background: var(--bg-surface-muted);
   border-color: var(--border-default);

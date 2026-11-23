@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import starIcon from '../../assets/icons/star-fill.svg';
+import starFillIcon from '../../assets/icons/star-fill.svg';
+import starOutlineIcon from '../../assets/icons/star-outline.svg';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
@@ -82,7 +83,7 @@ export default function TemplateGalleryModal({
                 className={[styles.star, template.isFavorite ? styles.starOn : ''].filter(Boolean).join(' ')}
                 onClick={() => onToggleFavorite(template.templateId)}
               >
-                <Icon src={starIcon} size={STAR_SIZE} />
+                <Icon src={template.isFavorite ? starFillIcon : starOutlineIcon} size={STAR_SIZE} />
               </button>
             </li>
           );

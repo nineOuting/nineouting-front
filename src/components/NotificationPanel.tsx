@@ -155,6 +155,8 @@ export default function NotificationPanel({ anchorRef, onUnreadChange, onClose }
           </li>
         ))}
       </ul>
+      {/* 임시 문구 (2026-11-23): 알림 14일 보관 안내. 메시지 정의서에 정식 문구가 생기면 바꾼다 */}
+      <p className={styles.footer}>알림은 14일이 지나면 자동으로 삭제돼요</p>
     </div>
   );
 }
