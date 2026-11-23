@@ -59,9 +59,13 @@ const toMyProfile = ({ email, name, profileImageUrl, passwordChangedAt }: MyProf
   passwordChangedAt: passwordChangedAt ?? undefined,
 });
 
-/** 계정 프로필이 바뀌면 상단 바 등이 새 값을 받도록 getMe 캐시를 비운다 */
+/** 프로필(이름, 사진)이 바뀌었을 때 window에 보내는 이벤트. 상단 바가 듣고 다시 받는다 */
+export const ME_CHANGED_EVENT = 'nineouting:me-changed';
+
+/** 계정 프로필이 바뀌면 상단 바 등이 새 값을 받도록 getMe 캐시를 비우고 알린다 */
 function forgetMe() {
   cached = null;
+  window.dispatchEvent(new Event(ME_CHANGED_EVENT));
 }
 
 /** REQ-114, 115 프로필 (설정 > 프로필). 모든 워크스페이스에 공통이다 */
