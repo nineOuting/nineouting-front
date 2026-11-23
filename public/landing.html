@@ -26,7 +26,8 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .nav.solid .cta{background:var(--p);color:#fff}
 
 /* 히어로: 스크롤하는 동안 화면에 붙어 있음 */
-#hero{position:relative;height:310vh}
+/* 스크롤 구간 183.25vh: 말풍선 → 로고 사이(G)를 1000 줄인 만큼만 빼서 다른 장면의 스크롤 양은 그대로 (2026-11-23, 원래 310vh) */
+#hero{position:relative;height:283.25vh}
 #heroIn{position:sticky;top:0;height:100vh;min-height:600px;overflow:hidden;background:#fff;user-select:none}
 #stage{position:absolute;left:0;top:0;width:1440px;height:1220px;transform-origin:0 0}
 .layer{position:absolute;left:0;top:0;width:1440px;height:1220px;pointer-events:none}
@@ -422,8 +423,8 @@ body.flip{background:#fff}
   <div id="stage">
     <svg class="layer" viewBox="0 0 1440 1220">
       <defs><linearGradient id="grad" x1="0" y1="0" x2=".8" y2="1"><stop offset=".55" stop-color="#361AD5"/><stop offset="1" stop-color="#211084"/></linearGradient></defs>
-      <ellipse id="oval" fill="url(#grad)"/>
-      <ellipse id="ovalSolid" fill="#361AD5" opacity="0"/>
+      <path id="oval" fill="url(#grad)"/>
+      <path id="ovalSolid" fill="#361AD5" opacity="0"/>
       <path id="neck" fill="#361AD5"/>
     </svg>
     <div class="layer" id="inside"></div>
@@ -588,7 +589,7 @@ body.flip{background:#fff}
 
   /* ── 타임라인 (스크롤 진행을 ms 단위로 환산) */
   const FREEZE=60, A=120, NARROW=1500, B=1250, DRIP=600, C=1650, D=2300, Etm=C+D, PINCH=300,
-        JIG=Etm+PINCH, F=JIG+700, G=F+2000, END=G+900;
+        JIG=Etm+PINCH, F=JIG+700, G=F+1000, END=G+900;  // G: 말풍선 → 로고 사이를 절반으로 (2026-11-23, 원래 F+2000)
   const HX=708.5, HT=383, HEAD_W=165, TRAVEL=460;
 
   /* ── 뒤 원 (역주행) */
@@ -664,6 +665,73 @@ body.flip{background:#fff}
     pieces=[];
   }
 
+
+  /* ── 타원 + 관을 하나의 매끈한 외곽선으로 만들기
+     A: 그릇 아래가 부드럽게 오므라들며 가는 관으로 이어지는 물방울 모양
+     B: 타원 옆면이 안쪽으로 휘어 들어가며 한 점으로 모이는 깔때기(소용돌이) 모양 */
+  const VARIANT='B'; let FUN=null;
+  function blob(cx,cy,rx,ry,yb,grow,pinch,sx,sy,p){
+    const f=n=>Math.round(n*100)/100;
+    const ellD=(rx>0&&ry>0)?'M'+f(cx-rx)+','+f(cy)+' A'+f(rx)+','+f(ry)+' 0 1 0 '+f(cx+rx)+','+f(cy)+' A'+f(rx)+','+f(ry)+' 0 1 0 '+f(cx-rx)+','+f(cy)+' Z':'';
+    FUN=null; if(grow<=.002) return ellD;
+    const k=Math.max(0,1-pinch);
+    const nb=HT+6+30*Math.max(sy,.15);
+    const top=lerp(yb,HT+10,pinch);
+    const tip=lerp(top,nb,grow);
+    const wHead=Math.max(2,Math.min(HEAD_W*Math.min(sx,1)*.2,30));
+    const tiny=rx<3||ry<3;
+    let th,PRx,PRy,dx,dy;
+    const at=t=>[cx+rx*Math.sin(t),cy+ry*Math.cos(t)];
+    if(VARIANT==='A'){
+      th=(38*Math.PI/180)*Math.min(1,grow*1.2);
+    } else {
+      th=(78*Math.PI/180)*grow;
+    }
+    if(tiny){PRx=cx;PRy=top;dx=0;dy=1;}
+    else{[PRx,PRy]=at(th); const l=Math.hypot(rx*Math.cos(th),ry*Math.sin(th))||1; dx=-rx*Math.cos(th)/l; dy=ry*Math.sin(th)/l;}
+    const PLx=2*cx-PRx;
+    const half=Math.max(.5,PRx-cx);
+    let R,L; // 오른쪽 외곽선 조각들, 왼쪽은 좌우 반전
+    if(VARIANT==='A'){
+      const Ld=Math.max(0,tip-PRy);
+      let wn=Math.max(wHead,Math.min(26,Math.max(rx,1)*.06))*k; wn=Math.min(wn,half*.92+.5);
+      const wt=Math.max(.8,Math.min(wn,wHead*.75*k));
+      const Lf=Math.min(Ld*.55,Math.max(rx,1)*.32+24);
+      const ys=PRy+Lf, ch=Math.hypot(HX+wn-PRx,ys-PRy);
+      const c1=[PRx+dx*ch*.42,PRy+dy*ch*.42], c2=[HX+wn,ys-Lf*.55];
+      const nL=tip-ys;
+      R=[['C',c1,c2,[HX+wn,ys]],['C',[HX+wn,ys+nL*.45],[HX+wt,tip-nL*.35],[HX+wt,tip]]];
+      L={w:wt};
+    } else {
+      const tw=Math.max(1.2,wHead*.45)*k;
+      const ch=Math.hypot(HX+tw-PRx,tip-PRy);
+      const c1=[PRx+dx*ch*.42,PRy+dy*ch*.42], c2=[HX+tw+(PRx-HX)*.04,tip-(tip-PRy)*.42];
+      R=[['C',c1,c2,[HX+tw,tip]]];
+      L={w:tw};
+      // 깔때기 안쪽 폭 표 (조각들이 벽 안쪽에 앉도록)
+      FUN=[]; for(let i=0;i<=40;i++){const t=i/40,u=1-t;
+        FUN.push([u*u*u*PRy+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*tip, u*u*u*PRx+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*(HX+tw)-cx]);}
+    }
+    const mx=pt=>[2*cx-pt[0]+(HX-cx)*2-(HX-cx)*2,pt[1]];
+    const mir=pt=>[2*HX-pt[0],pt[1]];
+    // 오른쪽: 접점 → 관 끝 / 바닥 둥글게 / 왼쪽: 관 끝 → 접점 (거꾸로)
+    let d='M'+f(PLx)+','+f(PRy);
+    if(!tiny) d+=' A'+f(rx)+','+f(ry)+' 0 1 1 '+f(PRx)+','+f(PRy);
+    else d+=' L'+f(PRx)+','+f(PRy);
+    R.forEach(c=>{d+=' C'+f(c[1][0])+','+f(c[1][1])+' '+f(c[2][0])+','+f(c[2][1])+' '+f(c[3][0])+','+f(c[3][1]);});
+    d+=' A'+f(L.w)+','+f(L.w)+' 0 0 1 '+f(HX-L.w)+','+f(tip);
+    // 왼쪽 조각: 오른쪽을 뒤집어 역순으로
+    const segs=[[PRx,PRy]].concat(R.map(c=>c[3]));
+    for(let i=R.length-1;i>=0;i--){
+      const c=R[i], a=c[2], b=c[1], e=segs[i];
+      // 왼쪽 접점은 타원 중심(cx) 기준으로, 관 쪽은 HX 기준으로 뒤집음
+      const flip=(pt,j)=>j===0&&i===0?[2*cx-pt[0],pt[1]]:mir(pt);
+      const e2=i===0?[PLx,PRy]:mir(e);
+      const b2=i===0?[2*cx-b[0],b[1]]:mir(b);
+      d+=' C'+f(mir(a)[0])+','+f(a[1])+' '+f(b2[0])+','+f(b2[1])+' '+f(e2[0])+','+f(e2[1]);
+    }
+    return d+' Z';
+  }
   /* ── 장면 그리기 */
   function render(T){
     place(T);
@@ -679,7 +747,6 @@ body.flip{background:#fff}
     const yb=lerp(bottom,HT-40,Math.pow(p,1.2));
     rx*=ovalScale; ry*=ovalScale;
     const cy=yb-ry;
-    [oval,ovalS].forEach(o=>{o.setAttribute('cx',cx);o.setAttribute('cy',cy);o.setAttribute('rx',Math.max(0,rx));o.setAttribute('ry',Math.max(0,ry));});
     ovalS.setAttribute('opacity',seg(T,700,600));
     inside.style.clipPath='ellipse('+Math.max(0,rx)+'px '+Math.max(0,ry)+'px at '+cx+'px '+cy+'px)';
 
@@ -702,19 +769,12 @@ body.flip{background:#fff}
     seed.setAttribute('cx',HX+1); seed.setAttribute('cy',HT+69); seed.setAttribute('rx',40); seed.setAttribute('ry',26);
     seed.setAttribute('opacity',T<B?0:1-clamp((s-.45)/.15));
 
-    // ── 관
-    if(T>=B && qn<.9){
-      const neckTop=lerp(yb,HT+10,qn), L=Math.max(1,HT-neckTop);
-      let wt=Math.min((40+60*(1-p))*g, Math.max(rx,1)*.7+(p<.05?999:0))*(1-qn); const wb=Math.max(2,Math.min(HEAD_W*Math.min(sx,1)*.2,30)), top=neckTop-28*(1-qn), nb=HT+6+30*Math.max(sy,.15);
-      if(T>=C) wt=Math.max(wt,wb);
-      neck.setAttribute('d','M'+(cx-wt)+','+top+
-        ' C'+(cx-wt*.55)+','+(neckTop+L*.35)+' '+(HX-wb)+','+(HT-L*.45)+' '+(HX-wb)+','+nb+
-        ' L'+(HX+wb)+','+nb+
-        ' C'+(HX+wb)+','+(HT-L*.45)+' '+(cx+wt*.55)+','+(neckTop+L*.35)+' '+(cx+wt)+','+top+
-        ' A'+wt+','+(wt*.9*(1-qn)+.1)+' 0 0 0 '+(cx-wt)+','+top+' Z');
-    } else neck.setAttribute('d','');
+    // ── 관: 타원과 관을 끊김 없는 한 덩어리 모양으로 그림 (버전 B)
     const ell=(x,y,a,b)=>a<=0||b<=0?'':'M'+(x-a)+','+y+' A'+a+','+b+' 0 1 0 '+(x+a)+','+y+' A'+a+','+b+' 0 1 0 '+(x-a)+','+y+' Z ';
-    const shape=ell(cx,cy,rx,ry)+(neck.getAttribute('d')||'')+' '+ell(HX,HT+67*sy,82*sx,72*sy);
+    const blobD=blob(cx,cy,Math.max(0,rx),Math.max(0,ry),yb,T>=B&&qn<.98?g:0,qn,sx,sy,p);
+    oval.setAttribute('d',blobD); ovalS.setAttribute('d',blobD); neck.setAttribute('d','');
+    if(VARIANT==='B'&&FUN&&blobD) inside.style.clipPath="path('"+blobD+"')";
+    const shape=blobD+' '+ell(HX,HT+67*sy,82*sx,72*sy);
     travel.style.clipPath=shape.trim()?"path('"+shape+"')":'none';
 
     // ── 뒤 원: 반대로 위로
@@ -730,7 +790,11 @@ body.flip{background:#fff}
     pieces.forEach(o=>{
       // 그릇 모양 자리 (지금 타원 기준)
       const fu=o.u*.68, bx=cx+fu*(ko.w/2), by=(ko.y+ko.h/2)+(ko.h/2)*Math.sqrt(1-fu*fu)*(.93-o.v*.3)-30;
-      let x=lerp(o.x,bx,bw), y=lerp(o.y,by,bw), sc=lerp(1/S,.72,bw), rot=o.rot+o.spin*Math.sin(bw*Math.PI)-o.rot*.6*bw;
+      let by2=by;
+      if(FUN&&VARIANT==='B'){const need=Math.abs(bx-cx)+o.w*.36+18; let yy=FUN[0][0];
+        for(const r of FUN){if(r[1]>=need)yy=r[0]; else break;}
+        by2=Math.min(by,yy-14-o.v*46);}
+      let x=lerp(o.x,bx,bw), y=lerp(o.y,by2,bw), sc=lerp(1/S,.72,bw), rot=o.rot+o.spin*Math.sin(bw*Math.PI)-o.rot*.6*bw;
       if(T>=C){const fx=shrink*(1-q); x=cx+(x-cx)*fx; y=yb-(bottom-y)*fx; sc*=Math.max(.25,Math.pow(fx,.7));}
       if(T>=o.start){
         if(o.el.parentNode!==travel)travel.appendChild(o.el);
