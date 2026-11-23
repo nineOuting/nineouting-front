@@ -8,10 +8,11 @@ import {
   type MeetingMaterial,
 } from '../../api/meeting';
 import closeIcon from '../../assets/icons/close-sm.svg';
-import fileIcon from '../../assets/icons/minutes-doc.svg';
-import tableIcon from '../../assets/icons/rail-table.svg';
+// 디자인 MaterialItem PdfIcon: 파일 형식과 상관없이 모든 자료에 같은 아이콘
+import fileIcon from '../../assets/icons/pdf.svg';
 import retryIcon from '../../assets/icons/refresh.svg';
-import uploadIcon from '../../assets/icons/upload-file.svg';
+// 디자인 06 UploadMaterialsModal UploadIcon: 위쪽 화살표 + 막대 (양식 올리기의 upload-file.svg와 다름)
+import uploadIcon from '../../assets/icons/upload.svg';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
@@ -24,7 +25,6 @@ const UPLOAD_ICON_SIZE = 32;
 // REQ-067 50MB 이하 파일만 (MSG-067). 서버도 다시 확인한다
 const MAX_MATERIAL_BYTES = 50 * 1024 * 1024;
 const SEARCH_STATUS_POLL_MS = 5000;
-const SHEET_EXTENSIONS = /\.(xlsx?|csv)$/i;
 
 /**
  * REQ-187 검색 상태 (MSG-078~080, 디자인 06 상태 모음 "사전 자료 AI 검색 상태").
@@ -203,7 +203,7 @@ export default function MeetingMaterials({
             return (
               <li key={material.materialId} className={styles.item}>
                 <Icon
-                  src={SHEET_EXTENSIONS.test(material.fileName) ? tableIcon : fileIcon}
+                  src={fileIcon}
                   size={ICON_SIZE}
                   className={styles.fileIcon}
                 />
@@ -266,7 +266,7 @@ export default function MeetingMaterials({
                 return (
                   <li key={upload.key} className={styles.uploadItem}>
                     <Icon
-                      src={SHEET_EXTENSIONS.test(upload.file.name) ? tableIcon : fileIcon}
+                      src={fileIcon}
                       size={ICON_SIZE}
                       className={styles.fileIcon}
                     />
