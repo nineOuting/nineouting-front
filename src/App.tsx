@@ -20,6 +20,7 @@ import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
 import TemplateEditorPage from './pages/template/TemplateEditorPage';
 import TemplateListPage from './pages/template/TemplateListPage';
 import { settingsPath } from './pages/settings/useSettingsModal';
+import ChannelLauncher from './components/ChannelLauncher';
 import TooltipLayer from './components/TooltipLayer';
 import InvitationPage from './pages/workspace/InvitationPage';
 import InviteLinkPage from './pages/workspace/InviteLinkPage';
@@ -34,6 +35,7 @@ function RootLayout() {
     <>
       <TooltipLayer />
       <Outlet />
+      <ChannelLauncher />
     </>
   );
 }
