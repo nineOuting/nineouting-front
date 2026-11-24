@@ -12,7 +12,7 @@
   flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-2);
+  gap: var(--spacing-6);
   min-height: 0;
   padding: var(--spacing-8) var(--spacing-6);
   overflow: auto;
@@ -22,16 +22,13 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  justify-content: space-between;
   height: 48px;
   padding: 0 var(--spacing-6);
   background: var(--bg-surface);
   border-top: var(--border-width-default) solid var(--border-default);
 }
 
-.tools,
-.zoom,
-.pager {
+.zoom {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
@@ -90,6 +87,21 @@
   font-size: 9px;
   color: var(--grey-60);
   text-align: center;
+}
+
+/* 피그마 PageBlock: 쪽 이름표와 종이 한 장 (QA 73 쪽마다 하나) */
+.pageBlock {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* 첫 쪽에만 있는 양식 이름, 회의 기본 정보 */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* 피그마 프론트 TemplateEditorPage: 종이 위 "1 페이지 양식 이름" */
@@ -170,43 +182,71 @@
   list-style: none;
 }
 
-/* 피그마 프론트 TemplateEditorPage: 섹션은 테두리 없이, 고른 섹션만 연한 보라 테두리와 바탕. 손잡이는 마우스를 올리거나 고르면 보인다 */
+/* 피그마 DocSection: 섹션은 테두리 없이, 고른 섹션만 연한 파랑 바탕과 1.5px 테두리 (QA 66).
+   손잡이는 테두리 바깥 왼쪽에 있고 마우스를 올리거나 고르면 보인다 (QA 69) */
 .row {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 8px 8px 8px 0;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  position: relative;
+  padding: 8px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+}
+
+/* 손잡이는 섹션 바깥에 있어 그쪽으로 마우스를 옮겨도 섹션에 올린 것으로 치게 왼쪽 빈 곳까지 잡는다 */
+.row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -24px;
+  width: 24px;
 }
 
 .selectedRow {
-  background: color-mix(in srgb, var(--primary-subtle) 40%, transparent);
-  border-color: var(--interactive-selected-border);
+  background: var(--interactive-selected);
+  border-color: var(--border-selected);
 }
 
 .dragging {
-  opacity: 0.4;
+  z-index: 2;
+  box-shadow: var(--shadow-md);
+  cursor: grabbing;
+}
+
+/* 끄는 섹션이 다른 섹션 위를 지나가도 내용이 겹쳐 보이지 않게 */
+.dragging:not(.selectedRow) {
+  background: var(--color-white);
+}
+
+/* 끄는 동안 다른 섹션은 부드럽게 비켜 준다 */
+.makingRoom {
+  transition: transform 150ms ease-out;
+}
+
+/* 고른 섹션의 파란 바탕은 표 뒤에만 깔고, 표 칸은 종이처럼 하얗게 둔다 */
+.selectedRow table {
+  background: var(--color-white);
 }
 
 .handle {
+  position: absolute;
+  top: 10px;
+  left: -20px;
   display: flex;
-  flex-shrink: 0;
-  padding: 2px 0;
   color: var(--primary-default);
   cursor: grab;
+  touch-action: none;
   visibility: hidden;
 }
 
 .row:hover .handle,
 .selectedRow .handle,
+.dragging .handle,
 .handle:focus-visible {
   visibility: visible;
 }
 
 .card {
   display: flex;
-  flex: 1;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
@@ -260,9 +300,3 @@
   width: 100%;
 }
 
-
-.pageLabel {
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
-  color: var(--text-secondary);
-}
