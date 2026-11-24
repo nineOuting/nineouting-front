@@ -101,8 +101,9 @@ export default function MinutesDocument({
           <div
             ref={paperRef}
             className={styles.paper}
-            // 피그마 다크 모드처럼 종이도 테마를 따른다. 양식에서 고른 글자색, 표 머리 색은 다크에서 index.css가 토큰 색으로 바꾼다
+            // 다크 모드에서도 회의록 종이(A4)는 흰 바탕으로 둔다 (2026-11-24 요청). 종이 안에만 라이트 색 토큰을 다시 깐다
             data-paper
+            data-theme="light"
             style={{
               zoom: zoom / 100,
               gap: layout.sectionGap,
