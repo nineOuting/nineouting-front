@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { listAllFolders, listMyWorkspaces } from '../api/workspace';
+import { onSignOut } from '../auth/tokenStore';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/nav-archive.svg';
@@ -34,6 +35,23 @@ interface SidebarProps {
 
 type FolderItem = Pick<FolderSummary, 'folderId' | 'name' | 'color'>;
 
+/**
+ * 화면마다 AppLayout을 새로 그려서 사이드바도 화면을 옮길 때마다 새로 만들어진다. 그때 빈 목록 → 접힌 목록 → 펼친 목록으로
+ * 세 번 바뀌며 번쩍이지 않게, 받은 워크스페이스·폴더 목록과 펼친 상태를 앱이 켜져 있는 동안 기억한다.
+ * 새로 그릴 때는 기억한 것으로 바로 그리고, 서버에서는 뒤에서 다시 받아 바뀐 것만 반영한다. 로그아웃하면 지운다 (SCRUM-410)
+ */
+const sidebarCache: { workspaces: WorkspaceSummary[] | null; folders: Record<number, FolderItem[]>; expandedIds: number[] } = {
+  workspaces: null,
+  folders: {},
+  expandedIds: [],
+};
+
+onSignOut(() => {
+  sidebarCache.workspaces = null;
+  sidebarCache.folders = {};
+  sidebarCache.expandedIds = [];
+});
+
 const menuClass = ({ isActive }: { isActive: boolean }) => [styles.item, isActive ? styles.selected : ''].join(' ');
 const subMenuClass = ({ isActive }: { isActive: boolean }) => [styles.subItem, isActive ? styles.selected : ''].join(' ');
 
@@ -61,24 +79,34 @@ function MenuLink({ to, icon, children }: { to: string | undefined; icon: string
 /** REQ-001 왼쪽 메뉴 (nep!nep! 디자인 Sidebar). 워크스페이스를 펼치면 그 안의 프로젝트 폴더가 보인다 */
 export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
   const settings = useSettingsModal();
-  const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
-  const [expandedIds, setExpandedIds] = useState<number[]>(workspaceId ? [workspaceId] : []);
-  const [folders, setFolders] = useState<Record<number, FolderItem[]>>({});
+  const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>(() => sidebarCache.workspaces ?? []);
+  const [expandedIds, setExpandedIds] = useState<number[]>(() =>
+    workspaceId && !sidebarCache.expandedIds.includes(workspaceId) ? [...sidebarCache.expandedIds, workspaceId] : sidebarCache.expandedIds,
+  );
+  const [folders, setFolders] = useState<Record<number, FolderItem[]>>(() => sidebarCache.folders);
   // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
   // const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
     listMyWorkspaces()
-      .then((items) => isCurrent && setWorkspaces(items))
+      .then((items) => {
+        sidebarCache.workspaces = items;
+        if (isCurrent) {
+          setWorkspaces(items);
+        }
+      })
       .catch(() => undefined);
     return () => {
       isCurrent = false;
     };
   }, []);
 
-  // 펼친 워크스페이스의 폴더는 한 번만 받는다
+  // 펼친 워크스페이스의 폴더는 사이드바가 새로 만들어질 때마다 한 번씩 다시 받는다 (기억한 목록은 먼저 보여 준다)
   const requestedRef = useRef(new Set<number>());
+  useEffect(() => {
+    sidebarCache.expandedIds = expandedIds;
+  }, [expandedIds]);
   useEffect(() => {
     expandedIds
       .filter((id) => !requestedRef.current.has(id))
@@ -86,9 +114,11 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
         requestedRef.current.add(id);
         // 들어갈 수 없는 폴더도 보인다. 누르면 폴더 화면이 안내한다 (2026-11-24 QA)
         listAllFolders(id)
-          .then((items) =>
-            setFolders((prev) => ({ ...prev, [id]: items.map(({ folderId, name, color }) => ({ folderId, name, color })) })),
-          )
+          .then((items) => {
+            const next = items.map(({ folderId, name, color }) => ({ folderId, name, color }));
+            sidebarCache.folders = { ...sidebarCache.folders, [id]: next };
+            setFolders((prev) => ({ ...prev, [id]: next }));
+          })
           .catch(() => requestedRef.current.delete(id));
       });
   }, [expandedIds]);
