@@ -217,23 +217,24 @@ body {
 }
 
 /*
+ * 다크 모드에서 어두운 종이(양식 편집 미리보기 등)에서만. 회의록 작성 종이는 다크에서도 흰 바탕이라 제외한다 (data-theme="light").
  * 피그마 다크 모드에서는 회의록 종이도 어둡다. 양식에서 고른 글자색(기본 #383838)과 표 머리 색(기본 #f4f4f4)은
  * 밝은 종이 기준이라, 다크에서는 토큰 색으로 바꿔 보여 준다 (내려받는 PDF, Word는 그대로)
  */
-[data-theme='dark'] [data-paper] [style*='color'] {
+[data-theme='dark'] [data-paper]:not([data-theme='light']) [style*='color'] {
   color: var(--text-primary) !important;
 }
 
-[data-theme='dark'] [data-paper] tr[style] {
+[data-theme='dark'] [data-paper]:not([data-theme='light']) tr[style] {
   background: var(--bg-surface-muted) !important;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) [data-paper] [style*='color'] {
+  :root:not([data-theme='light']) [data-paper]:not([data-theme='light']) [style*='color'] {
     color: var(--text-primary) !important;
   }
 
-  :root:not([data-theme='light']) [data-paper] tr[style] {
+  :root:not([data-theme='light']) [data-paper]:not([data-theme='light']) tr[style] {
     background: var(--bg-surface-muted) !important;
   }
 }
