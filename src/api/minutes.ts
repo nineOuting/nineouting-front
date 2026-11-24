@@ -279,6 +279,48 @@ export async function uploadTemplateBackground(file: File) {
   return imageKey;
 }
 
+/** REQ-195 양식 가져오기로 받을 수 있는 파일 (형식은 서버와 AI가 파일 내용으로 다시 확인한다) */
+export const TEMPLATE_IMPORT_TYPES: Record<string, string> = {
+  pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+export const TEMPLATE_IMPORT_MAX_BYTES = 20 * 1024 * 1024;
+
+export interface TemplateImportStatus {
+  importId: number;
+  status: 'PENDING' | 'SUCCEEDED' | 'FAILED';
+  /** SUCCEEDED일 때 만든 양식 */
+  templateId: number | null;
+  /** FAILED일 때 이유 코드와 화면 문구 (문구는 임시, 기획에서 정하는 중) */
+  code: string | null;
+  message: string | null;
+}
+
+/** 파일 이름 끝으로 형식을 정한다 (브라우저마다 docx의 file.type이 비어 있을 수 있다). 받을 수 없으면 null */
+export function templateImportType(file: File) {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  return TEMPLATE_IMPORT_TYPES[extension] ?? null;
+}
+
+/**
+ * REQ-195 양식 파일(PDF, Word)을 올리고 가져오기를 접수한다. 분석은 서버가 뒤에서 하고(최대 약 2분),
+ * 결과는 getTemplateImport로 다시 묻는다
+ */
+export async function startTemplateImport(file: File, name: string) {
+  const contentType = templateImportType(file) ?? file.type;
+  const upload = await request<{ fileKey: string; uploadUrl: string; contentType: string }>(
+    'POST',
+    '/api/minutes-templates/import-upload-url',
+    { contentType, size: file.size },
+  );
+  await putToStorage(upload.uploadUrl, file, upload.contentType);
+  return request<TemplateImportStatus>('POST', '/api/minutes-templates/import', { fileKey: upload.fileKey, name });
+}
+
+export function getTemplateImport(importId: number) {
+  return request<TemplateImportStatus>('GET', `/api/minutes-templates/import/${importId}`);
+}
+
 export function deleteMinutesTemplate(templateId: number) {
   return request('DELETE', `/api/minutes-templates/${templateId}`);
 }

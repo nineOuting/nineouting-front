@@ -291,7 +291,20 @@ export default function TemplateListPage() {
           onCancel={() => setDeleting(null)}
         />
       )}
-      {isImportOpen && <TemplateImportModal onClose={() => setIsImportOpen(false)} />}
+      {isImportOpen && (
+        <TemplateImportModal
+          onClose={() => setIsImportOpen(false)}
+          // REQ-195 가져오면 바로 새 양식으로 저장된다. 편집 화면으로 가지 않고 목록을 새로 고친다 (2026-11-24 결정)
+          onImported={(_templateId, name) => {
+            setIsImportOpen(false);
+            // 임시 문구 (2026-11-24, 기획에서 정하는 중)
+            setToast({ text: `'${name}' 양식을 가져왔어요`, variant: 'success' });
+            listMinutesTemplates()
+              .then(setTemplates)
+              .catch((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }));
+          }}
+        />
+      )}
     </AppLayout>
   );
 }
