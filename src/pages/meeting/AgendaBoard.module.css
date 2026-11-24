@@ -207,6 +207,66 @@
   border-radius: var(--radius-lg);
 }
 
+/* 안건 끌기 (디자인 09 TemplateEditorPage_Dragging을 따름): 원래 자리는 흐리게 */
+.dragSource {
+  opacity: 0.4;
+}
+
+/* 끌기 이미지: 떠 있는 흰 카드, 파란 테두리, 그림자. 화면 밖에 잠깐 두고 브라우저가 찍는다 */
+.dragImage {
+  position: fixed;
+  top: -10000px;
+  left: 0;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-focus);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+
+/* 놓일 자리: 안건 사이(12px) 가운데에 파란 줄과 왼쪽 점 */
+.dropBefore,
+.dropAfter {
+  position: relative;
+}
+
+.dropBefore::before,
+.dropAfter::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--border-focus);
+  content: '';
+}
+
+.dropBefore::before {
+  top: calc(-1 * var(--spacing-2) + 1px);
+}
+
+.dropAfter::after {
+  bottom: calc(-1 * var(--spacing-2) + 1px);
+}
+
+.dropBefore > .handle::before,
+.dropAfter > .handle::before {
+  position: absolute;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-focus);
+  border-radius: var(--radius-full);
+  content: '';
+}
+
+.dropBefore > .handle::before {
+  top: calc(-1 * var(--spacing-2) - 2px);
+}
+
+.dropAfter > .handle::before {
+  bottom: calc(-1 * var(--spacing-2) - 2px);
+}
+
 /* 디자인 Body: 제목 칸, 넘어옴 표시, 결정할 사항 사이 8px */
 .editBody {
   display: flex;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import addIcon from '../../assets/icons/add-sm.svg';
 import emptyCharacter from '../../assets/characters/empty.svg';
 import archiveIcon from '../../assets/icons/archive.svg';
@@ -106,6 +106,8 @@ export default function AgendaBoard({
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [focusId, setFocusId] = useState<string>();
   const dragRef = useRef<DragTarget | null>(null);
+  // 안건을 끄는 동안: 끌고 있는 안건, 지금 마우스 아래 안건 (놓일 자리 표시용)
+  const [agendaDrag, setAgendaDrag] = useState<{ from: number; over: number | null } | null>(null);
   const isEditing = draft !== null;
   useEffect(() => {
     onEditingChange?.(isEditing);
@@ -182,9 +184,38 @@ export default function AgendaBoard({
     });
   };
 
+  /**
+   * 디자인 09 TemplateEditorPage_Dragging처럼 안건 줄 전체를 떠 있는 카드로 끌고 다닌다 (SCRUM-364).
+   * 브라우저 끌기 이미지는 화면에 있는 요소를 찍어 쓰므로, 줄을 복제해 카드 모양을 입힌 뒤 화면 밖에 잠깐 두고 찍는다.
+   * 투명도는 브라우저가 정한다
+   */
+  const startAgendaDrag = (event: DragEvent<HTMLElement>, index: number) => {
+    dragRef.current = { kind: 'agenda', index };
+    setAgendaDrag({ from: index, over: null });
+    const row = event.currentTarget.closest('li');
+    if (!row) {
+      return;
+    }
+    const rect = row.getBoundingClientRect();
+    const ghost = row.cloneNode(true) as HTMLElement;
+    ghost.classList.add(styles.dragImage);
+    ghost.style.width = `${rect.width}px`;
+    document.body.appendChild(ghost);
+    event.dataTransfer.effectAllowed = 'move';
+    // 파이어폭스는 데이터가 있어야 끌기를 시작한다
+    event.dataTransfer.setData('text/plain', '');
+    event.dataTransfer.setDragImage(ghost, event.clientX - rect.left, event.clientY - rect.top);
+    window.setTimeout(() => ghost.remove(), 0);
+  };
+
+  const endAgendaDrag = () => {
+    setAgendaDrag(null);
+  };
+
   const handleDrop = (target: DragTarget) => {
     const source = dragRef.current;
     dragRef.current = null;
+    setAgendaDrag(null);
     if (!source || source.kind !== target.kind) {
       return;
     }
@@ -293,20 +324,29 @@ export default function AgendaBoard({
           <ol className={styles.editList}>
             {draft.map((agenda, agendaIndex) => {
               const agendaErrors = errors[agenda.id];
+              // 놓일 자리: 위로 옮기면 대상 안건 위, 아래로 옮기면 대상 안건 아래 (move가 대상 자리로 넣는다)
+              const isDropTarget = agendaDrag?.over === agendaIndex && agendaDrag.from !== agendaIndex;
+              const dropClass = isDropTarget ? (agendaDrag.from > agendaIndex ? styles.dropBefore : styles.dropAfter) : '';
               return (
                 <li
                   key={agenda.id}
-                  className={styles.editItem}
-                  onDragOver={(event) => event.preventDefault()}
+                  className={[styles.editItem, agendaDrag?.from === agendaIndex ? styles.dragSource : '', dropClass]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    if (agendaDrag && agendaDrag.over !== agendaIndex) {
+                      setAgendaDrag({ ...agendaDrag, over: agendaIndex });
+                    }
+                  }}
                   onDrop={() => handleDrop({ kind: 'agenda', index: agendaIndex })}
                 >
                   <span
                     className={styles.handle}
                     draggable
                     aria-label="끌어서 안건 순서 바꾸기"
-                    onDragStart={() => {
-                      dragRef.current = { kind: 'agenda', index: agendaIndex };
-                    }}
+                    onDragStart={(event) => startAgendaDrag(event, agendaIndex)}
+                    onDragEnd={endAgendaDrag}
                   >
                     <Icon src={dragIcon} size={ICON_SIZE} />
                   </span>
@@ -352,6 +392,10 @@ export default function AgendaBoard({
                           className={styles.decisionRow}
                           onDragOver={(event) => event.preventDefault()}
                           onDrop={(event) => {
+                            // 안건을 끌어 결정할 사항 줄 위에 놓으면 안건 줄(li)이 받게 둔다
+                            if (dragRef.current?.kind !== 'decision') {
+                              return;
+                            }
                             event.stopPropagation();
                             handleDrop({ kind: 'decision', agendaIndex, index });
                           }}
