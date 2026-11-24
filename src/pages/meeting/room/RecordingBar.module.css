@@ -96,11 +96,27 @@
   background: var(--rb-button-hover);
 }
 
+/* 끌어 옮기는 손잡이 (SCRUM-365). 터치로 끌 때 화면이 같이 움직이지 않게 touch-action을 끈다 */
 .handle {
   display: flex;
   margin-left: calc(-1 * var(--spacing-2));
+  border-radius: var(--radius-sm);
   color: var(--rb-subtle);
   cursor: grab;
+  touch-action: none;
+}
+
+.handle:hover,
+.handle:focus-visible {
+  color: var(--rb-muted);
+}
+
+.dragging {
+  user-select: none;
+}
+
+.dragging .handle {
+  cursor: grabbing;
 }
 
 .resumeButton {
