@@ -121,3 +121,20 @@
   background: var(--primary-default);
   color: var(--text-on-primary);
 }
+
+/* minDate보다 앞선 날: 흐리게, 누를 수 없음 (SCRUM-410) */
+.past,
+.past:hover {
+  background: none;
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.nav:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.nav:disabled:hover {
+  background: none;
+}

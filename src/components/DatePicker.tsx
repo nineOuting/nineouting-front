@@ -17,6 +17,8 @@ interface DatePickerProps {
   placeholder?: string;
   label?: string;
   error?: boolean;
+  /** 이 날(2026-10-20)보다 앞선 날은 고를 수 없다. 회의 생성은 오늘 (SCRUM-410) */
+  minDate?: string;
 }
 
 /** 2026-10-20 → 2026.10.20(화) */
@@ -26,7 +28,7 @@ function display(isoDate: string) {
 }
 
 /** 디자인 Input + 달력 Popover: 칸을 누르면 아래에 한 달 달력이 열리고, 날을 누르면 닫힌다 */
-export default function DatePicker({ value, onChange, placeholder = '날짜 선택', label, error }: DatePickerProps) {
+export default function DatePicker({ value, onChange, placeholder = '날짜 선택', label, error, minDate }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   // 창 안 스크롤 영역에 잘리지 않게 달력은 화면 기준(fixed)으로 칸 바로 아래에 띄운다
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties>();
@@ -67,6 +69,11 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
       return { year: next.getFullYear(), month: next.getMonth() };
     });
 
+  // 고를 수 있는 첫 달이면 이전 달로 가지 않는다
+  const minMonth = minDate ? fromIsoDate(minDate) : null;
+  const isFirstMonth = Boolean(minMonth && month.year === minMonth.getFullYear() && month.month <= minMonth.getMonth()) ||
+    Boolean(minMonth && month.year < minMonth.getFullYear());
+
   return (
     <div ref={rootRef} className={styles.root}>
       <button
@@ -90,7 +97,7 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
       {isOpen && (
         <div className={styles.popover} style={popoverStyle} role="dialog" aria-label="날짜 고르기">
           <div className={styles.head}>
-            <button type="button" className={styles.nav} aria-label="이전 달" onClick={() => shiftMonth(-1)}>
+            <button type="button" className={styles.nav} aria-label="이전 달" disabled={isFirstMonth} onClick={() => shiftMonth(-1)}>
               <Icon src={chevronLeftIcon} size={ICON_SIZE} />
             </button>
             <span className={styles.month}>
@@ -108,6 +115,7 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
             ))}
             {monthGridDays(month.year, month.month).map((day) => {
               const iso = toIsoDate(day);
+              const isPast = Boolean(minDate && iso < minDate);
               return (
                 <button
                   key={iso}
@@ -117,11 +125,13 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
                     day.getMonth() !== month.month ? styles.outside : '',
                     iso === today ? styles.today : '',
                     iso === value ? styles.selected : '',
+                    isPast ? styles.past : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                   aria-pressed={iso === value}
                   aria-label={display(iso)}
+                  disabled={isPast}
                   onClick={() => {
                     onChange(iso);
                     setIsOpen(false);
