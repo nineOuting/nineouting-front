@@ -16,6 +16,7 @@ import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate } from '../../types/template';
+import TemplatePaper, { PAPER_WIDTH } from '../meeting/TemplatePaper';
 import ActionMenu from '../workspace/ActionMenu';
 import TemplateImportModal from './TemplateImportModal';
 import styles from './TemplateListPage.module.css';
@@ -24,6 +25,8 @@ const BUTTON_ICON_SIZE = 16;
 const ICON_SIZE = 20;
 const SAVED_MESSAGE = '양식을 저장했어요.';
 const NAME_MAX_LENGTH = 100;
+// 카드 미리보기 종이 너비. 실제 종이(456px)를 이만큼 줄여 첫 쪽 윗부분을 보여 준다
+const CARD_PAGE_WIDTH = 140;
 
 type SortOrder = 'recent' | 'name';
 
@@ -67,11 +70,15 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
         aria-label={`${template.name} ${isReadOnly ? '복제해서 만들기' : '수정'}`}
         onClick={isReadOnly ? onDuplicate : onEdit}
       >
-        <span className={styles.paper} aria-hidden="true">
-          <span className={styles.paperTitle} />
-          {template.items.slice(0, 6).map((item, index) => (
-            <span key={`${item.title}-${index}`} className={styles.paperLine} />
-          ))}
+        {/* 실제 양식(항목, 글자 크기와 색, 여백, 머리말, 배경)을 줄여 보여 준다. 회의 대기 양식 카드와 같은 종이 */}
+        <span className={styles.cardPage} aria-hidden="true">
+          <TemplatePaper
+            name={template.name}
+            items={template.items}
+            layout={template.layout}
+            scale={CARD_PAGE_WIDTH / PAPER_WIDTH}
+            tiny
+          />
         </span>
       </button>
       <button
