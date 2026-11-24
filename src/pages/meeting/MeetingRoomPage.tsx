@@ -975,7 +975,6 @@ export default function MeetingRoomPage() {
         isPaused={isPaused}
         isFinished={isFinished}
         onTogglePause={isWriter && isLive ? () => void togglePause() : undefined}
-        onMore={isLive ? () => setIsLeaveOpen(true) : undefined}
       />
 
       {isLeaveOpen && (

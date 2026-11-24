@@ -103,17 +103,6 @@
   cursor: grab;
 }
 
-.more {
-  display: flex;
-  padding: var(--spacing-1);
-  border-radius: var(--radius-full);
-  color: var(--rb-muted);
-}
-
-.more:hover {
-  background: var(--rb-hover);
-}
-
 .resumeButton {
   background: var(--primary-default);
 }

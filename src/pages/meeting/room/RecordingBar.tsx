@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import dragIcon from '../../../assets/icons/drag.svg';
-import moreIcon from '../../../assets/icons/more-vert.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
 import playIcon from '../../../assets/icons/play.svg';
 import Icon from '../../../components/Icon';
@@ -18,8 +17,6 @@ interface RecordingBarProps {
   isFinished: boolean;
   /** 넘기면 회의록 작성자가 일시정지·다시 시작한다 (REQ-081, 084) */
   onTogglePause?: () => void;
-  /** ⋯ 메뉴 (나가기 등) */
-  onMore?: () => void;
 }
 
 /** 멈춘 뒤 몇 분째인지. 멈출 때 새로 그려져 그때부터 센다 */
@@ -37,9 +34,10 @@ function PausedFor() {
 
 /**
  * 디자인 Version02 Live RecordingBar: 화면 아래 가운데 떠 있는 녹음 상태와 경과 시간.
- * 일시정지면 "일시정지 중 · N분째"와 [다시 시작](보라), 예정 시간이 지나면 "+N분 초과"
+ * 일시정지면 "일시정지 중 · N분째"와 [다시 시작](보라), 예정 시간이 지나면 "+N분 초과".
+ * ⋮ 메뉴(나가기 창)는 뺐다. 나가기는 상단 뒤로 가기로 한다 (SCRUM-365)
  */
-export default function RecordingBar({ elapsedSeconds, plannedMinutes, isPaused, isFinished, onTogglePause, onMore }: RecordingBarProps) {
+export default function RecordingBar({ elapsedSeconds, plannedMinutes, isPaused, isFinished, onTogglePause }: RecordingBarProps) {
   const overMinutes = plannedMinutes !== undefined ? Math.floor(elapsedSeconds / 60) - plannedMinutes : 0;
   const state = isFinished ? '회의 종료' : isPaused ? <PausedFor /> : '녹음 중';
 
@@ -64,11 +62,6 @@ export default function RecordingBar({ elapsedSeconds, plannedMinutes, isPaused,
         <span />
         <span />
       </span>
-      {onMore && (
-        <button type="button" className={styles.more} aria-label="녹음 더보기" onClick={onMore}>
-          <Icon src={moreIcon} size={ICON_SIZE} />
-        </button>
-      )}
       {onTogglePause && !isFinished && (
         <>
           <span className={styles.divider} aria-hidden="true" />
