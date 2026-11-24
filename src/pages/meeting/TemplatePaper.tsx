@@ -16,17 +16,19 @@ interface TemplatePaperProps {
   scale: number;
   /** 종이를 이 쪽 수만큼은 채운다. 쪽 넘기기에서 마지막 쪽의 남는 부분도 흰 종이로 보이게 한다 */
   minPages?: number;
+  /** 카드처럼 아주 작게 줄일 때. 글머리 점을 글자 줄 안에 넣는다 */
+  tiny?: boolean;
 }
 
 /**
  * 양식을 실제 회의록 종이처럼 예시 내용으로 채워 보여 준다 (보기만). 회의 대기 양식 카드·상세 보기 (SCRUM-364, 디자인 요청).
  * 양식 편집 미리보기와 같은 설정(여백, 섹션 간격, 정렬, 글자 크기·색, 머리말·꼬리말, 배경)을 따른다
  */
-export default function TemplatePaper({ name, items, layout, scale, minPages = 1 }: TemplatePaperProps) {
+export default function TemplatePaper({ name, items, layout, scale, minPages = 1, tiny = false }: TemplatePaperProps) {
   const align = layout.align.toLowerCase() as 'left' | 'center' | 'right';
   return (
     <div
-      className={styles.paper}
+      className={[styles.paper, tiny ? styles.tiny : ''].filter(Boolean).join(' ')}
       // 다크 모드에서 양식 글자색·표 머리 색을 토큰 색으로 바꾸는 index.css 규칙을 같이 받는다
       data-paper
       aria-label={`${name} 미리보기`}

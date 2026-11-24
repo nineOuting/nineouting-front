@@ -78,6 +78,7 @@ export default function TemplateGalleryModal({
                         items={template.items}
                         layout={template.layout}
                         scale={CARD_PAGE_WIDTH / PAPER_WIDTH}
+                        tiny
                       />
                     </span>
                   ) : (
