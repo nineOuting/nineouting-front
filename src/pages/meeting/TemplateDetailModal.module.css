@@ -17,6 +17,21 @@
   border-radius: var(--radius-md);
 }
 
+/*
+ * 종이 한 쪽이 칸에 꼭 맞고, 좌우 버튼으로 쪽을 넘긴다. 스크롤은 하지 않는다 (SCRUM-364).
+ * 디자인 Preview는 260x340이지만 종이(456x675) 비율과 달라 양옆에 회색이 남아, 높이는 두고 폭을 종이 비율로 줄였다 (디자이너 확인 필요)
+ */
+.previewPaper {
+  width: 230px;
+  align-items: center;
+  padding: 0;
+  overflow: hidden;
+}
+
+.sheet {
+  flex-shrink: 0;
+}
+
 .line {
   height: 8px;
   max-width: 100%;

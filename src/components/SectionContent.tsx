@@ -135,7 +135,8 @@ export default function SectionContent({
   }
   if (settings.recordType === 'LIST') {
     return (
-      <ul className={styles.list} style={style}>
+      // data-list: 아주 작게 줄여 보여 주는 곳(회의 대기 양식 미리보기)이 글머리 점을 직접 그릴 때 찾는 표시
+      <ul className={styles.list} style={style} data-list>
         {items.map((line, index) => (
           <li key={index}>{line}</li>
         ))}

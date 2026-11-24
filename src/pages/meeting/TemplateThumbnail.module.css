@@ -1,0 +1,108 @@
+/* 디자인 Preview Page: 76x100 흰 종이. 넘치는 섹션은 잘려 종이가 이어지는 것처럼 보인다 */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 76px;
+  height: 100px;
+  padding: 8px;
+  overflow: hidden;
+  background: var(--bg-page);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 섹션 정보가 없을 때: 예전 가짜 줄 그대로 (디자인 Preview Line 4px, 사이 6px) */
+.fallback {
+  gap: 6px;
+  padding: 10px 8px;
+}
+
+.fallback .line {
+  height: 4px;
+  border-radius: var(--radius-full);
+}
+
+/* 디자인 TitleLine: 문서 제목 */
+.docTitle {
+  flex-shrink: 0;
+  width: 28px;
+  height: 5px;
+  background: var(--text-primary);
+  border-radius: 2px;
+}
+
+.section {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionTitle {
+  height: 3px;
+  background: var(--text-tertiary);
+  border-radius: 2px;
+}
+
+.lines {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 디자인 Preview Line */
+.line {
+  height: 3px;
+  max-width: 100%;
+  background: var(--border-default);
+  border-radius: 2px;
+}
+
+.infoLine {
+  height: 3px;
+  background: var(--border-strong);
+  border-radius: 2px;
+}
+
+/* 목록형 글머리 */
+.dot {
+  flex-shrink: 0;
+  width: 3px;
+  height: 3px;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+/* 체크리스트형 네모 */
+.box {
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 1px;
+}
+
+/* 표: 칸마다 얇은 테두리, 첫 줄은 머리글 색 */
+.table {
+  display: grid;
+  gap: 1px;
+  padding: 1px;
+  background: var(--border-default);
+}
+
+.cell {
+  height: 4px;
+  background: var(--bg-page);
+}
+
+.headerCell {
+  background: var(--bg-surface-muted);
+}

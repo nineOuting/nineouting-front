@@ -16,7 +16,7 @@ import {
 } from '../../api/meeting';
 import { listMinutesTemplates, setTemplateFavorite } from '../../api/minutes';
 import { getMe } from '../../api/user';
-import { getFolder, listFolderMemberDetails, listFolderMembers } from '../../api/workspace';
+import { getFolder, getWorkspace, listFolderMemberDetails, listFolderMembers } from '../../api/workspace';
 import checkIcon from '../../assets/icons/check-sm.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../../assets/icons/chevron-right-sm.svg';
@@ -36,6 +36,7 @@ import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Meeting, MeetingStatus, Member, MinutesTemplate, PendingAgenda } from '../../types/meeting';
 import { formatMeetingSchedule, formatShortDateTime } from '../../utils/meetingFormat';
 import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
+import { orderTemplates } from '../../utils/templateOrder';
 import ActionMenu from '../workspace/ActionMenu';
 import AgendaBoard from './AgendaBoard';
 import ConsentModal from './ConsentModal';
@@ -116,6 +117,10 @@ export default function MeetingWaitingPage() {
   const [pendingAgendas, setPendingAgendas] = useState<PendingAgenda[]>([]);
   // REQ-123 내가 쓸 수 있는 회의록 양식 (기본 양식 + 내 양식)과 즐겨찾기 표시
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
+  // REQ-199 이 회의 워크스페이스에서 정한 양식. null이면 서비스 기본 양식, undefined면 아직 모름
+  const [workspaceTemplateId, setWorkspaceTemplateId] = useState<number | null>();
+  // 양식 창을 열 때 정한 순서 (양식 ID). 창이 열린 동안 별표를 눌러도 순서는 그대로 둔다
+  const [templateOrder, setTemplateOrder] = useState<number[]>([]);
   const [openMenu, setOpenMenu] = useState<OpenMenu | null>(null);
   const [templateModal, setTemplateModal] = useState<TemplateModalState | null>(null);
   const [isConsentOpen, setIsConsentOpen] = useState(false);
@@ -158,11 +163,27 @@ export default function MeetingWaitingPage() {
       listFolderMemberDetails(loaded.folderId)
         .then((details) => isCurrent && setEmails(Object.fromEntries(details.map(({ userId, email }) => [userId, email]))))
         .catch(() => undefined);
+      // 양식 창 맨 앞에 둘 워크스페이스 양식 (못 불러오면 즐겨찾기 → 나머지 순서만)
+      if (folder) {
+        getWorkspace(folder.workspaceId)
+          .then(({ defaultTemplateId }) => isCurrent && setWorkspaceTemplateId(defaultTemplateId))
+          .catch(() => undefined);
+      }
       setMyId(me?.userId);
       const usable = pendingAgendasFor(pending, loaded.meetingId);
       setFolderMembers(members);
       setPendingAgendas(usable);
-      setTemplates(templateList.map(({ templateId, name, description, favorite }) => ({ templateId, name, description, isFavorite: favorite })));
+      setTemplates(
+        templateList.map(({ templateId, name, description, favorite, isDefault, items, layout }) => ({
+          templateId,
+          name,
+          description,
+          isFavorite: favorite,
+          isDefault,
+          items,
+          layout,
+        })),
+      );
       setMeeting({ ...loaded, agendas: withCarriedOverDates(loaded.agendas, usable) });
     };
     load().catch((error: unknown) => {
@@ -210,6 +231,12 @@ export default function MeetingWaitingPage() {
   const isWriter = meeting.writer?.userId === myId;
   const canStart = isReady && isWriter && !isEditingAgenda;
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
+  // 창을 열 때 정한 순서대로. 별표 상태는 templates에서 바로 읽는다
+  const orderedTemplates = templateOrder.flatMap((id) => templates.filter(({ templateId }) => templateId === id));
+  const openTemplateGallery = () => {
+    setTemplateOrder(orderTemplates(templates, workspaceTemplateId).map(({ templateId }) => templateId));
+    setTemplateModal({ view: 'gallery' });
+  };
 
   /** REQ-064, 122 안건·참석자·회의록 작성자는 바꾸는 즉시 저장한다. 실패하면 되돌린다 */
   /** 남은 안건 휴지통. 폴더의 남은 안건에서 버리고, [되돌리기]로 다시 살린다 */
@@ -554,7 +581,7 @@ export default function MeetingWaitingPage() {
               <button
                 type="button"
                 className={styles.settingRow}
-                onClick={() => setTemplateModal({ view: 'gallery' })}
+                onClick={openTemplateGallery}
               >
                 {/* 디자인 SettingRow: 라벨 "회의록 양식" + 고른 양식 이름 (작성자 줄과 같은 모양) */}
                 <span className={styles.settingLabel}>회의록 양식</span>
@@ -626,7 +653,7 @@ export default function MeetingWaitingPage() {
 
       {templateModal?.view === 'gallery' && (
         <TemplateGalleryModal
-          templates={templates}
+          templates={orderedTemplates}
           selectedId={meeting.templateId}
           onOpenDetail={(index) => setTemplateModal({ view: 'detail', index })}
           onToggleFavorite={(templateId) => void toggleFavorite(templateId)}
@@ -644,9 +671,8 @@ export default function MeetingWaitingPage() {
       )}
       {templateModal?.view === 'detail' && (
         <TemplateDetailModal
-          templates={templates}
+          templates={orderedTemplates}
           index={templateModal.index}
-          onChangeIndex={(index) => setTemplateModal({ view: 'detail', index })}
           onUse={
             canEdit
               ? (templateId) => {

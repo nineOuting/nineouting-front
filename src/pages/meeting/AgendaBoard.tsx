@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import addIcon from '../../assets/icons/add-sm.svg';
 import emptyCharacter from '../../assets/characters/empty.svg';
 import archiveIcon from '../../assets/icons/archive.svg';
@@ -15,6 +15,8 @@ import styles from './AgendaBoard.module.css';
 const EMPTY_CHARACTER_SIZE = 64;
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
+// 디자인 RemoveDecision: 16px 칸에 12px 아이콘
+const REMOVE_ICON_SIZE = 12;
 // meeting-service AgendaRequest 제한과 같다
 const TITLE_MAX_LENGTH = 100;
 const DECISION_MAX_LENGTH = 200;
@@ -104,6 +106,8 @@ export default function AgendaBoard({
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const [focusId, setFocusId] = useState<string>();
   const dragRef = useRef<DragTarget | null>(null);
+  // 안건을 끄는 동안: 끌고 있는 안건, 지금 마우스 아래 안건 (놓일 자리 표시용)
+  const [agendaDrag, setAgendaDrag] = useState<{ from: number; over: number | null } | null>(null);
   const isEditing = draft !== null;
   useEffect(() => {
     onEditingChange?.(isEditing);
@@ -131,12 +135,13 @@ export default function AgendaBoard({
 
   const startEditing = () => {
     setErrors({});
-    setDraft(agendas.length > 0 ? agendas : [{ id: crypto.randomUUID(), title: '', decisionPoints: [''] }]);
+    // 디자인 EditAgendaRow_03: 새 안건은 빈 결정할 사항 칸 없이 [결정할 사항 추가]만 보인다 (SCRUM-364)
+    setDraft(agendas.length > 0 ? agendas : [{ id: crypto.randomUUID(), title: '', decisionPoints: [] }]);
   };
 
   const addAgenda = () => {
     const id = crypto.randomUUID();
-    updateDraft((prev) => [...prev, { id, title: '', decisionPoints: [''] }]);
+    updateDraft((prev) => [...prev, { id, title: '', decisionPoints: [] }]);
     setFocusId(id);
   };
 
@@ -179,9 +184,38 @@ export default function AgendaBoard({
     });
   };
 
+  /**
+   * 디자인 09 TemplateEditorPage_Dragging처럼 안건 줄 전체를 떠 있는 카드로 끌고 다닌다 (SCRUM-364).
+   * 브라우저 끌기 이미지는 화면에 있는 요소를 찍어 쓰므로, 줄을 복제해 카드 모양을 입힌 뒤 화면 밖에 잠깐 두고 찍는다.
+   * 투명도는 브라우저가 정한다
+   */
+  const startAgendaDrag = (event: DragEvent<HTMLElement>, index: number) => {
+    dragRef.current = { kind: 'agenda', index };
+    setAgendaDrag({ from: index, over: null });
+    const row = event.currentTarget.closest('li');
+    if (!row) {
+      return;
+    }
+    const rect = row.getBoundingClientRect();
+    const ghost = row.cloneNode(true) as HTMLElement;
+    ghost.classList.add(styles.dragImage);
+    ghost.style.width = `${rect.width}px`;
+    document.body.appendChild(ghost);
+    event.dataTransfer.effectAllowed = 'move';
+    // 파이어폭스는 데이터가 있어야 끌기를 시작한다
+    event.dataTransfer.setData('text/plain', '');
+    event.dataTransfer.setDragImage(ghost, event.clientX - rect.left, event.clientY - rect.top);
+    window.setTimeout(() => ghost.remove(), 0);
+  };
+
+  const endAgendaDrag = () => {
+    setAgendaDrag(null);
+  };
+
   const handleDrop = (target: DragTarget) => {
     const source = dragRef.current;
     dragRef.current = null;
+    setAgendaDrag(null);
     if (!source || source.kind !== target.kind) {
       return;
     }
@@ -290,126 +324,140 @@ export default function AgendaBoard({
           <ol className={styles.editList}>
             {draft.map((agenda, agendaIndex) => {
               const agendaErrors = errors[agenda.id];
-              const isNew = !agendas.some(({ id }) => id === agenda.id) && !agenda.pendingAgendaId;
+              // 놓일 자리: 위로 옮기면 대상 안건 위, 아래로 옮기면 대상 안건 아래 (move가 대상 자리로 넣는다)
+              const isDropTarget = agendaDrag?.over === agendaIndex && agendaDrag.from !== agendaIndex;
+              const dropClass = isDropTarget ? (agendaDrag.from > agendaIndex ? styles.dropBefore : styles.dropAfter) : '';
               return (
                 <li
                   key={agenda.id}
-                  className={[styles.editItem, isNew ? styles.newItem : ''].filter(Boolean).join(' ')}
-                  onDragOver={(event) => event.preventDefault()}
+                  className={[styles.editItem, agendaDrag?.from === agendaIndex ? styles.dragSource : '', dropClass]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    if (agendaDrag && agendaDrag.over !== agendaIndex) {
+                      setAgendaDrag({ ...agendaDrag, over: agendaIndex });
+                    }
+                  }}
                   onDrop={() => handleDrop({ kind: 'agenda', index: agendaIndex })}
                 >
-                  <div className={styles.editTitleRow}>
-                    <span
-                      className={styles.handle}
-                      draggable
-                      aria-label="끌어서 안건 순서 바꾸기"
-                      onDragStart={() => {
-                        dragRef.current = { kind: 'agenda', index: agendaIndex };
-                      }}
-                    >
-                      <Icon src={dragIcon} size={ICON_SIZE} />
-                    </span>
-                    <input
-                      className={[styles.titleInput, agendaErrors?.title ? styles.inputError : ''].filter(Boolean).join(' ')}
-                      value={agenda.title}
-                      maxLength={TITLE_MAX_LENGTH}
-                      placeholder="안건을 입력하세요"
-                      aria-label="안건 제목"
-                      aria-invalid={Boolean(agendaErrors?.title)}
-                      // 새로 추가한 칸에 바로 쓸 수 있게
-                      ref={(element) => {
-                        if (element && focusId === agenda.id) {
-                          element.focus();
-                          setFocusId(undefined);
-                        }
-                      }}
-                      onChange={(event) => updateAgenda(agenda.id, { title: event.target.value })}
-                    />
-                    <button
-                      type="button"
-                      className={styles.iconButton}
-                      aria-label={`${agenda.title || '새 안건'} 삭제`}
-                      onClick={() => updateDraft((prev) => prev.filter(({ id }) => id !== agenda.id))}
-                    >
-                      <Icon src={deleteIcon} size={SMALL_ICON_SIZE} />
-                    </button>
-                  </div>
-                  {agendaErrors?.title && <p className={styles.fieldError}>{agendaErrors.title}</p>}
-                  {agenda.carriedOverFrom && (
-                    <p className={styles.carriedNote}>
-                      <Icon src={archiveIcon} size={SMALL_ICON_SIZE - 4} />
-                      지난 회의에서 넘어옴 · {agenda.carriedOverFrom}
-                    </p>
-                  )}
-                  <div className={styles.decisionEdit}>
-                    <p className={styles.decisionLabel}>결정할 사항</p>
-                    {agenda.decisionPoints.map((point, index) => (
-                      <div
-                        key={index}
-                        className={styles.decisionRow}
-                        onDragOver={(event) => event.preventDefault()}
-                        onDrop={(event) => {
-                          event.stopPropagation();
-                          handleDrop({ kind: 'decision', agendaIndex, index });
+                  <span
+                    className={styles.handle}
+                    draggable
+                    aria-label="끌어서 안건 순서 바꾸기"
+                    onDragStart={(event) => startAgendaDrag(event, agendaIndex)}
+                    onDragEnd={endAgendaDrag}
+                  >
+                    <Icon src={dragIcon} size={ICON_SIZE} />
+                  </span>
+                  <div className={styles.editBody}>
+                    <div className={styles.editTitleRow}>
+                      <input
+                        className={[styles.titleInput, agendaErrors?.title ? styles.inputError : ''].filter(Boolean).join(' ')}
+                        value={agenda.title}
+                        maxLength={TITLE_MAX_LENGTH}
+                        placeholder="안건 제목을 입력하세요"
+                        aria-label="안건 제목"
+                        aria-invalid={Boolean(agendaErrors?.title)}
+                        // 새로 추가한 칸에 바로 쓸 수 있게
+                        ref={(element) => {
+                          if (element && focusId === agenda.id) {
+                            element.focus();
+                            setFocusId(undefined);
+                          }
                         }}
-                      >
-                        <span
-                          className={styles.smallHandle}
-                          draggable
-                          aria-label="끌어서 결정할 사항 순서 바꾸기"
-                          onDragStart={(event) => {
-                            event.stopPropagation();
-                            dragRef.current = { kind: 'decision', agendaIndex, index };
-                          }}
-                        >
-                          <Icon src={dragIcon} size={SMALL_ICON_SIZE} />
-                        </span>
-                        <input
-                          className={styles.decisionInput}
-                          value={point}
-                          maxLength={DECISION_MAX_LENGTH}
-                          placeholder="결정할 사항을 입력하세요"
-                          aria-label={`결정할 사항 ${index + 1}`}
-                          onChange={(event) =>
-                            updateAgenda(agenda.id, {
-                              decisionPoints: agenda.decisionPoints.map((value, pointIndex) =>
-                                pointIndex === index ? event.target.value : value,
-                              ),
-                            })
-                          }
-                        />
-                        <button
-                          type="button"
-                          className={styles.iconButton}
-                          aria-label={`결정할 사항 ${index + 1} 지우기`}
-                          onClick={() =>
-                            updateAgenda(agenda.id, {
-                              decisionPoints: agenda.decisionPoints.filter((_, pointIndex) => pointIndex !== index),
-                            })
-                          }
-                        >
-                          <Icon src={closeIcon} size={SMALL_ICON_SIZE} />
-                        </button>
-                      </div>
-                    ))}
-                    {agendaErrors?.decisions && <p className={styles.fieldError}>{agendaErrors.decisions}</p>}
-                    {/* MSG-088 5개가 되면 버튼을 흐리게 하고, 마우스를 올리면 말풍선으로 알린다 (디자인 06 상태 모음) */}
-                    <span className={styles.addDecisionWrap}>
+                        onChange={(event) => updateAgenda(agenda.id, { title: event.target.value })}
+                      />
                       <button
                         type="button"
-                        className={styles.addDecision}
-                        disabled={agenda.decisionPoints.length >= DECISION_MAX_COUNT}
-                        onClick={() => updateAgenda(agenda.id, { decisionPoints: [...agenda.decisionPoints, ''] })}
+                        className={styles.iconButton}
+                        aria-label={`${agenda.title || '새 안건'} 삭제`}
+                        onClick={() => updateDraft((prev) => prev.filter(({ id }) => id !== agenda.id))}
                       >
-                        <Icon src={addIcon} size={SMALL_ICON_SIZE} />
-                        결정할 사항 추가
+                        <Icon src={deleteIcon} size={SMALL_ICON_SIZE} />
                       </button>
-                      {agenda.decisionPoints.length >= DECISION_MAX_COUNT && (
-                        <span className={styles.limitTooltip} role="tooltip">
-                          결정할 사항은 안건마다 5개까지 넣을 수 있어요.
-                        </span>
-                      )}
-                    </span>
+                    </div>
+                    {agendaErrors?.title && <p className={styles.fieldError}>{agendaErrors.title}</p>}
+                    {agenda.carriedOverFrom && (
+                      <p className={styles.carriedNote}>
+                        <Icon src={archiveIcon} size={SMALL_ICON_SIZE - 4} />
+                        지난 회의에서 넘어옴 · {agenda.carriedOverFrom}
+                      </p>
+                    )}
+                    <div className={styles.decisionEdit}>
+                      <p className={styles.decisionLabel}>결정할 사항</p>
+                      {agenda.decisionPoints.map((point, index) => (
+                        <div
+                          key={index}
+                          className={styles.decisionRow}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={(event) => {
+                            // 안건을 끌어 결정할 사항 줄 위에 놓으면 안건 줄(li)이 받게 둔다
+                            if (dragRef.current?.kind !== 'decision') {
+                              return;
+                            }
+                            event.stopPropagation();
+                            handleDrop({ kind: 'decision', agendaIndex, index });
+                          }}
+                        >
+                          <span
+                            className={styles.smallHandle}
+                            draggable
+                            aria-label="끌어서 결정할 사항 순서 바꾸기"
+                            onDragStart={(event) => {
+                              event.stopPropagation();
+                              dragRef.current = { kind: 'decision', agendaIndex, index };
+                            }}
+                          >
+                            <Icon src={dragIcon} size={SMALL_ICON_SIZE} />
+                          </span>
+                          <input
+                            className={styles.decisionInput}
+                            value={point}
+                            maxLength={DECISION_MAX_LENGTH}
+                            placeholder="결정할 사항을 입력하세요"
+                            aria-label={`결정할 사항 ${index + 1}`}
+                            onChange={(event) =>
+                              updateAgenda(agenda.id, {
+                                decisionPoints: agenda.decisionPoints.map((value, pointIndex) =>
+                                  pointIndex === index ? event.target.value : value,
+                                ),
+                              })
+                            }
+                          />
+                          <button
+                            type="button"
+                            className={styles.removeDecision}
+                            aria-label={`결정할 사항 ${index + 1} 지우기`}
+                            onClick={() =>
+                              updateAgenda(agenda.id, {
+                                decisionPoints: agenda.decisionPoints.filter((_, pointIndex) => pointIndex !== index),
+                              })
+                            }
+                          >
+                            <Icon src={closeIcon} size={REMOVE_ICON_SIZE} />
+                          </button>
+                        </div>
+                      ))}
+                      {agendaErrors?.decisions && <p className={styles.fieldError}>{agendaErrors.decisions}</p>}
+                      {/* MSG-088 5개가 되면 버튼을 흐리게 하고, 마우스를 올리면 말풍선으로 알린다 (디자인 06 상태 모음) */}
+                      <span className={styles.addDecisionWrap}>
+                        <button
+                          type="button"
+                          className={styles.addDecision}
+                          disabled={agenda.decisionPoints.length >= DECISION_MAX_COUNT}
+                          onClick={() => updateAgenda(agenda.id, { decisionPoints: [...agenda.decisionPoints, ''] })}
+                        >
+                          <Icon src={addIcon} size={SMALL_ICON_SIZE} />
+                          결정할 사항 추가
+                        </button>
+                        {agenda.decisionPoints.length >= DECISION_MAX_COUNT && (
+                          <span className={styles.limitTooltip} role="tooltip">
+                            결정할 사항은 안건마다 5개까지 넣을 수 있어요.
+                          </span>
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </li>
               );

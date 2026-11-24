@@ -39,23 +39,14 @@
   background: var(--bg-surface-muted);
 }
 
+/* 디자인 Preview Page 76x100: 줄인 종이의 첫 쪽 윗부분만 */
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: block;
   width: 76px;
   height: 100px;
-  padding: 10px 8px;
-  background: var(--bg-page);
+  overflow: hidden;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
-}
-
-.line {
-  height: 4px;
-  max-width: 100%;
-  background: var(--border-default);
-  border-radius: var(--radius-full);
 }
 
 .star {
