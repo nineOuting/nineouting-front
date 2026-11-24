@@ -24,6 +24,8 @@ export interface ItemSettings {
   /** 바깥 여백 px */
   margin: number;
   table: TableSettings;
+  /** 왼쪽 항목 목록의 기본 항목에서 넣었으면 그 기본 항목 이름. 제목을 고쳐도 같은 기본 항목으로 본다 (QA 78) */
+  preset?: string;
 }
 
 export interface TemplateLayout {

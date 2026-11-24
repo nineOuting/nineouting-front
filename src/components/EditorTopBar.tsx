@@ -18,13 +18,15 @@ interface EditorTopBarProps {
   center?: ReactNode;
   /** 오른쪽 버튼들 (임시저장, 작성 완료 등) */
   actions?: ReactNode;
+  /** false면 메뉴 버튼을 숨긴다 (왼쪽에 작은 사이드바를 따로 두는 양식 편집 화면, QA 79) */
+  showMenuButton?: boolean;
 }
 
 /**
  * 회의록, 양식 편집 화면의 상단 바 (디자인 EditorTopBar). 평소에는 왼쪽 메뉴 없이 편집에 집중하고,
  * 메뉴 버튼을 누르면 왼쪽 메뉴가 화면 위로 나온다. 로고를 누르면 홈으로 간다
  */
-export default function EditorTopBar({ left, center, actions }: EditorTopBarProps) {
+export default function EditorTopBar({ left, center, actions, showMenuButton = true }: EditorTopBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -44,15 +46,17 @@ export default function EditorTopBar({ left, center, actions }: EditorTopBarProp
     <header className={styles.bar}>
       <div className={styles.left}>
         <div className={styles.brand}>
-          <button
-            type="button"
-            className={styles.iconButton}
-            aria-label={isMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
-            aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen((open) => !open)}
-          >
-            <Icon src={menuIcon} size={MENU_ICON_SIZE} />
-          </button>
+          {showMenuButton && (
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label={isMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+              aria-expanded={isMenuOpen}
+              onClick={() => setIsMenuOpen((open) => !open)}
+            >
+              <Icon src={menuIcon} size={MENU_ICON_SIZE} />
+            </button>
+          )}
           <Link to="/home" aria-label="홈으로" className={styles.logoLink}>
             <img src={logo} alt="nep!nep!" width={LOGO_WIDTH} height={LOGO_HEIGHT} className="nepnep-logo" />
           </Link>

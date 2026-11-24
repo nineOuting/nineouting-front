@@ -79,6 +79,18 @@ export function presetItem(preset: PresetItem): TemplateItem {
   return {
     title: preset.title,
     description: preset.description,
-    settings: { ...DEFAULT_ITEM_SETTINGS, recordType: preset.recordType },
+    settings: { ...DEFAULT_ITEM_SETTINGS, recordType: preset.recordType, preset: preset.title },
   };
+}
+
+/** 표시가 없는 예전 항목에 기본 항목 표시를 붙인다 (불러올 때 한 번) */
+export function withPreset(item: TemplateItem): TemplateItem {
+  const preset = presetOf(item);
+  return preset && !item.settings.preset ? { ...item, settings: { ...item.settings, preset: preset.title } } : item;
+}
+
+/** 이 항목이 어느 기본 항목인지. 표시가 없는 예전 양식은 제목이 같으면 그 기본 항목으로 본다 */
+export function presetOf(item: TemplateItem) {
+  const key = item.settings.preset ?? item.title;
+  return PRESET_ITEMS.find((preset) => preset.title === key);
 }

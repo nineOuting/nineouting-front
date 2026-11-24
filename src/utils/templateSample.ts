@@ -19,6 +19,19 @@ export const SAMPLE_MEETING_INFO = [
   ['참석자', '김민지, 이준호, 박서연, 최지호, 김민솔 (5명)'],
 ];
 
+/**
+ * QA 77 양식 편집 미리보기는 예시 대신 항목 설명을 보여 준다. 표는 머리 행 열 이름만 두고 칸은 비운다
+ */
+export function blankContent(item: TemplateItem) {
+  const { recordType, table } = item.settings;
+  if (recordType !== 'TABLE') {
+    return item.description;
+  }
+  const head = Array.from({ length: table.cols }, (_, col) => SAMPLE_TABLE_HEADERS[col] ?? `열 ${col + 1}`);
+  const rows = Array.from({ length: Math.max(0, table.rows - 1) }, () => Array.from({ length: table.cols }, () => ''));
+  return [head, ...rows].map((cells) => cells.join(CELL_SEPARATOR)).join('\n');
+}
+
 /** 미리보기 칸 예시 내용 (기록 방식별). 표는 양식의 행, 열 수에 맞춰 자른다 */
 export function sampleContent(item: TemplateItem) {
   const { recordType, table } = item.settings;

@@ -1,10 +1,29 @@
 /* 디자인 TemplateEditorPage: 편집 바 56px 아래로 SideRail 72px, SidePanel 300px, 나머지는 CanvasArea */
 .page {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  min-width: 1200px;
+  min-width: calc(1200px - 64px);
   height: 100vh;
   background: var(--bg-page);
+}
+
+/* QA 79 왼쪽 작은 사이드바 + 편집 화면 (AppLayout 접힌 메뉴와 같은 모양) */
+.frame {
+  display: flex;
+  height: 100vh;
+  overflow: auto;
+}
+
+.appRail {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  width: 64px;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border-right: var(--border-width-default) solid var(--border-default);
 }
 
 /* 디자인 EditorTopBar 가운데 양식 이름 칸 */
@@ -99,6 +118,45 @@
   overflow-y: auto;
   background: var(--bg-surface);
   border-right: var(--border-width-default) solid var(--border-default);
+}
+
+/* QA 71 왼쪽 패널과 접기 손잡이 (피그마 PanelCollapseHandle: 패널 오른쪽 끝 가운데 16x56) */
+.sideWrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.sideClosed .side {
+  display: none;
+}
+
+.collapseHandle {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 56px;
+  padding: 0;
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-left: none;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--text-secondary);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.collapseHandle:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+.collapseIconClosed {
+  transform: rotate(180deg);
 }
 
 .itemsPanel {
