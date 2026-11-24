@@ -34,6 +34,8 @@ import copyIcon from '../../assets/icons/copy.svg';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
 import emptyCharacter from '../../assets/characters/empty.svg';
+import failCharacter from '../../assets/characters/fail.svg';
+import unknownCharacter from '../../assets/characters/unknown.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
@@ -559,34 +561,10 @@ export default function ArchivePage() {
               <Skeleton key={index} height={ROW_HEIGHT} />
             ))}
           </div>
-        ) : isFailed ? (
-          <EmptyState
-            title="회의록 목록을 불러오지 못했어요."
-            description="잠시 후 다시 시도해 주세요."
-            action={
-              <button type="button" className={styles.retry} onClick={reload}>
-                다시 시도
-              </button>
-            }
-          />
-        ) : items.length === 0 ? (
-          query || hasFilters ? (
-            <EmptyState
-              character={emptyCharacter}
-              title="검색 결과가 없어요"
-              description="다른 검색어를 입력하거나 필터를 줄여 보세요"
-              action={
-                <button type="button" className={styles.reset} onClick={resetAll}>
-                  필터 초기화
-                </button>
-              }
-            />
-          ) : (
-            <EmptyState title="아직 회의록이 없어요" description="회의록을 작성 완료하면 여기에 모여요" />
-          )
         ) : (
+          // 디자인 10 상태 모음: 비었거나 못 불러와도 표 머리 줄은 그대로 두고 그 아래 상황별 캐릭터 (SCRUM-366)
           <ArchiveTable
-            items={items}
+            items={isFailed ? [] : items}
             folderColors={folderColors}
             onOpen={(item) => openMinutes(item.meetingId)}
             onDownload={(item, format) => void download(item, format)}
@@ -598,6 +576,38 @@ export default function ArchivePage() {
                 ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, hasDividerBefore: true, onSelect: () => setDeleting(item) }]
                 : []),
             ]}
+            empty={
+              isFailed ? (
+                // MSG-114. 디자인은 버튼이 없지만 다시 불러올 길이 없어 [다시 시도]는 남긴다
+                <EmptyState
+                  className={styles.tableEmpty}
+                  character={failCharacter}
+                  title="회의록 목록을 불러오지 못했어요."
+                  description="잠시 후 다시 시도해 주세요."
+                  action={
+                    <button type="button" className={styles.retry} onClick={reload}>
+                      다시 시도
+                    </button>
+                  }
+                />
+              ) : query || hasFilters ? (
+                // MSG-062
+                <EmptyState
+                  className={styles.tableEmpty}
+                  character={unknownCharacter}
+                  title="검색 결과가 없어요"
+                  description="다른 검색어를 입력하거나 필터를 줄여 보세요"
+                  action={
+                    <button type="button" className={styles.reset} onClick={resetAll}>
+                      필터 초기화
+                    </button>
+                  }
+                />
+              ) : (
+                // MSG-115
+                <EmptyState className={styles.tableEmpty} character={emptyCharacter} title="아직 회의록이 없어요" description="회의록을 작성 완료하면 여기에 모여요" />
+              )
+            }
           />
         )}
 
@@ -612,7 +622,7 @@ export default function ArchivePage() {
               <nav className={styles.pager} aria-label="페이지">
                 <button
                   type="button"
-                  className={styles.pageButton}
+                  className={`${styles.pageButton} ${styles.pageArrow}`}
                   aria-label="이전 페이지"
                   disabled={page === 0}
                   onClick={() => setPage(page - 1)}
@@ -638,7 +648,7 @@ export default function ArchivePage() {
                 )}
                 <button
                   type="button"
-                  className={styles.pageButton}
+                  className={`${styles.pageButton} ${styles.pageArrow}`}
                   aria-label="다음 페이지"
                   disabled={page >= pageCount - 1}
                   onClick={() => setPage(page + 1)}

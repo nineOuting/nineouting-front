@@ -62,7 +62,8 @@
 
 .tabs {
   display: flex;
-  gap: var(--spacing-1);
+  /* 디자인 10 FolderTabs: 탭끼리 붙어 있다 (SCRUM-366) */
+  gap: 0;
   padding: 0 var(--spacing-4);
   overflow-x: auto;
   border-bottom: var(--border-width-default) solid var(--border-default);
@@ -199,9 +200,10 @@
 .chip {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
+  /* 디자인 10 PeriodFilter·SortSelect: 좌우 12, 글자와 화살표 사이 8 (SCRUM-366) */
+  gap: var(--spacing-2);
   height: 32px;
-  padding: 0 var(--spacing-2) 0 var(--spacing-3);
+  padding: 0 var(--spacing-3);
   background: var(--bg-surface);
   border: var(--border-width-default) solid var(--border-strong);
   border-radius: var(--radius-md);
@@ -309,7 +311,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 56px;
+  /* 디자인 10 TableFooter 57 */
+  min-height: 57px;
   padding: var(--spacing-2) var(--spacing-4);
 }
 
@@ -356,4 +359,15 @@
   min-width: 32px;
   text-align: center;
   color: var(--text-tertiary);
+}
+
+/* 디자인 10 Pagination: 이전·다음은 24px, 쪽 번호는 32px (SCRUM-366) */
+.pageArrow {
+  min-width: 24px;
+  height: 24px;
+}
+
+/* 디자인 10 EmptyBody: 머리 줄 아래 위아래 64 (48 + EmptyState 안쪽 16) (SCRUM-366) */
+.tableEmpty {
+  padding: calc(var(--spacing-12) + var(--spacing-4)) var(--spacing-4);
 }

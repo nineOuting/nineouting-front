@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import type { ArchiveMinutes, ExportFormat } from '../../api/minutes';
 import folderIcon from '../../assets/icons/folder-sm.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
@@ -27,10 +27,12 @@ interface ArchiveTableProps {
   onDownload: (item: ArchiveMinutes, format: ExportFormat) => void;
   /** REQ-160 줄마다 ⋮ 메뉴: 회의록 보기, 다운로드, 링크 복사, 회의록 삭제. openDownload는 형식 메뉴를 연다 */
   rowMenu: (item: ArchiveMinutes, openDownload: () => void) => ActionMenuItem[];
+  /** 목록이 비었을 때 머리 줄 아래 보여 줄 내용 (디자인 10 상태 모음: 머리 줄은 그대로 둔다) */
+  empty?: ReactNode;
 }
 
 /** REQ-053 아카이브 목록 (디자인 Page 9 ArchivePage): 회의명, 폴더, 일시, 참석자, 장소, 작업. 줄을 누르면 회의록을 연다 */
-export default function ArchiveTable({ items, folderColors, onOpen, onDownload, rowMenu }: ArchiveTableProps) {
+export default function ArchiveTable({ items, folderColors, onOpen, onDownload, rowMenu, empty }: ArchiveTableProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   // 줄 메뉴와 다운로드 형식 메뉴는 같은 ⋮ 버튼에 붙는다 (디자인 10: 작업 칸에는 ⋮ 하나만)
   const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
@@ -57,6 +59,7 @@ export default function ArchiveTable({ items, folderColors, onOpen, onDownload, 
           작업
         </span>
       </div>
+      {items.length === 0 && empty}
       {items.map((item) => (
         <div
           key={item.minutesId}
