@@ -327,3 +327,58 @@
   color: var(--text-secondary);
   text-align: left;
 }
+
+/* 디자인 시스템 CalendarMoreChip: 겹친 회의 수. 앞 회의 칸 오른쪽 위 */
+.moreChip {
+  position: absolute;
+  right: 8px;
+  z-index: 1;
+  padding: 0 var(--spacing-2);
+  background: var(--neutral-pressed);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  /* 바탕(진회색, 다크에서는 밝은 회색)과 반대 색 */
+  color: var(--bg-surface);
+}
+
+/* 디자인 HomeMonthViewPage_v6 CalendarEvent month: 예정은 시간 파랑 굵게, 제목 회색. 끝난 회의는 시간도 회색 */
+.monthEvent > .eventMeta {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+}
+
+.monthEvent > .eventTitle {
+  font-weight: var(--font-weight-regular);
+  color: var(--text-tertiary);
+}
+
+.past.monthEvent > .eventMeta {
+  color: var(--text-secondary);
+}
+
+/* 회의 1개: 두 줄 (시간 위, 제목 아래) */
+.monthStacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding-block: var(--spacing-1);
+}
+
+.monthStacked > .eventMeta {
+  font-weight: var(--font-weight-regular);
+}
+
+.monthStacked > .eventTitle {
+  font-weight: var(--font-weight-semibold);
+}
+
+.past.monthStacked > .eventMeta {
+  color: var(--text-tertiary);
+}
+
+/* [+N] 칩 자리만큼 제목을 비운다 */
+.hasMore > .eventTitle {
+  padding-right: 32px;
+}

@@ -29,8 +29,9 @@ export default function TemplatePaper({ name, items, layout, scale, minPages = 1
   return (
     <div
       className={[styles.paper, tiny ? styles.tiny : ''].filter(Boolean).join(' ')}
-      // 다크 모드에서 양식 글자색·표 머리 색을 토큰 색으로 바꾸는 index.css 규칙을 같이 받는다
+      // 다크 모드에서도 양식 종이는 흰 바탕 (2026-11-24 요청, 회의록 종이와 같게)
       data-paper
+      data-theme="light"
       aria-label={`${name} 미리보기`}
       style={{
         zoom: scale,

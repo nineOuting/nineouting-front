@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { listCalendarMeetings, type CalendarMeeting } from '../../api/meeting';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
@@ -7,6 +7,7 @@ import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
 import { addDays, minutesOfDay, monthGridDays, toIsoDate, toTime, weekDays } from '../../utils/calendar';
 import { meetingPath } from '../../utils/meetingFormat';
 import MeetingPreviewCard from './MeetingPreviewCard';
+import OverlapEventsPopover from './OverlapEventsPopover';
 import ProjectFilter, { type FolderOption } from './ProjectFilter';
 import { folderColor, folderSubtleColor } from '../../utils/folderColor';
 import styles from './HomeCalendar.module.css';
@@ -25,6 +26,30 @@ const MIN_EVENT_HEIGHT = 24;
 const ARROW_ICON_SIZE = 20;
 const FILTER_ICON_SIZE = 16;
 const MONTH_EVENT_LIMIT = 2;
+const WEEKDAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
+/** 시간이 겹치는 회의끼리 묶는다 (A와 B, B와 C가 겹치면 셋이 한 묶음). 시작 순 */
+function overlapGroups(items: CalendarMeeting[]) {
+  const sorted = [...items].sort((a, b) => a.startAt.localeCompare(b.startAt));
+  const groups: { meetings: CalendarMeeting[]; end: string }[] = [];
+  for (const meeting of sorted) {
+    const last = groups[groups.length - 1];
+    if (last && meeting.startAt < last.end) {
+      last.meetings.push(meeting);
+      if (meeting.endAt > last.end) {
+        last.end = meeting.endAt;
+      }
+    } else {
+      groups.push({ meetings: [meeting], end: meeting.endAt });
+    }
+  }
+  return groups.map(({ meetings }) => meetings);
+}
+
+/** 11월 25일(수) */
+function dayLabel(day: Date) {
+  return `${day.getMonth() + 1}월 ${day.getDate()}일(${WEEKDAY_NAMES[day.getDay()]})`;
+}
 
 interface HomeCalendarProps {
   /** 내 워크스페이스들의 프로젝트 폴더 (홈이 불러와 작성 중인 회의록 카드와 같이 쓴다) */
@@ -58,6 +83,8 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
   };
   // REQ-019 누른 회의의 미리보기 카드
   const [preview, setPreview] = useState<{ meeting: CalendarMeeting; anchor: DOMRect } | null>(null);
+  // 디자인 시스템 CalendarOverlapSpec: 겹친 회의, 그날 회의 전체 목록
+  const [overlap, setOverlap] = useState<{ title: string; meetings: CalendarMeeting[]; anchor: DOMRect } | null>(null);
   const [cursor, setCursor] = useState(() => new Date());
   const [today] = useState(() => toIsoDate(new Date()));
   // 프로젝트 = 프로젝트 폴더. 워크스페이스가 아니라 폴더 단위로 거른다
@@ -100,7 +127,8 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
   const shown = meetings.filter(
     (meeting) => folderFilter === null || folderFilter.includes(meeting.folderId),
   );
-  const byDay = (day: Date) => shown.filter((meeting) => meeting.startAt.startsWith(toIsoDate(day)));
+  const byDay = (day: Date) =>
+    shown.filter((meeting) => meeting.startAt.startsWith(toIsoDate(day))).sort((a, b) => a.startAt.localeCompare(b.startAt));
   // 일부만 고르면 버튼에 고른 개수 (하나면 그 이름)
   const filterLabel =
     folderFilter === null
@@ -109,6 +137,7 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
         ? (folders.find(({ folderId }) => folderId === folderFilter[0])?.label ?? '프로젝트 1개')
         : `프로젝트 ${folderFilter.length}개`;
 
+  const closeOverlap = useCallback(() => setOverlap(null), []);
   const move = (direction: 1 | -1) =>
     setCursor((date) =>
       view === 'week' ? addDays(date, direction * 7) : new Date(date.getFullYear(), date.getMonth() + direction, 1),
@@ -224,14 +253,16 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
                 {HOURS.map((hour) => (
                   <span key={hour} className={styles.hourCell} />
                 ))}
-                {byDay(day).map((meeting) => {
+                {overlapGroups(byDay(day)).map((group) => {
+                  // 겹친 회의는 앞 회의 하나만 그리고 [+N]으로 나머지를 알린다 (누르면 목록)
+                  const meeting = group[0];
                   const start = minutesOfDay(meeting.startAt);
                   const end = meeting.endAt.startsWith(toIsoDate(day)) ? minutesOfDay(meeting.endAt) : 24 * 60;
-                  return (
+                  const event = (
                     <button
                       key={meeting.meetingId}
                       type="button"
-                      className={`${eventClass(meeting)} ${styles.weekEvent}`}
+                      className={`${eventClass(meeting)} ${styles.weekEvent} ${group.length > 1 ? styles.hasMore : ''}`}
                       style={{
                         ...eventStyle(meeting),
                         top: (start / 60) * HOUR_HEIGHT + EVENT_GAP,
@@ -245,6 +276,29 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
                         {toTime(meeting.startAt)} ~ {toTime(meeting.endAt)}
                       </span>
                     </button>
+                  );
+                  if (group.length === 1) {
+                    return event;
+                  }
+                  return (
+                    <Fragment key={meeting.meetingId}>
+                      {event}
+                      <button
+                        type="button"
+                        className={styles.moreChip}
+                        style={{ top: (start / 60) * HOUR_HEIGHT + EVENT_GAP + 4 }}
+                        aria-label={`${toTime(meeting.startAt)}에 겹친 회의 ${group.length}개 보기`}
+                        onClick={(click) =>
+                          setOverlap({
+                            title: `${dayLabel(day)} ${toTime(meeting.startAt)} · 회의 ${group.length}개`,
+                            meetings: group,
+                            anchor: click.currentTarget.getBoundingClientRect(),
+                          })
+                        }
+                      >
+                        +{group.length - 1}
+                      </button>
+                    </Fragment>
                   );
                 })}
               </div>
@@ -266,11 +320,12 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
                 <span className={[styles.monthDate, toIsoDate(day) === today ? styles.isToday : ''].filter(Boolean).join(' ')}>
                   {day.getDate()}
                 </span>
+                {/* 디자인 HomeMonthViewPage_v6: 1개는 두 줄(시간 위, 제목 아래), 2개 이상은 한 줄씩 2개 + [+N개 더보기] */}
                 {items.slice(0, MONTH_EVENT_LIMIT).map((meeting) => (
                   <button
                     key={meeting.meetingId}
                     type="button"
-                    className={`${eventClass(meeting)} ${styles.monthEvent}`}
+                    className={`${eventClass(meeting)} ${styles.monthEvent} ${items.length === 1 ? styles.monthStacked : ''}`}
                     style={eventStyle(meeting)}
                     aria-label={eventLabel(meeting)}
                     onClick={(event) => setPreview({ meeting, anchor: event.currentTarget.getBoundingClientRect() })}
@@ -284,10 +339,13 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
                   <button
                     type="button"
                     className={styles.more}
-                    onClick={() => {
-                      setCursor(day);
-                      setView('week');
-                    }}
+                    onClick={(click) =>
+                      setOverlap({
+                        title: `${dayLabel(day)} · 회의 ${items.length}개`,
+                        meetings: items,
+                        anchor: click.currentTarget.getBoundingClientRect(),
+                      })
+                    }
                   >
                     +{items.length - MONTH_EVENT_LIMIT}개 더보기
                   </button>
@@ -296,6 +354,19 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
             );
           })}
         </div>
+      )}
+      {overlap && (
+        <OverlapEventsPopover
+          title={overlap.title}
+          meetings={overlap.meetings}
+          anchor={overlap.anchor}
+          colorOf={(meeting) => folderColor(folders.find(({ folderId }) => folderId === meeting.folderId)?.color)}
+          onPick={(meeting, rect) => {
+            setOverlap(null);
+            setPreview({ meeting, anchor: rect });
+          }}
+          onClose={closeOverlap}
+        />
       )}
       {preview && (
         <MeetingPreviewCard
