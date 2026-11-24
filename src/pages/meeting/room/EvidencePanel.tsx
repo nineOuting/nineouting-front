@@ -2,14 +2,15 @@ import type { ReactNode } from 'react';
 import checkIcon from '../../../assets/icons/check.svg';
 import closeIcon from '../../../assets/icons/close.svg';
 import errorIcon from '../../../assets/icons/error.svg';
+import evidenceIcon from '../../../assets/icons/evidence.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
-import transcriptIcon from '../../../assets/icons/transcript.svg';
 import Icon from '../../../components/Icon';
 import type { DecisionPoint, TranscriptLine } from '../../../types/meetingRoom';
 import styles from './EvidencePanel.module.css';
 
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 14;
+const CLOSE_ICON_SIZE = 16;
 
 interface EvidencePanelProps {
   decision: DecisionPoint;
@@ -28,11 +29,12 @@ export default function EvidencePanel({ decision, lines, onClose, notice }: Evid
     <div className={styles.panel}>
       <div className={styles.head}>
         <h2 className={styles.title}>
-          <Icon src={transcriptIcon} size={ICON_SIZE} />
+          {/* 디자인 EvidenceIcon (따옴표) */}
+          <Icon src={evidenceIcon} size={ICON_SIZE} />
           결정 근거
         </h2>
         <button type="button" className={styles.close} aria-label="결정 근거 닫기" onClick={onClose}>
-          <Icon src={closeIcon} size={ICON_SIZE} />
+          <Icon src={closeIcon} size={CLOSE_ICON_SIZE} />
         </button>
       </div>
 
@@ -40,11 +42,11 @@ export default function EvidencePanel({ decision, lines, onClose, notice }: Evid
       <p className={[styles.decision, styles[decision.status]].filter(Boolean).join(' ')}>
         <span className={styles.statusIcon} aria-hidden="true">
           {decision.status === 'decided' && <Icon src={checkIcon} size={SMALL_ICON_SIZE} />}
-          {decision.status === 'undecided' && <Icon src={pauseIcon} size={SMALL_ICON_SIZE - 2} />}
+          {(decision.status === 'undecided' || decision.status === 'decisionCheck') && <Icon src={pauseIcon} size={SMALL_ICON_SIZE - 2} />}
         </span>
         {decision.title}
       </p>
-      {decision.summary && lines.length > 0 && <p className={styles.summary}>{decision.summary}</p>}
+      {/* 디자인 07: 결정 내용은 가운데 카드에만 보이고 근거 창에는 넣지 않는다 (SCRUM-365) */}
 
       {lines.length === 0 ? (
         // MSG-028

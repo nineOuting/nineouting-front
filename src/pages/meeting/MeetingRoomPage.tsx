@@ -943,7 +943,7 @@ export default function MeetingRoomPage() {
               decision={selectedDecision}
               lines={transcript.filter(({ seq }) => selectedDecision.evidenceSeqs.includes(seq))}
               onClose={() => setSelectedDecisionId(undefined)}
-              notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" />}
+              notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" variant="panel" />}
             />
           ) : sideTab === 'chat' ? (
             <ChatPanel
