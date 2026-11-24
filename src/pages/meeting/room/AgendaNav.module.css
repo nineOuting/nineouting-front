@@ -68,9 +68,10 @@
   background: var(--text-primary);
 }
 
+/* 디자인 AgendaSidebarItem status=discussing: 짙은 회색 점(#374151) + 연회색 3px 테두리(#F1F3F5) (SCRUM-365) */
 .discussing .dot {
-  background: var(--secondary-strong, #263366);
-  box-shadow: 0 0 0 3px var(--secondary-default);
+  background: var(--text-secondary);
+  box-shadow: 0 0 0 3px var(--neutral-subtle);
 }
 
 .undecided .dot,
