@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
+import emptyCharacter from '../../../assets/characters/empty.svg';
 import type { DecisionStatusEdit } from '../../../api/meeting';
 import addIcon from '../../../assets/icons/add-sm.svg';
 import checkIcon from '../../../assets/icons/check.svg';
@@ -8,6 +9,7 @@ import moreIcon from '../../../assets/icons/more-vert.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
 import refreshIcon from '../../../assets/icons/refresh.svg';
 import todoIcon from '../../../assets/icons/todo.svg';
+import EmptyState from '../../../components/EmptyState';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionPoint, RoomAgenda, RoomTodo } from '../../../types/meetingRoom';
 import ActionMenu from '../../workspace/ActionMenu';
@@ -411,9 +413,16 @@ export default function AgendaFocus({
             )}
           </>
         ) : (
-          // MSG-024
-          <p className={styles.noSummary}>회의 발언이 시작되면 이곳에서 논의 흐름과 주요 의견을 확인할 수 있어요.</p>
+          // MSG-024. 디자인 07 Live_01 EmptyState: 자는 캐릭터, 제목, 설명 (SCRUM-365)
+          <EmptyState
+            className={styles.summaryEmpty}
+            character={emptyCharacter}
+            title="아직 논의 내용이 없어요"
+            description="회의 발언이 시작되면 이곳에서 논의 흐름과 주요 의견을 확인할 수 있어요"
+          />
         )}
+        {/* 디자인 07 Live_01: 요약도 할 일도 없으면 할 일 칸을 숨긴다 */}
+        {(hasSummary || agenda.todos.length > 0) && (
         <div className={styles.todoCard}>
           <p className={styles.todoHead}>
             <Icon src={todoIcon} size={ICON_SIZE} />
@@ -431,6 +440,7 @@ export default function AgendaFocus({
             <p className={styles.todoEmpty}>회의에서 할 일이 나오면 담당자·기한과 함께 여기에 모여요</p>
           )}
         </div>
+        )}
       </section>
     </div>
   );

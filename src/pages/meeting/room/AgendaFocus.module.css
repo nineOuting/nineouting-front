@@ -356,13 +356,9 @@
   color: var(--text-primary);
 }
 
-.noSummary {
-  padding: var(--spacing-6);
-  background: var(--bg-surface-muted);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  color: var(--text-secondary);
+/* 디자인 07 Live_01 EmptyState: 위아래 16px, 캐릭터 96 → 16 → 제목 → 4 → 설명 */
+.summaryEmpty {
+  padding: var(--spacing-4);
 }
 
 .opinionColumns {
