@@ -673,7 +673,6 @@ export default function MeetingWaitingPage() {
         <TemplateDetailModal
           templates={orderedTemplates}
           index={templateModal.index}
-          onChangeIndex={(index) => setTemplateModal({ view: 'detail', index })}
           onUse={
             canEdit
               ? (templateId) => {

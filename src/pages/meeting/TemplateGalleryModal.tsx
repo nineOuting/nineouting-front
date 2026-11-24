@@ -6,9 +6,12 @@ import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
 import type { MinutesTemplate } from '../../types/meeting';
 import styles from './TemplateGalleryModal.module.css';
+import TemplatePaper, { PAPER_WIDTH } from './TemplatePaper';
 import TemplateThumbnail from './TemplateThumbnail';
 
 const STAR_SIZE = 20;
+// 디자인 Preview Page 76x100
+const CARD_PAGE_WIDTH = 76;
 
 interface TemplateGalleryModalProps {
   templates: MinutesTemplate[];
@@ -67,7 +70,19 @@ export default function TemplateGalleryModal({
                 onClick={() => (isSelected ? onOpenDetail(index) : setPickedId(template.templateId))}
               >
                 <span className={styles.preview}>
-                  <TemplateThumbnail items={template.items} showMeetingInfo={template.layout?.showMeetingInfo} />
+                  {/* 디자인 요청 (SCRUM-364): 카드에도 글자가 있는 실제 종이를 줄여 보여 준다. 양식 정보가 없으면 가짜 줄 */}
+                  {template.items && template.layout ? (
+                    <span className={styles.page} aria-hidden="true">
+                      <TemplatePaper
+                        name={template.name}
+                        items={template.items}
+                        layout={template.layout}
+                        scale={CARD_PAGE_WIDTH / PAPER_WIDTH}
+                      />
+                    </span>
+                  ) : (
+                    <TemplateThumbnail />
+                  )}
                 </span>
                 <span className={styles.name}>{template.name}</span>
               </button>

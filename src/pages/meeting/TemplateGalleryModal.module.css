@@ -39,6 +39,16 @@
   background: var(--bg-surface-muted);
 }
 
+/* 디자인 Preview Page 76x100: 줄인 종이의 첫 쪽 윗부분만 */
+.page {
+  display: block;
+  width: 76px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
 .star {
   position: absolute;
   top: 4px;

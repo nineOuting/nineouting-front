@@ -4,22 +4,23 @@ import { SAMPLE_MEETING_INFO, sampleContent } from '../../utils/templateSample';
 import { PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
 import styles from './TemplatePaper.module.css';
 
-// 양식 편집 미리보기(TemplatePreview)와 같은 종이 폭. 보여 줄 칸 폭에 맞춰 zoom으로 줄인다
-const PAPER_WIDTH = 456;
+// 양식 편집 미리보기(TemplatePreview)와 같은 종이 크기. 한 쪽 높이도 같다 (편집 화면 PAGE_HEIGHT)
+export const PAPER_WIDTH = 456;
+export const PAPER_PAGE_HEIGHT = 675;
 
 interface TemplatePaperProps {
   name: string;
   items: TemplateItem[];
   layout: TemplateLayout;
-  /** 종이를 보여 줄 칸 폭 (px) */
-  width: number;
+  /** 줄이는 비율 (1이면 실제 종이 크기) */
+  scale: number;
 }
 
 /**
- * 양식을 실제 회의록 종이처럼 예시 내용으로 채워 보여 준다 (보기만). 회의 대기 양식 상세 보기 (SCRUM-364, 디자인 요청).
+ * 양식을 실제 회의록 종이처럼 예시 내용으로 채워 보여 준다 (보기만). 회의 대기 양식 카드·상세 보기 (SCRUM-364, 디자인 요청).
  * 양식 편집 미리보기와 같은 설정(여백, 섹션 간격, 정렬, 글자 크기·색, 머리말·꼬리말, 배경)을 따른다
  */
-export default function TemplatePaper({ name, items, layout, width }: TemplatePaperProps) {
+export default function TemplatePaper({ name, items, layout, scale }: TemplatePaperProps) {
   const align = layout.align.toLowerCase() as 'left' | 'center' | 'right';
   return (
     <div
@@ -28,7 +29,7 @@ export default function TemplatePaper({ name, items, layout, width }: TemplatePa
       data-paper
       aria-label={`${name} 미리보기`}
       style={{
-        zoom: width / PAPER_WIDTH,
+        zoom: scale,
         padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
         // REQ-157 배경 사진은 종이 전체를 덮는다
         ...(layout.backgroundImageUrl
