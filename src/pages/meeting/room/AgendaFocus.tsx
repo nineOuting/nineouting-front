@@ -379,7 +379,8 @@ export default function AgendaFocus({
             이 안건 요약
           </h2>
           {isAiAvailable ? (
-            isCurrent && <span className={styles.sectionMeta}>· AI가 정리 중</span>
+            // 지금 논의 중인 안건, 또는 정리된 요약이 있는 안건이면 보인다 (SCRUM-365)
+            (isCurrent || hasSummary) && <span className={styles.sectionMeta}>· AI가 정리 중</span>
           ) : (
             <span className={styles.aiPausedChip}>
               <Icon src={refreshIcon} size={ICON_SIZE - 4} />
