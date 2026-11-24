@@ -106,6 +106,8 @@ body {
 
 /* 피그마 변수의 어두운 테마 값 (위 블록의 새 변수) */
 [data-theme='dark'] {
+  /* 피그마 text/tertiary 다크 값 (SettingsDark_Modal 2466:142935) (SCRUM-410) */
+  --text-tertiary: var(--gray-400);
   --status-discussing-border: var(--brand-700);
   --bg-panel: var(--gray-900);
   --bg-sidebar: var(--gray-900);
@@ -142,6 +144,7 @@ body {
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
+    --text-tertiary: var(--gray-400);
     --status-discussing-border: var(--brand-700);
     --bg-panel: var(--gray-900);
     --bg-sidebar: var(--gray-900);
