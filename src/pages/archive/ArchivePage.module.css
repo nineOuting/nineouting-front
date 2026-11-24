@@ -372,3 +372,10 @@
 .tableEmpty {
   padding: calc(var(--spacing-12) + var(--spacing-4)) var(--spacing-4);
 }
+
+/* 검색 조건을 바꿔 다시 불러오는 동안: 이전 목록을 흐리게 두고 누르지 못하게 (SCRUM-410) */
+.refreshing {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}

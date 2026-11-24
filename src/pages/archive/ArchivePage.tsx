@@ -279,7 +279,10 @@ export default function ArchivePage() {
   }, [id, reloadToken]);
 
   const requestKey = JSON.stringify([id, query, filters, sort, folderId, page, reloadToken]);
-  const isLoading = loadedKey !== requestKey;
+  // 스켈레톤은 처음 들어올 때(또는 워크스페이스를 바꿨을 때)만. 검색 조건이 바뀌면 이전 목록을 흐리게 두고
+  // 결과가 오면 그 자리에서 바꾼다. 스켈레톤이 잠깐 나왔다 사라지며 번쩍이지 않게 (SCRUM-410)
+  const isFirstLoad = loadedKey === null || (JSON.parse(loadedKey) as unknown[])[0] !== id;
+  const isRefreshing = !isFirstLoad && loadedKey !== requestKey;
 
   useEffect(() => {
     let isCurrent = true;
@@ -577,108 +580,110 @@ export default function ArchivePage() {
         </div>
 
         {/* 적용된 조건 칩 줄은 뺐다 (디자인 체크 2026-11-19). 필터 버튼에 고른 값이 보이고 [필터 초기화]로 지운다 */}
-        {isLoading ? (
+        {isFirstLoad ? (
           <div className={styles.loadingRows}>
             {Array.from({ length: LOADING_ROWS }, (_, index) => (
               <Skeleton key={index} height={ROW_HEIGHT} />
             ))}
           </div>
         ) : (
-          // 디자인 10 상태 모음: 비었거나 못 불러와도 표 머리 줄은 그대로 두고 그 아래 상황별 캐릭터 (SCRUM-366)
-          <ArchiveTable
-            items={isFailed ? [] : items}
-            folderColors={folderColors}
-            onOpen={(item) => openMinutes(item.meetingId)}
-            onDownload={(item, format) => void download(item, format)}
-            rowMenu={(item, openDownload) => [
-              // 디자인 10 줄 메뉴: 다운로드, 링크 복사, (구분선) 회의록 삭제. 회의록 보기는 줄을 누르면 되므로 뺐다 (SCRUM-366)
-              { label: '다운로드', icon: downloadIcon, onSelect: openDownload },
-              { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
-              ...(isFolderOwner(item.folderId)
-                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, hasDividerBefore: true, onSelect: () => setDeleting(item) }]
-                : []),
-            ]}
-            empty={
-              isFailed ? (
-                // MSG-114. 디자인은 버튼이 없지만 다시 불러올 길이 없어 [다시 시도]는 남긴다
-                <EmptyState
-                  className={styles.tableEmpty}
-                  character={failCharacter}
-                  title="회의록 목록을 불러오지 못했어요."
-                  description="잠시 후 다시 시도해 주세요."
-                  action={
-                    <button type="button" className={styles.retry} onClick={reload}>
-                      다시 시도
-                    </button>
-                  }
-                />
-              ) : query || hasFilters ? (
-                // MSG-062
-                <EmptyState
-                  className={styles.tableEmpty}
-                  character={unknownCharacter}
-                  title="검색 결과가 없어요"
-                  description="다른 검색어를 입력하거나 필터를 줄여 보세요"
-                  action={
-                    <button type="button" className={styles.reset} onClick={resetAll}>
-                      필터 초기화
-                    </button>
-                  }
-                />
-              ) : (
-                // MSG-115
-                <EmptyState className={styles.tableEmpty} character={emptyCharacter} title="아직 회의록이 없어요" description="회의록을 작성 완료하면 여기에 모여요" />
-              )
-            }
-          />
-        )}
+          <div className={isRefreshing ? styles.refreshing : undefined} aria-busy={isRefreshing}>
+            {/* 디자인 10 상태 모음: 비었거나 못 불러와도 표 머리 줄은 그대로 두고 그 아래 상황별 캐릭터 (SCRUM-366) */}
+            <ArchiveTable
+              items={isFailed ? [] : items}
+              folderColors={folderColors}
+              onOpen={(item) => openMinutes(item.meetingId)}
+              onDownload={(item, format) => void download(item, format)}
+              rowMenu={(item, openDownload) => [
+                // 디자인 10 줄 메뉴: 다운로드, 링크 복사, (구분선) 회의록 삭제. 회의록 보기는 줄을 누르면 되므로 뺐다 (SCRUM-366)
+                { label: '다운로드', icon: downloadIcon, onSelect: openDownload },
+                { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
+                ...(isFolderOwner(item.folderId)
+                  ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, hasDividerBefore: true, onSelect: () => setDeleting(item) }]
+                  : []),
+              ]}
+              empty={
+                isFailed ? (
+                  // MSG-114. 디자인은 버튼이 없지만 다시 불러올 길이 없어 [다시 시도]는 남긴다
+                  <EmptyState
+                    className={styles.tableEmpty}
+                    character={failCharacter}
+                    title="회의록 목록을 불러오지 못했어요."
+                    description="잠시 후 다시 시도해 주세요."
+                    action={
+                      <button type="button" className={styles.retry} onClick={reload}>
+                        다시 시도
+                      </button>
+                    }
+                  />
+                ) : query || hasFilters ? (
+                  // MSG-062
+                  <EmptyState
+                    className={styles.tableEmpty}
+                    character={unknownCharacter}
+                    title="검색 결과가 없어요"
+                    description="다른 검색어를 입력하거나 필터를 줄여 보세요"
+                    action={
+                      <button type="button" className={styles.reset} onClick={resetAll}>
+                        필터 초기화
+                      </button>
+                    }
+                  />
+                ) : (
+                  // MSG-115
+                  <EmptyState className={styles.tableEmpty} character={emptyCharacter} title="아직 회의록이 없어요" description="회의록을 작성 완료하면 여기에 모여요" />
+                )
+              }
+            />
 
-        {/* REQ-168 페이지 번호 (한 페이지 20건) */}
-        {!isLoading && !isFailed && items.length > 0 && (
-          <div className={styles.footer}>
-            <span className={styles.count}>
-              {/* 디자인 TableFooter RangeText: 한 쪽이어도 같은 문구 (디자인 체크 2026-11-19) */}
-              {`${totalCount}개 중 ${page * ARCHIVE_PAGE_SIZE + 1}–${page * ARCHIVE_PAGE_SIZE + items.length}번째 회의록`}
-            </span>
-            {pageCount > 1 && (
-              <nav className={styles.pager} aria-label="페이지">
-                <button
-                  type="button"
-                  className={`${styles.pageButton} ${styles.pageArrow}`}
-                  aria-label="이전 페이지"
-                  disabled={page === 0}
-                  onClick={() => goToPage(page - 1)}
-                >
-                  <Icon src={chevronLeftIcon} size={PAGER_ICON_SIZE} />
-                </button>
-                {pageNumbers(page, pageCount).map((number, index) =>
-                  number === null ? (
-                    <span key={`gap-${index}`} className={styles.pageGap}>
-                      …
-                    </span>
-                  ) : (
-                    <button
-                      key={number}
-                      type="button"
-                      className={[styles.pageButton, number === page ? styles.pageCurrent : ''].filter(Boolean).join(' ')}
-                      aria-current={number === page ? 'page' : undefined}
-                      onClick={() => goToPage(number)}
-                    >
-                      {number + 1}
-                    </button>
-                  ),
-                )}
-                <button
-                  type="button"
-                  className={`${styles.pageButton} ${styles.pageArrow}`}
-                  aria-label="다음 페이지"
-                  disabled={page >= pageCount - 1}
-                  onClick={() => goToPage(page + 1)}
-                >
-                  <Icon src={chevronRightIcon} size={PAGER_ICON_SIZE} />
-                </button>
-              </nav>
-            )}
+          {/* REQ-168 페이지 번호 (한 페이지 20건) */}
+          {!isFailed && items.length > 0 && (
+            <div className={styles.footer}>
+              <span className={styles.count}>
+                {/* 디자인 TableFooter RangeText: 한 쪽이어도 같은 문구 (디자인 체크 2026-11-19) */}
+                {`${totalCount}개 중 ${page * ARCHIVE_PAGE_SIZE + 1}–${page * ARCHIVE_PAGE_SIZE + items.length}번째 회의록`}
+              </span>
+              {pageCount > 1 && (
+                <nav className={styles.pager} aria-label="페이지">
+                  <button
+                    type="button"
+                    className={`${styles.pageButton} ${styles.pageArrow}`}
+                    aria-label="이전 페이지"
+                    disabled={page === 0}
+                    onClick={() => goToPage(page - 1)}
+                  >
+                    <Icon src={chevronLeftIcon} size={PAGER_ICON_SIZE} />
+                  </button>
+                  {pageNumbers(page, pageCount).map((number, index) =>
+                    number === null ? (
+                      <span key={`gap-${index}`} className={styles.pageGap}>
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={number}
+                        type="button"
+                        className={[styles.pageButton, number === page ? styles.pageCurrent : ''].filter(Boolean).join(' ')}
+                        aria-current={number === page ? 'page' : undefined}
+                        onClick={() => goToPage(number)}
+                      >
+                        {number + 1}
+                      </button>
+                    ),
+                  )}
+                  <button
+                    type="button"
+                    className={`${styles.pageButton} ${styles.pageArrow}`}
+                    aria-label="다음 페이지"
+                    disabled={page >= pageCount - 1}
+                    onClick={() => goToPage(page + 1)}
+                  >
+                    <Icon src={chevronRightIcon} size={PAGER_ICON_SIZE} />
+                  </button>
+                </nav>
+              )}
+            </div>
+          )}
           </div>
         )}
       </section>
