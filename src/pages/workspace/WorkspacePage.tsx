@@ -12,9 +12,9 @@ import {
   inviteByEmail,
   issueInviteLink,
   leaveWorkspace,
+  listAllFolders,
   listFolderMembers,
   listFavorites,
-  listFolders,
   listMyWorkspaces,
   listPendingInvitations,
   listWorkspaceMembers,
@@ -154,13 +154,23 @@ export default function WorkspacePage() {
       const [detail, mine, folderList, me] = await Promise.all([
         getWorkspace(id),
         listMyWorkspaces(),
-        listFolders(id),
+        // 들어갈 수 없는 폴더도 카드로 보인다 (2026-11-24 QA)
+        listAllFolders(id),
         getMe().catch(() => null),
       ]);
       // REQ-037 폴더 카드의 회의 수, 다음(마지막) 회의는 meeting-service 폴더 회의 목록으로, 얼굴은 폴더 멤버로
+      // 들어갈 수 없는 폴더는 회의, 멤버를 받을 수 없어 묻지 않는다
       const [rows, memberLists] = await Promise.all([
-        Promise.all(folderList.map(({ folderId }) => listFolderMeetingRows(folderId).catch(() => []))),
-        Promise.all(folderList.map(({ folderId }) => listFolderMembers(folderId).catch(() => []))),
+        Promise.all(
+          folderList.map(({ folderId, accessible }) =>
+            accessible === false ? [] : listFolderMeetingRows(folderId).catch(() => []),
+          ),
+        ),
+        Promise.all(
+          folderList.map(({ folderId, accessible }) =>
+            accessible === false ? [] : listFolderMembers(folderId).catch(() => []),
+          ),
+        ),
       ]);
       // TODO(백엔드): 멤버도 목록을 볼 수 있게 바뀌기 전까지는 소유자가 아니면 403이라 빈 목록으로 둔다
       const memberList = await listWorkspaceMembers(id).catch(() => []);

@@ -50,6 +50,13 @@
   color: var(--text-tertiary);
 }
 
+/* 들어갈 수 없는 폴더: 자물쇠와 안내 (2026-11-24 QA) */
+.locked {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
 .actions {
   display: flex;
   flex-shrink: 0;

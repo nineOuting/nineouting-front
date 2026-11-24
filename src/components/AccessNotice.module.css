@@ -1,28 +1,35 @@
-/* 화면 가운데 안내 */
+/* 화면 가운데 안내 (피그마 EmptyState: 캐릭터, 글, 버튼 사이 16px) */
 .notice {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-2);
+  gap: var(--gap-content);
   min-height: 60vh;
   padding: var(--spacing-6) 16px;
   text-align: center;
 }
 
+.texts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
+}
+
 .title {
-  font-size: var(--font-size-heading-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
+  font-size: var(--font-size-heading-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-heading-lg);
+  color: var(--text-secondary);
 }
 
 .description {
-  font-size: var(--font-size-body-md);
-  color: var(--text-secondary);
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-tertiary);
 }
 
 .actions {
   display: flex;
   gap: var(--spacing-2);
-  margin-top: var(--spacing-3);
 }
