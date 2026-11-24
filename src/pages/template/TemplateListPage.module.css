@@ -151,30 +151,14 @@
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
-/* 종이 모양 미리보기 */
-.paper {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 124px;
-  padding: 16px;
-  background: var(--bg-surface);
-}
-
-.paperTitle {
-  width: 48px;
-  height: 4px;
-  margin-bottom: 4px;
-  background: var(--text-primary);
-}
-
-.paperLine {
-  height: 3px;
-  background: var(--border-default);
-}
-
-.paperLine:nth-child(odd) {
-  width: 70%;
+/* 실제 양식을 줄인 종이 (TemplatePaper). 첫 쪽 윗부분만 보인다 */
+.cardPage {
+  display: block;
+  flex-shrink: 0;
+  width: 140px;
+  overflow: hidden;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  box-shadow: var(--shadow-sm);
 }
 
 .favorite {
