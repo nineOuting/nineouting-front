@@ -120,6 +120,13 @@
   padding: var(--spacing-6) var(--spacing-6) 120px;
 }
 
+/* 디자인 07 Live 가운데 내용: 1440 기준 폭 724px. 넓은 화면에서는 이 폭으로 묶고 가운데에 둔다 (회의 대기와 같은 방식, SCRUM-365) */
+.boardContent > * {
+  width: 100%;
+  max-width: 724px;
+  margin-inline: auto;
+}
+
 .sidePanel {
   display: flex;
   flex-shrink: 0;
@@ -130,18 +137,18 @@
   overflow: hidden;
 }
 
-/* 디자인 밑줄 탭: 실시간 전사 / 내 도우미 */
+/* 디자인 07 PanelTabs: 밑줄 탭, 탭 사이 4px (SCRUM-365) */
 .tabs {
   display: flex;
   flex-shrink: 0;
-  gap: var(--spacing-2);
+  gap: var(--spacing-1);
   margin-bottom: var(--spacing-5, 20px);
   border-bottom: var(--border-width-default) solid var(--border-default);
 }
 
+/* 디자인 PanelTab: 위 8, 아래 12, 좌우 12 (밑줄 포함 높이 46) */
 .tab {
-  height: 48px;
-  padding: 0 var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-3) var(--spacing-3);
   border-bottom: 2px solid transparent;
   font-size: var(--font-size-body-lg);
   line-height: var(--line-height-body-lg);
@@ -152,10 +159,11 @@
   color: var(--text-primary);
 }
 
+/* 디자인 PanelTab 선택: B1 Bold, 링크 파랑 글자와 밑줄 */
 .tabActive {
-  border-bottom-color: var(--primary-default);
-  font-weight: var(--font-weight-semibold);
-  color: var(--primary-default);
+  border-bottom-color: var(--interactive-selected-border);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-link);
 }
 
 .leaveNote {
