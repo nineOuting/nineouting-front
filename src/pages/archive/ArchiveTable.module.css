@@ -1,4 +1,4 @@
-/* 디자인 Page 9 ArchivePage 표: 회색 머리줄, 줄 높이 52px, 줄 사이 선 (바깥 테두리는 감싼 카드가 그린다) */
+/* 디자인 10 ArchivePage 표: 회색 머리줄, 줄 사이 선 (바깥 테두리는 감싼 카드가 그린다) */
 .table {
   display: flex;
   flex-direction: column;
@@ -8,13 +8,15 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-4);
-  min-height: 52px;
+  /* 디자인 ArchiveListRow 53: 위아래 16 + 글자 20 + 아래 선 1 (SCRUM-366) */
+  min-height: 53px;
   padding: 0 var(--spacing-4);
   border-bottom: var(--border-width-default) solid var(--border-default);
 }
 
 .head {
-  min-height: 40px;
+  /* 디자인 ArchiveListHeader 41: 위아래 12 + 글자 16 + 아래 선 1 */
+  min-height: 41px;
   background: var(--bg-surface-muted);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
@@ -82,8 +84,12 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--spacing-1);
   width: 64px;
+}
+
+/* 디자인 ArchiveListHeader: "작업" 글자는 칸 왼쪽 */
+.head .action {
+  justify-content: flex-start;
 }
 
 .ellipsis {
@@ -103,19 +109,19 @@
   background: var(--neutral-ghost-hover);
 }
 
-.menuAnchor,
-.downloadAnchor {
+.menuAnchor {
   position: relative;
   display: inline-flex;
 }
 
-/* REQ-160 다운로드 아이콘은 늘 보이고 ⋮는 줄에 마우스를 올리거나 키보드로 들어오면 보인다 */
+/* REQ-160 디자인 10: ⋮ 하나만, 줄에 마우스를 올리거나 키보드로 들어오거나 메뉴가 열려 있으면 보인다 (SCRUM-366) */
 .item .menuAnchor {
   visibility: hidden;
 }
 
 .item:hover .menuAnchor,
-.item:focus-within .menuAnchor {
+.item:focus-within .menuAnchor,
+.item .menuOpen {
   visibility: visible;
 }
 

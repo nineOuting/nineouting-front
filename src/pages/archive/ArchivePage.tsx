@@ -33,10 +33,9 @@ import { restoreMeeting, trashMeeting } from '../../api/meeting';
 import copyIcon from '../../assets/icons/copy.svg';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
-import moveIcon from '../../assets/icons/folder-sm.svg';
-import MoveMeetingModal from '../../components/MoveMeetingModal';
 import emptyCharacter from '../../assets/characters/empty.svg';
-import viewIcon from '../../assets/icons/visibility.svg';
+import failCharacter from '../../assets/characters/fail.svg';
+import unknownCharacter from '../../assets/characters/unknown.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
@@ -175,7 +174,6 @@ export default function ArchivePage() {
   const [viewed, setViewed] = useState<ViewedMinutes[]>([]);
   const [isViewedOpen, setIsViewedOpen] = useState(false);
   const [keyword, setKeyword] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '');
-  const [moving, setMoving] = useState<ArchiveMinutes | null>(null);
   // REQ-160 [회의록 삭제] 확인 창 (MSG-116)
   const [deleting, setDeleting] = useState<ArchiveMinutes | null>(null);
   // 되돌리기, 이동, 다시 시도 뒤 같은 조건으로 다시 받는다
@@ -563,47 +561,53 @@ export default function ArchivePage() {
               <Skeleton key={index} height={ROW_HEIGHT} />
             ))}
           </div>
-        ) : isFailed ? (
-          <EmptyState
-            title="회의록 목록을 불러오지 못했어요."
-            description="잠시 후 다시 시도해 주세요."
-            action={
-              <button type="button" className={styles.retry} onClick={reload}>
-                다시 시도
-              </button>
-            }
-          />
-        ) : items.length === 0 ? (
-          query || hasFilters ? (
-            <EmptyState
-              character={emptyCharacter}
-              title="검색 결과가 없어요"
-              description="다른 검색어를 입력하거나 필터를 줄여 보세요"
-              action={
-                <button type="button" className={styles.reset} onClick={resetAll}>
-                  필터 초기화
-                </button>
-              }
-            />
-          ) : (
-            <EmptyState title="아직 회의록이 없어요" description="회의록을 작성 완료하면 여기에 모여요" />
-          )
         ) : (
+          // 디자인 10 상태 모음: 비었거나 못 불러와도 표 머리 줄은 그대로 두고 그 아래 상황별 캐릭터 (SCRUM-366)
           <ArchiveTable
-            items={items}
+            items={isFailed ? [] : items}
             folderColors={folderColors}
             onOpen={(item) => openMinutes(item.meetingId)}
             onDownload={(item, format) => void download(item, format)}
             rowMenu={(item, openDownload) => [
-              // 디자인 MenuItem ViewIcon (디자인 체크 2026-11-19)
-              { label: '회의록 보기', icon: viewIcon, onSelect: () => openMinutes(item.meetingId) },
+              // 디자인 10 줄 메뉴: 다운로드, 링크 복사, (구분선) 회의록 삭제. 회의록 보기는 줄을 누르면 되므로 뺐다 (SCRUM-366)
               { label: '다운로드', icon: downloadIcon, onSelect: openDownload },
               { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
-              { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
               ...(isFolderOwner(item.folderId)
-                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setDeleting(item) }]
+                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, hasDividerBefore: true, onSelect: () => setDeleting(item) }]
                 : []),
             ]}
+            empty={
+              isFailed ? (
+                // MSG-114. 디자인은 버튼이 없지만 다시 불러올 길이 없어 [다시 시도]는 남긴다
+                <EmptyState
+                  className={styles.tableEmpty}
+                  character={failCharacter}
+                  title="회의록 목록을 불러오지 못했어요."
+                  description="잠시 후 다시 시도해 주세요."
+                  action={
+                    <button type="button" className={styles.retry} onClick={reload}>
+                      다시 시도
+                    </button>
+                  }
+                />
+              ) : query || hasFilters ? (
+                // MSG-062
+                <EmptyState
+                  className={styles.tableEmpty}
+                  character={unknownCharacter}
+                  title="검색 결과가 없어요"
+                  description="다른 검색어를 입력하거나 필터를 줄여 보세요"
+                  action={
+                    <button type="button" className={styles.reset} onClick={resetAll}>
+                      필터 초기화
+                    </button>
+                  }
+                />
+              ) : (
+                // MSG-115
+                <EmptyState className={styles.tableEmpty} character={emptyCharacter} title="아직 회의록이 없어요" description="회의록을 작성 완료하면 여기에 모여요" />
+              )
+            }
           />
         )}
 
@@ -618,7 +622,7 @@ export default function ArchivePage() {
               <nav className={styles.pager} aria-label="페이지">
                 <button
                   type="button"
-                  className={styles.pageButton}
+                  className={`${styles.pageButton} ${styles.pageArrow}`}
                   aria-label="이전 페이지"
                   disabled={page === 0}
                   onClick={() => setPage(page - 1)}
@@ -644,7 +648,7 @@ export default function ArchivePage() {
                 )}
                 <button
                   type="button"
-                  className={styles.pageButton}
+                  className={`${styles.pageButton} ${styles.pageArrow}`}
                   aria-label="다음 페이지"
                   disabled={page >= pageCount - 1}
                   onClick={() => setPage(page + 1)}
@@ -659,20 +663,6 @@ export default function ArchivePage() {
       {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {isCreatingWorkspace && <CreateWorkspaceModal onClose={() => setIsCreatingWorkspace(false)} />}
       */}
-      {moving && (
-        <MoveMeetingModal
-          meetingId={moving.meetingId}
-          title={moving.title}
-          workspaceId={id}
-          currentFolderId={moving.folderId}
-          onMoved={(folderName) => {
-            setToast({ text: `'${moving.title}'을 ${folderName} 폴더로 옮겼어요.`, variant: 'success' });
-            setMoving(null);
-            reload();
-          }}
-          onClose={() => setMoving(null)}
-        />
-      )}
       {deleting && (
         <ConfirmDialog
           title={`'${deleting.title}' 회의록을 삭제할까요?`}
