@@ -29,6 +29,15 @@ function textToHtml(text: string) {
   return escaped.replaceAll('\n', '<br>');
 }
 
+/** 서식 없이 저장된 목록을 서식 칸에 넣을 HTML 목록으로 바꾼다 (한 줄이 한 항목, AI 초안의 "- "는 뗀다) */
+function listToHtml(text: string) {
+  const items = text
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => textToHtml(line.replace(LIST_MARKER, '')));
+  return `<ul>${(items.length ? items : ['<br>']).map((item) => `<li>${item}</li>`).join('')}</ul>`;
+}
+
 /** 줄 = 행, 탭 = 열. 양식의 행·열 수보다 적으면 빈 칸으로 채운다 */
 function toGrid(content: string, settings: ItemSettings) {
   const lines = content ? content.split('\n').map((line) => line.split(CELL_SEPARATOR)) : [];
@@ -92,11 +101,12 @@ export default function SectionContent({
     );
   }
 
-  const isRich = richText && settings.recordType === 'FREE';
+  // REQ-194 서식은 HTML로 저장한다. 줄글에 더해 목록 칸도 서식을 쓴다 (QA 58). 체크리스트, 표는 칸 모양 때문에 서식 없이 둔다
+  const isRich = richText && (settings.recordType === 'FREE' || settings.recordType === 'LIST');
   if (editable && isRich) {
     return (
       <RichTextField
-        html={richContent ?? textToHtml(content)}
+        html={richContent ?? (settings.recordType === 'LIST' ? listToHtml(content) : textToHtml(content))}
         label={label}
         placeholder={placeholder}
         style={style}
