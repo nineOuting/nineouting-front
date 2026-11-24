@@ -359,7 +359,8 @@ export default function AgendaFocus({
               isPaused={isPaused}
               isSelected={decision.id === selectedDecisionId}
               canEdit={canEdit}
-              onSelect={() => onSelectDecision(decision.id === selectedDecisionId ? undefined : decision.id)}
+              // 근거 창이 떠 있을 때 같은 카드를 다시 눌러도 닫지 않는다. 닫기는 창의 X로만 (SCRUM-365)
+              onSelect={() => onSelectDecision(decision.id)}
               onSave={(summary) => onSaveDecision(decision.id, summary)}
               onChangeStatus={(status) => onChangeDecisionStatus(decision.id, status)}
             />
