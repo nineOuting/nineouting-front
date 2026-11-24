@@ -49,6 +49,8 @@ export interface MinutesTemplate {
   /** 상세 보기 부제 */
   description?: string;
   isFavorite: boolean;
+  /** 서비스 기본 양식("기본 회의록"). 워크스페이스가 양식을 따로 정하지 않았으면 이 양식이 워크스페이스 양식이다 */
+  isDefault?: boolean;
 }
 
 export interface PreviousMeeting {
