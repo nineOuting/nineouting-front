@@ -6,10 +6,9 @@ import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
 import type { MinutesTemplate } from '../../types/meeting';
 import styles from './TemplateGalleryModal.module.css';
+import TemplateThumbnail from './TemplateThumbnail';
 
 const STAR_SIZE = 20;
-// 미리보기 속 줄 길이 (디자인 Preview)
-const PREVIEW_LINES = [32, 56, 48, 56, 40, 24];
 
 interface TemplateGalleryModalProps {
   templates: MinutesTemplate[];
@@ -68,11 +67,7 @@ export default function TemplateGalleryModal({
                 onClick={() => (isSelected ? onOpenDetail(index) : setPickedId(template.templateId))}
               >
                 <span className={styles.preview}>
-                  <span className={styles.page}>
-                    {PREVIEW_LINES.map((width, line) => (
-                      <span key={line} className={styles.line} style={{ width }} />
-                    ))}
-                  </span>
+                  <TemplateThumbnail items={template.items} showMeetingInfo={template.showMeetingInfo} />
                 </span>
                 <span className={styles.name}>{template.name}</span>
               </button>

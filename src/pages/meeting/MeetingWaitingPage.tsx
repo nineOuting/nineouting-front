@@ -174,12 +174,14 @@ export default function MeetingWaitingPage() {
       setFolderMembers(members);
       setPendingAgendas(usable);
       setTemplates(
-        templateList.map(({ templateId, name, description, favorite, isDefault }) => ({
+        templateList.map(({ templateId, name, description, favorite, isDefault, items, layout }) => ({
           templateId,
           name,
           description,
           isFavorite: favorite,
           isDefault,
+          items,
+          showMeetingInfo: layout.showMeetingInfo,
         })),
       );
       setMeeting({ ...loaded, agendas: withCarriedOverDates(loaded.agendas, usable) });

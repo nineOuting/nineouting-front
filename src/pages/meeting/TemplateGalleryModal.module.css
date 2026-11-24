@@ -39,25 +39,6 @@
   background: var(--bg-surface-muted);
 }
 
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 76px;
-  height: 100px;
-  padding: 10px 8px;
-  background: var(--bg-page);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-}
-
-.line {
-  height: 4px;
-  max-width: 100%;
-  background: var(--border-default);
-  border-radius: var(--radius-full);
-}
-
 .star {
   position: absolute;
   top: 4px;

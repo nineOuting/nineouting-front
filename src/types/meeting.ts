@@ -1,3 +1,5 @@
+import type { TemplateItem } from './template';
+
 export interface Member {
   userId: number;
   name: string;
@@ -51,6 +53,10 @@ export interface MinutesTemplate {
   isFavorite: boolean;
   /** 서비스 기본 양식("기본 회의록"). 워크스페이스가 양식을 따로 정하지 않았으면 이 양식이 워크스페이스 양식이다 */
   isDefault?: boolean;
+  /** 카드 미리보기에 그릴 섹션 (순서, 기록 방식, 표 크기) */
+  items?: TemplateItem[];
+  /** 회의 기본 정보 칸을 켠 양식 (카드 미리보기) */
+  showMeetingInfo?: boolean;
 }
 
 export interface PreviousMeeting {
