@@ -49,6 +49,22 @@ export default function StatusPill({ status, soft = false }: StatusPillProps) {
   );
 }
 
+// 디자인 Badge tone: 미결 warning, 논의 전 neutral, 논의 중 primary, 결정 success, 결정 확인 필요 info
+const BADGE_TONES: Record<PillTone, string> = {
+  discussing: styles.badgePrimary,
+  decided: styles.badgeSuccess,
+  notStarted: styles.badgeNeutral,
+  undecided: styles.badgeWarning,
+  decisionCheck: styles.badgeInfo,
+};
+
+/**
+ * 디자인 Badge: 아이콘 없이 글자만, 모서리 4px. 회의 끝내기 창의 남은 안건 상태 (디자인 07 Live_17, SCRUM-365)
+ */
+export function StatusBadge({ status }: { status: AgendaStatus }) {
+  return <span className={[styles.badge, BADGE_TONES[status]].join(' ')}>{LABELS[status]}</span>;
+}
+
 /** REQ-124 결정할 사항 상태를 같은 모양으로 보여 준다 */
 export function DecisionStatusPill({ status }: { status: DecisionStatus }) {
   return <StatusPill status={DECISION_TONES[status]} />;
