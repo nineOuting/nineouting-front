@@ -356,7 +356,6 @@ export default function MinutesEditorPage() {
 
   const isWriter = minutes.writer.userId === myId;
   const templateName = templates.find((template) => template.templateId === minutes.templateId)?.name;
-  const isEditing = isWriter && minutes.status === 'WRITING';
   const meta = [
     { icon: scheduleIcon, label: scheduleLabel(minutes.meetingStartAt, meeting?.endAt) },
     ...(minutes.location ? [{ icon: locationIcon, label: minutes.location }] : []),
@@ -512,7 +511,8 @@ export default function MinutesEditorPage() {
       {toast && <Toast message={toast} onClose={closeToast} />}
       <EditorTopBar
         left={
-          isEditing && (
+          // QA 59 되돌리기, 다시 실행은 작성자에게 늘 보인다 (공유 뒤에도 고칠 수 있다)
+          isWriter && (
             <div className={styles.history}>
               <button type="button" className={styles.historyButton} aria-label="되돌리기" disabled={past.length === 0} onClick={undo}>
                 <Icon src={undoIcon} size={HISTORY_ICON_SIZE} />
@@ -605,14 +605,16 @@ export default function MinutesEditorPage() {
               {item.label}
             </li>
           ))}
-          {minutes.status !== 'WRITING' && <li className={styles.status}>{STATUS_LABELS[minutes.status]}</li>}
-          {/* REQ-140 디자인 ChangeTemplateButton (작성자, 작성 중) */}
-          {isEditing && (
+          {/* QA 63 작성자에게는 상태 칩 대신 양식 변경 버튼을 둔다 (공유, 확정 뒤에도 양식을 바꿀 수 있다) */}
+          {!isWriter && minutes.status !== 'WRITING' && <li className={styles.status}>{STATUS_LABELS[minutes.status]}</li>}
+          {/* REQ-140 디자인 ChangeTemplateButton (작성자) */}
+          {isWriter && (
             <li className={styles.anchor}>
               <button
                 ref={templateAnchorRef}
                 type="button"
                 className={styles.changeTemplate}
+                aria-label="양식 변경"
                 aria-haspopup="listbox"
                 aria-expanded={isTemplateMenuOpen}
                 onClick={() => setIsTemplateMenuOpen((open) => !open)}
