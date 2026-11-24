@@ -190,25 +190,30 @@
   color: var(--text-primary);
 }
 
-/* 수정 모드 */
+/* 수정 모드. 디자인 AgendaRows: 위 16px, 안건 사이 12px (SCRUM-364) */
 .editList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
-  padding-top: var(--spacing-6);
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-4);
 }
 
+/* 디자인 EditAgendaRow: 위아래 16px, 좌우 12px, 손잡이와 내용 사이 8px. 테두리 없음 (새 안건도 같다) */
 .editItem {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  padding: var(--spacing-4) 0 var(--spacing-6);
+  align-items: flex-start;
+  gap: var(--gap-inline);
+  padding: var(--spacing-4) var(--spacing-3);
+  border-radius: var(--radius-lg);
 }
 
-.newItem {
-  padding: var(--spacing-4) var(--spacing-4) var(--spacing-6) 0;
-  border: var(--border-width-default) dashed var(--border-strong);
-  border-radius: var(--radius-lg);
+/* 디자인 Body: 제목 칸, 넘어옴 표시, 결정할 사항 사이 8px */
+.editBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
 }
 
 .editTitleRow {
@@ -217,18 +222,20 @@
   gap: var(--spacing-2);
 }
 
+/* 디자인 DragHandle 20px: 행 맨 위(제목 칸 윗선)에 붙는다 */
 .handle,
 .smallHandle {
   display: flex;
   flex-shrink: 0;
   justify-content: center;
-  width: 40px;
+  width: 20px;
   color: var(--text-secondary);
   cursor: grab;
 }
 
+/* 디자인 DragHandleIcon 16px */
 .smallHandle {
-  width: 24px;
+  width: 16px;
   color: var(--text-disabled);
 }
 
@@ -250,8 +257,9 @@
   font-weight: var(--font-weight-semibold);
 }
 
+/* 디자인 DecisionInput: 위아래 4px + 글자 20px + 테두리 = 30px */
 .decisionInput {
-  height: 34px;
+  height: 30px;
   padding: 0 var(--input-md-padding-x);
   font-size: var(--font-size-body-md);
 }
@@ -273,38 +281,36 @@
 }
 
 .fieldError {
-  padding-left: 48px;
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
   color: var(--danger-default);
 }
 
+/* 디자인 Chip: 위아래 4px, 좌우 8px */
 .carriedNote {
   display: flex;
+  align-self: flex-start;
   align-items: center;
   gap: var(--spacing-1);
-  padding-left: 48px;
+  padding: var(--spacing-1) var(--spacing-2);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
   color: var(--text-secondary);
 }
 
+/* 디자인 DecisionStack: 왼쪽 4px, 라벨·줄 사이 4px */
 .decisionEdit {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
-  padding-left: 44px;
+  padding-left: var(--spacing-1);
 }
 
-.decisionEdit > .decisionLabel {
-  margin-top: var(--spacing-2);
-}
-
+/* 디자인 EditDecisionRow: 손잡이, 입력 칸, 지우기 사이 8px */
 .decisionRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-1);
-  margin-left: -28px;
+  gap: var(--spacing-2);
 }
 
 .iconButton {
@@ -316,6 +322,22 @@
 }
 
 .iconButton:hover {
+  background: var(--neutral-ghost-hover);
+}
+
+/* 디자인 RemoveDecision: 16px 칸, 아이콘 12px */
+.removeDecision {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
+}
+
+.removeDecision:hover {
   background: var(--neutral-ghost-hover);
 }
 
