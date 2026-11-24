@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   listNotifications,
   readAllNotifications,
@@ -12,6 +12,7 @@ import memberIcon from '../assets/icons/noti-member.svg';
 import minutesIcon from '../assets/icons/noti-minutes.svg';
 import Icon from './Icon';
 import Skeleton from './Skeleton';
+import type { BackState } from '../utils/meetingFormat';
 import styles from './NotificationPanel.module.css';
 
 const ICON_SIZE = 24;
@@ -57,6 +58,7 @@ interface NotificationPanelProps {
 /** REQ-004 알림 목록 (디자인 NotificationPanel). 누르면 읽음 처리하고 회의 알림이면 그 회의로 간다 */
 export default function NotificationPanel({ anchorRef, onUnreadChange, onClose }: NotificationPanelProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const panelRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<AppNotification[]>();
   const [error, setError] = useState(false);
@@ -104,7 +106,8 @@ export default function NotificationPanel({ anchorRef, onUnreadChange, onClose }
     }
     if (item.type.startsWith('MEETING_') && item.type !== 'MEETING_CANCELLED' && item.targetId) {
       onClose();
-      navigate(`/meetings/${item.targetId}`);
+      // 회의록 확인에서 뒤로 가면 알림을 열었던 화면으로 (SCRUM-366)
+      navigate(`/meetings/${item.targetId}`, { state: { backTo: `${location.pathname}${location.search}` } satisfies BackState });
     }
   };
 

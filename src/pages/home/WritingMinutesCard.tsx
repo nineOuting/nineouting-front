@@ -7,6 +7,7 @@ import { daysBetween, fromIsoDate } from '../../utils/calendar';
 import { folderIconColor } from '../../utils/folderColor';
 import card from './HomeCard.module.css';
 import type { FolderOption } from './ProjectFilter';
+import type { BackState } from '../../utils/meetingFormat';
 import styles from './WritingMinutesCard.module.css';
 
 const SMALL_ICON_SIZE = 16;
@@ -44,7 +45,7 @@ export default function WritingMinutesCard({ items, folders }: WritingMinutesCar
             const folder = folders.find(({ folderId }) => folderId === item.folderId);
             return (
               <li key={item.minutesId}>
-                <Link to={`/meetings/${item.meetingId}/minutes`} className={styles.item}>
+                <Link to={`/meetings/${item.meetingId}/minutes`} state={{ backTo: '/home' } satisfies BackState} className={styles.item}>
                   <span className={styles.titleRow}>
                     <span className={card.rowTitle}>{item.title}</span>
                     <span className={card.badgeNeutral}>{days === 0 ? 'D-day' : `D+${days}`}</span>

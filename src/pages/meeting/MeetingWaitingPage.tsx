@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
   cancelMeeting,
@@ -34,7 +34,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import Icon from '../../components/Icon';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Meeting, MeetingStatus, Member, MinutesTemplate, PendingAgenda } from '../../types/meeting';
-import { formatMeetingSchedule, formatShortDateTime } from '../../utils/meetingFormat';
+import { backToOf, formatMeetingSchedule, formatShortDateTime } from '../../utils/meetingFormat';
 import { pendingAgendasFor, withCarriedOverDates } from '../../utils/pendingAgenda';
 import { orderTemplates } from '../../utils/templateOrder';
 import ActionMenu from '../workspace/ActionMenu';
@@ -107,6 +107,8 @@ function Avatar({ member }: { member: Member }) {
 /** REQ-064, 073~077, 122~123 회의 대기 화면 */
 export default function MeetingWaitingPage() {
   const navigate = useNavigate();
+  // 들어온 화면(홈, 아카이브 등)이 넘긴 돌아갈 곳. 없으면 프로젝트 폴더로 (SCRUM-366)
+  const backTo = backToOf(useLocation().state);
   const { meetingId } = useParams();
   // 피그마 MeetingWaiting_EditAgenda: 안건을 고치는 동안에는 [회의 시작하기]를 막는다
   const [isEditingAgenda, setIsEditingAgenda] = useState(false);
@@ -398,9 +400,9 @@ export default function MeetingWaitingPage() {
         <button
           type="button"
           className={styles.iconButton}
-          aria-label="프로젝트 폴더로 돌아가기"
-          title={folderName || undefined}
-          onClick={() => navigate(`/folders/${meeting.folderId}`)}
+          aria-label={backTo ? '이전 화면으로 돌아가기' : '프로젝트 폴더로 돌아가기'}
+          title={backTo ? undefined : folderName || undefined}
+          onClick={() => navigate(backTo ?? `/folders/${meeting.folderId}`)}
         >
           <Icon src={chevronLeftIcon} size={BACK_ICON_SIZE} />
         </button>

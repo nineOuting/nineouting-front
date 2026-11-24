@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { listCalendarMeetings, type CalendarMeeting } from '../../api/meeting';
 import nextIcon from '../../assets/icons/carousel-next.svg';
 import prevIcon from '../../assets/icons/carousel-prev.svg';
@@ -7,6 +7,7 @@ import Icon from '../../components/Icon';
 import type { FolderSummary } from '../../types/workspace';
 import { folderIconColor, folderSubtleColor } from '../../utils/folderColor';
 import { addDays, startOfWeek, toIsoDate, toTime } from '../../utils/calendar';
+import type { BackState } from '../../utils/meetingFormat';
 import styles from './WeekMeetings.module.css';
 
 const DAYS_IN_WEEK = 7;
@@ -35,6 +36,8 @@ function meetingPath(meeting: CalendarMeeting) {
 
 /** REQ-197 워크스페이스 이번 주 회의: 이번 주(월~일)에 이 워크스페이스에서 열리는 회의를 카드로 (날짜, 회의명, 프로젝트, 시간) */
 export default function WeekMeetings({ workspaceId, folders }: WeekMeetingsProps) {
+  // 끝난 회의의 회의록 확인에서 뒤로 가면 이 워크스페이스 화면으로 (SCRUM-366)
+  const location = useLocation();
   // null이면 불러오는 중
   const [meetings, setMeetings] = useState<CalendarMeeting[] | null>(null);
   // 보이는 첫 카드 위치
@@ -89,7 +92,7 @@ export default function WeekMeetings({ workspaceId, folders }: WeekMeetingsProps
           {meetings.map((meeting, index) => (
             <li key={meeting.meetingId} inert={index < start || index >= start + VISIBLE_COUNT}>
               {/* 피그마 Page 8 MeetingCard: 날짜 상자(프로젝트 색) + 회의명, 프로젝트 · 시간 */}
-              <Link to={meetingPath(meeting)} className={styles.card}>
+              <Link to={meetingPath(meeting)} state={{ backTo: location.pathname } satisfies BackState} className={styles.card}>
                 <span
                   className={styles.dateBox}
                   style={{ background: folderSubtleColor(colorOf(meeting)), color: folderIconColor(colorOf(meeting)) }}
