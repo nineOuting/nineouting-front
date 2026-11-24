@@ -39,7 +39,8 @@ export default function TooltipLayer() {
       setTip(null);
     };
     const handleOver = (event: MouseEvent) => {
-      const element = iconButtonOf(event.target);
+      // 버튼을 누른 채 끄는 동안에는 띄우지 않는다 (양식 섹션 손잡이)
+      const element = event.buttons ? null : iconButtonOf(event.target);
       if (element === current) {
         return;
       }
@@ -55,12 +56,13 @@ export default function TooltipLayer() {
     };
 
     document.addEventListener('mouseover', handleOver);
-    document.addEventListener('mousedown', hide);
+    // 손잡이처럼 누를 때 기본 동작을 막아 mousedown이 오지 않아도 닫히게 pointerdown으로 듣는다
+    document.addEventListener('pointerdown', hide);
     window.addEventListener('scroll', hide, true);
     return () => {
       hide();
       document.removeEventListener('mouseover', handleOver);
-      document.removeEventListener('mousedown', hide);
+      document.removeEventListener('pointerdown', hide);
       window.removeEventListener('scroll', hide, true);
     };
   }, []);

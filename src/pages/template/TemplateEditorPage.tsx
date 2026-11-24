@@ -5,6 +5,7 @@ import { createMinutesTemplate, listMinutesTemplates, updateMinutesTemplate } fr
 import ConfirmDialog from '../../components/ConfirmDialog';
 import addIcon from '../../assets/icons/add-plain.svg';
 import checkIcon from '../../assets/icons/check.svg';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import ballotIcon from '../../assets/icons/rail-ballot.svg';
 import layoutIcon from '../../assets/icons/rail-layout.svg';
 import tableIcon from '../../assets/icons/rail-table.svg';
@@ -14,6 +15,8 @@ import templateIcon from '../../assets/icons/template-sm.svg';
 import EditorTopBar from '../../components/EditorTopBar';
 import editorBar from '../../components/EditorTopBar.module.css';
 import Icon from '../../components/Icon';
+import Sidebar from '../../components/Sidebar';
+import SidebarRail from '../../components/SidebarRail';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate, TemplateItem, TemplateLayout } from '../../types/template';
 import {
@@ -22,6 +25,8 @@ import {
   MEETING_INFO_PRESET,
   PRESET_ITEMS,
   presetItem,
+  presetOf,
+  withPreset,
 } from '../../utils/templateSettings';
 import TemplatePreview from './TemplatePreview';
 import TemplateSettingsPanel, { type SettingsView } from './TemplateSettingsPanel';
@@ -30,6 +35,7 @@ import styles from './TemplateEditorPage.module.css';
 const RAIL_ICON_SIZE = 24;
 const ADD_ICON_SIZE = 20;
 const BUTTON_ICON_SIZE = 16;
+const COLLAPSE_ICON_SIZE = 16;
 const MAX_NAME_LENGTH = 50;
 const MAX_DESCRIPTION_LENGTH = 100;
 const CUSTOM_TITLE = '커스텀 항목';
@@ -57,7 +63,7 @@ const EMPTY_DRAFT: Draft = { name: '', description: '', items: [], layout: DEFAU
 /** 기본 양식의 항목·레이아웃 (기본 양식으로 초기화) */
 function fromDefault(templates: MinutesTemplate[], name: string, description: string): Draft {
   const base = templates.find((template) => template.isDefault);
-  return { name, description, items: base?.items ?? [], layout: base?.layout ?? DEFAULT_LAYOUT };
+  return { name, description, items: (base?.items ?? []).map(withPreset), layout: base?.layout ?? DEFAULT_LAYOUT };
 }
 
 /** 같은 제목이 이미 있으면 뒤에 숫자를 붙인다 */
@@ -113,6 +119,9 @@ export default function TemplateEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<RailView>('items');
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  // QA 71 왼쪽 패널을 접어 문서를 넓게 본다 (피그마 PanelCollapseHandle)
+  const [isSideOpen, setIsSideOpen] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
 
@@ -125,7 +134,8 @@ export default function TemplateEditorPage() {
         }
         setTemplates(list);
         const source = list.find(({ templateId: id }) => id === (editingId ?? Number(copyFrom)));
-        if (editingId !== null && (!source || source.isDefault)) {
+        // QA 64 기본 양식은 내 기본 양식으로 고친다. 공유받은 양식만 고칠 수 없다
+        if (editingId !== null && (!source || source.shared)) {
           setToast({ text: '고칠 수 없는 양식이에요.', variant: 'error' });
         }
         setDraft(
@@ -133,7 +143,7 @@ export default function TemplateEditorPage() {
             ? {
                 name: editingId !== null ? source.name : `${source.name} (사본)`.slice(0, MAX_NAME_LENGTH),
                 description: source.description,
-                items: source.items,
+                items: source.items.map(withPreset),
                 layout: source.layout,
               }
             : fromDefault(list, '', ''),
@@ -148,11 +158,12 @@ export default function TemplateEditorPage() {
 
   const setItems = (items: TemplateItem[]) => setDraft((prev) => ({ ...prev, items }));
   const indexOf = (title: string) => draft.items.findIndex((item) => item.title === title);
-  const presetTitles = new Set(PRESET_ITEMS.map(({ title }) => title));
-  const customItems = draft.items.filter((item) => !presetTitles.has(item.title));
+  // QA 78 기본 항목은 제목을 고쳐도 같은 자리로 본다
+  const presetIndexOf = (preset: (typeof PRESET_ITEMS)[number]) => draft.items.findIndex((item) => presetOf(item) === preset);
+  const customItems = draft.items.filter((item) => !presetOf(item));
 
   const togglePreset = (preset: (typeof PRESET_ITEMS)[number]) => {
-    const index = indexOf(preset.title);
+    const index = presetIndexOf(preset);
     if (index >= 0) {
       removeItem(index);
     } else {
@@ -182,16 +193,6 @@ export default function TemplateEditorPage() {
     next.splice(to, 0, moved);
     setItems(next);
     setSelectedIndex(to);
-  };
-  const duplicateItem = () => {
-    if (selectedIndex === null) {
-      return;
-    }
-    const source = draft.items[selectedIndex];
-    const next = [...draft.items];
-    next.splice(selectedIndex + 1, 0, { ...source, title: uniqueTitle(draft.items, source.title) });
-    setItems(next);
-    setSelectedIndex(selectedIndex + 1);
   };
 
   const save = async () => {
@@ -233,6 +234,19 @@ export default function TemplateEditorPage() {
   };
 
   return (
+    // QA 79 햄버거 버튼 대신 다른 화면처럼 왼쪽에 작은 사이드바를 둔다. 펼치면 전체 메뉴가 화면 위로 나온다
+    <div className={styles.frame}>
+      <aside className={styles.appRail}>
+        <SidebarRail onExpand={() => setIsMenuOpen(true)} />
+      </aside>
+      {isMenuOpen && (
+        <>
+          <div className={editorBar.dim} aria-hidden="true" onClick={() => setIsMenuOpen(false)} />
+          <aside className={editorBar.drawer} aria-label="메뉴">
+            <Sidebar onCollapse={() => setIsMenuOpen(false)} />
+          </aside>
+        </>
+      )}
     <div className={styles.page}>
       {toast && <Toast message={toast} onClose={closeToast} />}
       {isResetDialogOpen && (
@@ -246,6 +260,7 @@ export default function TemplateEditorPage() {
         />
       )}
       <EditorTopBar
+        showMenuButton={false}
         center={
           <label className={styles.nameField}>
             <Icon src={templateIcon} size={BUTTON_ICON_SIZE} className={styles.nameIcon} />
@@ -302,6 +317,7 @@ export default function TemplateEditorPage() {
             ))}
           </nav>
 
+          <div className={[styles.sideWrap, isSideOpen ? '' : styles.sideClosed].filter(Boolean).join(' ')}>
           <div className={styles.side}>
             {view === 'items' ? (
               <section className={styles.itemsPanel} aria-label="항목 구성">
@@ -337,15 +353,18 @@ export default function TemplateEditorPage() {
                       setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: !prev.layout.showMeetingInfo } }))
                     }
                   />
-                  {PRESET_ITEMS.map((preset) => (
-                    <ItemRow
-                      key={preset.title}
-                      title={preset.title}
-                      description={preset.description}
-                      isOn={indexOf(preset.title) >= 0}
-                      onToggle={() => togglePreset(preset)}
-                    />
-                  ))}
+                  {PRESET_ITEMS.map((preset) => {
+                    const index = presetIndexOf(preset);
+                    return (
+                      <ItemRow
+                        key={preset.title}
+                        title={index >= 0 ? draft.items[index].title : preset.title}
+                        description={preset.description}
+                        isOn={index >= 0}
+                        onToggle={() => togglePreset(preset)}
+                      />
+                    );
+                  })}
                   {customItems.map((item) => (
                     <ItemRow
                       key={item.title}
@@ -375,6 +394,16 @@ export default function TemplateEditorPage() {
               />
             )}
           </div>
+            <button
+              type="button"
+              className={styles.collapseHandle}
+              aria-label={isSideOpen ? '패널 접기' : '패널 펼치기'}
+              aria-expanded={isSideOpen}
+              onClick={() => setIsSideOpen((open) => !open)}
+            >
+              <Icon src={chevronLeftIcon} size={COLLAPSE_ICON_SIZE} className={isSideOpen ? '' : styles.collapseIconClosed} />
+            </button>
+          </div>
 
           <TemplatePreview
             name={draft.name}
@@ -384,12 +413,11 @@ export default function TemplateEditorPage() {
             onSelect={setSelectedIndex}
             onChangeItem={(index, item) => setItems(draft.items.map((current, position) => (position === index ? item : current)))}
             onMove={moveItem}
-            onAdd={addCustom}
-            onDuplicate={duplicateItem}
             onRemove={removeItem}
           />
         </div>
       )}
+    </div>
     </div>
   );
 }

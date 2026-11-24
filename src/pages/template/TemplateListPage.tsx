@@ -49,8 +49,8 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
-  // 기본 양식과 공유받은 양식(REQ-199)은 고칠 수 없고 복제만 된다
-  const isReadOnly = template.isDefault || Boolean(template.shared);
+  // 공유받은 양식(REQ-199)은 고칠 수 없고 복제만 된다. 기본 양식은 내 기본 양식으로 고치고, 지울 수는 없다 (QA 64)
+  const isReadOnly = Boolean(template.shared);
   const menuItems = isReadOnly
     ? [{ label: '복제해서 내 양식 만들기', icon: copyIcon, onSelect: onDuplicate }]
     : [
@@ -119,7 +119,7 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
           {template.description || template.items.map(({ title }) => title).join(', ')}
         </p>
         <p className={styles.metaRow}>
-          <span className={[styles.kind, isReadOnly ? styles.kindDefault : ''].filter(Boolean).join(' ')}>
+          <span className={[styles.kind, template.isDefault || isReadOnly ? styles.kindDefault : ''].filter(Boolean).join(' ')}>
             {template.isDefault ? '기본 양식' : template.shared ? '공유 양식' : '내 양식'}
           </span>
           <span className={styles.meta}>
@@ -133,7 +133,7 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
 
 /**
  * REQ-119~121, 123 디자인 Version02 TemplateListPage: 기본 양식과 내 양식을 나눠 미리보기 카드로 보여 준다.
- * 기본 양식은 고칠 수 없어 복제해서 내 양식을 만든다
+ * 기본 양식을 누르면 다른 양식처럼 편집 화면으로 간다. 저장하면 내 기본 양식이 된다 (QA 64)
  */
 export default function TemplateListPage() {
   const navigate = useNavigate();
@@ -214,7 +214,7 @@ export default function TemplateListPage() {
       key={template.templateId}
       template={template}
       onToggleFavorite={() => void toggleFavorite(template)}
-      onEdit={template.isDefault || template.shared ? undefined : () => navigate(`/templates/${template.templateId}/edit`)}
+      onEdit={template.shared ? undefined : () => navigate(`/templates/${template.templateId}/edit`)}
       onDuplicate={() => void duplicate(template)}
       onDelete={template.isDefault || template.shared ? undefined : () => setDeleting(template)}
     />
