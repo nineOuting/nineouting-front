@@ -107,11 +107,12 @@
   flex-direction: column;
 }
 
+/* 디자인 AgendaRow: 위 16px, 아래 12px, 안건 제목과 결정할 사항 사이 12px */
 .viewItem {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
-  padding: var(--spacing-5, 20px) 0;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) 0 var(--spacing-3);
   border-bottom: var(--border-width-default) solid var(--border-default);
 }
 
@@ -142,10 +143,11 @@
   color: var(--text-secondary);
 }
 
+/* 디자인 DecisionStack: 왼쪽 32px, "결정할 사항" 라벨과 목록 사이 4px */
 .decisionBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
+  gap: var(--spacing-1);
   padding-left: var(--spacing-8);
 }
 
@@ -162,12 +164,12 @@
   gap: var(--spacing-1);
 }
 
+/* 디자인 DecisionItem: 사방 12px (높이 44px) */
 .decisionItem {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  min-height: 40px;
-  padding-left: var(--spacing-3);
+  padding: var(--spacing-3);
   font-size: var(--font-size-body-md);
   line-height: var(--line-height-body-md);
   color: var(--text-secondary);
@@ -382,11 +384,11 @@
   background: var(--secondary-ghost-hover);
 }
 
-/* 이전 회의에서 남은 안건 */
+/* 이전 회의에서 남은 안건. 디자인 PreviousAgendaFooter: 위 20px, 제목과 목록 사이 12px */
 .pending {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
   padding-top: var(--spacing-5, 20px);
 }
 
