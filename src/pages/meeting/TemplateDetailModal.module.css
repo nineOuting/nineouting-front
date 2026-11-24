@@ -17,6 +17,14 @@
   border-radius: var(--radius-md);
 }
 
+/* 종이를 칸 폭에 맞춰 붙이고, 길면 위아래로 스크롤한다 (좌우 화살표는 다른 양식 넘기기) */
+.previewPaper {
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .line {
   height: 8px;
   max-width: 100%;

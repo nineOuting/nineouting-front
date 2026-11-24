@@ -181,7 +181,7 @@ export default function MeetingWaitingPage() {
           isFavorite: favorite,
           isDefault,
           items,
-          showMeetingInfo: layout.showMeetingInfo,
+          layout,
         })),
       );
       setMeeting({ ...loaded, agendas: withCarriedOverDates(loaded.agendas, usable) });

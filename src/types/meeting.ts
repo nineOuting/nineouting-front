@@ -1,4 +1,4 @@
-import type { TemplateItem } from './template';
+import type { TemplateItem, TemplateLayout } from './template';
 
 export interface Member {
   userId: number;
@@ -55,8 +55,8 @@ export interface MinutesTemplate {
   isDefault?: boolean;
   /** 카드 미리보기에 그릴 섹션 (순서, 기록 방식, 표 크기) */
   items?: TemplateItem[];
-  /** 회의 기본 정보 칸을 켠 양식 (카드 미리보기) */
-  showMeetingInfo?: boolean;
+  /** 종이 설정 (여백, 정렬, 회의 기본 정보, 머리말·꼬리말, 배경). 카드·상세 미리보기에 쓴다 */
+  layout?: TemplateLayout;
 }
 
 export interface PreviousMeeting {

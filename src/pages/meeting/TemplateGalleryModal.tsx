@@ -67,7 +67,7 @@ export default function TemplateGalleryModal({
                 onClick={() => (isSelected ? onOpenDetail(index) : setPickedId(template.templateId))}
               >
                 <span className={styles.preview}>
-                  <TemplateThumbnail items={template.items} showMeetingInfo={template.showMeetingInfo} />
+                  <TemplateThumbnail items={template.items} showMeetingInfo={template.layout?.showMeetingInfo} />
                 </span>
                 <span className={styles.name}>{template.name}</span>
               </button>

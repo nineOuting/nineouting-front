@@ -5,10 +5,13 @@ import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
 import type { MinutesTemplate } from '../../types/meeting';
 import styles from './TemplateDetailModal.module.css';
+import TemplatePaper from './TemplatePaper';
 
 // 미리보기 속 줄 길이 (디자인 Preview Line)
 const PREVIEW_LINES = [110, 220, 187, 220, 154, 220, 198, 88, 220, 132];
 const ICON_SIZE = 24;
+// 미리보기 칸 260px에서 테두리 1px씩을 뺀 폭
+const PAPER_BOX_WIDTH = 258;
 
 interface TemplateDetailModalProps {
   templates: MinutesTemplate[];
@@ -57,12 +60,19 @@ export default function TemplateDetailModal({ templates, index, onChangeIndex, o
         >
           <Icon src={chevronLeftIcon} size={ICON_SIZE} />
         </button>
-        {/* 디자인 Preview 260x340 세로 쪽. 양식 미리보기 이미지는 양식 관리(REQ-119) 연동 때 채운다 */}
-        <div className={styles.preview}>
-          {PREVIEW_LINES.map((width, line) => (
-            <span key={line} className={styles.line} style={{ width }} />
-          ))}
-        </div>
+        {/* 디자인 Preview 260x340. 양식 정보가 있으면 실제 회의록 종이를 예시 내용으로 채워 줄여 보여 준다 (SCRUM-364, 디자인 요청) */}
+        {template.items && template.layout ? (
+          // 다른 양식으로 넘기면 스크롤을 맨 위부터 다시 보이게 칸을 새로 만든다
+          <div key={template.templateId} className={`${styles.preview} ${styles.previewPaper}`}>
+            <TemplatePaper name={template.name} items={template.items} layout={template.layout} width={PAPER_BOX_WIDTH} />
+          </div>
+        ) : (
+          <div className={styles.preview}>
+            {PREVIEW_LINES.map((width, line) => (
+              <span key={line} className={styles.line} style={{ width }} />
+            ))}
+          </div>
+        )}
         <button
           type="button"
           className={styles.iconButton}

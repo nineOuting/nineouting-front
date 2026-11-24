@@ -1,0 +1,105 @@
+/* 양식 편집 미리보기(TemplatePreview.module.css)의 종이와 같은 모양. 편집 손잡이·선택 테두리만 뺐다 */
+.paper {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 10px;
+  width: 456px;
+  min-height: 675px;
+  background: var(--color-white);
+  color: var(--text-primary);
+}
+
+.edge {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--grey-60);
+}
+
+.footer {
+  margin-top: auto;
+}
+
+.pageNumber {
+  margin: 0;
+  font-size: 9px;
+  color: var(--grey-60);
+  text-align: center;
+}
+
+.docTitle {
+  margin: 0;
+  padding-bottom: var(--spacing-3);
+  border-bottom: var(--border-width-default) solid var(--border-strong);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading-sm);
+  color: var(--text-primary);
+}
+
+.meetingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) 26px;
+}
+
+.meetingInfoTitle {
+  margin: 0;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.meetingInfoList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.meetingInfoRow {
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+.meetingInfoRow dt {
+  flex-shrink: 0;
+  width: 40px;
+  color: var(--text-secondary);
+}
+
+.meetingInfoRow dd {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  overflow: hidden;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
