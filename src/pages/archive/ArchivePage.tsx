@@ -33,10 +33,7 @@ import { restoreMeeting, trashMeeting } from '../../api/meeting';
 import copyIcon from '../../assets/icons/copy.svg';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import downloadIcon from '../../assets/icons/download-sm.svg';
-import moveIcon from '../../assets/icons/folder-sm.svg';
-import MoveMeetingModal from '../../components/MoveMeetingModal';
 import emptyCharacter from '../../assets/characters/empty.svg';
-import viewIcon from '../../assets/icons/visibility.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
@@ -175,7 +172,6 @@ export default function ArchivePage() {
   const [viewed, setViewed] = useState<ViewedMinutes[]>([]);
   const [isViewedOpen, setIsViewedOpen] = useState(false);
   const [keyword, setKeyword] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '');
-  const [moving, setMoving] = useState<ArchiveMinutes | null>(null);
   // REQ-160 [회의록 삭제] 확인 창 (MSG-116)
   const [deleting, setDeleting] = useState<ArchiveMinutes | null>(null);
   // 되돌리기, 이동, 다시 시도 뒤 같은 조건으로 다시 받는다
@@ -595,13 +591,11 @@ export default function ArchivePage() {
             onOpen={(item) => openMinutes(item.meetingId)}
             onDownload={(item, format) => void download(item, format)}
             rowMenu={(item, openDownload) => [
-              // 디자인 MenuItem ViewIcon (디자인 체크 2026-11-19)
-              { label: '회의록 보기', icon: viewIcon, onSelect: () => openMinutes(item.meetingId) },
+              // 디자인 10 줄 메뉴: 다운로드, 링크 복사, (구분선) 회의록 삭제. 회의록 보기는 줄을 누르면 되므로 뺐다 (SCRUM-366)
               { label: '다운로드', icon: downloadIcon, onSelect: openDownload },
               { label: '링크 복사', icon: copyIcon, onSelect: () => void copyLink(item) },
-              { label: '다른 폴더로 이동', icon: moveIcon, onSelect: () => setMoving(item) },
               ...(isFolderOwner(item.folderId)
-                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setDeleting(item) }]
+                ? [{ label: '회의록 삭제', icon: deleteIcon, isDanger: true, hasDividerBefore: true, onSelect: () => setDeleting(item) }]
                 : []),
             ]}
           />
@@ -659,20 +653,6 @@ export default function ArchivePage() {
       {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {isCreatingWorkspace && <CreateWorkspaceModal onClose={() => setIsCreatingWorkspace(false)} />}
       */}
-      {moving && (
-        <MoveMeetingModal
-          meetingId={moving.meetingId}
-          title={moving.title}
-          workspaceId={id}
-          currentFolderId={moving.folderId}
-          onMoved={(folderName) => {
-            setToast({ text: `'${moving.title}'을 ${folderName} 폴더로 옮겼어요.`, variant: 'success' });
-            setMoving(null);
-            reload();
-          }}
-          onClose={() => setMoving(null)}
-        />
-      )}
       {deleting && (
         <ConfirmDialog
           title={`'${deleting.title}' 회의록을 삭제할까요?`}

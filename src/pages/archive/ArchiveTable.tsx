@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import type { ArchiveMinutes, ExportFormat } from '../../api/minutes';
-import downloadIcon from '../../assets/icons/download.svg';
 import folderIcon from '../../assets/icons/folder-sm.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
 import Icon from '../../components/Icon';
@@ -26,16 +25,16 @@ interface ArchiveTableProps {
   onOpen: (item: ArchiveMinutes) => void;
   /** 피그마 프론트 "다운로드 메뉴": 형식(PDF, Word)을 고르면 바로 받는다 */
   onDownload: (item: ArchiveMinutes, format: ExportFormat) => void;
-  /** REQ-160 줄마다 ⋮ 메뉴: 회의록 보기, 다운로드, 링크 복사, 다른 폴더로 이동, 회의록 삭제. openDownload는 형식 메뉴를 연다 */
+  /** REQ-160 줄마다 ⋮ 메뉴: 회의록 보기, 다운로드, 링크 복사, 회의록 삭제. openDownload는 형식 메뉴를 연다 */
   rowMenu: (item: ArchiveMinutes, openDownload: () => void) => ActionMenuItem[];
 }
 
 /** REQ-053 아카이브 목록 (디자인 Page 9 ArchivePage): 회의명, 폴더, 일시, 참석자, 장소, 작업. 줄을 누르면 회의록을 연다 */
 export default function ArchiveTable({ items, folderColors, onOpen, onDownload, rowMenu }: ArchiveTableProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  // 줄 메뉴와 다운로드 형식 메뉴는 같은 ⋮ 버튼에 붙는다 (디자인 10: 작업 칸에는 ⋮ 하나만)
   const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
   const [downloadMenuId, setDownloadMenuId] = useState<number | null>(null);
-  const downloadAnchorRef = useRef<HTMLButtonElement | null>(null);
   return (
     <div className={styles.table} role="table" aria-label="회의록 목록">
       <div className={`${styles.row} ${styles.head}`} role="row">
@@ -96,22 +95,29 @@ export default function ArchiveTable({ items, folderColors, onOpen, onDownload, 
             onClick={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
           >
-            <span className={styles.downloadAnchor}>
+            <span
+              className={[styles.menuAnchor, openMenuId === item.minutesId || downloadMenuId === item.minutesId ? styles.menuOpen : '']
+                .filter(Boolean)
+                .join(' ')}
+            >
               <button
-                ref={downloadMenuId === item.minutesId ? downloadAnchorRef : undefined}
+                ref={openMenuId === item.minutesId || downloadMenuId === item.minutesId ? menuAnchorRef : undefined}
                 type="button"
                 className={styles.iconButton}
-                aria-label={`${item.title} 다운로드`}
+                aria-label={`${item.title} 메뉴`}
                 aria-haspopup="menu"
-                aria-expanded={downloadMenuId === item.minutesId}
-                onClick={() => setDownloadMenuId((current) => (current === item.minutesId ? null : item.minutesId))}
+                aria-expanded={openMenuId === item.minutesId || downloadMenuId === item.minutesId}
+                onClick={() => {
+                  setDownloadMenuId(null);
+                  setOpenMenuId((current) => (current === item.minutesId ? null : item.minutesId));
+                }}
               >
-                <Icon src={downloadIcon} size={ACTION_ICON_SIZE} />
+                <Icon src={moreIcon} size={ACTION_ICON_SIZE} />
               </button>
               {downloadMenuId === item.minutesId && (
                 <ActionMenu
                   label="다운로드 형식"
-                  anchorRef={downloadAnchorRef}
+                  anchorRef={menuAnchorRef}
                   className={styles.menu}
                   items={[
                     { label: 'PDF로 다운로드', onSelect: () => onDownload(item, 'PDF') },
@@ -126,19 +132,6 @@ export default function ArchiveTable({ items, folderColors, onOpen, onDownload, 
                   onClose={() => setDownloadMenuId(null)}
                 />
               )}
-            </span>
-            <span className={styles.menuAnchor}>
-              <button
-                ref={openMenuId === item.minutesId ? menuAnchorRef : undefined}
-                type="button"
-                className={styles.iconButton}
-                aria-label={`${item.title} 메뉴`}
-                aria-haspopup="menu"
-                aria-expanded={openMenuId === item.minutesId}
-                onClick={() => setOpenMenuId((current) => (current === item.minutesId ? null : item.minutesId))}
-              >
-                <Icon src={moreIcon} size={ACTION_ICON_SIZE} />
-              </button>
               {openMenuId === item.minutesId && (
                 <ActionMenu
                   label={`${item.title} 메뉴`}
