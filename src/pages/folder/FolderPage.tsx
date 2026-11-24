@@ -35,7 +35,6 @@ import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
-import chipRemoveIcon from '../../assets/icons/chip-remove.svg';
 import Icon from '../../components/Icon';
 import MemberListPopover from '../../components/MemberListPopover';
 import Skeleton from '../../components/Skeleton';
@@ -57,7 +56,6 @@ import styles from './FolderPage.module.css';
 const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
-const CHIP_ICON_SIZE = 16;
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -467,13 +465,7 @@ export default function FolderPage() {
             <h2 id="meetings-title" className={styles.sectionTitle}>
               회의 목록
             </h2>
-            {selectedDay && (
-              <button type="button" className={styles.dayChip} onClick={() => selectDay(null)}>
-                {Number(selectedDay.slice(5, 7))}월 {Number(selectedDay.slice(8, 10))}일 회의만 보기
-                <Icon src={chipRemoveIcon} size={CHIP_ICON_SIZE} />
-                <span className={styles.hidden}>해제</span>
-              </button>
-            )}
+            {/* 날짜를 골랐다는 뱃지는 뺐다. 고른 날은 달력에 표시되고, 같은 날을 다시 누르면 풀린다 (SCRUM-410) */}
           </div>
           {/* REQ-053 회의 목록 오른쪽 위 [회의록 아카이브]. 이 폴더 탭을 고른 채로 연다 (QA 2026-11-23) */}
           <button

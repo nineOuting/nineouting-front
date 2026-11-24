@@ -337,36 +337,11 @@
   min-width: 0;
 }
 
-/* REQ-201 달력에서 고른 날 칩 (디자인 ProjectCalendarFilterPage: "11월 18일 회의만 보기 ×") */
+/* 회의 목록 제목 줄 (날짜 칩은 뺐다, SCRUM-410) */
 .sectionTitleGroup {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
-}
-
-.dayChip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  padding: var(--spacing-1) var(--spacing-2);
-  background: var(--neutral-subtle);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-caption);
-  color: var(--text-primary);
-}
-
-.dayChip:hover {
-  background: var(--neutral-ghost-hover);
-}
-
-.hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
 }
 
 /* [멤버 N명] 보기 전용 목록이 버튼 아래에 뜬다 */
