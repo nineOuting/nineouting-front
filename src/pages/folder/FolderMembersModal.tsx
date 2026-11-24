@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { errorMessage } from '../../api/client';
 import dividerModal from '../../assets/divider-modal.svg';
-import TopConfirm from '../../components/TopConfirm';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import type { FolderMember, WorkspaceMember } from '../../types/workspace';
 import MemberChips from '../meeting/MemberChips';
 import MembersModal, { MemberIdentity } from '../workspace/MembersModal';
@@ -157,11 +157,13 @@ export default function FolderMembersModal({
         )}
       </MembersModal>
       {isRemoveConfirmOpen && (
-        // MSG-033
-        <TopConfirm
+        // MSG-033. 다른 확인 창처럼 화면 가운데 (QA 2026-11-23, 전에는 화면 위에 떴다)
+        <ConfirmDialog
           title="멤버를 프로젝트에서 제외할까요?"
           message="제외한 멤버는 프로젝트와 접근 권한이 없는 하위 폴더를 더 이상 볼 수 없어요."
+          cancelLabel="취소"
           confirmLabel="제외하기"
+          isDanger
           onCancel={() => setIsRemoveConfirmOpen(false)}
           onConfirm={removeSelected}
         />

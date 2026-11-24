@@ -24,6 +24,8 @@ export interface FolderSummary {
   ownerUserId?: number | null;
   /** REQ-202 프로젝트 색 번호 (0~7) */
   color?: number;
+  /** false면 초대받지 않아 들어갈 수 없는 폴더 (목록에는 보인다, 2026-11-24). 없으면 들어갈 수 있음 */
+  accessible?: boolean;
 }
 
 export interface FolderMember extends Member {

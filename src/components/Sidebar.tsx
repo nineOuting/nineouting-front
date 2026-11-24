@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { listFolders, listMyWorkspaces } from '../api/workspace';
+import { listAllFolders, listMyWorkspaces } from '../api/workspace';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/nav-archive.svg';
@@ -84,7 +84,8 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
       .filter((id) => !requestedRef.current.has(id))
       .forEach((id) => {
         requestedRef.current.add(id);
-        listFolders(id)
+        // 들어갈 수 없는 폴더도 보인다. 누르면 폴더 화면이 안내한다 (2026-11-24 QA)
+        listAllFolders(id)
           .then((items) =>
             setFolders((prev) => ({ ...prev, [id]: items.map(({ folderId, name, color }) => ({ folderId, name, color })) })),
           )

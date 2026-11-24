@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clockIcon from '../../assets/icons/clock.svg';
 import folderIcon from '../../assets/icons/folder-md.svg';
+import lockIcon from '../../assets/icons/lock.svg';
 import AvatarStack from '../../components/AvatarStack';
 import FavoriteButton from '../../components/FavoriteButton';
 import Icon from '../../components/Icon';
@@ -55,7 +56,9 @@ export default function WorkspaceFolderCard({
   onFavoriteChange,
 }: WorkspaceFolderCardProps) {
   const navigate = useNavigate();
+  // 들어갈 수 없는 폴더도 누르면 폴더 화면으로 가서 "이 폴더는 볼 수 없어요" 안내를 본다 (2026-11-24 QA)
   const open = () => navigate(`/folders/${folder.folderId}`);
+  const isLocked = folder.accessible === false;
 
   return (
     <li
@@ -68,8 +71,17 @@ export default function WorkspaceFolderCard({
         </span>
         <button type="button" className={styles.titleGroup} onClick={open}>
           <span className={styles.name}>{folder.name}</span>
-          <span className={styles.count}>회의 {folder.meetingCount}개</span>
+          {isLocked ? (
+            <span className={`${styles.count} ${styles.locked}`}>
+              <Icon src={lockIcon} size={TIME_ICON_SIZE} />
+              초대받은 멤버만 볼 수 있어요
+            </span>
+          ) : (
+            <span className={styles.count}>회의 {folder.meetingCount}개</span>
+          )}
         </button>
+        {/* 들어갈 수 없는 폴더는 메뉴, 즐겨찾기를 숨긴다 */}
+        {!isLocked && (
         <span className={styles.actions}>
           {menu}
           <FavoriteButton
@@ -80,8 +92,10 @@ export default function WorkspaceFolderCard({
             onChange={onFavoriteChange}
           />
         </span>
+        )}
       </div>
       <div className={styles.divider} style={{ background: folderBorderColor(folder.color) }} />
+      {!isLocked && (
       <button type="button" className={styles.meta} onClick={open}>
         <span className={styles.activity}>
           <Icon src={clockIcon} size={TIME_ICON_SIZE} />
@@ -93,6 +107,7 @@ export default function WorkspaceFolderCard({
         </span>
         {members.length > 0 && <AvatarStack members={members} max={AVATAR_MAX} label={`폴더 멤버 ${members.length}명`} />}
       </button>
+      )}
     </li>
   );
 }

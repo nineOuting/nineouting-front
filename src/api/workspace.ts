@@ -154,6 +154,19 @@ export async function listFolders(workspaceId: number): Promise<Omit<FolderSumma
     .map(({ folderId, name, isDefault, ownerUserId, color }) => ({ folderId, name, isDefault, ownerUserId, color }));
 }
 
+/** REQ-037 워크스페이스의 모든 프로젝트 폴더. 들어갈 수 없는 폴더도 accessible=false로 온다 (워크스페이스 화면, 사이드 바) */
+export async function listAllFolders(workspaceId: number): Promise<Omit<FolderSummary, 'meetingCount'>[]> {
+  const nodes = await request<FolderNode[]>('GET', `/api/workspaces/${workspaceId}/folders`);
+  return nodes.map(({ folderId, name, isDefault, ownerUserId, color, accessible }) => ({
+    folderId,
+    name,
+    isDefault,
+    ownerUserId,
+    color,
+    accessible,
+  }));
+}
+
 /** REQ-039~040 새 프로젝트 폴더 */
 export function createFolder(workspaceId: number, name: string) {
   return request<FolderNode>('POST', `/api/workspaces/${workspaceId}/folders`, { name });

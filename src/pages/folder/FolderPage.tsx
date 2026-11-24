@@ -27,6 +27,7 @@ import {
   transferFolderOwnership,
   type FolderInfo,
 } from '../../api/workspace';
+import emptyCharacter from '../../assets/characters/empty.svg';
 import addIcon from '../../assets/icons/add-sm.svg';
 import folderIcon from '../../assets/icons/folder-md.svg';
 import separatorIcon from '../../assets/icons/breadcrumb-sep.svg';
@@ -474,11 +475,11 @@ export default function FolderPage() {
               </button>
             )}
           </div>
-          {/* REQ-053 회의 목록 오른쪽 위 [회의록 아카이브] */}
+          {/* REQ-053 회의 목록 오른쪽 위 [회의록 아카이브]. 이 폴더 탭을 고른 채로 연다 (QA 2026-11-23) */}
           <button
             type="button"
             className={styles.textButton}
-            onClick={() => navigate(`/workspaces/${folder.workspaceId}/archive`)}
+            onClick={() => navigate(`/workspaces/${folder.workspaceId}/archive?folder=${folder.folderId}`)}
           >
             회의록 아카이브
           </button>
@@ -503,12 +504,14 @@ export default function FolderPage() {
               empty={
                 selectedDay ? (
                   <EmptyState
+                    character={emptyCharacter}
                     title={`${Number(selectedDay.slice(5, 7))}월 ${Number(selectedDay.slice(8, 10))}일에는 회의가 없어요`}
                     description="다른 날짜를 고르거나 날짜 선택을 풀어 보세요"
                   />
                 ) : (
-                  // MSG-034 (와이어프레임 ProjectEmptyPage 문구)
+                  // MSG-034 (와이어프레임 ProjectEmptyPage 문구). 아이콘 대신 넵넵 캐릭터 (QA 2026-11-24, 피그마 2172:138386)
                   <EmptyState
+                    character={emptyCharacter}
                     title="아직 회의가 없어요"
                     description="첫 회의를 만들고 안건을 정리해 보세요"
                     action={
