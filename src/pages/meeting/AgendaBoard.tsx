@@ -278,7 +278,8 @@ export default function AgendaBoard({
       {!isEditing && agendas.length === 0 && (
         <div className={styles.empty}>
           {/* 디자인 체크 2026-11-19: 느낌표 대신 넵넵 캐릭터 */}
-          <img src={emptyCharacter} alt="" width={EMPTY_CHARACTER_SIZE} height={EMPTY_CHARACTER_SIZE} className={styles.emptyIcon} />
+          {/* 캐릭터는 모양만 쓰고 테마의 보라로 칠한다 (SCRUM-365) */}
+          <Icon src={emptyCharacter} size={EMPTY_CHARACTER_SIZE} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>아직 안건이 없어요</p>
           <p className={styles.emptyText}>
             {canEdit ? '[안건 수정]에서 추가하거나 아래 남은 안건을 체크해 가져와요' : '회의 참석자가 안건을 추가하면 여기에 보여요'}
