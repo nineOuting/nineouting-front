@@ -1,155 +1,124 @@
-/* 디자인 23:2157: 261px 창 안의 달력 */
+/*
+ * 디자인 10 상태 모음 "기간 필터" (FilterPopover 320, 안쪽 286). 달력은 폴더 화면과 같은 MiniCalendar (SCRUM-366).
+ * 입력칸 → 8 → 달력 → 8 → 빠른 선택 → 16 → [취소] [적용]
+ */
 .picker {
   display: flex;
   flex-direction: column;
-  gap: 13px;
-  width: 227px;
+  gap: var(--spacing-2);
+  width: 286px;
 }
 
-.selected {
-  padding: 4px 8px;
-  background: var(--grey-10);
-  border: 1px solid var(--grey-20);
-  border-radius: 8px;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--color-black);
-}
-
-.monthRow {
+/* 디자인 RangeField: 32px, 흰 바탕, 연한 테두리 */
+.rangeField {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.placeholder {
+  color: var(--text-disabled);
+}
+
+/* 디자인 MiniCalendar: 머리 28 → 12 → 요일 20 → 12 → 날짜 (줄 40, 줄 사이 4) */
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  height: 28px;
 }
 
 .month {
-  font-size: var(--font-size-b2);
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--color-black);
+  flex: 1;
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-lg);
+  color: var(--text-primary);
 }
 
-.nav {
+.navButton {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--neutral-default);
 }
 
-.today {
-  margin-right: 4px;
-  padding: 0;
-  background: none;
-  border: none;
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-  color: var(--grey-50);
+.navButton:hover {
+  background: var(--neutral-ghost-hover);
 }
 
-.iconButton {
-  display: flex;
-  padding: 0;
-  background: none;
-  border: none;
-}
-
+.weekdays,
 .grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 7px 3px;
+  grid-template-columns: repeat(7, 40px);
   text-align: center;
 }
 
-.weekday,
-.day {
-  font-size: var(--font-size-caption);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
+.grid {
+  row-gap: var(--spacing-1);
 }
 
 .weekday {
-  color: var(--grey-50);
+  font-size: var(--font-size-caption);
+  line-height: 20px;
+  color: var(--text-tertiary);
 }
 
 .day {
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: 4px;
-  color: var(--grey-100);
+  display: flex;
+  justify-content: center;
+  height: 40px;
+  font-size: var(--font-size-body-md);
+  color: var(--text-primary);
 }
 
-.otherMonth {
-  color: var(--grey-50);
-}
-
-.inside {
-  background: var(--blue-10);
-}
-
-.edge {
-  background: var(--primary-default);
-  color: var(--color-white);
-}
-
-.divider {
-  display: block;
-  width: 100%;
-  max-width: none;
-}
-
-.option {
+/* 디자인 DateCell: 칸 위쪽 32px 동그라미 */
+.dayNumber {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: var(--font-size-b2);
-  line-height: 1.5;
-  color: var(--color-black);
-  cursor: pointer;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
 }
 
-.switchInput {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.day:hover .dayNumber {
+  background: var(--neutral-ghost-hover);
 }
 
-/* 디자인 23:2223: 31×16 회색 바탕에 흰 동그라미. 켜면 파란 바탕, 동그라미가 오른쪽 */
-.switch {
-  position: relative;
-  width: 31px;
-  height: 16px;
-  background: var(--grey-50);
-  border-radius: 8px;
+.outside {
+  color: var(--text-disabled);
 }
 
-.switch::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 3px;
-  width: 12px;
-  height: 12px;
-  background: var(--color-white);
-  border-radius: 50%;
+/* 고른 기간 안: 보라 글자 */
+.inside {
+  color: var(--primary-default);
 }
 
-.switchInput:checked + .switch {
+/* 시작일·종료일: 보라 동그라미에 흰 글자 */
+.edge .dayNumber,
+.edge:hover .dayNumber {
   background: var(--primary-default);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-on-primary);
 }
 
-.switchInput:checked + .switch::after {
-  left: 16px;
-}
-
-.switchInput:focus-visible + .switch {
-  outline: 2px solid var(--blue-70);
-  outline-offset: 2px;
-}
-
-/* REQ-055 1주, 1개월, 3개월 빠른 선택 */
 .quickRow {
   display: flex;
   gap: var(--spacing-2);
@@ -160,12 +129,46 @@
   height: 32px;
   background: var(--bg-surface);
   border: var(--border-width-default) solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-caption);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
   font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
 }
 
 .quick:hover {
-  background: var(--interactive-hover);
+  background: var(--neutral-ghost-hover);
+}
+
+/* 디자인 FilterPopover Footer: 32px 버튼 두 개, 사이 8 */
+.footer {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.cancel,
+.apply {
+  flex: 1;
+  height: 32px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.cancel {
+  background: var(--secondary-default);
+  color: var(--primary-default);
+}
+
+.cancel:hover {
+  background: var(--secondary-hover);
+}
+
+.apply {
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+}
+
+.apply:hover {
+  background: var(--primary-hover);
 }
