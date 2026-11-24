@@ -279,10 +279,11 @@
   color: var(--neutral-default);
 }
 
+/* 디자인 10 정렬 Menu: 160px, 고른 항목 앞 체크 (SCRUM-366) */
 .sortMenu {
   right: 0;
   left: auto;
-  min-width: 140px;
+  min-width: 160px;
 }
 
 .loadingRows {

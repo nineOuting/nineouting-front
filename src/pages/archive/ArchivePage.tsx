@@ -43,7 +43,7 @@ import Skeleton from '../../components/Skeleton';
 import Popover from '../../components/Popover';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
-import { formatPeriodDate, toIsoDate } from '../../utils/calendar';
+import { toIsoDate } from '../../utils/calendar';
 import WorkspaceSwitcher from '../workspace/WorkspaceSwitcher';
 import ArchiveTable from './ArchiveTable';
 import CheckListFilter from './CheckListFilter';
@@ -376,9 +376,14 @@ export default function ArchivePage() {
   };
 
   const memberName = (userId: number) => members.find((member) => member.userId === userId)?.name ?? '알 수 없는 사용자';
+  // 디자인 10 PeriodFilter: 2026.10.10 ~ 10.26 (끝 날짜의 해가 다르면 해까지) (SCRUM-366)
   const periodText = (period: Period) => {
-    const from = formatPeriodDate(period.from).slice(0, -1);
-    return period.from === period.to ? from : `${from} ~ ${formatPeriodDate(period.to).slice(5, -1)}`;
+    const from = period.from.replaceAll('-', '.');
+    const to = period.to.replaceAll('-', '.');
+    if (period.from === period.to) {
+      return from;
+    }
+    return `${from} ~ ${period.from.slice(0, 4) === period.to.slice(0, 4) ? to.slice(5) : to}`;
   };
   const hasFilters = Boolean(filters.period || filters.locations.length || filters.attendeeIds.length);
   const folderColors = new Map(folderTabs.map((folder) => [folder.folderId, folder.color]));
@@ -494,7 +499,11 @@ export default function ArchivePage() {
             isOpen={openFilter === 'period'}
             onToggle={() => toggleFilter('period')}
           >
-            <PeriodPicker value={filters.period} onChange={(period) => changeFilters({ ...filters, period })} />
+            <PeriodPicker
+              value={filters.period}
+              onApply={(period) => changeFilters({ ...filters, period })}
+              onCancel={() => setOpenFilter(null)}
+            />
           </FilterChip>
           <FilterChip
             label={filters.locations.length ? filters.locations.join(', ') : '전체 장소'}
@@ -551,6 +560,7 @@ export default function ArchivePage() {
                 emptyText=""
                 anchorRef={sortRef}
                 className={styles.sortMenu}
+                showCheck
                 items={(['LATEST', 'OLDEST', 'TITLE'] as const).map((option) => ({
                   id: option,
                   label: SORT_LABELS[option],

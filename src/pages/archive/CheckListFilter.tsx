@@ -6,6 +6,8 @@ import type { Member } from '../../types/meeting';
 import styles from './CheckListFilter.module.css';
 
 const SEARCH_ICON_SIZE = 16;
+// 디자인 10 CheckboxField: 꺼져 있어도 파란 테두리 (#6184FB). 다크 테마에서는 토큰 값을 따른다
+const BOX_COLOR = 'var(--control-track-on-secondary)';
 
 export interface CheckOption {
   id: string;
@@ -19,13 +21,13 @@ interface CheckListFilterProps {
   selected: string[];
   searchPlaceholder: string;
   emptyText: string;
-  /** 참석자 필터: [전체 선택]과 목록 안 스크롤 (디자인 23:1892) */
+  /** 참석자 필터: [전체 선택], 구분선, 목록이 길면 안에서 스크롤 */
   withSelectAll?: boolean;
   onApply: (ids: string[]) => void;
   onCancel: () => void;
 }
 
-/** REQ-055 장소·참석자 필터 (디자인 23:2606, 23:1892). 여러 개 골라 [적용] */
+/** REQ-055 장소·참석자 필터 (디자인 10 상태 모음 "장소 필터", "참석자 필터"). 여러 개 골라 [적용] */
 export default function CheckListFilter({
   options,
   selected,
@@ -50,7 +52,8 @@ export default function CheckListFilter({
     );
 
   return (
-    <div className={styles.filter}>
+    // 디자인 10: 장소 필터 안쪽 206px, 참석자 필터 226px (SCRUM-366)
+    <div className={[styles.filter, withSelectAll ? styles.wide : ''].filter(Boolean).join(' ')}>
       <label className={styles.search}>
         <Icon src={searchIcon} size={SEARCH_ICON_SIZE} className={styles.searchIcon} />
         <input
@@ -61,16 +64,21 @@ export default function CheckListFilter({
         />
       </label>
       {withSelectAll && shown.length > 0 && (
-        <Checkbox className={styles.option} checked={isAllChecked} onChange={toggleAll}>
-          <span className={styles.label}>전체 선택</span>
-        </Checkbox>
+        <>
+          <Checkbox className={styles.option} boxColor={BOX_COLOR} look="icon" checked={isAllChecked} onChange={toggleAll}>
+            <span className={styles.label}>전체 선택</span>
+          </Checkbox>
+          {/* 디자인 참석자 필터: [전체 선택] 아래 구분선 */}
+          <hr className={styles.divider} />
+        </>
       )}
       <div className={[styles.list, withSelectAll ? styles.scroll : ''].filter(Boolean).join(' ')}>
         {shown.length === 0 && <p className={styles.empty}>{emptyText}</p>}
         {shown.map((option) => (
           <Checkbox
             key={option.id}
-            className={styles.option}
+            className={[styles.option, option.member ? styles.memberOption : ''].filter(Boolean).join(' ')}
+            boxColor={BOX_COLOR} look="icon"
             checked={checked.includes(option.id)}
             onChange={() => toggle(option.id)}
           >

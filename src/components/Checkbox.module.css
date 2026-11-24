@@ -67,3 +67,30 @@
   outline: var(--border-width-focus) solid var(--border-focus);
   outline-offset: 2px;
 }
+
+/*
+ * look="icon": 디자인 시스템 체크박스 아이콘을 상자 안 ::before에 모양(mask)으로 쓰고 색을 칠한다 (SCRUM-366).
+ * 상자 자체는 비워 둬서 키보드 포커스 테두리(위 규칙)가 그대로 보인다
+ */
+.icon .box,
+.icon .input:checked + .box {
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+.icon .box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--checkbox-color, var(--control-track-on-secondary));
+  mask: var(--checkbox-off) center / contain no-repeat;
+}
+
+.icon .input:checked + .box::before {
+  mask-image: var(--checkbox-on);
+}
+
+.icon .input:checked + .box::after {
+  content: none;
+}
