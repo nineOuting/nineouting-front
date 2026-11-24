@@ -5,7 +5,7 @@ import scheduleIcon from '../../assets/icons/schedule.svg';
 import Button from '../../components/Button';
 import Icon from '../../components/Icon';
 import { daysBetween, fromIsoDate, toTime } from '../../utils/calendar';
-import { formatMeetingDate } from '../../utils/meetingFormat';
+import { formatMeetingDate, type BackState } from '../../utils/meetingFormat';
 import styles from './UpcomingMeetingCard.module.css';
 
 const SMALL_ICON_SIZE = 16;
@@ -65,7 +65,7 @@ export default function UpcomingMeetingCard({ meeting }: UpcomingMeetingCardProp
             variant="primary"
             size="md"
             className={styles.go}
-            onClick={() => navigate(`/meetings/${meeting.meetingId}`)}
+            onClick={() => navigate(`/meetings/${meeting.meetingId}`, { state: { backTo: '/home' } satisfies BackState })}
           >
             대기실로 이동
           </Button>

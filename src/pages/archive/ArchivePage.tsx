@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
 import {
   ARCHIVE_PAGE_SIZE,
@@ -48,6 +48,7 @@ import WorkspaceSwitcher from '../workspace/WorkspaceSwitcher';
 import ArchiveTable from './ArchiveTable';
 import CheckListFilter from './CheckListFilter';
 import PeriodPicker, { type Period } from './PeriodPicker';
+import type { BackState } from '../../utils/meetingFormat';
 import styles from './ArchivePage.module.css';
 
 const ICON_SIZE = 16;
@@ -183,7 +184,6 @@ export default function ArchivePage() {
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [isFailed, setIsFailed] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(0);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
@@ -196,7 +196,7 @@ export default function ArchivePage() {
   const closeSwitcher = useCallback(() => setIsSwitcherOpen(false), []);
   const closeSort = useCallback(() => setIsSortOpen(false), []);
   const showError = useCallback((error: unknown) => setToast({ text: errorMessage(error), variant: 'error' }), []);
-  // REQ-180 검색어, 필터, 정렬, 폴더 탭은 주소에 둬서 회의록을 보고 뒤로 와도 그대로다
+  // REQ-180 검색어, 필터, 정렬, 폴더 탭, 쪽 번호는 주소에 둬서 회의록을 보고 뒤로 와도 그대로다
   const [searchParams, setSearchParams] = useSearchParams();
   const paramsKey = searchParams.toString();
   const query = searchParams.get('q') ?? '';
@@ -204,6 +204,9 @@ export default function ArchivePage() {
   const sort: ArchiveQuery['sort'] = sortParam === 'OLDEST' || sortParam === 'TITLE' ? sortParam : 'LATEST';
   const folderParam = Number(searchParams.get('folder'));
   const folderId = Number.isInteger(folderParam) && folderParam > 0 ? folderParam : undefined;
+  // 주소의 page는 1부터 (첫 쪽이면 뺀다). 안에서는 0부터 센다 (SCRUM-366)
+  const pageParam = Number(searchParams.get('page'));
+  const page = Number.isInteger(pageParam) && pageParam > 1 ? pageParam - 1 : 0;
   const filters = useMemo(() => filtersOf(new URLSearchParams(paramsKey)), [paramsKey]);
   const updateParams = (patch: { q?: string; sort?: ArchiveQuery['sort']; filters?: Filters; folderId?: number | null }) => {
     const next = new URLSearchParams(searchParams);
@@ -222,8 +225,14 @@ export default function ArchivePage() {
     if (patch.folderId !== undefined) {
       setOrDelete(next, 'folder', patch.folderId === null ? '' : String(patch.folderId));
     }
+    // 검색 조건이 바뀌면 첫 쪽부터
+    next.delete('page');
     setSearchParams(next, { replace: true });
-    setPage(0);
+  };
+  const goToPage = (nextPage: number) => {
+    const next = new URLSearchParams(searchParams);
+    setOrDelete(next, 'page', nextPage > 0 ? String(nextPage + 1) : '');
+    setSearchParams(next, { replace: true });
   };
 
   useEffect(() => {
@@ -322,7 +331,10 @@ export default function ArchivePage() {
   };
   const toggleFilter = (key: FilterKey) => setOpenFilter((open) => (open === key ? null : key));
   // REQ-175 아카이브에서 열어도 회의록 확인 화면 (끝난 회의의 대기 화면)
-  const openMinutes = (meetingId: number) => navigate(`/meetings/${meetingId}`);
+  const location = useLocation();
+  // 회의록 확인에서 뒤로 가면 지금 보던 탭, 검색어, 필터, 쪽 그대로 아카이브로 돌아온다 (SCRUM-366)
+  const openMinutes = (meetingId: number) =>
+    navigate(`/meetings/${meetingId}`, { state: { backTo: `${location.pathname}${location.search}` } satisfies BackState });
   // 피그마 프론트 "다운로드 메뉴": 형식을 고르면 그 자리에서 받는다. 실패하면 MSG-040
   const download = async (item: ArchiveMinutes, format: ExportFormat) => {
     try {
@@ -625,7 +637,7 @@ export default function ArchivePage() {
                   className={`${styles.pageButton} ${styles.pageArrow}`}
                   aria-label="이전 페이지"
                   disabled={page === 0}
-                  onClick={() => setPage(page - 1)}
+                  onClick={() => goToPage(page - 1)}
                 >
                   <Icon src={chevronLeftIcon} size={PAGER_ICON_SIZE} />
                 </button>
@@ -640,7 +652,7 @@ export default function ArchivePage() {
                       type="button"
                       className={[styles.pageButton, number === page ? styles.pageCurrent : ''].filter(Boolean).join(' ')}
                       aria-current={number === page ? 'page' : undefined}
-                      onClick={() => setPage(number)}
+                      onClick={() => goToPage(number)}
                     >
                       {number + 1}
                     </button>
@@ -651,7 +663,7 @@ export default function ArchivePage() {
                   className={`${styles.pageButton} ${styles.pageArrow}`}
                   aria-label="다음 페이지"
                   disabled={page >= pageCount - 1}
-                  onClick={() => setPage(page + 1)}
+                  onClick={() => goToPage(page + 1)}
                 >
                   <Icon src={chevronRightIcon} size={PAGER_ICON_SIZE} />
                 </button>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { MyTodo } from '../../api/meeting';
 import Checkbox from '../../components/Checkbox';
 import card from './HomeCard.module.css';
+import type { BackState } from '../../utils/meetingFormat';
 import styles from './MyTodosCard.module.css';
 
 interface MyTodosCardProps {
@@ -69,7 +70,7 @@ export default function MyTodosCard({ items, onComplete }: MyTodosCardProps) {
                 >
                   {null}
                 </Checkbox>
-                <Link to={`/meetings/${todo.meetingId}/minutes`} className={styles.link}>
+                <Link to={`/meetings/${todo.meetingId}/minutes`} state={{ backTo: '/home' } satisfies BackState} className={styles.link}>
                   <span className={card.rowTitle}>{todo.task}</span>
                   <span className={card.rowCaption}>
                     {todo.meetingTitle} · {todo.folderName}

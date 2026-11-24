@@ -36,3 +36,17 @@ export function formatDateTime(dateTime: string) {
   const displayHour = hour % 12 === 0 ? 12 : hour % 12;
   return `${dateTime.slice(0, 10).replaceAll('-', '.')} ${period} ${String(displayHour).padStart(2, '0')}:${minute}`;
 }
+
+/**
+ * 회의·회의록 화면으로 갈 때 넘기는 "돌아갈 곳". 회의록 확인 화면의 뒤로 가기가 이 주소로 간다
+ * (홈, 아카이브, 워크스페이스, 알림에서 들어오면 그 화면으로. 없으면 회의의 프로젝트 폴더로) (SCRUM-366)
+ */
+export interface BackState {
+  backTo?: string;
+}
+
+/** location.state에서 돌아갈 곳을 꺼낸다. 앱 안의 주소(/로 시작)만 받는다 */
+export function backToOf(state: unknown) {
+  const backTo = (state as BackState | null)?.backTo;
+  return typeof backTo === 'string' && backTo.startsWith('/') && !backTo.startsWith('//') ? backTo : undefined;
+}
