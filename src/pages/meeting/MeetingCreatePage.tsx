@@ -23,6 +23,7 @@ import type { Agenda, Meeting, MeetingBasicInfo, Member } from '../../types/meet
 import FolderPage from '../folder/FolderPage';
 import LoadPreviousSettings, { type PreviousSettings } from './LoadPreviousSettings';
 import MeetingWaitingPage from './MeetingWaitingPage';
+import { toIsoDate } from '../../utils/calendar';
 import styles from './MeetingCreatePage.module.css';
 
 const ICON_SIZE = 20;
@@ -96,16 +97,29 @@ function durationOf(form: MeetingBasicInfo): Duration {
 }
 
 /** REQ-071 필수 항목이 비어 있으면 칸 아래에 안내한다. 문구는 meeting-service 검증 메시지와 같게 맞췄다 */
-function validate(form: MeetingForm): FieldErrors {
+/** 지금 시각 (14:05) */
+function nowTime() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+function validate(form: MeetingForm, todayIso: string, initial: MeetingForm): FieldErrors {
   const errors: FieldErrors = {};
+  const isUnchangedSchedule = form.date === initial.date && form.startTime === initial.startTime;
   if (!form.title.trim()) {
     errors.title = '회의명을 입력해 주세요';
   }
   if (!form.date) {
     errors.date = '날짜를 선택해 주세요';
+  } else if (form.date < todayIso && form.date !== initial.date) {
+    // 지난 날은 고를 수 없다. 이미 날짜가 지난 예정 회의를 고칠 때 날짜를 그대로 두는 것은 받는다 (SCRUM-410)
+    errors.date = '지난 날짜는 선택할 수 없어요';
   }
   if (!form.startTime) {
     errors.startTime = '시작 시간을 선택해 주세요';
+  } else if (form.date === todayIso && form.startTime <= nowTime() && !isUnchangedSchedule) {
+    // 오늘이면 지난 시간은 고를 수 없다. 이미 시작 시간이 지난 오늘 회의를 고칠 때 그대로 두는 것은 받는다 (SCRUM-410)
+    errors.startTime = '지난 시간은 선택할 수 없어요';
   } else if (!form.endTime) {
     errors.endTime = '종료 예정 시간을 선택해 주세요';
   } else if (form.endTime <= form.startTime) {
@@ -134,6 +148,7 @@ export default function MeetingCreatePage() {
     editingMeeting ? { ...pickBasicInfo(editingMeeting), agendas: [] } : EMPTY_FORM,
   );
   const [form, setForm] = useState<MeetingForm>(initialForm);
+  const [todayIso] = useState(() => toIsoDate(new Date()));
   const [duration, setDuration] = useState<Duration>(() => durationOf(initialForm));
   const [errors, setErrors] = useState<FieldErrors>({});
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
@@ -273,7 +288,7 @@ export default function MeetingCreatePage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors = validate(form);
+    const nextErrors = validate(form, todayIso, initialForm);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || isSubmitting) {
       return;
@@ -400,6 +415,8 @@ export default function MeetingCreatePage() {
                   <div className={styles.field}>
                     <span className={styles.label}>회의 날짜</span>
                     <DatePicker
+                      // 지난 날은 고를 수 없다 (SCRUM-410)
+                      minDate={todayIso}
                       label="회의 날짜 선택"
                       value={form.date}
                       error={Boolean(errors.date)}
@@ -436,7 +453,12 @@ export default function MeetingCreatePage() {
                         emptyText="고를 수 있는 시간이 없어요"
                         anchorRef={startAnchorRef}
                         className={styles.timeMenu}
-                        items={START_SLOTS.map((time) => ({ id: time, label: time, isSelected: time === form.startTime }))}
+                        // 오늘이면 지금보다 뒤의 시간만 (SCRUM-410)
+                        items={START_SLOTS.filter((time) => form.date !== todayIso || time > nowTime()).map((time) => ({
+                          id: time,
+                          label: time,
+                          isSelected: time === form.startTime,
+                        }))}
                         onSelect={selectStartTime}
                         onClose={closeMenu}
                       />
