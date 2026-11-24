@@ -560,6 +560,7 @@ export default function ArchivePage() {
                 emptyText=""
                 anchorRef={sortRef}
                 className={styles.sortMenu}
+                showCheck
                 items={(['LATEST', 'OLDEST', 'TITLE'] as const).map((option) => ({
                   id: option,
                   label: SORT_LABELS[option],

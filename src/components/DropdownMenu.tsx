@@ -1,4 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import checkIcon from '../assets/icons/check.svg';
+import Icon from './Icon';
 import menu from './Menu.module.css';
 import styles from './DropdownMenu.module.css';
 
@@ -19,7 +21,11 @@ interface DropdownMenuProps {
   onClose: () => void;
   /** 여는 버튼이 좁을 때 목록 너비 등을 덧붙인다 */
   className?: string;
+  /** 고른 항목 글자 앞에 체크 표시 (디자인 10 정렬 메뉴) */
+  showCheck?: boolean;
 }
+
+const CHECK_ICON_SIZE = 16;
 
 /** 입력 칸 아래에 뜨는 선택 목록 (디자인 Menu). 부모는 position: relative 여야 한다 */
 export default function DropdownMenu({
@@ -30,6 +36,7 @@ export default function DropdownMenu({
   onSelect,
   onClose,
   className,
+  showCheck = false,
 }: DropdownMenuProps) {
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -63,6 +70,7 @@ export default function DropdownMenu({
             className={[menu.item, item.isSelected ? menu.selected : ''].filter(Boolean).join(' ')}
             onClick={() => onSelect(item.id)}
           >
+            {showCheck && item.isSelected && <Icon src={checkIcon} size={CHECK_ICON_SIZE} />}
             <span className={menu.texts}>
               <span>{item.label}</span>
               {item.description && <span className={menu.description}>{item.description}</span>}
