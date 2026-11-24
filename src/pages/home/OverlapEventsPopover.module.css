@@ -1,0 +1,75 @@
+/* 디자인 시스템 OverlapEventsPopover: 280px 흰 창, 안쪽 12px, 줄 사이 4px */
+.popover {
+  position: fixed;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 280px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: 1px 1px 2px 0 rgb(0 0 0 / 10%);
+}
+
+.header {
+  margin: 0;
+  padding: 0 4px 4px;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 디자인 OverlapEventRow: 왼쪽 프로젝트 색 막대 3px, 마우스를 올리면 회색 바탕 */
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: var(--bg-surface-muted);
+}
+
+.color {
+  flex-shrink: 0;
+  width: 3px;
+  height: 36px;
+  border-radius: 2px;
+}
+
+.texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title,
+.meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.meta {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}

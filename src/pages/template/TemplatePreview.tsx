@@ -398,8 +398,9 @@ export default function TemplatePreview({
               <div
                 ref={isFirst ? firstPaperRef : undefined}
                 className={styles.paper}
-                // 피그마 다크 모드처럼 종이도 테마를 따른다. 양식에서 고른 글자색, 표 머리 색은 다크에서 index.css가 토큰 색으로 바꾼다
+                // 다크 모드에서도 양식 종이(A4)는 흰 바탕 (2026-11-24 요청). 종이 안에만 라이트 색 토큰을 다시 깐다
                 data-paper
+                data-theme="light"
                 style={{
                   zoom: zoom / 100,
                   padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,

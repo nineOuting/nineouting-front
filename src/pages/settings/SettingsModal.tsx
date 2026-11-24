@@ -1,4 +1,4 @@
-import brightnessIcon from '../../assets/icons/brightness.svg';
+import displayIcon from '../../assets/icons/display.svg';
 import cardIcon from '../../assets/icons/card.svg';
 import closeIcon from '../../assets/icons/close.svg';
 import helpIcon from '../../assets/icons/nav-help.svg';
@@ -22,7 +22,7 @@ const MENU: { tab: SettingsTab; label: string; icon: string }[][] = [
   [
     { tab: 'profile', label: '프로필', icon: profileIcon },
     { tab: 'plan', label: '요금제', icon: cardIcon },
-    { tab: 'display', label: '화면', icon: brightnessIcon },
+    { tab: 'display', label: '화면', icon: displayIcon },
   ],
   [
     { tab: 'trash', label: '삭제 목록', icon: trashIcon },

@@ -4,7 +4,7 @@ import { logout } from '../api/auth';
 import { getUnreadCount } from '../api/notification';
 import { getMe, ME_CHANGED_EVENT, type Me } from '../api/user';
 import logoutIcon from '../assets/icons/logout.svg';
-import settingsIcon from '../assets/icons/menu-settings.svg';
+import displayIcon from '../assets/icons/display.svg';
 import notificationsIcon from '../assets/icons/notifications.svg';
 import personIcon from '../assets/icons/person.svg';
 import { useSettingsModal, type SettingsTab } from '../pages/settings/useSettingsModal';
@@ -148,7 +148,8 @@ export default function TopBarUser() {
               </button>
               {/* 요금제는 프로필 메뉴에서 뺐다 (디자인 체크 2026-11-19). 설정 창의 요금제 메뉴로 본다 */}
               <button type="button" role="menuitem" className={menu.item} onClick={() => openSettings('display')}>
-                <Icon src={settingsIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
+                {/* 디자인 Card 프로필 메뉴 (11/17 변경): 화면 아이콘 */}
+                <Icon src={displayIcon} size={MENU_ICON_SIZE} className={menu.itemIcon} />
                 화면
               </button>
               <div className={menu.divider} />
