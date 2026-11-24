@@ -897,7 +897,7 @@ export default function MeetingRoomPage() {
             onAddDecision={(content) => (focusedAgenda ? addDecision(focusedAgenda.id, content) : Promise.resolve(false))}
             selectedDecisionId={selectedDecisionId}
             canEdit={isWriter && isLive}
-            notice={<AiNotice meetingId={meetingIdNumber} target="LIVE_SUMMARY" />}
+            // 디자인 07 LiveSummary: 요약 위 AI 안내 줄(REQ-172 MSG-070) 없이 제목 옆 "· AI가 정리 중"만 (SCRUM-365)
             onSelectDecision={setSelectedDecisionId}
             onSaveDecision={(decisionId, decisionSummary) => void saveDecision(decisionId, decisionSummary)}
             onChangeDecisionStatus={(decisionId, status) => {
@@ -943,7 +943,7 @@ export default function MeetingRoomPage() {
               decision={selectedDecision}
               lines={transcript.filter(({ seq }) => selectedDecision.evidenceSeqs.includes(seq))}
               onClose={() => setSelectedDecisionId(undefined)}
-              notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" />}
+              notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" variant="panel" />}
             />
           ) : sideTab === 'chat' ? (
             <ChatPanel
@@ -975,7 +975,6 @@ export default function MeetingRoomPage() {
         isPaused={isPaused}
         isFinished={isFinished}
         onTogglePause={isWriter && isLive ? () => void togglePause() : undefined}
-        onMore={isLive ? () => setIsLeaveOpen(true) : undefined}
       />
 
       {isLeaveOpen && (

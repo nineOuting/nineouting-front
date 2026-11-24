@@ -85,7 +85,8 @@
 
 .emptyIcon {
   margin-bottom: var(--spacing-3);
-  color: var(--text-primary);
+  /* 넵넵 캐릭터: 라이트 #361AD5(그림 원래 색), 다크는 밝은 보라 */
+  color: var(--primary-default);
 }
 
 .emptyTitle {

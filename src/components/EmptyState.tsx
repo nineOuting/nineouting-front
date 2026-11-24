@@ -24,7 +24,8 @@ export default function EmptyState({ title, description, action, note, className
   return (
     <div className={[styles.empty, character && styles.withCharacter, className].filter(Boolean).join(' ')}>
       {character ? (
-        <img src={character} alt="" width={CHARACTER_SIZE} height={CHARACTER_SIZE} />
+        // 모양만 쓰고 색은 테마의 보라(--primary-default)로 칠한다. 다크 테마에서도 배경에 맞는 보라가 된다 (SCRUM-365)
+        <Icon src={character} size={CHARACTER_SIZE} className={styles.character} />
       ) : (
         <Icon src={errorIcon} size={ICON_SIZE} className={styles.icon} />
       )}

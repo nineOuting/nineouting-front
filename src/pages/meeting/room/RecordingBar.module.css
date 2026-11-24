@@ -18,13 +18,15 @@
 
   position: fixed;
   bottom: var(--spacing-6);
-  left: 50%;
+  /* 디자인 07 RecordingDock: 가운데 영역(왼쪽 안건 240px, 오른쪽 패널 420px 사이)의 가운데 (SCRUM-365) */
+  left: calc(50% + (240px - 420px) / 2);
   z-index: 60;
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
   height: 52px;
-  padding: 0 var(--spacing-2) 0 var(--spacing-5, 20px);
+  /* 디자인 RecordingDock: 왼쪽 12, 오른쪽 8 */
+  padding: 0 var(--spacing-2) 0 var(--spacing-3);
   background: var(--rb-bg);
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
@@ -94,22 +96,27 @@
   background: var(--rb-button-hover);
 }
 
+/* 끌어 옮기는 손잡이 (SCRUM-365). 터치로 끌 때 화면이 같이 움직이지 않게 touch-action을 끈다 */
 .handle {
   display: flex;
   margin-left: calc(-1 * var(--spacing-2));
+  border-radius: var(--radius-sm);
   color: var(--rb-subtle);
   cursor: grab;
+  touch-action: none;
 }
 
-.more {
-  display: flex;
-  padding: var(--spacing-1);
-  border-radius: var(--radius-full);
+.handle:hover,
+.handle:focus-visible {
   color: var(--rb-muted);
 }
 
-.more:hover {
-  background: var(--rb-hover);
+.dragging {
+  user-select: none;
+}
+
+.dragging .handle {
+  cursor: grabbing;
 }
 
 .resumeButton {

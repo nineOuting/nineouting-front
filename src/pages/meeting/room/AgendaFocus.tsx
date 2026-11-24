@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
+import emptyCharacter from '../../../assets/characters/empty.svg';
 import type { DecisionStatusEdit } from '../../../api/meeting';
 import addIcon from '../../../assets/icons/add-sm.svg';
 import checkIcon from '../../../assets/icons/check.svg';
@@ -7,7 +8,8 @@ import evidenceIcon from '../../../assets/icons/evidence.svg';
 import moreIcon from '../../../assets/icons/more-vert.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
 import refreshIcon from '../../../assets/icons/refresh.svg';
-import todoIcon from '../../../assets/icons/agenda-status.svg';
+import todoIcon from '../../../assets/icons/todo.svg';
+import EmptyState from '../../../components/EmptyState';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionPoint, RoomAgenda, RoomTodo } from '../../../types/meetingRoom';
 import ActionMenu from '../../workspace/ActionMenu';
@@ -85,7 +87,7 @@ function DecisionCard({
   if (isEditing) {
     // 디자인 Live_11 결정 내용 수정: 카드가 펼쳐져 결정할 사항과 결정 내용을 보여 준다
     return (
-      <li className={`${styles.decision} ${styles.discussing} ${styles.editingCard}`}>
+      <li className={`${styles.decision} ${styles.editingCard}`}>
         <p className={styles.editHeading}>결정 내용 수정</p>
         <label className={styles.editField}>
           <span className={styles.editLabel}>결정할 사항</span>
@@ -222,9 +224,9 @@ function NewDecisionCard({ onAdd, onClose }: { onAdd: (content: string) => Promi
   };
 
   return (
-    <li className={`${styles.decision} ${styles.discussing} ${styles.editingCard}`}>
+    <li className={`${styles.decision} ${styles.editingCard}`}>
       {/* 디자인 체크 2026-11-19: 더하는 카드도 수정 카드와 같은 제목 */}
-      <p className={styles.editHeading}>결정 내용 수정</p>
+      <p className={styles.editHeading}>결정할 사항 추가</p>
       <label className={styles.editField}>
         <span className={styles.editLabel}>결정할 사항</span>
         <input
@@ -359,7 +361,8 @@ export default function AgendaFocus({
               isPaused={isPaused}
               isSelected={decision.id === selectedDecisionId}
               canEdit={canEdit}
-              onSelect={() => onSelectDecision(decision.id === selectedDecisionId ? undefined : decision.id)}
+              // 근거 창이 떠 있을 때 같은 카드를 다시 눌러도 닫지 않는다. 닫기는 창의 X로만 (SCRUM-365)
+              onSelect={() => onSelectDecision(decision.id)}
               onSave={(summary) => onSaveDecision(decision.id, summary)}
               onChangeStatus={(status) => onChangeDecisionStatus(decision.id, status)}
             />
@@ -376,7 +379,8 @@ export default function AgendaFocus({
             이 안건 요약
           </h2>
           {isAiAvailable ? (
-            isCurrent && <span className={styles.sectionMeta}>· AI가 정리 중</span>
+            // 지금 논의 중인 안건, 또는 정리된 요약이 있는 안건이면 보인다 (SCRUM-365)
+            (isCurrent || hasSummary) && <span className={styles.sectionMeta}>· AI가 정리 중</span>
           ) : (
             <span className={styles.aiPausedChip}>
               <Icon src={refreshIcon} size={ICON_SIZE - 4} />
@@ -410,9 +414,16 @@ export default function AgendaFocus({
             )}
           </>
         ) : (
-          // MSG-024
-          <p className={styles.noSummary}>회의 발언이 시작되면 이곳에서 논의 흐름과 주요 의견을 확인할 수 있어요.</p>
+          // MSG-024. 디자인 07 Live_01 EmptyState: 자는 캐릭터, 제목, 설명 (SCRUM-365)
+          <EmptyState
+            className={styles.summaryEmpty}
+            character={emptyCharacter}
+            title="아직 논의 내용이 없어요"
+            description="회의 발언이 시작되면 이곳에서 논의 흐름과 주요 의견을 확인할 수 있어요"
+          />
         )}
+        {/* 디자인 07 Live_01: 요약도 할 일도 없으면 할 일 칸을 숨긴다 */}
+        {(hasSummary || agenda.todos.length > 0) && (
         <div className={styles.todoCard}>
           <p className={styles.todoHead}>
             <Icon src={todoIcon} size={ICON_SIZE} />
@@ -430,6 +441,7 @@ export default function AgendaFocus({
             <p className={styles.todoEmpty}>회의에서 할 일이 나오면 담당자·기한과 함께 여기에 모여요</p>
           )}
         </div>
+        )}
       </section>
     </div>
   );

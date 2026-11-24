@@ -10,6 +10,11 @@
   text-align: center;
 }
 
+/* 넵넵 캐릭터: 라이트 #361AD5(그림 원래 색), 다크는 밝은 보라 */
+.character {
+  color: var(--primary-default);
+}
+
 .texts {
   display: flex;
   flex-direction: column;

@@ -1,13 +1,11 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
-import transcriptIcon from '../../../assets/icons/transcript.svg';
-import Icon from '../../../components/Icon';
+import doneCharacter from '../../../assets/characters/done.svg';
+import EmptyState from '../../../components/EmptyState';
 import type { TranscriptLine } from '../../../types/meetingRoom';
-import room from './room.module.css';
 import TermText from './TermText';
 import type { TermMatcher } from './termGlossary';
 import styles from './SidePanel.module.css';
 
-const EMPTY_ICON_SIZE = 48;
 
 const NO_AGENDA = '';
 
@@ -86,12 +84,13 @@ export default function TranscriptPanel({
     <>
       {/* 디자인 Version02: 제목은 위 탭(실시간 전사)이 대신한다 */}
       {lines.length === 0 ? (
-        // MSG-025
-        <div className={room.empty}>
-          <Icon src={transcriptIcon} size={EMPTY_ICON_SIZE} className={room.emptyIcon} />
-          <p className={room.emptyTitle}>넵! 듣고 있어요.</p>
-          <p className={room.emptyCaption}>말씀이 시작되면 여기에 받아 적을게요.</p>
-        </div>
+        // MSG-025. 디자인 07 Live_01 EmptyState: 이마에 손을 얹은 캐릭터(done), 탭 바로 아래 (SCRUM-365)
+        <EmptyState
+          className={styles.transcriptEmpty}
+          character={doneCharacter}
+          title="넵! 듣고 있어요"
+          description="말씀이 시작되면 여기에 받아 적을게요."
+        />
       ) : (
         <ol ref={listRef} className={styles.lines} aria-live="polite" onScroll={handleScroll}>
           {lines.map((line) => {

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import waveCharacter from '../assets/characters/wave.svg';
+import Icon from './Icon';
 import { useSettingsModal } from '../pages/settings/useSettingsModal';
 import type { AccessNoticeKind } from '../utils/accessNotice';
 import Button from './Button';
@@ -18,7 +19,8 @@ export default function AccessNotice({ kind }: { kind: AccessNoticeKind }) {
 
   return (
     <div className={styles.notice} role="alert">
-      {isForbidden && <img src={waveCharacter} alt="" width={CHARACTER_SIZE} height={CHARACTER_SIZE} />}
+      {/* 캐릭터는 모양만 쓰고 테마의 보라로 칠한다 (SCRUM-365) */}
+      {isForbidden && <Icon src={waveCharacter} size={CHARACTER_SIZE} className={styles.character} />}
       <div className={styles.texts}>
       <p className={styles.title}>{isForbidden ? '이 폴더는 볼 수 없어요' : '삭제된 회의예요.'}</p>
       <p className={styles.description}>

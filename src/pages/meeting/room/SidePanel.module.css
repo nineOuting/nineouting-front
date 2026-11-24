@@ -156,3 +156,8 @@
   font-size: var(--font-size-caption);
   color: var(--text-secondary);
 }
+
+/* 디자인 07 Live_01 실시간 전사 EmptyState: 탭 바로 아래, 위아래 16px (세로 가운데가 아님, SCRUM-365) */
+.transcriptEmpty {
+  padding: var(--spacing-4);
+}

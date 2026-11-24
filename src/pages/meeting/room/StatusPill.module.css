@@ -41,3 +41,39 @@
   background: var(--info-subtle);
   color: var(--info-default);
 }
+
+/* 디자인 Badge: 글자만, 모서리 4px, 위아래 4px 좌우 8px (SCRUM-365) */
+.badge {
+  flex-shrink: 0;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  white-space: nowrap;
+}
+
+.badgeWarning {
+  background: var(--warning-subtle);
+  color: var(--warning-default);
+}
+
+.badgeNeutral {
+  background: var(--neutral-subtle);
+  color: var(--neutral-default);
+}
+
+.badgePrimary {
+  background: var(--primary-subtle);
+  color: var(--primary-default);
+}
+
+.badgeSuccess {
+  background: var(--success-subtle);
+  color: var(--success-default);
+}
+
+.badgeInfo {
+  background: var(--info-subtle);
+  color: var(--info-default);
+}

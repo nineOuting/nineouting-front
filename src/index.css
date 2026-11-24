@@ -56,6 +56,8 @@
   --status-undecided: #ea580c;
   --status-undecided-subtle: #fff4e6;
   --status-discussing-border: var(--brand-300);
+  /* 피그마 07 지금 이야기하는·수정 중인 결정 카드 그림자: 아래 6, 흐림 16, 보라(brand-600) 14% (SCRUM-365) */
+  --shadow-selected: 0 6px 16px 0 rgb(54 26 213 / 14%);
   /* 피그마 warning/default, warning/subtle (orange 600, 50) */
   --warning-default: #ea580c;
   --warning-subtle: #fff7ed;

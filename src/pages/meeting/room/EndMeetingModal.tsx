@@ -6,7 +6,7 @@ import Dialog from '../../../components/Dialog';
 import Icon from '../../../components/Icon';
 import Spinner from '../../../components/Spinner';
 import type { RoomAgenda } from '../../../types/meetingRoom';
-import StatusPill from './StatusPill';
+import { StatusBadge } from './StatusPill';
 import styles from './EndMeetingModal.module.css';
 
 export type EndStep = 'waiting' | 'leftover' | 'confirm';
@@ -181,7 +181,7 @@ export default function EndMeetingModal({
                           {agenda.summary.length > 0 ? agenda.summary.join(' ') : '아직 이야기하지 않았어요'}
                         </span>
                       </span>
-                      <StatusPill status={agenda.status} soft />
+                      <StatusBadge status={agenda.status} />
                     </Checkbox>
                   </li>
                 ))}

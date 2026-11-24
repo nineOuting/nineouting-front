@@ -8,8 +8,8 @@ import useCloseGuard from '../../../components/useCloseGuard';
 const TITLE_MAX_LENGTH = 100;
 // MSG-029
 const EMPTY_TITLE_MESSAGE = '안건 제목을 입력해 주세요.';
+// meeting-service는 결정할 사항을 1개 이상 받는다 (AddAgendaRequest @NotEmpty, 2026-10-23 결정). 창에서는 받지 않으므로 이 문구를 대신 보낸다
 const PLACEHOLDER_DECISION = '결정할 사항';
-const DECISION_MAX_LENGTH = 200;
 
 interface AddAgendaModalProps {
   /** 새 안건 제안(REQ-091)에서 열면 제안된 제목을 채워 둔다 */
@@ -18,13 +18,12 @@ interface AddAgendaModalProps {
   onAdd: (title: string, decisionPoints: string[]) => void;
 }
 
-/** REQ-090 회의 중 안건 추가. 안건 제목과 결정할 사항 1개 이상이 필수 (2026-10-23 결정) */
+/** REQ-090 회의 중 안건 추가. 안건 제목만 받는다 (SCRUM-365, 디자인 요청) */
 export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: AddAgendaModalProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [decision, setDecision] = useState('');
   const [titleError, setTitleError] = useState<string>();
   // REQ-179 입력한 내용이 있으면 닫기 전에 묻는다
-  const { requestClose, confirmElement } = useCloseGuard(title.trim() !== initialTitle.trim() || decision.trim() !== '', onCancel);
+  const { requestClose, confirmElement } = useCloseGuard(title.trim() !== initialTitle.trim(), onCancel);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -32,8 +31,7 @@ export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: A
     if (!title.trim()) {
       return;
     }
-    // 디자인은 결정할 내용이 선택이지만 meeting-service는 1개 이상 받는다. 비우면 고칠 자리만 넣는다
-    onAdd(title.trim(), [decision.trim() || PLACEHOLDER_DECISION]);
+    onAdd(title.trim(), [PLACEHOLDER_DECISION]);
   };
 
   return (
@@ -67,14 +65,6 @@ export default function AddAgendaModal({ initialTitle = '', onCancel, onAdd }: A
             setTitle(event.target.value);
             setTitleError(undefined);
           }}
-        />
-        <TextField
-          label="결정할 내용 (선택)"
-          placeholder="예: 영상 길이와 담당자 정하기"
-          maxLength={DECISION_MAX_LENGTH}
-          value={decision}
-          helper="결정할 내용을 적으면 AI가 논의 상태를 따라가요"
-          onChange={(event) => setDecision(event.target.value)}
         />
       </Dialog>
       {confirmElement}

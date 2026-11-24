@@ -43,3 +43,17 @@
 .selected {
   background: var(--bg-surface);
 }
+
+/* 디자인 07 결정 근거 Banner: 연회색 바탕, 아이콘과 글자 모두 회색, 글자 14px, 높이 36 (SCRUM-365) */
+.panel {
+  background: var(--neutral-subtle);
+}
+
+.panel .icon {
+  color: var(--text-secondary);
+}
+
+.panel .text {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+}

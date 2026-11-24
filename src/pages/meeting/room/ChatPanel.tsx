@@ -1,10 +1,14 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { askChat, getChat, type ChatBasis, type ChatCitation, type ChatMessage } from '../../../api/chat';
+import { askChat, getChat, type ChatCitation, type ChatMessage } from '../../../api/chat';
 import { errorMessage } from '../../../api/client';
 import errorIcon from '../../../assets/icons/error.svg';
+import liveIcon from '../../../assets/icons/evidence.svg';
+import generalIcon from '../../../assets/icons/general-knowledge.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
+import archiveIcon from '../../../assets/icons/nav-archive.svg';
+import uploadIcon from '../../../assets/icons/pdf.svg';
 import sendIcon from '../../../assets/icons/send.svg';
-import summaryIcon from '../../../assets/icons/summary.svg';
+import suggestionIcon from '../../../assets/icons/ai-suggestion.svg';
 import Icon from '../../../components/Icon';
 import Spinner from '../../../components/Spinner';
 import room from './room.module.css';
@@ -17,11 +21,31 @@ const MAX_QUERY = 1000;
 const FAILED_MESSAGE = '답을 만들지 못했어요. 잠시 뒤 다시 질문해 주세요.';
 const GENERAL_MARK = '[일반]';
 
-const BASIS_LABELS: Record<ChatBasis, string> = {
-  sources: '회의 자료 기반',
-  general: '일반 지식',
-  mixed: '회의 자료와 일반 지식',
+const HEAD_ICON_SIZE = 14;
+
+// 디자인 AssistantAnswerCard: 답 카드 맨 위 "아이콘 + 어디서 찾았는지" 한 줄 (SCRUM-365).
+// 지금 회의, 지난 회의, 찾지 못함은 디자인대로, 사전 자료, 일반 지식은 디자인에 없어 같은 모양으로 더했다
+const SOURCE_HEADS: Record<ChatCitation['sourceType'], { label: string; icon: string }> = {
+  live: { label: '지금 회의에서 찾았어요', icon: liveIcon },
+  minutes: { label: '지난 회의에서 찾았어요', icon: archiveIcon },
+  upload: { label: '사전 자료에서 찾았어요', icon: uploadIcon },
 };
+// 근거가 여러 곳에서 나오면 이 순서로 하나만 보여 준다
+const SOURCE_ORDER: ChatCitation['sourceType'][] = ['live', 'minutes', 'upload'];
+const NO_RESULT_HEAD = { label: '찾지 못했어요', icon: archiveIcon };
+const GENERAL_HEAD = { label: '일반 지식으로 답했어요', icon: generalIcon };
+
+/** 답 카드 머리 줄. 근거도 일반 지식도 아니면(예전 답 등) 보여 주지 않는다 */
+function answerHead(message: ChatMessage) {
+  if (message.status === 'no_result') {
+    return NO_RESULT_HEAD;
+  }
+  if (message.basis === 'general') {
+    return GENERAL_HEAD;
+  }
+  const source = SOURCE_ORDER.find((type) => message.citations.some(({ sourceType }) => sourceType === type));
+  return source ? SOURCE_HEADS[source] : undefined;
+}
 
 interface ChatPanelProps {
   meetingId: number;
@@ -35,9 +59,14 @@ interface ChatPanelProps {
 
 const DEFAULT_SUGGESTIONS = ['방금 5분 요약해 줘', '지난 회의에서 비슷한 얘기 찾아줘'];
 
-/** 답 글의 [n]은 근거 번호, [일반]은 일반 지식 표시, **글**은 굵게 보여 준다 */
-function AnswerText({ text }: { text: string }) {
-  const parts = text.split(/(\[\d+\]|\[일반\]|\*\*[^*]+\*\*)/);
+/**
+ * 답 글의 [n]은 근거 번호, [일반]은 일반 지식 표시, **글**은 굵게 보여 준다.
+ * 답 전체가 일반 지식이면 머리 줄과 겹치므로 [일반] 표시는 숨긴다 (hideGeneral)
+ */
+function AnswerText({ text, hideGeneral = false }: { text: string; hideGeneral?: boolean }) {
+  // 숨길 때는 표시 앞 빈칸도 같이 지운다 ("단위예요 [일반]." → "단위예요.")
+  const shown = hideGeneral ? text.replace(/\s*\[일반\]/g, '') : text;
+  const parts = shown.split(/(\[\d+\]|\[일반\]|\*\*[^*]+\*\*)/);
   return (
     <p className={side.text}>
       {parts.map((part, index) => {
@@ -62,6 +91,19 @@ function AnswerText({ text }: { text: string }) {
         return <Fragment key={index}>{part}</Fragment>;
       })}
     </p>
+  );
+}
+
+function AnswerHead({ message }: { message: ChatMessage }) {
+  const head = answerHead(message);
+  if (!head) {
+    return null;
+  }
+  return (
+    <span className={styles.answerHead}>
+      <Icon src={head.icon} size={HEAD_ICON_SIZE} />
+      {head.label}
+    </span>
   );
 }
 
@@ -183,11 +225,9 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
             </div>
           ) : (
             <div key={message.messageId} className={styles.answer}>
-              {message.status === 'answered' && message.basis && (
-                <span className={styles.basis}>{BASIS_LABELS[message.basis]}</span>
-              )}
+              <AnswerHead message={message} />
               {/* MSG-076은 ai-service가 답 글로 준다 */}
-              <AnswerText text={message.text} />
+              <AnswerText text={message.text} hideGeneral={message.basis === 'general'} />
               <Citations citations={message.citations} />
             </div>
           ),
@@ -202,8 +242,8 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
         {failed && !asking && (
           // 디자인 Card 넵넵이가 답을 못 만듦: 흰 카드, 위에 작은 아이콘과 "답을 만들지 못했어요" (디자인 체크 2026-11-19)
           <div className={`${styles.answer} ${styles.failed}`} role="alert">
-            <span className={styles.failedHead}>
-              <Icon src={errorIcon} size={14} />
+            <span className={styles.answerHead}>
+              <Icon src={errorIcon} size={HEAD_ICON_SIZE} />
               답을 만들지 못했어요
             </span>
             <p className={side.text}>{FAILED_MESSAGE}</p>
@@ -224,7 +264,7 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
               disabled={asking !== null}
               onClick={() => void ask(suggestion)}
             >
-              <Icon src={summaryIcon} size={12} />
+              <Icon src={suggestionIcon} size={12} />
               {suggestion}
             </button>
           ))}

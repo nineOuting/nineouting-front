@@ -5,19 +5,23 @@ import Icon from './Icon';
 import styles from './AiNotice.module.css';
 
 const ICON_SIZE = 16;
+// 디자인 07 결정 근거 Banner: AiIcon 18px
+const PANEL_ICON_SIZE = 18;
 /** REQ-172 피드백 버튼은 2026-11-17 기획 결정으로 보류. 지금은 안내 문구만 보인다 (다시 쓰면 true) */
 const SHOW_FEEDBACK = false;
 
 interface AiNoticeProps {
   meetingId: number;
   target: AiFeedbackTarget;
+  /** panel: 결정 근거 창 아래 안내 줄 (디자인 07 Banner, 회색 바탕, 글자 14px) */
+  variant?: 'default' | 'panel';
 }
 
 /**
  * REQ-172 AI가 정리한 내용 위의 안내 줄 (MSG-070)과 [정확해요], [고칠 부분 있어요].
  * 누른 피드백은 AI 품질을 고치는 데 쓴다 (meeting-service에 남는다)
  */
-export default function AiNotice({ meetingId, target }: AiNoticeProps) {
+export default function AiNotice({ meetingId, target, variant = 'default' }: AiNoticeProps) {
   const [rating, setRating] = useState<AiFeedbackRating | null>(null);
   const [isSending, setIsSending] = useState(false);
 
@@ -34,8 +38,8 @@ export default function AiNotice({ meetingId, target }: AiNoticeProps) {
   };
 
   return (
-    <div className={styles.notice}>
-      <Icon src={summaryIcon} size={ICON_SIZE} className={styles.icon} />
+    <div className={variant === 'panel' ? `${styles.notice} ${styles.panel}` : styles.notice}>
+      <Icon src={summaryIcon} size={variant === 'panel' ? PANEL_ICON_SIZE : ICON_SIZE} className={styles.icon} />
       <p className={styles.text}>
         {rating ? '의견 고마워요. AI가 더 잘 정리하는 데 쓸게요.' : 'AI가 정리한 내용이에요. 틀린 부분이 있을 수 있어요.'}
       </p>
