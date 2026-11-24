@@ -7,7 +7,7 @@ import evidenceIcon from '../../../assets/icons/evidence.svg';
 import moreIcon from '../../../assets/icons/more-vert.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
 import refreshIcon from '../../../assets/icons/refresh.svg';
-import todoIcon from '../../../assets/icons/agenda-status.svg';
+import todoIcon from '../../../assets/icons/todo.svg';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionPoint, RoomAgenda, RoomTodo } from '../../../types/meetingRoom';
 import ActionMenu from '../../workspace/ActionMenu';

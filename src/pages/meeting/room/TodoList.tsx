@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import editIcon from '../../../assets/icons/create-sm.svg';
 import personIcon from '../../../assets/icons/person-sm.svg';
-import scheduleIcon from '../../../assets/icons/schedule.svg';
+import dueDateIcon from '../../../assets/icons/due-date.svg';
 import Icon from '../../../components/Icon';
 import type { RoomTodo } from '../../../types/meetingRoom';
 import room from './room.module.css';
@@ -152,7 +152,7 @@ export default function TodoList({ todos, onSave, variant = 'list', doneIds = []
                 aria-label={`${todo.task} 기한 ${todo.due ?? '선택'}`}
                 onClick={() => startEditing(todo)}
               >
-                <Icon src={scheduleIcon} size={EDIT_ICON_SIZE - 2} />
+                <Icon src={dueDateIcon} size={EDIT_ICON_SIZE - 2} />
                 {todo.due ?? '기한'}
               </button>
             </li>

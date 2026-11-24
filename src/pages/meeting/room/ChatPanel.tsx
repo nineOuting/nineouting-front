@@ -4,7 +4,7 @@ import { errorMessage } from '../../../api/client';
 import errorIcon from '../../../assets/icons/error.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
 import sendIcon from '../../../assets/icons/send.svg';
-import summaryIcon from '../../../assets/icons/summary.svg';
+import suggestionIcon from '../../../assets/icons/ai-suggestion.svg';
 import Icon from '../../../components/Icon';
 import Spinner from '../../../components/Spinner';
 import room from './room.module.css';
@@ -224,7 +224,7 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
               disabled={asking !== null}
               onClick={() => void ask(suggestion)}
             >
-              <Icon src={summaryIcon} size={12} />
+              <Icon src={suggestionIcon} size={12} />
               {suggestion}
             </button>
           ))}
