@@ -315,6 +315,12 @@
   width: 96px;
 }
 
+/* 디자인 SettingRow 글자: 라벨·값 모두 text/secondary. 끝난 회의 "회의록 정보"(디자인 08)는 그대로 둔다 (SCRUM-364) */
+.settingRow .settingLabel,
+.settingRow .settingValue {
+  color: var(--text-secondary);
+}
+
 .settingRow:disabled {
   cursor: default;
 }
