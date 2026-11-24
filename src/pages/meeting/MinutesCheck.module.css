@@ -240,3 +240,14 @@
   flex: 1;
   min-width: 0;
 }
+
+/* 회의록을 받기 전: 문서 상자 안 가운데에 종이 모양 회색 자리 (SCRUM-410) */
+.documentLoading {
+  justify-content: center;
+  padding: var(--spacing-10) var(--spacing-6) 0;
+}
+
+.documentLoading > .paperSkeleton {
+  flex: none;
+  border-radius: 0;
+}

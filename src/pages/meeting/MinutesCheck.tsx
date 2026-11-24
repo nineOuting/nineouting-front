@@ -17,6 +17,7 @@ import locationIcon from '../../assets/icons/location.svg';
 import refreshIcon from '../../assets/icons/refresh.svg';
 import scheduleIcon from '../../assets/icons/schedule.svg';
 import Icon from '../../components/Icon';
+import Skeleton from '../../components/Skeleton';
 import Spinner from '../../components/Spinner';
 import type { Meeting } from '../../types/meeting';
 import type { MinutesTemplate } from '../../types/template';
@@ -76,6 +77,8 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
   const [isRetrying, setIsRetrying] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  // 첫 불러오기가 끝나기 전에는 스켈레톤. 회의록이 아직 없으면(만드는 중) 그 뒤에도 minutes가 비어 있어 따로 센다 (SCRUM-410)
+  const [hasLoaded, setHasLoaded] = useState(false);
   const downloadRef = useRef<HTMLButtonElement>(null);
   const viewedRef = useRef(false);
   const editorPath = `/meetings/${meeting.meetingId}/minutes`;
@@ -94,6 +97,8 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
       if (!isApiError(error, MINUTES_ERROR_CODES.notReady)) {
         onError(errorMessage(error));
       }
+    } finally {
+      setHasLoaded(true);
     }
   }, [meeting.meetingId, onError]);
 
@@ -215,6 +220,23 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
       ) : null}
     </div>
   );
+
+  // 회의록을 받기 전에는 "작성 중" 카드가 잠깐 보였다가 확정 회의록으로 바뀌며 번쩍였다. 제목 자리와 종이 자리를 회색으로 (SCRUM-410)
+  if (!hasLoaded) {
+    return (
+      <>
+        <div className={styles.head} aria-busy="true">
+          <div className={styles.titleBlock}>
+            <Skeleton width={160} height={32} />
+            <Skeleton width={320} height={20} />
+          </div>
+        </div>
+        <div className={`${styles.document} ${styles.documentLoading}`} aria-hidden="true">
+          <Skeleton className={styles.paperSkeleton} width={560} height="100%" />
+        </div>
+      </>
+    );
+  }
 
   if (isConfirmed) {
     const info: DocInfo[] = [

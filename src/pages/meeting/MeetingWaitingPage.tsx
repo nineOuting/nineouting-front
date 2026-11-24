@@ -32,6 +32,7 @@ import AppLayout from '../../components/AppLayout';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icon from '../../components/Icon';
+import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Meeting, MeetingStatus, Member, MinutesTemplate, PendingAgenda } from '../../types/meeting';
 import { backToOf, formatMeetingSchedule, formatShortDateTime } from '../../utils/meetingFormat';
@@ -50,6 +51,9 @@ import TemplateGalleryModal from './TemplateGalleryModal';
 import AccessNotice from '../../components/AccessNotice';
 import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import styles from './MeetingWaitingPage.module.css';
+
+// 불러오는 동안 오른쪽 패널(참여자, 회의록 설정, 사전 자료) 자리 높이
+const LOADING_SIDE_SECTIONS = [136, 96, 56];
 
 const ICON_SIZE = 20;
 const BACK_ICON_SIZE = 24;
@@ -211,10 +215,39 @@ export default function MeetingWaitingPage() {
     );
   }
   if (!meeting) {
-    // 불러오는 동안에도 접힌 메뉴로 그린다 (같은 AppLayout이 이어서 쓰여 메뉴 열림 상태가 남는다)
+    // 불러오는 동안에도 접힌 메뉴로 그린다 (같은 AppLayout이 이어서 쓰여 메뉴 열림 상태가 남는다).
+    // 빈 화면이었다가 한꺼번에 나타나며 번쩍이지 않게, 상단 바·본문·오른쪽 패널 자리를 회색으로 그린다 (SCRUM-410)
     return (
-      <AppLayout className={styles.page} variant="compact">
+      <AppLayout
+        className={styles.page}
+        variant="compact"
+        header={
+          <div className={styles.topBar} aria-hidden="true">
+            <div className={styles.topLeft}>
+              <Skeleton width={24} height={24} />
+              <Skeleton width={200} height={24} />
+            </div>
+          </div>
+        }
+      >
         {toast && <Toast message={toast} onClose={closeToast} />}
+        <div className={styles.columns} aria-busy="true">
+          <div className={styles.main}>
+            <div className={styles.titleBlock}>
+              <Skeleton width={200} height={32} />
+              <Skeleton width={280} height={20} />
+            </div>
+            <Skeleton height={420} />
+          </div>
+          <aside className={styles.side} aria-hidden="true">
+            {LOADING_SIDE_SECTIONS.map((height, index) => (
+              <section key={index} className={styles.sideSection}>
+                <Skeleton width={120} height={24} />
+                <Skeleton height={height} />
+              </section>
+            ))}
+          </aside>
+        </div>
       </AppLayout>
     );
   }
