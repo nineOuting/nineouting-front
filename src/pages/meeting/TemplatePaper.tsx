@@ -14,13 +14,15 @@ interface TemplatePaperProps {
   layout: TemplateLayout;
   /** 줄이는 비율 (1이면 실제 종이 크기) */
   scale: number;
+  /** 종이를 이 쪽 수만큼은 채운다. 쪽 넘기기에서 마지막 쪽의 남는 부분도 흰 종이로 보이게 한다 */
+  minPages?: number;
 }
 
 /**
  * 양식을 실제 회의록 종이처럼 예시 내용으로 채워 보여 준다 (보기만). 회의 대기 양식 카드·상세 보기 (SCRUM-364, 디자인 요청).
  * 양식 편집 미리보기와 같은 설정(여백, 섹션 간격, 정렬, 글자 크기·색, 머리말·꼬리말, 배경)을 따른다
  */
-export default function TemplatePaper({ name, items, layout, scale }: TemplatePaperProps) {
+export default function TemplatePaper({ name, items, layout, scale, minPages = 1 }: TemplatePaperProps) {
   const align = layout.align.toLowerCase() as 'left' | 'center' | 'right';
   return (
     <div
@@ -30,6 +32,7 @@ export default function TemplatePaper({ name, items, layout, scale }: TemplatePa
       aria-label={`${name} 미리보기`}
       style={{
         zoom: scale,
+        minHeight: PAPER_PAGE_HEIGHT * minPages,
         padding: `${layout.marginVerticalMm * PX_PER_MM}px ${layout.marginHorizontalMm * PX_PER_MM}px`,
         // REQ-157 배경 사진은 종이 전체를 덮는다
         ...(layout.backgroundImageUrl

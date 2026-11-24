@@ -87,7 +87,14 @@ export default function TemplateDetailModal({ templates, index, onUse, onClose, 
               className={styles.sheet}
               style={{ transform: `translateY(-${(page - 1) * PAGE_BOX_HEIGHT}px)` }}
             >
-              <TemplatePaper name={template.name} items={template.items} layout={template.layout} scale={PAPER_SCALE} />
+              {/* 마지막 쪽의 남는 부분도 흰 종이로 (종이 높이 = 쪽 수 x 한 쪽) */}
+              <TemplatePaper
+                name={template.name}
+                items={template.items}
+                layout={template.layout}
+                scale={PAPER_SCALE}
+                minPages={pageCount}
+              />
             </div>
           </div>
         ) : (
