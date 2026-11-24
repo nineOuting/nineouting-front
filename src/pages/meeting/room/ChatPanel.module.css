@@ -47,23 +47,14 @@
   border-radius: var(--radius-md);
 }
 
-.failedHead {
+/* 디자인 AssistantAnswerCard 머리 줄: 작은 아이콘 + 어디서 찾았는지 (실패 카드도 같은 모양) */
+.answerHead {
   display: flex;
   align-items: center;
   gap: var(--spacing-1);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
   color: var(--text-secondary);
-}
-
-.basis {
-  align-self: flex-start;
-  padding: 0 var(--spacing-2);
-  background: var(--info-subtle);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
-  color: var(--info-default);
 }
 
 .ref {
