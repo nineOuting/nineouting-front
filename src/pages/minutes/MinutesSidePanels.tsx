@@ -56,16 +56,16 @@ const DECISION_LABELS: Record<AgendaStatusCode, string> = {
   NOT_STARTED: '논의 전',
 };
 
-/** 안건 고르기 목록의 작은 상태 글 (결정됨 / 미결 N개 / 논의 전) */
+/** 안건 고르기 목록의 작은 상태 글: 결정 / 미결 / 논의 전 (QA 61, 논의만 하고 결정이 없으면 미결) */
 function agendaStateLabel(agenda: AgendaSummary) {
   const undecided = agenda.decisions?.filter(({ status }) => status === 'UNDECIDED').length ?? 0;
   if (undecided > 0) {
-    return `미결 ${undecided}개`;
+    return '미결';
   }
   if (agenda.status === 'DECIDED' || (agenda.decisions?.length && agenda.decisions.every(({ status }) => status === 'DECIDED'))) {
-    return '결정됨';
+    return '결정';
   }
-  return agenda.status === 'NOT_STARTED' ? '논의 전' : '논의함';
+  return agenda.status === 'NOT_STARTED' ? '논의 전' : '미결';
 }
 
 /**
@@ -148,6 +148,7 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
                 </span>
               </div>
               <div className={styles.pickerRow}>
+                {/* QA 62 안건은 드롭다운으로만 고른다 (좌우 버튼은 뺐다) */}
                 <div ref={pickerRef} className={styles.selectAnchor}>
                   <button
                     type="button"
@@ -174,7 +175,7 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
                                 setIsPickerOpen(false);
                               }}
                             >
-                              <span className={[styles.pickerDot, label === '결정됨' ? styles.pickerDotFilled : ''].filter(Boolean).join(' ')} />
+                              <span className={[styles.pickerDot, label === '결정' ? styles.pickerDotFilled : ''].filter(Boolean).join(' ')} />
                               <span className={styles.pickerTexts}>
                                 <span className={styles.pickerState}>{label}</span>
                                 <span className={styles.pickerTitle}>
@@ -188,24 +189,6 @@ export default function MinutesSidePanels({ agendas, lines }: MinutesSidePanelsP
                     </ul>
                   )}
                 </div>
-                <button
-                  type="button"
-                  className={styles.navButton}
-                  aria-label="이전 안건"
-                  disabled={index === 0}
-                  onClick={() => setIndex((value) => value - 1)}
-                >
-                  <Icon src={chevronLeftIcon} size={NAV_ICON_SIZE} />
-                </button>
-                <button
-                  type="button"
-                  className={styles.navButton}
-                  aria-label="다음 안건"
-                  disabled={index >= agendas.length - 1}
-                  onClick={() => setIndex((value) => value + 1)}
-                >
-                  <Icon src={chevronRightIcon} size={NAV_ICON_SIZE} />
-                </button>
               </div>
             </div>
             <div className={styles.block}>

@@ -1,5 +1,5 @@
-<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="ArrowUndoUpLeftIcon">
-<path id="Vector" d="M7 5L3 9L7 13M3 9H16C18.7614 9 21 11.2386 21 14C21 16.7614 18.7614 19 16 19H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#374151"/>
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Icon">
+<path id="Vector" d="M16.6667 11.6667C16.6667 9.82572 15.1743 8.33333 13.3333 8.33333H4.51172L6.42253 10.2441C6.74796 10.5696 6.74796 11.0971 6.42253 11.4225C6.09709 11.748 5.56958 11.748 5.24414 11.4225L1.91081 8.08919C1.58537 7.76376 1.58537 7.23625 1.91081 6.91081L5.24414 3.57747C5.56958 3.25204 6.09709 3.25204 6.42253 3.57747C6.74796 3.90291 6.74796 4.43042 6.42253 4.75586L4.51172 6.66667H13.3333C16.0948 6.66667 18.3333 8.90524 18.3333 11.6667C18.3333 14.4281 16.0948 16.6667 13.3333 16.6667H9.16667C8.70643 16.6667 8.33333 16.2936 8.33333 15.8333C8.33333 15.3731 8.70643 15 9.16667 15H13.3333C15.1743 15 16.6667 13.5076 16.6667 11.6667Z" fill="#6B7280"/>
 </g>
 </svg>
