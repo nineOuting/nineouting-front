@@ -87,7 +87,7 @@ function DecisionCard({
   if (isEditing) {
     // 디자인 Live_11 결정 내용 수정: 카드가 펼쳐져 결정할 사항과 결정 내용을 보여 준다
     return (
-      <li className={`${styles.decision} ${styles.discussing} ${styles.editingCard}`}>
+      <li className={`${styles.decision} ${styles.editingCard}`}>
         <p className={styles.editHeading}>결정 내용 수정</p>
         <label className={styles.editField}>
           <span className={styles.editLabel}>결정할 사항</span>
@@ -224,9 +224,9 @@ function NewDecisionCard({ onAdd, onClose }: { onAdd: (content: string) => Promi
   };
 
   return (
-    <li className={`${styles.decision} ${styles.discussing} ${styles.editingCard}`}>
+    <li className={`${styles.decision} ${styles.editingCard}`}>
       {/* 디자인 체크 2026-11-19: 더하는 카드도 수정 카드와 같은 제목 */}
-      <p className={styles.editHeading}>결정 내용 수정</p>
+      <p className={styles.editHeading}>결정할 사항 추가</p>
       <label className={styles.editField}>
         <span className={styles.editLabel}>결정할 사항</span>
         <input

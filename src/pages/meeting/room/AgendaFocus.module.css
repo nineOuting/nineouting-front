@@ -187,11 +187,14 @@
   color: var(--text-primary);
 }
 
-/* 지금 이야기하고 있는 결정할 사항 */
+/*
+ * 지금 이야기하고 있는 결정할 사항. 디자인 07: 연보라 2px 테두리 + 보라 그림자 (SCRUM-365).
+ * 기본 테두리 1px에 같은 색 1px 선을 더해 2px로 보이게 한다 (글자 자리가 밀리지 않게)
+ */
 .discussing,
 .discussing:hover {
-  border-color: var(--interactive-selected-border);
-  box-shadow: 0 0 0 1px var(--interactive-selected-border);
+  border-color: var(--status-discussing-border);
+  box-shadow: 0 0 0 1px var(--status-discussing-border), var(--shadow-selected);
 }
 
 .discussing .statusIcon {
@@ -271,6 +274,13 @@
   background: var(--bg-page);
   border: 2px solid var(--status-discussing-border);
   border-radius: var(--radius-md);
+  /* 디자인 07: 파란 선 없이 연보라 테두리 + 보라 그림자 (SCRUM-365) */
+  box-shadow: var(--shadow-selected);
+}
+
+/* 마우스를 올려도 일반 카드처럼 회색 테두리로 바뀌지 않게 */
+.editingCard:hover {
+  border-color: var(--status-discussing-border);
 }
 
 .editHeading {
