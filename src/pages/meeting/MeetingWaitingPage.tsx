@@ -116,6 +116,8 @@ export default function MeetingWaitingPage() {
   const { meetingId } = useParams();
   // 피그마 MeetingWaiting_EditAgenda: 안건을 고치는 동안에는 [회의 시작하기]를 막는다
   const [isEditingAgenda, setIsEditingAgenda] = useState(false);
+  // MSG-130 작성자가 아닐 때 양식 줄 툴팁: 마우스를 올리거나 누르면 뜬다 (디자인 06 상태 모음, SCRUM-410)
+  const [isTemplateTipOpen, setIsTemplateTipOpen] = useState(false);
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [myId, setMyId] = useState<number>();
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
@@ -663,11 +665,17 @@ export default function MeetingWaitingPage() {
           <section className={styles.sideSection}>
             <h2 className={styles.sideTitle}>회의록 설정</h2>
             <div className={styles.settingsCard}>
+              <div className={styles.templateRow}>
+              {/* 작성자가 아니면 회색 줄. disabled 대신 aria-disabled로 눌렀을 때 툴팁을 띄운다 */}
               <button
                 type="button"
-                className={styles.settingRow}
-                disabled={!canChooseTemplate}
-                onClick={openTemplateGallery}
+                className={[styles.settingRow, canChooseTemplate ? '' : styles.settingRowLocked].filter(Boolean).join(' ')}
+                aria-disabled={!canChooseTemplate}
+                aria-describedby={!canChooseTemplate && isTemplateTipOpen ? 'template-locked-tip' : undefined}
+                onClick={canChooseTemplate ? openTemplateGallery : () => setIsTemplateTipOpen(true)}
+                onMouseEnter={canChooseTemplate ? undefined : () => setIsTemplateTipOpen(true)}
+                onMouseLeave={() => setIsTemplateTipOpen(false)}
+                onBlur={() => setIsTemplateTipOpen(false)}
               >
                 {/* 디자인 SettingRow: 라벨 "회의록 양식" + 고른 양식 이름 (작성자 줄과 같은 모양) */}
                 <span className={styles.settingLabel}>회의록 양식</span>
@@ -686,6 +694,12 @@ export default function MeetingWaitingPage() {
                 )}
                 {canChooseTemplate && <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />}
               </button>
+              {!canChooseTemplate && isTemplateTipOpen && (
+                <span id="template-locked-tip" role="tooltip" className={styles.templateTip}>
+                  회의록 양식은 회의록 작성자만 바꿀 수 있어요
+                </span>
+              )}
+              </div>
               <div className={styles.menuAnchor}>
                 <button
                   ref={writerAnchorRef}
