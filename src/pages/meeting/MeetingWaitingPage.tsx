@@ -121,6 +121,11 @@ export default function MeetingWaitingPage() {
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
   const [emails, setEmails] = useState<Record<number, string>>({});
   const [pendingAgendas, setPendingAgendas] = useState<PendingAgenda[]>([]);
+  // 창으로 돌아와 회의를 다시 받을 때 안건 날짜를 맞추는 데 쓴다
+  const pendingAgendasRef = useRef<PendingAgenda[]>([]);
+  useEffect(() => {
+    pendingAgendasRef.current = pendingAgendas;
+  }, [pendingAgendas]);
   // REQ-123 내가 쓸 수 있는 회의록 양식 (기본 양식 + 내 양식)과 즐겨찾기 표시
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   // REQ-199 이 회의 워크스페이스에서 정한 양식. null이면 서비스 기본 양식, undefined면 아직 모름
@@ -211,6 +216,39 @@ export default function MeetingWaitingPage() {
     });
     return () => {
       isCurrent = false;
+    };
+  }, [meetingId]);
+
+  // 다른 사람이 바꾼 내용(작성자가 고른 양식, 안건, 참여자, 회의 시작)을 창으로 돌아올 때 다시 받는다.
+  // 이 화면은 실시간 연결이 없어 새로고침 전까지 예전 정보가 보였다. 편집 중이거나 창·메뉴가 열려 있으면 건너뛴다 (SCRUM-410)
+  const isBusyRef = useRef(false);
+  useEffect(() => {
+    isBusyRef.current = isEditingAgenda || templateModal !== null || openMenu !== null;
+  }, [isEditingAgenda, templateModal, openMenu]);
+  useEffect(() => {
+    if (!meetingId) {
+      return undefined;
+    }
+    let isCurrent = true;
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || isBusyRef.current) {
+        return;
+      }
+      getMeetingDetail(meetingId)
+        .then((detail) => {
+          if (isCurrent && !isBusyRef.current) {
+            const loaded = toMeeting(detail);
+            setMeeting((prev) => prev && { ...loaded, agendas: withCarriedOverDates(loaded.agendas, pendingAgendasRef.current) });
+          }
+        })
+        .catch(() => undefined);
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      isCurrent = false;
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
     };
   }, [meetingId]);
 
