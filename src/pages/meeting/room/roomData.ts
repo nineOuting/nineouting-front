@@ -57,7 +57,7 @@ export function toRoomAgenda(agenda: AgendaResponse): RoomAgenda {
 
 /** REQ-097 보드의 할 일을 화면 모양으로 */
 export function toRoomTodos(todos: BoardTodo[] | undefined): RoomTodo[] {
-  return (todos ?? []).map(({ id, task, assigneeName, dueText, assigneeStatus, assigneeUserId, evidenceSeqs }) => ({
+  return (todos ?? []).map(({ id, task, assigneeName, dueText, assigneeStatus, assigneeUserId, evidenceSeqs, edited }) => ({
     id,
     task,
     assignee: assigneeName ?? undefined,
@@ -65,6 +65,7 @@ export function toRoomTodos(todos: BoardTodo[] | undefined): RoomTodo[] {
     assigneeStatus: assigneeStatus ?? null,
     assigneeUserId,
     evidenceSeqs: evidenceSeqs ?? [],
+    edited: edited ?? false,
   }));
 }
 

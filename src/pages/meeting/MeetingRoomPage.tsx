@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../../api/client';
+import { listWorkspaceMembers } from '../../api/workspace';
+import type { WorkspaceMember } from '../../types/workspace';
 import {
   finishMeeting,
   addDecisionPoint,
@@ -109,6 +111,8 @@ export default function MeetingRoomPage() {
   const [agendas, setAgendas] = useState<RoomAgenda[]>([]);
   // 완료로 체크한 할 일 항목 번호 (회의록 작성자가 체크하면 회의방 모두에게 온다)
   const [doneTodoIds, setDoneTodoIds] = useState<string[]>([]);
+  // REQ-190 할 일 담당자 선택 창의 워크스페이스 멤버 (이메일, 참석자가 아닌 사람)
+  const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[]>([]);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -295,6 +299,10 @@ export default function MeetingRoomPage() {
       }
       const roomAgendas = loaded.agendas.map(toRoomAgenda);
       setDetail(loaded);
+      // 담당자 선택 창용. 못 받아도 회의는 이어 간다 (참석자만 보인다)
+      listWorkspaceMembers(loaded.workspaceId)
+        .then((members) => isCurrent && setWorkspaceMembers(members))
+        .catch(() => setWorkspaceMembers([]));
       // MSG-083 회의를 끝낼 때 어떤 양식으로 회의록을 만드는지 보여 준다
       if (loaded.templateId !== null) {
         listMinutesTemplates()
@@ -639,13 +647,25 @@ export default function MeetingRoomPage() {
       return;
     }
     const sameAssignee = (todo.assignee ?? '') === change.assignee;
+    // 담당자 선택 창에서 고른 사람은 번호까지 정해진다. 직접 입력한 외부 담당자는 null
+    const assigneeUserId = change.assigneeUserId !== undefined ? change.assigneeUserId : sameAssignee ? todo.assigneeUserId : null;
     const next: RoomTodo = {
       ...todo,
       task: change.task,
       assignee: change.assignee || undefined,
       due: change.due || undefined,
-      assigneeStatus: change.assignee ? (sameAssignee ? todo.assigneeStatus : null) : 'UNASSIGNED',
-      assigneeUserId: sameAssignee ? todo.assigneeUserId : null,
+      assigneeStatus: !change.assignee
+        ? 'UNASSIGNED'
+        : change.assigneeUserId !== undefined
+          ? change.assigneeUserId === null
+            ? 'NOT_IN_ROSTER'
+            : 'MATCHED'
+          : sameAssignee
+            ? todo.assigneeStatus
+            : null,
+      assigneeUserId,
+      // 고치거나 확정하면 AI 추정이 아니다 (보드가 edited로 다시 온다)
+      edited: true,
     };
     const replace = (todos: RoomTodo[]) =>
       setAgendas((prev) => prev.map((agenda) => (agenda.id === agendaId ? { ...agenda, todos } : agenda)));
@@ -772,6 +792,16 @@ export default function MeetingRoomPage() {
     }
   };
 
+  // 디자인 07 MemberPicker: 회의 참석자 → 워크스페이스 멤버 (이메일은 워크스페이스 멤버 목록에서)
+  const emailOf = (userId: number) => workspaceMembers.find((member) => member.userId === userId)?.email;
+  const todoPeople = {
+    attendees: detail.attendees.flatMap(({ userId, name, profileImageUrl }) =>
+      name ? [{ userId, name, email: emailOf(userId), profileImageUrl: profileImageUrl ?? undefined }] : [],
+    ),
+    members: workspaceMembers
+      .filter(({ userId }) => !detail.attendees.some((attendee) => attendee.userId === userId))
+      .map(({ userId, name, email, profileImageUrl }) => ({ userId, name, email, profileImageUrl })),
+  };
   const plannedMinutes = Math.round((new Date(detail.endAt).getTime() - new Date(detail.startAt).getTime()) / 60000);
   const writerName = detail.writer.name ?? '알 수 없음';
   // REQ-191 칠할 용어 = 받은 목록 + 내 설정. 지금은 받은 목록뿐이고, 나중에 아는 말 숨기기, 개인 용어집을 여기서 합친다
@@ -940,6 +970,7 @@ export default function MeetingRoomPage() {
             }}
             doneTodoIds={doneTodoIds}
             onToggleTodo={(todo, done) => void toggleTodo(todo.id, done)}
+            todoPeople={todoPeople}
           />
           </div>
         </main>

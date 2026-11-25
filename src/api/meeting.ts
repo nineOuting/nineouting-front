@@ -152,6 +152,8 @@ export interface BoardTodo {
   assigneeUserId: number | null;
   dueText: string | null;
   evidenceSeqs: number[];
+  /** 사람이 고친(확정한) 할 일 (agenda-opinions-contract 4.2). false면 담당자는 AI 추정 */
+  edited?: boolean;
 }
 
 export interface BoardAgenda {

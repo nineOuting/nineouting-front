@@ -1,9 +1,12 @@
-import { useState, type KeyboardEvent } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
+import chevronDownIcon from '../../../assets/icons/chevron-down.svg';
+import chevronUpIcon from '../../../assets/icons/chevron-up-sm.svg';
 import editIcon from '../../../assets/icons/create-sm.svg';
 import personIcon from '../../../assets/icons/person-sm.svg';
 import dueDateIcon from '../../../assets/icons/due-date.svg';
 import Icon from '../../../components/Icon';
 import type { RoomTodo } from '../../../types/meetingRoom';
+import AssigneePicker, { type PickerPerson } from './AssigneePicker';
 import room from './room.module.css';
 import styles from './TodoList.module.css';
 
@@ -20,6 +23,14 @@ export interface TodoChange {
   task: string;
   assignee: string;
   due: string;
+  /** 담당자 선택 창에서 정한 사람 번호 (외부 담당자는 null). 없으면 이름으로 맞춘다 */
+  assigneeUserId?: number | null;
+}
+
+/** 담당자 선택 창에 보일 사람 (회의 참석자 → 워크스페이스 멤버) */
+export interface AssigneePeople {
+  attendees: PickerPerson[];
+  members: PickerPerson[];
 }
 
 interface TodoListProps {
@@ -32,6 +43,8 @@ interface TodoListProps {
   doneIds?: string[];
   /** 넘기면 회의록 작성자가 완료를 체크하고 푼다 */
   onToggleDone?: (todo: RoomTodo, done: boolean) => void;
+  /** table에서 담당자 칩의 얼굴과 선택 창 목록 */
+  people?: AssigneePeople;
 }
 
 function assigneeLabel(todo: RoomTodo) {
@@ -46,8 +59,25 @@ function assigneeLabel(todo: RoomTodo) {
 }
 
 /** REQ-097 할 일·담당자·기한 (임시 디자인). 담당자가 참석자가 아니거나 동명이인이면 주황 표시 */
-export default function TodoList({ todos, onSave, variant = 'list', doneIds = [], onToggleDone }: TodoListProps) {
+export default function TodoList({
+  todos,
+  onSave,
+  variant = 'list',
+  doneIds = [],
+  onToggleDone,
+  people = { attendees: [], members: [] },
+}: TodoListProps) {
   const [editing, setEditing] = useState<{ id: string; change: TodoChange } | null>(null);
+  // 담당자 선택 창이 열린 할 일
+  const [pickingId, setPickingId] = useState<string | null>(null);
+  const pickerAnchorRef = useRef<HTMLSpanElement>(null);
+  const everyone = [...people.attendees, ...people.members];
+
+  /** 담당자만 바꿔 저장한다 (할 일·기한은 그대로) */
+  const saveAssignee = (todo: RoomTodo, assignee: string, assigneeUserId: number | null) => {
+    setPickingId(null);
+    onSave?.(todo, { task: todo.task, assignee, due: todo.due ?? '', assigneeUserId });
+  };
   const startEditing = (todo: RoomTodo) =>
     setEditing({ id: todo.id, change: { task: todo.task, assignee: todo.assignee ?? '', due: todo.due ?? '' } });
 
@@ -69,6 +99,92 @@ export default function TodoList({ todos, onSave, variant = 'list', doneIds = []
     } else if (event.key === 'Escape') {
       setEditing(null);
     }
+  };
+
+  /**
+   * 디자인 07 AssigneeChip (REQ-190, 11/25): 비어 있음 · AI 추정(점선, 확정 전) · 확정 · 외부(? 얼굴) · 열림.
+   * AI 추정 칩은 누르면 바로 확정되고(마우스를 올리면 "확정" 툴팁), ⌄로 선택 창을 연다
+   */
+  const renderAssigneeChip = (todo: RoomTodo, text: string, hasAssignee: boolean) => {
+    const isExternal = hasAssignee && todo.assigneeStatus === 'NOT_IN_ROSTER';
+    const isSuggested = hasAssignee && !todo.edited;
+    const isOpen = pickingId === todo.id;
+    const person = everyone.find(({ userId }) => userId === todo.assigneeUserId);
+    const canEdit = Boolean(onSave);
+    const avatar = !hasAssignee ? (
+      <Icon src={personIcon} size={EDIT_ICON_SIZE - 2} />
+    ) : isExternal ? (
+      <span className={`${styles.chipAvatar} ${styles.chipAvatarExternal}`} aria-hidden="true">
+        ?
+      </span>
+    ) : person?.profileImageUrl ? (
+      <img src={person.profileImageUrl} alt="" className={styles.chipAvatar} />
+    ) : (
+      <span className={styles.chipAvatar} aria-hidden="true">
+        {todo.assignee?.slice(0, 1)}
+      </span>
+    );
+    const chipClass = [
+      styles.chip,
+      !hasAssignee ? styles.chipEmpty : '',
+      isSuggested ? styles.chipSuggested : '',
+      isOpen ? styles.chipOpen : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    const name = hasAssignee ? (isExternal ? todo.assignee : text) : '담당자';
+    const togglePicker = () => setPickingId((id) => (id === todo.id ? null : todo.id));
+
+    return (
+      <span ref={isOpen ? pickerAnchorRef : undefined} className={styles.chipAnchor}>
+        {isSuggested && canEdit && !isOpen ? (
+          // AI 추정: 이름 쪽을 누르면 확정, ⌄는 다시 고르기
+          <span className={chipClass}>
+            <button
+              type="button"
+              className={styles.chipConfirm}
+              aria-label={`${todo.task} 담당자 ${name} 확정`}
+              onClick={() => saveAssignee(todo, todo.assignee ?? '', todo.assigneeUserId ?? null)}
+            >
+              {avatar}
+              {name}
+              <span className={styles.confirmTip} role="tooltip">
+                확정
+              </span>
+            </button>
+            <button type="button" className={styles.chipChevron} aria-label={`${todo.task} 담당자 다시 고르기`} onClick={togglePicker}>
+              <Icon src={chevronDownIcon} size={EDIT_ICON_SIZE - 2} />
+            </button>
+          </span>
+        ) : (
+          <button
+            type="button"
+            className={chipClass}
+            disabled={!canEdit}
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+            aria-label={`${todo.task} 담당자 ${hasAssignee ? name : '선택'}`}
+            onClick={togglePicker}
+          >
+            {avatar}
+            {name}
+            {isOpen && <Icon src={chevronUpIcon} size={EDIT_ICON_SIZE - 2} />}
+            {isSuggested && !isOpen && <Icon src={chevronDownIcon} size={EDIT_ICON_SIZE - 2} />}
+          </button>
+        )}
+        {isOpen && (
+          <AssigneePicker
+            attendees={people.attendees}
+            members={people.members}
+            selectedUserId={todo.assigneeUserId}
+            anchorRef={pickerAnchorRef}
+            onSelect={(picked) => saveAssignee(todo, picked.name, picked.userId)}
+            onExternal={(external) => saveAssignee(todo, external, null)}
+            onClose={() => setPickingId(null)}
+          />
+        )}
+      </span>
+    );
   };
 
   return (
@@ -127,24 +243,7 @@ export default function TodoList({ todos, onSave, variant = 'list', doneIds = []
                 onChange={() => onToggleDone?.(todo, !isDone)}
               />
               <span className={[styles.tableTask, isDone ? styles.done : ''].filter(Boolean).join(' ')}>{todo.task}</span>
-              <button
-                type="button"
-                className={[styles.chip, hasAssignee ? '' : styles.chipEmpty, label.className === styles.assigneeWarning ? styles.chipWarning : '']
-                  .filter(Boolean)
-                  .join(' ')}
-                disabled={!onSave}
-                aria-label={`${todo.task} 담당자 ${hasAssignee ? label.text : '선택'}`}
-                onClick={() => startEditing(todo)}
-              >
-                {hasAssignee ? (
-                  <span className={styles.chipAvatar} aria-hidden="true">
-                    {todo.assignee?.slice(0, 1)}
-                  </span>
-                ) : (
-                  <Icon src={personIcon} size={EDIT_ICON_SIZE - 2} />
-                )}
-                {hasAssignee ? label.text : '담당자'}
-              </button>
+              {renderAssigneeChip(todo, label.text, hasAssignee)}
               <button
                 type="button"
                 className={[styles.chip, todo.due ? '' : styles.chipEmpty].filter(Boolean).join(' ')}

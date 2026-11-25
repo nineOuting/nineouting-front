@@ -14,7 +14,7 @@ import EmptyState from '../../../components/EmptyState';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionPoint, RoomAgenda, RoomTodo } from '../../../types/meetingRoom';
 import ActionMenu from '../../workspace/ActionMenu';
-import TodoList, { type TodoChange } from './TodoList';
+import TodoList, { type AssigneePeople, type TodoChange } from './TodoList';
 import styles from './AgendaFocus.module.css';
 
 const ICON_SIZE = 16;
@@ -284,6 +284,8 @@ interface AgendaFocusProps {
   doneTodoIds?: string[];
   /** 할 일 완료 체크 (회의록 작성자, 진행 중) */
   onToggleTodo?: (todo: RoomTodo, done: boolean) => void;
+  /** 할 일 담당자 선택 창 목록 (회의 참석자 → 워크스페이스 멤버) */
+  todoPeople?: AssigneePeople;
 }
 
 /** 디자인 Version02 Live 가운데: 고른 안건의 결정할 사항, 이 안건 요약(주요 의견·합의되지 않은 부분), 할 일 */
@@ -303,6 +305,7 @@ export default function AgendaFocus({
   onSaveTodo,
   doneTodoIds,
   onToggleTodo,
+  todoPeople,
 }: AgendaFocusProps) {
   // 안건을 바꾸면 열려 있던 추가 칸을 닫는다
   const [addingAgendaId, setAddingAgendaId] = useState<string>();
@@ -438,6 +441,7 @@ export default function AgendaFocus({
               onSave={canEdit ? onSaveTodo : undefined}
               doneIds={doneTodoIds}
               onToggleDone={canEdit ? onToggleTodo : undefined}
+              people={todoPeople}
             />
           ) : (
             <p className={styles.todoEmpty}>회의에서 할 일이 나오면 담당자·기한과 함께 여기에 모여요</p>

@@ -42,6 +42,8 @@ export interface RoomTodo {
   assigneeUserId?: number | null;
   /** 고칠 때 그대로 돌려보낸다 */
   evidenceSeqs?: number[];
+  /** 사람이 고치거나 확정한 할 일. 아니면 담당자는 AI 추정 (디자인 07 AssigneeChip suggested) */
+  edited?: boolean;
 }
 
 /** REQ-085 안건 요약 문장 (고칠 때 번호와 근거가 필요하다) */
