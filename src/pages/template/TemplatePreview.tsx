@@ -20,13 +20,8 @@ const DEFAULT_ZOOM = 120;
 const ZOOM_STEP = 10;
 const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;
-// 오른쪽 섹션 설정의 섹션 이름 칸과 같다
-// 디자인 09 항목 이름 20자 (11/25). 이미 저장된 긴 이름은 그대로 보이고, 더 늘리지만 못한다
-const MAX_TITLE_LENGTH = 20;
 // QA 70 순서를 바꾸면 다른 섹션이 미끄러지듯 자리를 옮긴다
 const MOVE_MS = 200;
-
-type EditField = 'title' | 'body';
 
 /** 손잡이로 끄는 중인 섹션. top, height는 끌기 시작할 때 화면 위치 (확대율이 들어간 px) */
 interface DragState {
@@ -47,8 +42,6 @@ interface TemplatePreviewProps {
   layout: TemplateLayout;
   selectedIndex: number | null;
   onSelect: (index: number) => void;
-  /** 미리보기에서 섹션 제목·설명을 바로 고칠 때 */
-  onChangeItem: (index: number, item: TemplateItem) => void;
   onMove: (from: number, to: number) => void;
   onRemove: (index: number) => void;
 }
@@ -74,12 +67,10 @@ function normalizePages(pages: number[][], count: number) {
   return filled;
 }
 
-/** 표는 머리 행만 보여 주므로 미리보기에서 고치지 않는다 (오른쪽 설정에서 행·열을 바꾼다) */
-const canEditBody = (item: TemplateItem) => item.settings.recordType !== 'TABLE';
-
 /**
  * 양식 미리보기 (피그마 프론트 TemplateEditorPage). 실제 회의록 종이처럼 양식 이름, 회의 기본 정보, 섹션마다 예시 내용을 보여 준다.
- * 섹션을 눌러 고르고, 바깥 손잡이를 끌어 순서를 바꾼다. 고른 섹션은 제목과 설명을 이 자리에서 바로 고친다.
+ * 섹션을 눌러 고르고, 바깥 손잡이를 끌어 순서를 바꾼다. 미리보기라 제목·설명은 여기서 고치지 않고
+ * 왼쪽 항목 구성 패널에서만 고친다 (디자인 09 11/25, SCRUM-410).
  * QA 73 한 쪽에 다 들어가지 않으면 섹션 단위로 다음 쪽 종이로 넘긴다 (한 쪽보다 긴 섹션은 그 쪽에 혼자 둔다)
  */
 export default function TemplatePreview({
@@ -88,7 +79,6 @@ export default function TemplatePreview({
   layout,
   selectedIndex,
   onSelect,
-  onChangeItem,
   onMove,
   onRemove,
 }: TemplatePreviewProps) {
@@ -96,9 +86,6 @@ export default function TemplatePreview({
   const [pageState, setPageState] = useState<number[][]>([]);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [, setMeasureTick] = useState(0);
-  // 고르지 않은 섹션의 제목·내용을 누르면 고른 뒤 그 칸에 바로 커서를 둔다
-  const focusFieldRef = useRef<EditField | null>(null);
-  const selectedCardRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLLIElement | null)[]>([]);
   const firstPaperRef = useRef<HTMLDivElement>(null);
   const edgeHeadRef = useRef<HTMLParagraphElement>(null);
@@ -192,16 +179,6 @@ export default function TemplatePreview({
       }
     });
   }, [items]);
-
-  useEffect(() => {
-    const field = focusFieldRef.current;
-    focusFieldRef.current = null;
-    if (field) {
-      selectedCardRef.current
-        ?.querySelector<HTMLElement>(field === 'title' ? '[data-edit="title"]' : 'textarea')
-        ?.focus();
-    }
-  }, [selectedIndex]);
 
   const move = (from: number, to: number) => {
     const order = items.map((_, index) => index);
@@ -314,37 +291,15 @@ export default function TemplatePreview({
           <Icon src={dragIcon} size={ICON_SIZE} />
         </span>
         <div
-          ref={isSelected ? selectedCardRef : undefined}
           className={[styles.card, isSelected ? styles.cardSelected : ''].filter(Boolean).join(' ')}
           onClick={() => onSelect(index)}
         >
           <div className={styles.cardHead}>
-            {isSelected ? (
-              <span className={styles.cardTitle} style={titleStyle}>
-                <input
-                  data-edit="title"
-                  className={styles.titleInput}
-                  aria-label="섹션 이름"
-                  maxLength={MAX_TITLE_LENGTH}
-                  value={item.title}
-                  onChange={(event) => onChangeItem(index, { ...item, title: event.target.value })}
-                />
-              </span>
-            ) : (
-              <button
-                type="button"
-                className={styles.cardTitle}
-                style={titleStyle}
-                aria-pressed={false}
-                onClick={() => {
-                  focusFieldRef.current = 'title';
-                }}
-              >
-                {item.title}
-              </button>
-            )}
+            <span className={styles.cardTitle} style={titleStyle}>
+              {item.title}
+            </span>
             {isSelected && (
-              // QA 74, 75 이름은 제목을 눌러 바로 고치므로 연필은 빼고 휴지통만 둔다
+              // QA 74, 75 연필은 빼고 휴지통만 둔다. 이름·설명은 왼쪽 항목 구성 패널에서 고친다
               <span className={styles.cardTools}>
                 <button
                   type="button"
@@ -361,21 +316,12 @@ export default function TemplatePreview({
               </span>
             )}
           </div>
-          <div
-            className={styles.cardBody}
-            onClick={() => {
-              if (!isSelected && canEditBody(item)) {
-                focusFieldRef.current = 'body';
-              }
-            }}
-          >
+          <div className={styles.cardBody}>
             <SectionContent
               settings={item.settings}
               content={blankContent(item)}
               label={item.title}
-              editable={isSelected && canEditBody(item)}
               placeholder="왼쪽에서 이 항목에 무엇을 채울지 설명을 적어 주세요"
-              onChange={(description) => onChangeItem(index, { ...item, description })}
             />
           </div>
         </div>
