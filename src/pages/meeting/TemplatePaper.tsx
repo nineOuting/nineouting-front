@@ -1,12 +1,12 @@
 import SectionContent from '../../components/SectionContent';
 import type { TemplateItem, TemplateLayout } from '../../types/template';
 import { SAMPLE_MEETING_INFO, sampleContent } from '../../utils/templateSample';
-import { PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
+import { A4_HEIGHT_PX, A4_WIDTH_PX, PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
 import styles from './TemplatePaper.module.css';
 
-// 양식 편집 미리보기(TemplatePreview)와 같은 종이 크기. 한 쪽 높이도 같다 (편집 화면 PAGE_HEIGHT)
-export const PAPER_WIDTH = 456;
-export const PAPER_PAGE_HEIGHT = 675;
+// 양식 편집 미리보기(TemplatePreview)와 같은 실제 A4 크기 종이. 한 쪽 높이도 같다
+export const PAPER_WIDTH = A4_WIDTH_PX;
+export const PAPER_PAGE_HEIGHT = A4_HEIGHT_PX;
 
 interface TemplatePaperProps {
   name: string;

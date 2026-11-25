@@ -7,12 +7,12 @@ import zoomOutIcon from '../../assets/icons/zoom-out.svg';
 import Icon from '../../components/Icon';
 import SectionContent from '../../components/SectionContent';
 import type { MinutesTemplate } from '../../types/template';
-import { DEFAULT_LAYOUT, PAPER_FONT_SCALE, PX_PER_MM, withItemDefaults } from '../../utils/templateSettings';
+import { A4_HEIGHT_PX, DEFAULT_LAYOUT, DEFAULT_PAPER_ZOOM, PAPER_FONT_SCALE, PX_PER_MM, withItemDefaults } from '../../utils/templateSettings';
 import styles from './MinutesDocument.module.css';
 
 const ICON_SIZE = 16;
-// 디자인 DocumentPage 560×792 (A4 비율)
-const PAGE_HEIGHT = 792;
+// 실제 A4 크기 종이 794×1123 (디자인 DocumentPage 560×792는 70%로 보는 크기, SCRUM-410)
+const PAGE_HEIGHT = A4_HEIGHT_PX;
 const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;
 const ZOOM_STEP = 10;
@@ -44,7 +44,7 @@ export default function MinutesDocument({
   notice,
   onChangeSection,
 }: MinutesDocumentProps) {
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(DEFAULT_PAPER_ZOOM);
   // 확대 비율은 숫자로도 입력한다. 입력하는 동안의 글자는 따로 두고, Enter나 칸을 벗어나면 범위 안으로 맞춰 반영한다
   const [zoomDraft, setZoomDraft] = useState<string | null>(null);
   const commitZoom = () => {

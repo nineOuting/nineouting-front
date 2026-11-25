@@ -7,16 +7,16 @@ import Icon from '../../components/Icon';
 import SectionContent from '../../components/SectionContent';
 import type { TemplateItem, TemplateLayout } from '../../types/template';
 import { SAMPLE_MEETING_INFO, blankContent } from '../../utils/templateSample';
-import { PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
+import { A4_HEIGHT_PX, A4_WIDTH_PX, DEFAULT_PAPER_ZOOM, PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
 import styles from './TemplatePreview.module.css';
 
 const ICON_SIZE = 16;
-const PAGE_HEIGHT = 675;
-const PAPER_WIDTH = 456;
+// 실제 A4 크기 종이 (SCRUM-410)
+const PAGE_HEIGHT = A4_HEIGHT_PX;
+const PAPER_WIDTH = A4_WIDTH_PX;
 // 종이 안 칸 사이 간격 (.paper gap)
 const PAPER_GAP = 10;
-// 캔버스가 넓어져 문서를 조금 키워 보여 준다 (디자인 종이 너비 560px 정도)
-const DEFAULT_ZOOM = 120;
+const DEFAULT_ZOOM = DEFAULT_PAPER_ZOOM;
 const ZOOM_STEP = 10;
 const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;

@@ -67,8 +67,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 456px;
-  min-height: 675px;
+  /* 실제 A4 크기 (210 × 297mm = 794 × 1123px, SCRUM-410) */
+  width: 794px;
+  min-height: 1123px;
   background: var(--color-white);
   color: var(--text-primary);
 }
