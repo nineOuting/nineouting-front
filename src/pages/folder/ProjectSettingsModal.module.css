@@ -1,0 +1,18 @@
+/* 피그마 ProjectSettingsPage: 프로젝트 색 칸 */
+.colorField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.colorLabel {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+}
+
+/* 창 안에서는 8가지 색을 한 줄로 */
+.swatchRow {
+  grid-template-columns: repeat(8, 36px);
+}

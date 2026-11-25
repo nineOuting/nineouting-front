@@ -18,12 +18,14 @@ import {
 import {
   addFolderMember,
   changeFolderColor,
+  deleteFolder,
   getFolder,
   getWorkspace,
   leaveFolder,
   listFolderMemberDetails,
   listWorkspaceMembers,
   removeFolderMember,
+  renameFolder,
   transferFolderOwnership,
   type FolderInfo,
 } from '../../api/workspace';
@@ -36,17 +38,27 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
 import Icon from '../../components/Icon';
-import MemberListPopover from '../../components/MemberListPopover';
+// 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다): 보기 전용 멤버 목록 팝오버
+// import MemberListPopover from '../../components/MemberListPopover';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderMeeting, FolderMember, FolderPendingAgenda, WorkspaceMember } from '../../types/workspace';
 import moreIcon from '../../assets/icons/more-vert.svg';
-import MoveMeetingModal from '../../components/MoveMeetingModal';
+import deleteIcon from '../../assets/icons/delete.svg';
+import editIcon from '../../assets/icons/edit.svg';
+import linkIcon from '../../assets/icons/link.svg';
+import logoutIcon from '../../assets/icons/logout.svg';
+import settingsIcon from '../../assets/icons/settings.svg';
+// 레거시 (2026-11-25, 피그마 코멘트 "다른 폴더로 이동 삭제"): 회의 줄 ⋮ [다른 폴더로 이동]
+// import MoveMeetingModal from '../../components/MoveMeetingModal';
 import ActionMenu from '../workspace/ActionMenu';
+import TransferOwnerDialog from '../workspace/TransferOwnerDialog';
 import FolderCalendar from './FolderCalendar';
 import FolderStats from './FolderStats';
-import ProjectColorPicker from './ProjectColorPicker';
+// 레거시 (2026-11-25, 피그마 11/24: 색은 프로젝트 설정 창에서 고른다): ⋮ [프로젝트 색 설정] 팝오버
+// import ProjectColorPicker from './ProjectColorPicker';
 import FolderMembersModal from './FolderMembersModal';
+import ProjectSettingsModal from './ProjectSettingsModal';
 import MeetingTable, { type MeetingSort, type SortKey } from './MeetingTable';
 import AccessNotice from '../../components/AccessNotice';
 import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
@@ -74,8 +86,15 @@ function sortOf(params: URLSearchParams): MeetingSort {
 type Dialog =
   | { type: 'members' }
   | { type: 'leave' }
-  | { type: 'color' }
-  | { type: 'move'; meeting: FolderMeeting };
+  | { type: 'settings' }
+  | { type: 'transfer' }
+  | { type: 'deleteFolder' };
+
+/** 받침이 있으면 '을', 없으면 '를' (토스트 "'킥오프 회의'를 삭제했어요.") */
+function objectParticle(word: string) {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  return code >= 0 && code <= 11171 && code % 28 !== 0 ? '을' : '를';
+}
 
 /** 진행 중이면 회의방, 아니면 대기 화면 (끝난 회의는 회의록 확인 화면으로 바뀌어 있다, REQ-175) */
 function meetingPath({ meetingId, status }: FolderMeeting) {
@@ -96,8 +115,9 @@ export default function FolderPage() {
   const page = Math.max(0, Number(searchParams.get('page') ?? '1') - 1);
   const [isFolderMenuOpen, setIsFolderMenuOpen] = useState(false);
   const folderMenuRef = useRef<HTMLButtonElement>(null);
-  const memberListRef = useRef<HTMLButtonElement>(null);
-  const [isMemberListOpen, setIsMemberListOpen] = useState(false);
+  // 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다): 보기 전용 멤버 목록 팝오버
+  // const memberListRef = useRef<HTMLButtonElement>(null);
+  // const [isMemberListOpen, setIsMemberListOpen] = useState(false);
   // 즐겨찾기 버튼은 스스로 상태를 불러오므로 메뉴에서 바꾸면 다시 그린다
   const [folder, setFolder] = useState<FolderInfo | null>(null);
   const [meetings, setMeetings] = useState<FolderMeeting[]>([]);
@@ -112,6 +132,8 @@ export default function FolderPage() {
   const [accessNotice, setAccessNotice] = useState<AccessNoticeKind | null>(null);
   // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
   const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
+  // 프로젝트 설정(이름, 색), 폴더 삭제도 프로젝트 소유자와 워크스페이스 소유자 (피그마 11/24 코멘트)
+  const canEditSettings = canManageMembers;
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const location = useLocation();
   // 워크스페이스에서 새 폴더를 만들고 오면 MSG-093 안내를 띄운다
@@ -201,6 +223,10 @@ export default function FolderPage() {
 
   /** REQ-043 넘기면 나는 폴더 멤버로 남는다. 이제 폴더에서 나갈 수 있다 */
   const transferOwnership = async (userId: number) => {
+    // 서버는 폴더에 초대된 멤버에게만 넘긴다. "모든 폴더" 권한으로 들어온 멤버는 먼저 폴더에 초대해 둔다 (2026-11-25, 후보가 0명이던 문제)
+    if (members.find((member) => member.userId === userId)?.isInherited) {
+      await addFolderMember(id, userId);
+    }
     await transferFolderOwnership(id, userId);
     setFolder((prev) => prev && { ...prev, isOwner: false });
     closeDialog();
@@ -239,7 +265,7 @@ export default function FolderPage() {
       await trashMeeting(meeting.meetingId);
       setMeetings((prev) => prev.filter(({ meetingId }) => meetingId !== meeting.meetingId));
       setToast({
-        text: `'${meeting.title}'을 삭제했어요.`,
+        text: `'${meeting.title}'${objectParticle(meeting.title)} 삭제했어요.`,
         variant: 'info',
         action: {
           label: '되돌리기',
@@ -278,14 +304,14 @@ export default function FolderPage() {
   const meetingMenu = (meeting: FolderMeeting) => [
     // REQ-064 회의 정보 수정은 시작 전에만
     ...(meeting.status === 'scheduled'
-      ? [{ label: '회의 정보 수정', onSelect: () => void openEdit(meeting) }]
+      ? [{ label: '회의 정보 수정', icon: editIcon, onSelect: () => void openEdit(meeting) }]
       : []),
-    { label: '다른 폴더로 이동', onSelect: () => setDialog({ type: 'move', meeting }) },
-    { label: '링크 복사', onSelect: () => void copyMeetingLink(meeting) },
-    // 디자인 체크 2026-11-19: 아이콘 없이, 삭제 앞에 선
+    // 레거시 (2026-11-25, 피그마 코멘트 "다른 폴더로 이동 삭제"): { label: '다른 폴더로 이동', onSelect: () => setDialog({ type: 'move', meeting }) },
+    { label: '링크 복사', icon: linkIcon, onSelect: () => void copyMeetingLink(meeting) },
+    // 피그마 04 프로젝트 "회의 줄 ⋮ 메뉴" (11/24): 아이콘, 삭제 앞에 선
     ...(meeting.status === 'inProgress'
       ? []
-      : [{ label: '회의 삭제', isDanger: true, hasDividerBefore: true, onSelect: () => void removeMeeting(meeting) }]),
+      : [{ label: '회의 삭제', icon: deleteIcon, isDanger: true, hasDividerBefore: true, onSelect: () => void removeMeeting(meeting) }]),
   ];
 
   // REQ-153 폴더 메뉴의 [즐겨찾기에 추가]
@@ -319,6 +345,29 @@ export default function FolderPage() {
     } catch (error) {
       showError(error);
     }
+  };
+
+  // REQ-058 폴더 삭제 (⋮ [폴더 삭제], 프로젝트 소유자, 워크스페이스 소유자). 쓰레기통으로 가고 워크스페이스로 돌아간다
+  const removeFolder = async () => {
+    closeDialog();
+    try {
+      await deleteFolder(id);
+      navigate(`/workspaces/${folder?.workspaceId}`, { replace: true });
+    } catch (error) {
+      showError(error);
+    }
+  };
+
+  // REQ-165, 202 프로젝트 설정 저장: 바뀐 것만 보낸다. 실패하면 던져 창 안에 보인다
+  const saveSettings = async ({ name, color }: { name?: string; color?: number }) => {
+    if (name !== undefined) {
+      await renameFolder(id, name);
+    }
+    if (color !== undefined) {
+      await changeFolderColor(id, color);
+    }
+    setFolder((prev) => prev && { ...prev, ...(name !== undefined && { name }), ...(color !== undefined && { color }) });
+    closeDialog();
   };
 
   // REQ-178 불러오는 동안 회색 자리
@@ -364,92 +413,78 @@ export default function FolderPage() {
               <Icon src={folderIcon} size={BUTTON_ICON_SIZE} />
             </span>
             <h1 className={styles.title}>{folder.name}</h1>
-            {/* REQ-165 폴더 ⋮ 메뉴. 보일 항목이 없으면(기본 폴더의 일반 멤버) 숨긴다 */}
-            {(canManageMembers || !folder.isDefault) && (<span className={styles.menuAnchor}>
-              <button
-                ref={folderMenuRef}
-                type="button"
-                className={styles.iconButton}
-                aria-label="폴더 메뉴"
-                aria-haspopup="menu"
-                aria-expanded={isFolderMenuOpen}
-                onClick={() => setIsFolderMenuOpen((value) => !value)}
-              >
-                <Icon src={moreIcon} size={MORE_ICON_SIZE} />
-              </button>
-              {dialog?.type === 'color' && (
-                <ProjectColorPicker
-                  color={folder.color}
-                  onClose={closeDialog}
-                  onPick={(color) => {
-                    // 고르면 바로 바뀐다 (토스트 없음). 실패하면 되돌린다
-                    const before = folder.color;
-                    setFolder({ ...folder, color });
-                    changeFolderColor(folder.folderId, color).catch((error: unknown) => {
-                      setFolder((prev) => prev && { ...prev, color: before });
-                      showError(error);
-                    });
-                  }}
-                />
-              )}
-              {isFolderMenuOpen && (
-                <ActionMenu
-                  label="폴더 메뉴"
-                  anchorRef={folderMenuRef}
-                  onClose={() => setIsFolderMenuOpen(false)}
-                  items={[
-                    // 2026-11-17 기획: 이름 바꾸기, 즐겨찾기, 삭제는 워크스페이스 화면의 폴더 카드 ⋮ 메뉴로 옮겼다
-                    ...(canManageMembers
-                      ? [{ label: '멤버 관리', onSelect: () => void openMembers() }]
-                      : []),
-                    // REQ-202 프로젝트 색 설정 (프로젝트 소유자, 워크스페이스 소유자)
-                    ...(folder.isOwner || isWorkspaceOwner
-                      ? [{ label: '프로젝트 색 설정', onSelect: () => setDialog({ type: 'color' }) }]
-                      : []),
-                    // 폴더 나가기는 모두에게 보인다. 소유자는 누르면 소유권 양도 안내 (MSG-045, MSG-101)
-                    ...(!folder.isDefault
-                      ? [{ label: '폴더 나가기', onSelect: () => setDialog({ type: 'leave' }) }]
-                      : []),
-                  ].map((item) => ({
-                    ...item,
-                    onSelect: () => {
-                      setIsFolderMenuOpen(false);
-                      item.onSelect();
-                    },
-                  }))}
-                />
-              )}
-            </span>)}
           </div>
-          {/* REQ-050 폴더 멤버 모두 새 회의를 만들 수 있다 */}
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}
-          >
-            <Icon src={addIcon} size={BUTTON_ICON_SIZE} />새 회의
-          </button>
+          <div className={styles.titleActions}>
+            {/* REQ-050 폴더 멤버 모두 새 회의를 만들 수 있다 */}
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}
+            >
+              <Icon src={addIcon} size={BUTTON_ICON_SIZE} />새 회의
+            </button>
+            {/* REQ-165 폴더 ⋮ 메뉴 (피그마 11/24 코멘트: [새 회의] 오른쪽으로 옮김). 보일 항목이 없으면(기본 폴더의 일반 멤버) 숨긴다 */}
+            {(canEditSettings || !folder.isDefault) && (
+              <span className={styles.menuAnchor}>
+                <button
+                  ref={folderMenuRef}
+                  type="button"
+                  className={styles.iconButton}
+                  aria-label="폴더 메뉴"
+                  aria-haspopup="menu"
+                  aria-expanded={isFolderMenuOpen}
+                  onClick={() => setIsFolderMenuOpen((value) => !value)}
+                >
+                  <Icon src={moreIcon} size={MORE_ICON_SIZE} />
+                </button>
+                {isFolderMenuOpen && (
+                  <ActionMenu
+                    label="폴더 메뉴"
+                    anchorRef={folderMenuRef}
+                    onClose={() => setIsFolderMenuOpen(false)}
+                    // 피그마 04 프로젝트 "프로젝트 ⋮ 더보기" (11/24 코멘트 #30): 멤버 관리는 빼고 설정, 나가기, 삭제 (워크스페이스와 같게)
+                    items={[
+                      // REQ-165, 202 프로젝트 설정 (이름, 색, 소유권): 프로젝트 소유자, 워크스페이스 소유자
+                      ...(canEditSettings
+                        ? [{ label: '프로젝트 설정', icon: settingsIcon, onSelect: () => setDialog({ type: 'settings' }) }]
+                        : []),
+                      // 폴더 나가기는 모두에게 보인다. 소유자는 누르면 소유권 양도 안내 (MSG-045, MSG-101)
+                      ...(!folder.isDefault
+                        ? [{ label: '폴더 나가기', icon: logoutIcon, onSelect: () => setDialog({ type: 'leave' }) }]
+                        : []),
+                      // REQ-058 폴더 삭제: 기본 폴더는 지울 수 없다
+                      ...(!folder.isDefault && canEditSettings
+                        ? [
+                            {
+                              label: '폴더 삭제',
+                              icon: deleteIcon,
+                              isDanger: true,
+                              hasDividerBefore: true,
+                              onSelect: () => setDialog({ type: 'deleteFolder' }),
+                            },
+                          ]
+                        : []),
+                    ].map((item) => ({
+                      ...item,
+                      onSelect: () => {
+                        setIsFolderMenuOpen(false);
+                        item.onSelect();
+                      },
+                    }))}
+                  />
+                )}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
       {/* 피그마 Page 8 MetaLine: 멤버 수(REQ-203), 회의 수, 내 권한 */}
       <div className={styles.metaLine}>
-        {/* 피그마 프론트 "프로젝트 멤버 목록 보기": [멤버 N명]은 보기 전용, 관리는 ⋮ [멤버 관리] */}
-        <span className={styles.memberAnchor}>
-          <button
-            ref={memberListRef}
-            type="button"
-            className={styles.linkButton}
-            aria-haspopup="dialog"
-            aria-expanded={isMemberListOpen}
-            onClick={() => setIsMemberListOpen((value) => !value)}
-          >
-            멤버 {members.length}명
-          </button>
-          {isMemberListOpen && (
-            <MemberListPopover anchorRef={memberListRef} members={members} onClose={() => setIsMemberListOpen(false)} />
-          )}
-        </span>
+        {/* 피그마 11/24: [멤버 N명]이 멤버 관리 창을 연다 (추가, 제외는 관리할 수 있는 사람만, 아니면 보기 전용) */}
+        <button type="button" className={styles.linkButton} aria-haspopup="dialog" onClick={() => void openMembers()}>
+          멤버 {members.length}명
+        </button>
         <span className={styles.metaDivider} aria-hidden="true" />
         <span className={styles.metaText}>회의 {meetings.length}개</span>
         <span className={styles.metaDivider} aria-hidden="true" />
@@ -525,34 +560,51 @@ export default function FolderPage() {
           workspaceMembers={workspaceMembers}
           workspaceMembersError={workspaceMembersError}
           canManage={canManageMembers}
-          canTransfer={folder.isOwner}
           onAdd={addMembers}
           onRemove={removeMembers}
-          onTransfer={transferOwnership}
           onNotice={notice}
           onClose={closeDialog}
         />
       )}
-      {dialog?.type === 'move' && (
-        <MoveMeetingModal
-          meetingId={dialog.meeting.meetingId}
-          title={dialog.meeting.title}
-          workspaceId={folder.workspaceId}
-          currentFolderId={folder.folderId}
-          onMoved={(folderName) => {
-            closeDialog();
-            setMeetings((prev) => prev.filter(({ meetingId }) => meetingId !== dialog.meeting.meetingId));
-            setToast({ text: `'${dialog.meeting.title}'을 ${folderName} 폴더로 옮겼어요.`, variant: 'success' });
-          }}
+      {dialog?.type === 'settings' && (
+        <ProjectSettingsModal
+          name={folder.name}
+          color={folder.color}
+          // 피그마 11/24 코멘트(2026-11-25 사용자 결정): 이름도 색, 삭제처럼 프로젝트 소유자와 워크스페이스 소유자. 기본 폴더는 워크스페이스 소유자
+          canRename={folder.isDefault ? isWorkspaceOwner : canEditSettings}
+          canTransfer={folder.isOwner}
+          onSave={saveSettings}
+          onTransfer={() => setDialog({ type: 'transfer' })}
           onClose={closeDialog}
+        />
+      )}
+      {dialog?.type === 'transfer' && (
+        // REQ-043 MSG-090, 091 (피그마: 프로젝트 설정 [소유권 양도] 또는 나가기 제한 창 [소유권 양도] → 이 창)
+        <TransferOwnerDialog
+          candidates={members.filter((member) => !member.isOwner)}
+          onTransfer={transferOwnership}
+          confirmDescription={(name) => `넘기면 프로젝트 관리 권한은 ${name} 님에게 가요. 나는 일반 멤버가 돼요`}
+          onClose={closeDialog}
+        />
+      )}
+      {dialog?.type === 'deleteFolder' && (
+        // MSG-046 (워크스페이스 폴더 카드의 삭제 확인과 같은 문구)
+        <ConfirmDialog
+          title={`${folder.name} 폴더를 삭제할까요?`}
+          message={`폴더 안의 회의 ${meetings.length}개와 회의록이 함께 삭제돼요. 3개월 동안 삭제 목록에서 복구할 수 있어요`}
+          cancelLabel="취소"
+          confirmLabel="삭제하기"
+          isDanger
+          onCancel={closeDialog}
+          onConfirm={() => void removeFolder()}
         />
       )}
       {dialog?.type === 'leave' &&
         (isWorkspaceOwner && !folder.isOwner ? (
           // MSG-101 워크스페이스 소유자는 모든 폴더를 함께 관리하므로 워크스페이스 소유권을 넘겨야 나갈 수 있다
           <ConfirmDialog
-            title="워크스페이스 소유권을 넘겨야 폴더에서 나갈 수 있어요."
-            message={'워크스페이스 소유자는 모든 폴더를 함께 관리해요.\n다른 멤버에게 워크스페이스 소유권을 넘긴 뒤 다시 시도해 주세요.'}
+            title="워크스페이스 소유권을 넘겨야 폴더에서 나갈 수 있어요"
+            message="워크스페이스 소유자는 모든 폴더를 함께 관리해요. 다른 멤버에게 워크스페이스 소유권을 넘긴 뒤 다시 시도해 주세요"
             cancelLabel="취소"
             confirmLabel="소유권 양도"
             onCancel={closeDialog}
@@ -561,18 +613,18 @@ export default function FolderPage() {
         ) : folder.isOwner ? (
           // MSG-045
           <ConfirmDialog
-            title="소유권을 양도해야 폴더에서 나갈 수 있어요."
-            message="다른 폴더 멤버에게 소유권을 양도한 후 다시 시도해 주세요."
+            title="소유권을 넘겨야 폴더에서 나갈 수 있어요"
+            message="다른 폴더 멤버에게 소유권을 넘긴 뒤 다시 시도해 주세요"
             cancelLabel="취소"
             confirmLabel="소유권 양도"
             onCancel={closeDialog}
-            onConfirm={openMembers}
+            onConfirm={() => setDialog({ type: 'transfer' })}
           />
         ) : (
           // MSG-044
           <ConfirmDialog
-            title="프로젝트 폴더에서 나갈까요?"
-            message="나가면 이 폴더의 회의와 회의록을 더 이상 볼 수 없어요."
+            title={`${folder.name} 폴더에서 나갈까요?`}
+            message="나가면 이 폴더의 회의와 회의록을 볼 수 없어요"
             cancelLabel="취소"
             confirmLabel="나가기"
             onCancel={closeDialog}
