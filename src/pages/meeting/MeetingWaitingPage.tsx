@@ -125,6 +125,8 @@ export default function MeetingWaitingPage() {
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   // REQ-199 이 회의 워크스페이스에서 정한 양식. null이면 서비스 기본 양식, undefined면 아직 모름
   const [workspaceTemplateId, setWorkspaceTemplateId] = useState<number | null>();
+  // 양식 선택 창 설명에 넣는 워크스페이스 이름 (디자인 06 "양식 선택 · 워크스페이스 기본 먼저")
+  const [workspaceName, setWorkspaceName] = useState('');
   // 양식 창을 열 때 정한 순서 (양식 ID). 창이 열린 동안 별표를 눌러도 순서는 그대로 둔다
   const [templateOrder, setTemplateOrder] = useState<number[]>([]);
   const [openMenu, setOpenMenu] = useState<OpenMenu | null>(null);
@@ -172,7 +174,12 @@ export default function MeetingWaitingPage() {
       // 양식 창 맨 앞에 둘 워크스페이스 양식 (못 불러오면 즐겨찾기 → 나머지 순서만)
       if (folder) {
         getWorkspace(folder.workspaceId)
-          .then(({ defaultTemplateId }) => isCurrent && setWorkspaceTemplateId(defaultTemplateId))
+          .then(({ defaultTemplateId, name }) => {
+            if (isCurrent) {
+              setWorkspaceTemplateId(defaultTemplateId);
+              setWorkspaceName(name);
+            }
+          })
           .catch(() => undefined);
       }
       setMyId(me?.userId);
@@ -268,6 +275,8 @@ export default function MeetingWaitingPage() {
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
   // 창을 열 때 정한 순서대로. 별표 상태는 templates에서 바로 읽는다
   const orderedTemplates = templateOrder.flatMap((id) => templates.filter(({ templateId }) => templateId === id));
+  // 워크스페이스 기본 양식: 워크스페이스에 정해 둔 양식, 없으면 서비스 기본 양식 (순서를 정할 때와 같은 기준) (SCRUM-410)
+  const workspaceDefaultId = workspaceTemplateId ?? templates.find(({ isDefault }) => isDefault)?.templateId;
   const openTemplateGallery = () => {
     setTemplateOrder(orderTemplates(templates, workspaceTemplateId).map(({ templateId }) => templateId));
     setTemplateModal({ view: 'gallery' });
@@ -689,7 +698,10 @@ export default function MeetingWaitingPage() {
       {templateModal?.view === 'gallery' && (
         <TemplateGalleryModal
           templates={orderedTemplates}
-          selectedId={meeting.templateId}
+          // 회의에 양식이 걸려 있으면 그 양식, 없으면 워크스페이스 기본 양식을 고른 채로 연다 (REQ-199, SCRUM-410)
+          selectedId={meeting.templateId ?? workspaceDefaultId}
+          defaultTemplateId={workspaceDefaultId}
+          workspaceName={workspaceName}
           onOpenDetail={(index) => setTemplateModal({ view: 'detail', index })}
           onToggleFavorite={(templateId) => void toggleFavorite(templateId)}
           onCreateTemplate={() => navigate('/templates/new')}

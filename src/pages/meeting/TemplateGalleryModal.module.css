@@ -32,6 +32,7 @@
 
 /* 미리보기 116px 안에 세로 쪽(76x100) */
 .preview {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,5 +71,23 @@
   line-height: var(--line-height-body-md);
   color: var(--text-primary);
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 디자인 06 DefaultTemplateBadge: 미리보기 오른쪽 아래(오른쪽 8, 아래 4), 높이 24, 모서리 4, 연보라 바탕에 보라 글자 (SCRUM-410) */
+.defaultBadge {
+  position: absolute;
+  right: var(--spacing-2);
+  bottom: var(--spacing-1);
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--spacing-2);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--primary-default);
   white-space: nowrap;
 }
