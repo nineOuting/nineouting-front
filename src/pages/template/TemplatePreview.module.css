@@ -67,8 +67,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 456px;
-  min-height: 675px;
+  /* 실제 A4 크기 (210 × 297mm = 794 × 1123px, SCRUM-410) */
+  width: 794px;
+  min-height: 1123px;
   background: var(--color-white);
   color: var(--text-primary);
 }
@@ -284,19 +285,4 @@
   gap: 4px;
 }
 
-/* 고른 섹션의 제목·설명은 미리보기에서 바로 고친다 (디자인 없음) */
-.titleInput {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  background: none;
-  border: none;
-  outline: none;
-  font: inherit;
-  color: inherit;
-}
-
-.cardSelected .cardBody textarea {
-  width: 100%;
-}
 

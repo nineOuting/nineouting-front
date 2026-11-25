@@ -31,11 +31,21 @@ export const DEFAULT_LAYOUT: TemplateLayout = {
   footer: { enabled: false, text: '' },
 };
 
-/** A4(210mm)를 456px로 그리므로 1mm ≈ 2.17px */
-export const PX_PER_MM = 456 / 210;
+/**
+ * 문서 종이는 실제 A4 크기 (210 × 297mm, 화면 96dpi 기준 794 × 1123px). 확대 100%면 인쇄한 A4와 같은 크기다 (SCRUM-410).
+ * 양식 편집 미리보기·양식 카드·회의록 문서가 같이 쓴다
+ */
+export const A4_WIDTH_PX = 794;
+export const A4_HEIGHT_PX = 1123;
 
-/** 문서 종이(456px)에 맞게 양식의 글자 크기(px)를 줄여 그린다 (16px → 약 13.6px) */
-export const PAPER_FONT_SCALE = 0.85;
+/** 1mm = 794 / 210 ≈ 3.78px */
+export const PX_PER_MM = A4_WIDTH_PX / 210;
+
+/** 실제 A4 크기로 그리므로 양식의 글자 크기(px)를 그대로 쓴다 */
+export const PAPER_FONT_SCALE = 1;
+
+/** 화면에서 처음 보이는 확대율. 70%면 종이가 약 556px로 디자인의 종이 너비(560px)와 비슷하다 */
+export const DEFAULT_PAPER_ZOOM = 70;
 
 /** 표 칸 구분: 줄 = 행, 탭 = 열 (서버 PDF와 같은 형식) */
 export const CELL_SEPARATOR = '\t';

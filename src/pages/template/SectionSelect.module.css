@@ -1,0 +1,90 @@
+/* 디자인 09 SectionSelect: 40px 칸, 흰 바탕, 연한 테두리(열리면 파란 테두리), 오른쪽 ⌄ (SCRUM-410) */
+.root {
+  position: relative;
+}
+
+.box {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--input-md-padding-x);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  text-align: left;
+}
+
+.open {
+  border-color: var(--border-focus);
+}
+
+.value,
+.placeholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.value {
+  color: var(--text-primary);
+}
+
+.placeholder {
+  color: var(--text-disabled);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+/* 디자인 Menu: 안쪽 4, 줄 사이 4, 둥근 8, 그림자 */
+.menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-1));
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  max-height: 320px;
+  padding: var(--spacing-1);
+  overflow-y: auto;
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* 디자인 MenuItem: 36px, 좌우 12, 아이콘 없이 이름만 */
+.item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.item:hover {
+  background: var(--interactive-hover);
+}
+
+/* 지금 섹션: 파란 바탕, 파란 굵은 글자 */
+.selected,
+.selected:hover {
+  background: var(--interactive-selected);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
+}

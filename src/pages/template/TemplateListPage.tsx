@@ -25,7 +25,7 @@ const BUTTON_ICON_SIZE = 16;
 const ICON_SIZE = 20;
 const SAVED_MESSAGE = '양식을 저장했어요.';
 const NAME_MAX_LENGTH = 100;
-// 카드 미리보기 종이 너비. 실제 종이(456px)를 이만큼 줄여 첫 쪽 윗부분을 보여 준다
+// 카드 미리보기 종이 너비. 실제 A4 종이(794px)를 이만큼 줄여 첫 쪽 윗부분을 보여 준다
 const CARD_PAGE_WIDTH = 140;
 
 type SortOrder = 'recent' | 'name';

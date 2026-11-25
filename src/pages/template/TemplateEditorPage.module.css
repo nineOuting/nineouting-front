@@ -234,6 +234,74 @@
   color: var(--text-disabled);
 }
 
+/* 디자인 09 "섹션 이름·AI 설명 고치기" (11/25): 구분선, 칸 이름(회색), 40px 입력칸, 아래 안내·글자 수 */
+.divider {
+  height: var(--border-width-default);
+  margin: 0;
+  background: var(--border-default);
+  border: none;
+}
+
+.subLabel {
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+.helper {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.inputBox {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 var(--input-md-padding-x);
+  background: var(--bg-page);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.inputBox:focus-within {
+  border-color: var(--border-focus);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+}
+
+.input::placeholder {
+  color: var(--text-disabled);
+}
+
+/* AI 설명: 96px 칸, 12px 글자 */
+.aiDescription {
+  min-height: 76px;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.helperRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  padding: 0 var(--spacing-1);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--neutral-default);
+}
+
 .counter {
   align-self: flex-end;
   font-size: var(--font-size-caption);

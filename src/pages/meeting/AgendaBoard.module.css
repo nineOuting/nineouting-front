@@ -208,64 +208,36 @@
   border-radius: var(--radius-lg);
 }
 
-/* 안건 끌기 (디자인 09 TemplateEditorPage_Dragging을 따름): 원래 자리는 흐리게 */
-.dragSource {
-  opacity: 0.4;
-}
-
-/* 끌기 이미지: 떠 있는 흰 카드, 파란 테두리, 그림자. 화면 밖에 잠깐 두고 브라우저가 찍는다 */
-.dragImage {
-  position: fixed;
-  top: -10000px;
-  left: 0;
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-focus);
-  box-shadow: var(--shadow-md);
-  pointer-events: none;
-}
-
-/* 놓일 자리: 안건 사이(12px) 가운데에 파란 줄과 왼쪽 점 */
-.dropBefore,
-.dropAfter {
+/*
+ * 안건 끌기 (디자인 09 TemplateEditorPage_Dragging): 끄는 안건은 떠 있는 흰 카드(파란 테두리, 그림자)로 마우스를 따라오고,
+ * 다른 안건은 자리를 비켜 준다 (양식 편집 미리보기와 같은 방식, SCRUM-410)
+ */
+.dragging {
   position: relative;
-}
-
-.dropBefore::before,
-.dropAfter::after {
-  position: absolute;
-  right: 0;
-  left: 0;
-  height: 2px;
-  background: var(--border-focus);
-  content: '';
-}
-
-.dropBefore::before {
-  top: calc(-1 * var(--spacing-2) + 1px);
-}
-
-.dropAfter::after {
-  bottom: calc(-1 * var(--spacing-2) + 1px);
-}
-
-.dropBefore > .handle::before,
-.dropAfter > .handle::before {
-  position: absolute;
-  left: -4px;
-  width: 8px;
-  height: 8px;
+  z-index: 2;
   background: var(--bg-surface);
-  border: 2px solid var(--border-focus);
-  border-radius: var(--radius-full);
-  content: '';
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  outline: var(--border-width-default) solid var(--border-focus);
 }
 
-.dropBefore > .handle::before {
-  top: calc(-1 * var(--spacing-2) - 2px);
+.dragging .handle,
+.dragging .smallHandle {
+  cursor: grabbing;
 }
 
-.dropAfter > .handle::before {
-  bottom: calc(-1 * var(--spacing-2) - 2px);
+/* 결정할 사항을 끌 때: 줄이 위로 떠서 따라온다 */
+.decisionDragging {
+  position: relative;
+  z-index: 2;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* 비켜 주는 줄은 부드럽게 움직인다 */
+.makingRoom {
+  transition: transform 0.2s ease-out;
 }
 
 /* 디자인 Body: 제목 칸, 넘어옴 표시, 결정할 사항 사이 8px */
@@ -292,6 +264,7 @@
   width: 20px;
   color: var(--text-secondary);
   cursor: grab;
+  touch-action: none;
 }
 
 /* 디자인 DragHandleIcon 16px */

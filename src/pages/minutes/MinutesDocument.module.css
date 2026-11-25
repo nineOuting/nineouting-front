@@ -41,13 +41,14 @@
   color: var(--text-secondary);
 }
 
-/* 디자인 DocumentPage 560×792, Dropshadow 2 */
+/* 디자인 DocumentPage (560×792를 실제 A4 크기로), Dropshadow 2 */
 .paper {
   display: flex;
   flex-direction: column;
   gap: var(--gap-content);
-  width: 560px;
-  min-height: 792px;
+  /* 실제 A4 크기 (210 × 297mm = 794 × 1123px, SCRUM-410) */
+  width: 794px;
+  min-height: 1123px;
   padding: var(--layout-page-margin);
   background: var(--bg-surface);
   box-shadow: 0 var(--spacing-1) var(--spacing-2) rgb(0 0 0 / 10%);
