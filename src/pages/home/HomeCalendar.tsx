@@ -23,6 +23,8 @@ const FIRST_VISIBLE_HOUR = 9;
 const EVENT_GAP = 2;
 // 30분보다 짧은 회의도 제목은 보이게 한다
 const MIN_EVENT_HEIGHT = 24;
+// 제목 줄과 시간 줄이 다 보이는 칸 높이 (위아래 여백 4+4, 제목 16, 간격 4, 시간 16). 이보다 낮으면 [+N]을 제목 줄 오른쪽에 둔다
+const TWO_LINE_EVENT_HEIGHT = 44;
 const ARROW_ICON_SIZE = 20;
 const FILTER_ICON_SIZE = 16;
 const MONTH_EVENT_LIMIT = 2;
@@ -258,15 +260,18 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
                   const meeting = group[0];
                   const start = minutesOfDay(meeting.startAt);
                   const end = meeting.endAt.startsWith(toIsoDate(day)) ? minutesOfDay(meeting.endAt) : 24 * 60;
+                  const top = (start / 60) * HOUR_HEIGHT + EVENT_GAP;
+                  const height = Math.max(((end - start) / 60) * HOUR_HEIGHT - EVENT_GAP * 2, MIN_EVENT_HEIGHT);
+                  const isShort = height < TWO_LINE_EVENT_HEIGHT;
                   const event = (
                     <button
                       key={meeting.meetingId}
                       type="button"
-                      className={`${eventClass(meeting)} ${styles.weekEvent} ${group.length > 1 ? styles.hasMore : ''}`}
+                      className={`${eventClass(meeting)} ${styles.weekEvent} ${group.length > 1 ? (isShort ? styles.hasMoreShort : styles.hasMore) : ''}`}
                       style={{
                         ...eventStyle(meeting),
-                        top: (start / 60) * HOUR_HEIGHT + EVENT_GAP,
-                        height: Math.max(((end - start) / 60) * HOUR_HEIGHT - EVENT_GAP * 2, MIN_EVENT_HEIGHT),
+                        top,
+                        height,
                       }}
                       aria-label={eventLabel(meeting)}
                       onClick={(event) => setPreview({ meeting, anchor: event.currentTarget.getBoundingClientRect() })}
@@ -280,24 +285,39 @@ export default function HomeCalendar({ folders }: HomeCalendarProps) {
                   if (group.length === 1) {
                     return event;
                   }
+                  const moreChip = (
+                    <button
+                      type="button"
+                      className={styles.moreChip}
+                      aria-label={`${toTime(meeting.startAt)}에 겹친 회의 ${group.length}개 보기`}
+                      onClick={(click) =>
+                        setOverlap({
+                          title: `${dayLabel(day)} ${toTime(meeting.startAt)} · 회의 ${group.length}개`,
+                          meetings: group,
+                          anchor: click.currentTarget.getBoundingClientRect(),
+                        })
+                      }
+                    >
+                      +{group.length - 1}
+                    </button>
+                  );
+                  // 회의 칸(버튼) 안에 버튼을 넣을 수 없어 같은 자리에 겹친 층을 두고, 시간 줄 오른쪽 끝에 [+N]을 둔다 (2026-11-25 사용자 요청).
+                  // 층의 제목은 자리만 잡는 투명 글자다. 칸이 낮아 시간 줄이 안 보이면 제목 줄 오른쪽 끝에 둔다
                   return (
                     <Fragment key={meeting.meetingId}>
                       {event}
-                      <button
-                        type="button"
-                        className={styles.moreChip}
-                        style={{ top: (start / 60) * HOUR_HEIGHT + EVENT_GAP + 4 }}
-                        aria-label={`${toTime(meeting.startAt)}에 겹친 회의 ${group.length}개 보기`}
-                        onClick={(click) =>
-                          setOverlap({
-                            title: `${dayLabel(day)} ${toTime(meeting.startAt)} · 회의 ${group.length}개`,
-                            meetings: group,
-                            anchor: click.currentTarget.getBoundingClientRect(),
-                          })
-                        }
-                      >
-                        +{group.length - 1}
-                      </button>
+                      <span className={`${styles.moreLayer} ${isShort ? styles.moreLayerShort : ''}`} style={{ top, height }}>
+                        {isShort ? (
+                          moreChip
+                        ) : (
+                          <>
+                            <span className={`${styles.eventTitle} ${styles.placeholder}`} aria-hidden="true">
+                              {meeting.title}
+                            </span>
+                            <span className={styles.moreLine}>{moreChip}</span>
+                          </>
+                        )}
+                      </span>
                     </Fragment>
                   );
                 })}

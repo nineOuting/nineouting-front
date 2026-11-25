@@ -18,14 +18,16 @@ interface AppLayoutProps {
   workspaceId?: number;
   /** 로고·프로필 대신 화면이 직접 채우는 상단 바 (회의 대기 화면의 뒤로 가기, 회의 시작 버튼 등) */
   header?: ReactNode;
+  /** 화면 높이에 맞춘다. 화면 전체 세로 스크롤 없이 본문 안쪽만 스크롤한다 (홈) */
+  fitScreen?: boolean;
 }
 
 /** 로그인 후 화면 틀 (nep!nep! 디자인 Sidebar + TopBar). 메뉴를 접으면 상단 바 왼쪽에 메뉴 버튼이 생긴다 */
-export default function AppLayout({ children, variant = 'default', className, workspaceId, header }: AppLayoutProps) {
+export default function AppLayout({ children, variant = 'default', className, workspaceId, header, fitScreen = false }: AppLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(variant === 'default');
 
   return (
-    <div className={styles.layout}>
+    <div className={[styles.layout, fitScreen ? styles.fitScreen : ''].filter(Boolean).join(' ')}>
       {isSidebarOpen ? (
         <aside className={styles.sidebar}>
           <Sidebar workspaceId={workspaceId} onCollapse={() => setIsSidebarOpen(false)} />

@@ -120,7 +120,8 @@
 
 /* 알림 보관 기간 안내 (임시 문구) */
 .footer {
-  padding: var(--spacing-2) var(--spacing-4);
+  padding: var(--spacing-2);
+  text-align: center;
   border-top: var(--border-width-default) solid var(--border-default);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
