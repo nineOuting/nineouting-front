@@ -2,6 +2,7 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 import emptyCharacter from '../../../assets/characters/empty.svg';
 import type { DecisionStatusEdit } from '../../../api/meeting';
 import addIcon from '../../../assets/icons/add-sm.svg';
+import aiIcon from '../../../assets/icons/ai-summary.svg';
 import checkIcon from '../../../assets/icons/check.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import evidenceIcon from '../../../assets/icons/evidence.svg';
@@ -13,7 +14,7 @@ import EmptyState from '../../../components/EmptyState';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionPoint, RoomAgenda, RoomTodo } from '../../../types/meetingRoom';
 import ActionMenu from '../../workspace/ActionMenu';
-import TodoList, { type TodoChange } from './TodoList';
+import TodoList, { type AssigneePeople, type TodoChange } from './TodoList';
 import styles from './AgendaFocus.module.css';
 
 const ICON_SIZE = 16;
@@ -146,7 +147,8 @@ function DecisionCard({
       : { label: '결정으로 확정하기', icon: checkIcon, onSelect: () => onChangeStatus('DECIDED') },
     { label: '결정 내용 수정하기', icon: editIcon, onSelect: () => setDraft(decision.summary ?? '') },
     { label: '근거 발언 보기', icon: evidenceIcon, onSelect: onSelect },
-    ...(decision.statusEdited ? [{ label: 'AI 판정으로 되돌리기', icon: refreshIcon, onSelect: () => onChangeStatus('AUTO') }] : []),
+    // 디자인 07 상태 모음 11/25 (MSG-131): 직접 정한 결정에만 [AI에게 다시 맡기기]. 누르면 AI가 다시 판단한다
+    ...(decision.statusEdited ? [{ label: 'AI에게 다시 맡기기', icon: aiIcon, onSelect: () => onChangeStatus('AUTO') }] : []),
   ];
 
   return (
@@ -282,6 +284,8 @@ interface AgendaFocusProps {
   doneTodoIds?: string[];
   /** 할 일 완료 체크 (회의록 작성자, 진행 중) */
   onToggleTodo?: (todo: RoomTodo, done: boolean) => void;
+  /** 할 일 담당자 선택 창 목록 (회의 참석자 → 워크스페이스 멤버) */
+  todoPeople?: AssigneePeople;
 }
 
 /** 디자인 Version02 Live 가운데: 고른 안건의 결정할 사항, 이 안건 요약(주요 의견·합의되지 않은 부분), 할 일 */
@@ -301,6 +305,7 @@ export default function AgendaFocus({
   onSaveTodo,
   doneTodoIds,
   onToggleTodo,
+  todoPeople,
 }: AgendaFocusProps) {
   // 안건을 바꾸면 열려 있던 추가 칸을 닫는다
   const [addingAgendaId, setAddingAgendaId] = useState<string>();
@@ -436,6 +441,7 @@ export default function AgendaFocus({
               onSave={canEdit ? onSaveTodo : undefined}
               doneIds={doneTodoIds}
               onToggleDone={canEdit ? onToggleTodo : undefined}
+              people={todoPeople}
             />
           ) : (
             <p className={styles.todoEmpty}>회의에서 할 일이 나오면 담당자·기한과 함께 여기에 모여요</p>

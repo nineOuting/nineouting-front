@@ -1,0 +1,188 @@
+/* 디자인 07 MemberPicker: 280px, 안쪽 8, 줄 사이 4, 둥근 12, 그림자 (SCRUM-410) */
+.picker {
+  position: absolute;
+  top: calc(100% + var(--spacing-1));
+  right: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 280px;
+  max-height: 420px;
+  padding: var(--spacing-2);
+  overflow-y: auto;
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: left;
+}
+
+/* 디자인 Search: 32px 입력칸, 왼쪽 돋보기 */
+.search {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-2);
+  height: 32px;
+  padding: 0 var(--spacing-2);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-sm);
+}
+
+.search:focus-within {
+  border-color: var(--interactive-selected-border);
+}
+
+.searchIcon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-disabled);
+}
+
+.groups,
+.group,
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 디자인 GroupLabel: 위 8 아래 4 좌우 8, "회의 참석자 4" */
+.groupLabel {
+  padding: var(--spacing-2) var(--spacing-2) var(--spacing-1);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+.count {
+  font-weight: var(--font-weight-regular, 400);
+  color: var(--text-disabled);
+}
+
+.divider {
+  height: var(--border-width-default);
+  background: var(--border-default);
+}
+
+/* 디자인 PickerMemberRow: 48px, 안쪽 8, 얼굴 24 · 이름·이메일 · 체크 */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  height: 48px;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.row:hover {
+  background: var(--interactive-hover);
+}
+
+.selected,
+.selected:hover {
+  background: var(--interactive-selected);
+}
+
+.avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--primary-subtle);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-default);
+  object-fit: cover;
+}
+
+.texts {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+}
+
+.selected .name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.email {
+  overflow: hidden;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.check {
+  flex-shrink: 0;
+  color: var(--primary-default);
+}
+
+/* 디자인 no-match: "일치하는 멤버가 없어요" 캡션 회색 */
+.noMatch {
+  padding: var(--spacing-1) 0 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 디자인 AvatarExternal sm: ? 얼굴, 회색 바탕 */
+.avatarExternal {
+  background: var(--bg-surface-muted);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-secondary);
+}
+
+/* 디자인 Footer: 연필 14 + "목록에 없으면 직접 입력" */
+.footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.footer:hover:not(:disabled) {
+  background: var(--interactive-hover);
+}
+
+.footer:disabled {
+  cursor: default;
+}

@@ -172,14 +172,117 @@
   color: var(--warning-default, var(--danger-default));
 }
 
+/* 디자인 AssigneeChip Avatar: 18px, 연한 테두리 */
 .chipAvatar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-full);
   background: var(--primary-subtle);
   font-size: 9px;
   color: var(--primary-default);
+  object-fit: cover;
+}
+
+/* 외부 담당자: ? 얼굴 */
+.chipAvatarExternal {
+  background: var(--bg-surface-muted);
+  color: var(--text-secondary);
+}
+
+/* 담당자 선택 창 기준 */
+.chipAnchor {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* 디자인 AssigneeChip state=suggested: AI 추정, 보라 점선, 옅은 보라 바탕, 회색 이름, ⌄ (11/25) */
+.chipSuggested {
+  gap: 0;
+  padding: 0;
+  background: var(--primary-ghost-hover);
+  border: var(--border-width-default) dashed var(--primary-default);
+  color: var(--text-secondary);
+}
+
+.chipSuggested:hover:not(:disabled) {
+  border-color: var(--primary-default);
+}
+
+button.chipSuggested {
+  gap: var(--spacing-1);
+  padding: 0 var(--spacing-1);
+}
+
+/* 이름 쪽 = [확정], ⌄ = 다시 고르기 */
+.chipConfirm,
+.chipChevron {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  border-radius: var(--radius-full);
+  color: inherit;
+}
+
+.chipConfirm {
+  position: relative;
+  gap: var(--spacing-1);
+  padding: 0 var(--spacing-1);
+  font: inherit;
+}
+
+.chipChevron {
+  padding: 0 var(--spacing-1) 0 0;
+}
+
+.chipChevron:hover {
+  color: var(--text-primary);
+}
+
+/* 디자인 Tooltip "확정": 칩 아래 가운데, 어두운 바탕, 위로 향한 꼬리 */
+.confirmTip {
+  position: absolute;
+  top: calc(100% + var(--spacing-2));
+  left: 50%;
+  z-index: 10;
+  display: none;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--bg-floating-dark);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: var(--line-height-caption);
+  color: var(--gray-0);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.confirmTip::before {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+  background: inherit;
+  content: '';
+  transform: translate(-50%, 50%) rotate(45deg);
+}
+
+.chipConfirm:hover .confirmTip,
+.chipConfirm:focus-visible .confirmTip {
+  display: block;
+}
+
+/* 디자인 AssigneeChip 열림: 흰 바탕, 파란 2px 테두리, ⌃ */
+.chipOpen,
+.chipOpen:hover:not(:disabled) {
+  background: var(--bg-surface);
+  border: 2px solid var(--interactive-selected-border);
+  color: var(--text-primary);
 }

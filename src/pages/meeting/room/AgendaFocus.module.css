@@ -424,8 +424,8 @@
   content: '·';
 }
 
+/* 담당자 선택 창이 카드 밖으로 나오게 자르지 않는다 (줄·머리에 배경이 없어 모서리는 그대로) */
 .todoCard {
-  overflow: hidden;
   background: var(--bg-surface);
   border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-md);
