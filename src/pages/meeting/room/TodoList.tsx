@@ -7,6 +7,7 @@ import dueDateIcon from '../../../assets/icons/due-date.svg';
 import Icon from '../../../components/Icon';
 import type { RoomTodo } from '../../../types/meetingRoom';
 import AssigneePicker, { type PickerPerson } from './AssigneePicker';
+import DueDatePicker from './DueDatePicker';
 import room from './room.module.css';
 import styles from './TodoList.module.css';
 
@@ -71,6 +72,9 @@ export default function TodoList({
   // 담당자 선택 창이 열린 할 일
   const [pickingId, setPickingId] = useState<string | null>(null);
   const pickerAnchorRef = useRef<HTMLSpanElement>(null);
+  // 기한 달력이 열린 할 일
+  const [datingId, setDatingId] = useState<string | null>(null);
+  const dueAnchorRef = useRef<HTMLSpanElement>(null);
   const everyone = [...people.attendees, ...people.members];
 
   /** 담당자만 바꿔 저장한다 (할 일·기한은 그대로) */
@@ -133,7 +137,10 @@ export default function TodoList({
       .filter(Boolean)
       .join(' ');
     const name = hasAssignee ? (isExternal ? todo.assignee : text) : '담당자';
-    const togglePicker = () => setPickingId((id) => (id === todo.id ? null : todo.id));
+    const togglePicker = () => {
+      setDatingId(null);
+      setPickingId((id) => (id === todo.id ? null : todo.id));
+    };
 
     return (
       <span ref={isOpen ? pickerAnchorRef : undefined} className={styles.chipAnchor}>
@@ -181,6 +188,42 @@ export default function TodoList({
             onSelect={(picked) => saveAssignee(todo, picked.name, picked.userId)}
             onExternal={(external) => saveAssignee(todo, external, null)}
             onClose={() => setPickingId(null)}
+          />
+        )}
+      </span>
+    );
+  };
+
+  /** 디자인 07 "할 일 기한 고르기" (11/25): [기한] 칩 → 달력, 날짜를 누르면 11/14(금)이 들어가고 닫힌다 */
+  const renderDueChip = (todo: RoomTodo) => {
+    const isOpen = datingId === todo.id;
+    return (
+      <span ref={isOpen ? dueAnchorRef : undefined} className={styles.chipAnchor}>
+        <button
+          type="button"
+          className={[styles.chip, todo.due ? '' : styles.chipEmpty, isOpen ? styles.chipOpen : ''].filter(Boolean).join(' ')}
+          disabled={!onSave}
+          aria-haspopup="dialog"
+          aria-expanded={isOpen}
+          aria-label={`${todo.task} 기한 ${todo.due ?? '선택'}`}
+          onClick={() => {
+            setPickingId(null);
+            setDatingId((id) => (id === todo.id ? null : todo.id));
+          }}
+        >
+          <Icon src={dueDateIcon} size={EDIT_ICON_SIZE - 2} />
+          {todo.due ?? '기한'}
+        </button>
+        {isOpen && (
+          <DueDatePicker
+            value={todo.due}
+            anchorRef={dueAnchorRef}
+            onSelect={(dueText) => {
+              setDatingId(null);
+              // 할 일·담당자는 그대로 (같은 담당자면 번호와 명단 맞춤 결과도 그대로 남는다)
+              onSave?.(todo, { task: todo.task, assignee: todo.assignee ?? '', due: dueText });
+            }}
+            onClose={() => setDatingId(null)}
           />
         )}
       </span>
@@ -244,16 +287,7 @@ export default function TodoList({
               />
               <span className={[styles.tableTask, isDone ? styles.done : ''].filter(Boolean).join(' ')}>{todo.task}</span>
               {renderAssigneeChip(todo, label.text, hasAssignee)}
-              <button
-                type="button"
-                className={[styles.chip, todo.due ? '' : styles.chipEmpty].filter(Boolean).join(' ')}
-                disabled={!onSave}
-                aria-label={`${todo.task} 기한 ${todo.due ?? '선택'}`}
-                onClick={() => startEditing(todo)}
-              >
-                <Icon src={dueDateIcon} size={EDIT_ICON_SIZE - 2} />
-                {todo.due ?? '기한'}
-              </button>
+              {renderDueChip(todo)}
             </li>
           );
         }
