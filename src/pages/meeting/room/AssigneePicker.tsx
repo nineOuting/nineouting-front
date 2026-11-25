@@ -149,7 +149,7 @@ export default function AssigneePicker({
           className={styles.input}
           value={keyword}
           autoFocus
-          placeholder={isTyping ? '담당자 이름을 입력하고 Enter' : '이름 또는 이메일 검색'}
+          placeholder={isTyping ? '담당자 이름 입력' : '이름 또는 이메일 검색'}
           aria-label={isTyping ? '담당자 이름 직접 입력' : '담당자 검색'}
           onChange={(event) => setKeyword(event.target.value)}
           onKeyDown={handleInputKeyDown}
@@ -160,15 +160,23 @@ export default function AssigneePicker({
           {renderGroup('회의 참석자', shownAttendees)}
           {shownAttendees.length > 0 && shownMembers.length > 0 && <div className={styles.divider} />}
           {renderGroup('워크스페이스 멤버', shownMembers)}
-          {!hasResult && <p className={styles.empty}>{name ? `'${name}'에 맞는 사람이 없어요` : '고를 수 있는 사람이 없어요'}</p>}
+          {/* 디자인 MemberPicker state=no-match: 검색 결과가 없으면 안내와 외부 담당자 줄 */}
+          {!hasResult && <p className={styles.noMatch}>{name ? '일치하는 멤버가 없어요' : '고를 수 있는 멤버가 없어요'}</p>}
         </div>
       )}
-      {isTyping || (!hasResult && name) ? (
-        <button type="button" className={styles.footer} disabled={!name} onClick={submitExternal}>
-          <Icon src={editIcon} size={SMALL_ICON_SIZE} />
-          {name ? `'${name}'(으)로 넣기 · 알림이 가지 않아요` : '목록에 없는 사람은 알림이 가지 않아요'}
+      {/* 디자인 PickerExternalRow: 검색 결과가 없거나 직접 입력할 때. 누르면 외부 담당자 (알림 없음) */}
+      {(isTyping || !hasResult) && name && (
+        <button type="button" className={styles.row} onClick={submitExternal}>
+          <span className={`${styles.avatar} ${styles.avatarExternal}`} aria-hidden="true">
+            ?
+          </span>
+          <span className={styles.texts}>
+            <span className={styles.name}>'{name}' 담당자로 넣기</span>
+            <span className={styles.email}>워크스페이스에 없는 사람이에요</span>
+          </span>
         </button>
-      ) : (
+      )}
+      {!isTyping && hasResult && (
         <button type="button" className={styles.footer} onClick={startTyping}>
           <Icon src={editIcon} size={SMALL_ICON_SIZE} />
           목록에 없으면 직접 입력

@@ -149,9 +149,19 @@
   color: var(--primary-default);
 }
 
-.empty {
-  padding: var(--spacing-3) var(--spacing-2);
+/* 디자인 no-match: "일치하는 멤버가 없어요" 캡션 회색 */
+.noMatch {
+  padding: var(--spacing-1) 0 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-secondary);
+}
+
+/* 디자인 AvatarExternal sm: ? 얼굴, 회색 바탕 */
+.avatarExternal {
+  background: var(--bg-surface-muted);
   font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-bold, 700);
   color: var(--text-secondary);
 }
 
