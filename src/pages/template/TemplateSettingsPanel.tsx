@@ -1,10 +1,11 @@
-import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { errorMessage } from '../../api/client';
 import { uploadTemplateBackground } from '../../api/minutes';
 import alignCenterIcon from '../../assets/icons/align-center.svg';
 import alignLeftIcon from '../../assets/icons/align-left.svg';
 import alignRightIcon from '../../assets/icons/align-right.svg';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
+import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
 import Icon from '../../components/Icon';
 import Spinner from '../../components/Spinner';
@@ -19,7 +20,8 @@ const BACKGROUND_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
 const MAX_EDGE_LENGTH = 50;
 const MAX_MARGIN_MM = 50;
-const MAX_ROWS = 20;
+// 디자인 09 "행 수 고르기": 1~10행 (11/25). 열은 지금처럼 8열까지
+const MAX_ROWS = 10;
 const MAX_COLS = 8;
 
 const RECORD_TYPES: { value: RecordType; label: string }[] = [
@@ -100,42 +102,98 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+/**
+ * 디자인 09 상태 모음 "행 수·열 수·테두리·제목 크기·본문 크기·바깥 여백·섹션 간격 고르기" (REQ-156, 11/25).
+ * 누르면 아래로 값 목록, 지금 값은 파란색. 고르면 문서에 바로 반영되고 닫힌다. 바깥·ESC로도 닫힌다
+ */
 function Select<T extends string | number>({
   label,
   value,
   options,
   onChange,
   disabled,
+  compact,
 }: {
   label: string;
   value: T;
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
   disabled?: boolean;
+  /** 행/열 수처럼 두 칸을 나란히 둘 때 (80px) */
+  compact?: boolean;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const rootRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const current = options.find((option) => option.value === value);
   return (
-    <span className={styles.selectBox}>
-      <select
-        className={styles.select}
+    <span ref={rootRef} className={[styles.dropdown, compact ? styles.dropdownCompact : ''].filter(Boolean).join(' ')}>
+      <button
+        type="button"
+        className={[styles.selectBox, isOpen ? styles.selectOpen : ''].filter(Boolean).join(' ')}
         aria-label={label}
-        value={value}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
         disabled={disabled}
-        onChange={(event) => {
-          const picked = options.find((option) => String(option.value) === event.target.value);
-          if (picked) {
-            onChange(picked.value);
-          }
-        }}
+        onClick={() => setIsOpen((open) => !open)}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <Icon src={chevronDownIcon} size={SMALL_ICON_SIZE} className={styles.selectIcon} />
+        <span className={styles.select}>{current?.label ?? String(value)}</span>
+        <Icon src={isOpen ? chevronUpIcon : chevronDownIcon} size={SMALL_ICON_SIZE} className={styles.selectIcon} />
+      </button>
+      {isOpen && (
+        <ul role="listbox" aria-label={label} className={styles.menu}>
+          {options.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <li key={option.value} role="option" aria-selected={isSelected}>
+                <button
+                  type="button"
+                  className={[styles.menuItem, isSelected ? styles.menuItemOn : ''].filter(Boolean).join(' ')}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </span>
   );
+}
+
+/** 1~max 숫자 목록 (지금 값이 범위를 넘으면 그 값도 넣는다: 예전에 저장한 양식) */
+function countOptions(max: number, unit: string, current: number) {
+  const values = Array.from({ length: max }, (_, index) => index + 1);
+  if (current > max) {
+    values.push(current);
+  }
+  return values.map((count) => ({ value: count, label: `${count}${unit}` }));
 }
 
 function Swatches({
@@ -307,8 +365,22 @@ export default function TemplateSettingsPanel({
             {!isTable && <p className={styles.hint}>기록 방식을 "표"로 고르면 바꿀 수 있어요.</p>}
             <Row label="행/열 수">
               <span className={styles.pair}>
-                <NumberField label="행 수" unit="행" value={item.settings.table.rows} min={1} max={MAX_ROWS} disabled={!isTable} onChange={(rows) => setTable({ rows })} />
-                <NumberField label="열 수" unit="열" value={item.settings.table.cols} min={1} max={MAX_COLS} disabled={!isTable} onChange={(cols) => setTable({ cols })} />
+                <Select
+                  compact
+                  label="행 수"
+                  value={item.settings.table.rows}
+                  options={countOptions(MAX_ROWS, '행', item.settings.table.rows)}
+                  disabled={!isTable}
+                  onChange={(rows) => setTable({ rows })}
+                />
+                <Select
+                  compact
+                  label="열 수"
+                  value={item.settings.table.cols}
+                  options={countOptions(MAX_COLS, '열', item.settings.table.cols)}
+                  disabled={!isTable}
+                  onChange={(cols) => setTable({ cols })}
+                />
               </span>
             </Row>
             <Row label="열 너비">

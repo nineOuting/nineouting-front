@@ -58,52 +58,106 @@
   flex-shrink: 0;
 }
 
-.selectBox {
+/* 디자인 SettingRow Dropdown: 한 칸 132px ("중간 (16px)"이 잘리지 않게) */
+.dropdown {
   position: relative;
+  display: flex;
+  width: 132px;
+}
+
+/* 행/열 수: 두 칸을 나란히 (디자인 Dropdown 80px) */
+.dropdownCompact {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+/* 디자인 Dropdown: 32px, 흰 바탕, 연한 테두리(열리면 파란 테두리), 오른쪽 ⌄ (09 상태 모음 11/25) */
+.selectBox {
   display: flex;
   align-items: center;
   gap: var(--spacing-1);
-  width: 110px;
+  width: 100%;
   height: 32px;
-  padding: 0 var(--spacing-2);
+  padding: 0 var(--input-sm-padding-x);
   background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-strong);
+  border: var(--border-width-default) solid var(--border-default);
   border-radius: var(--radius-sm);
+  text-align: left;
 }
 
-.selectBox:focus-within {
+.selectOpen {
   border-color: var(--border-focus);
+}
+
+.selectBox:disabled {
+  cursor: default;
 }
 
 .select {
   flex: 1;
   min-width: 0;
-  padding: 0;
-  background: none;
-  border: none;
-  outline: none;
-  font: inherit;
+  overflow: hidden;
   font-size: var(--font-size-body-md);
   line-height: var(--line-height-body-md);
   color: var(--text-primary);
-  appearance: none;
-  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.select:disabled {
+.selectBox:disabled .select {
   color: var(--text-disabled);
-  cursor: default;
-}
-
-.select option {
-  background: var(--bg-surface);
-  color: var(--text-primary);
 }
 
 .selectIcon {
   flex-shrink: 0;
   color: var(--neutral-default);
-  pointer-events: none;
+}
+
+/* 디자인 Menu: 칸 오른쪽 끝에 맞춰 아래로, 140px 이상, 안쪽 4, 줄 사이 4, 그림자 */
+.menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-1));
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: max(100%, 140px);
+  max-height: 420px;
+  padding: var(--spacing-1);
+  overflow-y: auto;
+  background: var(--bg-surface-raised);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* 디자인 MenuItem: 36px, 좌우 12 */
+.menuItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-primary);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.menuItem:hover {
+  background: var(--interactive-hover);
+}
+
+/* 지금 값: 파란 바탕, 파란 굵은 글자 */
+.menuItemOn,
+.menuItemOn:hover {
+  background: var(--interactive-selected);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-link);
 }
 
 .swatches {
@@ -167,10 +221,11 @@
   opacity: 0.5;
 }
 
+/* 디자인 SettingRow_행/열 수: 80px 칸 두 개, 사이 8 */
 .pair {
   display: flex;
   gap: var(--spacing-2);
-  width: 150px;
+  width: 168px;
 }
 
 .numberBox {
