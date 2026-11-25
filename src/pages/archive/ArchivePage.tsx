@@ -364,8 +364,9 @@ export default function ArchivePage() {
       await trashMeeting(item.meetingId);
       reload();
       setToast({
-        text: `'${item.title}' 회의록을 삭제했어요.`,
-        variant: 'info',
+        // 디자인 10 상태 모음 11/25 변경: 회의도 같이 지워졌다고 알린다. 체크 아이콘
+        text: `'${item.title}' 회의와 회의록을 삭제했어요.`,
+        variant: 'success',
         action: {
           label: '되돌리기',
           onClick: () => {
@@ -693,7 +694,8 @@ export default function ArchivePage() {
       {deleting && (
         <ConfirmDialog
           title={`'${deleting.title}' 회의록을 삭제할까요?`}
-          message="삭제한 회의록은 3개월 동안 삭제 목록에서 복구할 수 있어요."
+          // 디자인 10 상태 모음 11/25 변경: 회의록을 지우면 회의도 같이 지워진다 (REQ-143)
+          message="회의록을 삭제하면 이 회의도 함께 삭제돼요. 삭제한 회의와 회의록은 3개월 동안 삭제 목록에서 복구할 수 있어요."
           cancelLabel="취소"
           confirmLabel="삭제하기"
           isDanger
