@@ -4,9 +4,9 @@ import dragIcon from '../../assets/icons/drag.svg';
 import zoomInIcon from '../../assets/icons/zoom-in.svg';
 import zoomOutIcon from '../../assets/icons/zoom-out.svg';
 import Icon from '../../components/Icon';
-import SectionContent from '../../components/SectionContent';
+import TemplateSectionBlank from '../../components/TemplateSectionBlank';
 import type { TemplateItem, TemplateLayout } from '../../types/template';
-import { SAMPLE_MEETING_INFO, blankContent } from '../../utils/templateSample';
+import { SAMPLE_MEETING_INFO } from '../../utils/templateSample';
 import { A4_HEIGHT_PX, A4_WIDTH_PX, DEFAULT_PAPER_ZOOM, PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
 import styles from './TemplatePreview.module.css';
 
@@ -317,12 +317,7 @@ export default function TemplatePreview({
             )}
           </div>
           <div className={styles.cardBody}>
-            <SectionContent
-              settings={item.settings}
-              content={blankContent(item)}
-              label={item.title}
-              placeholder="왼쪽에서 이 항목에 무엇을 채울지 설명을 적어 주세요"
-            />
+            <TemplateSectionBlank item={item} emptyDescription="왼쪽에서 이 항목에 무엇을 채울지 설명을 적어 주세요" />
           </div>
         </div>
       </li>
@@ -371,11 +366,11 @@ export default function TemplatePreview({
                       <section className={styles.meetingInfo} aria-label="회의 기본 정보">
                         <h3 className={styles.meetingInfoTitle}>회의 기본 정보</h3>
                         <dl className={styles.meetingInfoList}>
-                          {/* QA 77 예시 값은 비우고 이름만 둔다 */}
-                          {SAMPLE_MEETING_INFO.map(([label]) => (
+                          {/* 이름표와 회색 값 안내 (SCRUM-410 디자인 요청) */}
+                          {SAMPLE_MEETING_INFO.map(([label, value]) => (
                             <div key={label} className={styles.meetingInfoRow}>
                               <dt>{label}</dt>
-                              <dd />
+                              <dd>{value}</dd>
                             </div>
                           ))}
                         </dl>

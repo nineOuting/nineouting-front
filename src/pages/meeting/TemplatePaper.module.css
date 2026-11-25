@@ -74,9 +74,10 @@
   color: var(--text-secondary);
 }
 
+/* 값은 회색 안내 (예시 값 없이) */
 .meetingInfoRow dd {
   margin: 0;
-  color: var(--text-primary);
+  color: var(--text-tertiary);
 }
 
 .sections {

@@ -1,0 +1,38 @@
+/* 디자인 09 DocSection content: 설명 줄 → 8 → 기록 방식 모양 */
+.blank {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* 회색 설명 한 줄 (Caption 12px) */
+.description {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--neutral-default);
+  white-space: pre-wrap;
+}
+
+.emptyDescription {
+  color: var(--text-disabled);
+}
+
+/* 목록·체크리스트 자리: 흐린 회색 한 줄 */
+.line {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin: 0;
+  line-height: var(--line-height-body-md);
+  color: var(--text-tertiary);
+}
+
+/* 체크리스트 빈 네모 (디자인 CheckboxOffIcon 자리) */
+.box {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border: var(--border-width-default) solid var(--text-tertiary);
+  border-radius: 3px;
+}

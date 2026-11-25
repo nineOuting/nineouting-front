@@ -1,6 +1,6 @@
-import SectionContent from '../../components/SectionContent';
+import TemplateSectionBlank from '../../components/TemplateSectionBlank';
 import type { TemplateItem, TemplateLayout } from '../../types/template';
-import { SAMPLE_MEETING_INFO, sampleContent } from '../../utils/templateSample';
+import { SAMPLE_MEETING_INFO } from '../../utils/templateSample';
 import { A4_HEIGHT_PX, A4_WIDTH_PX, PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
 import styles from './TemplatePaper.module.css';
 
@@ -69,7 +69,7 @@ export default function TemplatePaper({ name, items, layout, scale, minPages = 1
             >
               {item.title}
             </h4>
-            <SectionContent settings={item.settings} content={sampleContent(item)} label={item.title} />
+            <TemplateSectionBlank item={item} />
           </li>
         ))}
       </ol>
