@@ -9,6 +9,10 @@ export interface DropdownItem {
   label: string;
   description?: string;
   isSelected?: boolean;
+  /** 빨간 글자 (피그마 멤버 권한 칩 메뉴의 [워크스페이스에서 내보내기]) */
+  isDanger?: boolean;
+  /** 위에 구분선 */
+  hasDividerBefore?: boolean;
 }
 
 interface DropdownMenuProps {
@@ -65,9 +69,10 @@ export default function DropdownMenu({
       {items.length === 0 && <li className={menu.empty}>{emptyText}</li>}
       {items.map((item) => (
         <li key={item.id} role="option" aria-selected={Boolean(item.isSelected)}>
+          {item.hasDividerBefore && <div className={menu.divider} role="separator" />}
           <button
             type="button"
-            className={[menu.item, item.isSelected ? menu.selected : ''].filter(Boolean).join(' ')}
+            className={[menu.item, item.isSelected ? menu.selected : '', item.isDanger ? menu.danger : ''].filter(Boolean).join(' ')}
             onClick={() => onSelect(item.id)}
           >
             {showCheck && item.isSelected && <Icon src={checkIcon} size={CHECK_ICON_SIZE} />}

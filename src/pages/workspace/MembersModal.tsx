@@ -18,6 +18,8 @@ interface MembersModalProps {
   inputError?: string;
   onInputChange: (value: string) => void;
   onAdd: () => void;
+  /** 추가 줄 아래에 덧붙일 내용 (워크스페이스: 초대 링크 줄) */
+  afterAdd?: ReactNode;
   /** 소유자만 초대, 제외, 양도를 할 수 있다 (REQ-033) */
   canManage: boolean;
   /** 소유권 양도 줄을 보여 줄지 (기본: canManage). 폴더는 폴더 소유자가 양도한다 (REQ-043) */
@@ -38,6 +40,7 @@ export default function MembersModal({
   inputError,
   onInputChange,
   onAdd,
+  afterAdd,
   canManage,
   canTransfer = canManage,
   ownershipLabel,
@@ -51,7 +54,8 @@ export default function MembersModal({
   };
 
   return (
-    <Dialog title="멤버 권한 관리" description={description} width="md" onClose={onClose}>
+    // 피그마 03 워크스페이스, 프로젝트 MemberManageModal 제목 "멤버 관리"
+    <Dialog title="멤버 관리" description={description} width="md" onClose={onClose}>
       {help && <div className={styles.help}>{help}</div>}
       {canManage && (
         <form className={styles.addRow} onSubmit={handleSubmit} noValidate>
@@ -68,7 +72,8 @@ export default function MembersModal({
           </Button>
         </form>
       )}
-      <div className={styles.divider} />
+      {canManage && afterAdd}
+      {canManage && <div className={styles.divider} />}
       {children}
       {canTransfer && (
         <>

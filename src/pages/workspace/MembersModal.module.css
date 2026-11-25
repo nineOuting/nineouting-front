@@ -323,3 +323,46 @@
   right: auto;
   left: 0;
 }
+
+/* 피그마 InviteLinkRow: 링크 칸(아래 안내 글) + [링크 복사] */
+.linkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-inline);
+}
+
+.linkField {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 피그마 소유권 넘길 멤버 고르기: 줄마다 안쪽 여백을 두고, 고른 줄은 옅은 파랑 바탕.
+   음수 여백으로 바탕을 넓히면 창에 가로 스크롤바가 생겨 줄 안쪽 여백으로 잡는다 (2026-11-25) */
+.rowPickable {
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-md);
+}
+
+.rowPicked {
+  background: var(--primary-subtle);
+}
+
+/* 피그마 ProjectMemberPage AddMemberRow: 안내 글 + [멤버 추가] */
+.addHintRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-content);
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
+}
+
+/* 피그마 "멤버 검색 결과 없음": 결과 자리 가운데 회색 글 (MSG-032) */
+.addEmpty {
+  padding: var(--spacing-10) 0;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-tertiary);
+  text-align: center;
+}

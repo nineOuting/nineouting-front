@@ -16,7 +16,8 @@ import {
   listFolderMembers,
   listFavorites,
   listMyWorkspaces,
-  listPendingInvitations,
+  // 레거시 (2026-11-25, 보기 전용 멤버 목록 팝오버에서만 썼다)
+  // listPendingInvitations,
   listWorkspaceMembers,
   markLastVisited,
   removeWorkspaceMember,
@@ -33,7 +34,8 @@ import moreIcon from '../../assets/icons/more-vert.svg';
 import settingsIcon from '../../assets/icons/settings.svg';
 import AppLayout from '../../components/AppLayout';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import MemberListPopover, { type MemberListItem } from '../../components/MemberListPopover';
+// 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다. 소유자가 아니면 보기 전용): 보기 전용 멤버 목록 팝오버
+// import MemberListPopover, { type MemberListItem } from '../../components/MemberListPopover';
 import TextField from '../../components/TextField';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
@@ -44,9 +46,8 @@ import deleteIcon from '../../assets/icons/delete.svg';
 import groupIcon from '../../assets/icons/group-add-sm.svg';
 import editIcon from '../../assets/icons/edit.svg';
 import ActionMenu from './ActionMenu';
-// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
-// import CreateWorkspaceModal from './CreateWorkspaceModal';
-import DefaultTemplateCard from './DefaultTemplateCard';
+import CreateWorkspaceModal from './CreateWorkspaceModal';
+import DefaultTemplateCard, { type DefaultTemplateModalMode } from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
 import OnboardingBar from './OnboardingBar';
 import WeekMeetings from './WeekMeetings';
@@ -54,6 +55,7 @@ import WorkspaceFolderCard, { type FolderActivity } from './WorkspaceFolderCard'
 import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
+import TransferOwnerDialog from './TransferOwnerDialog';
 import styles from './WorkspacePage.module.css';
 
 const ICON_SIZE = 20;
@@ -68,6 +70,7 @@ type Dialog =
   | { type: 'rename'; folder: FolderSummary }
   | { type: 'deleteFolder'; folder: FolderSummary }
   | { type: 'members' }
+  | { type: 'transfer' }
   | { type: 'leave' }
   | { type: 'deleteWorkspace' }
   | { type: 'createWorkspace' }
@@ -107,18 +110,20 @@ export default function WorkspacePage() {
   const [folderMembers, setFolderMembers] = useState<Record<number, Member[]>>({});
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreAnchorRef = useRef<HTMLButtonElement>(null);
-  // 피그마 "멤버 목록 팝오버": [멤버 N명]은 보기 전용 목록, 관리는 ⋮ [멤버 권한 관리]
-  const membersAnchorRef = useRef<HTMLButtonElement>(null);
-  const [memberList, setMemberList] = useState<{ members: MemberListItem[] | null; pendingEmails: string[] } | null>(null);
+  // 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다): 보기 전용 멤버 목록 팝오버
+  // const membersAnchorRef = useRef<HTMLButtonElement>(null);
+  // const [memberList, setMemberList] = useState<{ members: MemberListItem[] | null; pendingEmails: string[] } | null>(null);
+  // REQ-198, 199 회의록 기본 양식 창 ([변경], 시작하기 바 [기본 양식 정하기])
+  const [templateModal, setTemplateModal] = useState<DefaultTemplateModalMode | null>(null);
   // 폴더 카드의 별이 쓰는 즐겨찾기 폴더
   const [favoriteFolderIds, setFavoriteFolderIds] = useState<Set<number>>(new Set());
   // 피그마 "워크스페이스 삭제 확인": 이름을 똑같이 써야 [삭제하기]
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [myUserId, setMyUserId] = useState<number | null>(null);
   const location = useLocation();
-  // MSG-101 폴더 화면의 [소유권 양도]로 오면 멤버 관리 창(소유권 넘기기)을 바로 연다
+  // MSG-101 폴더 화면의 [소유권 양도]로 오면 소유권 넘길 멤버 고르기 창을 바로 연다 (피그마 11/24: 양도는 설정 창에서)
   const [dialog, setDialog] = useState<Dialog | null>(() =>
-    (location.state as { openMembers?: boolean } | null)?.openMembers ? { type: 'members' } : null,
+    (location.state as { openMembers?: boolean } | null)?.openMembers ? { type: 'transfer' } : null,
   );
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [menuFolderId, setMenuFolderId] = useState<number | null>(null);
@@ -240,17 +245,20 @@ export default function WorkspacePage() {
   };
 
   // REQ-034 발급할 때마다 이전 링크는 무효가 된다
+  /** REQ-034 새 초대 링크를 받아 복사하고, 멤버 관리 창 링크 칸에 보여 주도록 돌려준다 */
   const copyInviteLink = async () => {
     try {
       const url = await issueInviteLink(id);
       try {
         await navigator.clipboard.writeText(url);
-        notice('초대 링크를 복사했어요. 1일 동안 쓸 수 있고, 이전 링크는 더 이상 쓸 수 없어요.');
+        notice('초대 링크를 복사했어요. 1일 동안 쓸 수 있어요.'); // MSG-099
       } catch {
         notice(`초대 링크: ${url}`);
       }
+      return url;
     } catch (error) {
       showError(error);
+      return undefined;
     }
   };
 
@@ -308,22 +316,23 @@ export default function WorkspacePage() {
       return next;
     });
 
-  const openMemberList = async () => {
-    setMemberList({ members: null, pendingEmails: [] });
-    try {
-      const [members, pending] = await Promise.all([
-        listWorkspaceMembers(id),
-        isOwner ? listPendingInvitations(id) : Promise.resolve([]),
-      ]);
-      setMemberList({
-        members,
-        pendingEmails: pending.filter((invitation) => !invitation.expired).map((invitation) => invitation.email),
-      });
-    } catch (error) {
-      setMemberList(null);
-      showError(error);
-    }
-  };
+  // 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다): 보기 전용 멤버 목록 팝오버
+  // const openMemberList = async () => {
+  //   setMemberList({ members: null, pendingEmails: [] });
+  //   try {
+  //     const [members, pending] = await Promise.all([
+  //       listWorkspaceMembers(id),
+  //       isOwner ? listPendingInvitations(id) : Promise.resolve([]),
+  //     ]);
+  //     setMemberList({
+  //       members,
+  //       pendingEmails: pending.filter((invitation) => !invitation.expired).map((invitation) => invitation.email),
+  //     });
+  //   } catch (error) {
+  //     setMemberList(null);
+  //     showError(error);
+  //   }
+  // };
 
   const removeWorkspace = async () => {
     closeDialog();
@@ -367,9 +376,10 @@ export default function WorkspacePage() {
                     closeSwitcher();
                     navigate(`/workspaces/${selectedId}`);
                   }}
-                  onSettings={() => {
+                  // 피그마 "워크스페이스 바꾸기": 목록 아래 [새 워크스페이스 만들기] (REQ-031). 설정은 ⋮ 메뉴에서 연다
+                  onCreate={() => {
                     closeSwitcher();
-                    setDialog({ type: 'settings' });
+                    setDialog({ type: 'createWorkspace' });
                   }}
                   onClose={closeSwitcher}
                 />
@@ -401,11 +411,11 @@ export default function WorkspacePage() {
                 label="워크스페이스 메뉴"
                 anchorRef={moreAnchorRef}
                 onClose={() => setIsMoreOpen(false)}
-                // 피그마 프론트 "워크스페이스 ⋮ 메뉴" (REQ-163): 멤버 권한 관리, 설정, 삭제는 소유자만. 멤버에게는 나가기만
+                // 피그마 프론트 "워크스페이스 ⋮ 메뉴" (REQ-163): 멤버 관리, 설정, 삭제는 소유자만. 멤버에게는 나가기만
                 items={[
                   ...(isOwner
                     ? [
-                        { label: '멤버 권한 관리', icon: groupIcon, onSelect: () => setDialog({ type: 'members' }) },
+                        { label: '멤버 관리', icon: groupIcon, onSelect: () => setDialog({ type: 'members' }) },
                         { label: '워크스페이스 설정', icon: settingsIcon, onSelect: () => setDialog({ type: 'settings' }) },
                       ]
                     : []),
@@ -439,26 +449,10 @@ export default function WorkspacePage() {
 
       {/* 피그마 Page 8 SummaryBar: 멤버 수, 내 권한, 회의록 기본 양식(REQ-199) */}
       <div className={styles.summaryBar}>
-        <span className={styles.anchor}>
-          <button
-            ref={membersAnchorRef}
-            type="button"
-            className={styles.linkButton}
-            aria-haspopup="dialog"
-            aria-expanded={memberList !== null}
-            onClick={() => (memberList ? setMemberList(null) : void openMemberList())}
-          >
-            멤버 {workspace.memberCount}명
-          </button>
-          {memberList && (
-            <MemberListPopover
-              anchorRef={membersAnchorRef}
-              members={memberList.members}
-              pendingEmails={memberList.pendingEmails}
-              onClose={() => setMemberList(null)}
-            />
-          )}
-        </span>
+        {/* 피그마 11/24: 멤버 관리 창을 연다. 소유자가 아니면 보기 전용 (REQ-033, 128) */}
+        <button type="button" className={styles.linkButton} aria-haspopup="dialog" onClick={() => setDialog({ type: 'members' })}>
+          멤버 {workspace.memberCount}명
+        </button>
         <span className={styles.summaryDivider} aria-hidden="true" />
         <span className={styles.summaryLabel}>내 권한</span>
         <span className={styles.roleBadge}>{isOwner ? '소유자' : '멤버'}</span>
@@ -467,9 +461,11 @@ export default function WorkspacePage() {
           workspaceId={id}
           templateId={workspace.defaultTemplateId}
           isOwner={isOwner}
-          onChanged={(templateId) => {
+          modalMode={templateModal}
+          onModalModeChange={setTemplateModal}
+          onChanged={(templateId, name) => {
             setWorkspace((prev) => prev && { ...prev, defaultTemplateId: templateId });
-            setToast({ text: '회의록 기본 양식을 바꿨어요.', variant: 'success' });
+            setToast({ text: `기본 양식을 '${name}'으로 정했어요.`, variant: 'success' }); // MSG-128
           }}
           onError={showError}
         />
@@ -485,9 +481,9 @@ export default function WorkspacePage() {
             {
               label: '회의록 기본 양식 정하기',
               done: workspace.defaultTemplateId !== null,
-              // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 회의록 기본 양식 고르기 창
-              // actionLabel: '양식 정하기',
-              // onAction: () => document.getElementById('default-template-change')?.click(),
+              // 피그마 11/24 "기본 양식 정하기 (시작하기 바에서)"
+              actionLabel: '기본 양식 정하기',
+              onAction: () => setTemplateModal('setup'),
             },
             {
               // 멤버 권한 관리에서 멤버의 폴더 접근 권한(모든 폴더 / 초대된 폴더만)을 한 번이라도 정하면 끝 (2026-11-17 결정)
@@ -523,7 +519,8 @@ export default function WorkspacePage() {
                 <FolderMenu
                   folder={folder}
                   // REQ-165 (2026-11-17 시트): 이름 바꾸기는 프로젝트 소유자(기본 폴더는 워크스페이스 소유자), 삭제는 프로젝트 소유자와 워크스페이스 소유자
-                  canRename={folder.isDefault ? isOwner : myUserId !== null && folder.ownerUserId === myUserId}
+                  // 이름 바꾸기는 프로젝트 소유자와 워크스페이스 소유자 (피그마 11/24 코멘트, 2026-11-25 사용자 결정)
+                  canRename={isOwner || (myUserId !== null && folder.ownerUserId === myUserId)}
                   canDelete={!folder.isDefault && (isOwner || (myUserId !== null && folder.ownerUserId === myUserId))}
                   isOpen={menuFolderId === folder.folderId}
                   onToggle={() => setMenuFolderId((current) => (current === folder.folderId ? null : folder.folderId))}
@@ -537,20 +534,19 @@ export default function WorkspacePage() {
         </ul>
       </section>
 
-      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
       {dialog?.type === 'createWorkspace' && <CreateWorkspaceModal onClose={closeDialog} />}
-      */}
       {dialog?.type === 'settings' && (
         <WorkspaceSettingsModal
           name={workspace.name}
           description={workspace.description}
           isOwner={isOwner}
+          onTransfer={() => setDialog({ type: 'transfer' })}
           onSave={async (name, description) => {
             const saved = await updateWorkspace(id, name, description);
             setWorkspace((prev) => prev && { ...prev, ...saved });
             setWorkspaces((prev) => prev.map((item) => (item.workspaceId === id ? { ...item, name: saved.name } : item)));
             closeDialog();
-            setToast({ text: '워크스페이스 설정을 저장했어요', variant: 'success' });
+            setToast({ text: '워크스페이스 설정을 저장했어요.', variant: 'success' }); // MSG-094
           }}
           onLeave={() => setDialog({ type: 'leave' })}
           onDelete={() => {
@@ -563,7 +559,7 @@ export default function WorkspacePage() {
       {dialog?.type === 'newFolder' && (
         <FolderNameModal
           title="새 프로젝트 폴더"
-          description="관리할 프로젝트 폴더를 만들어 주세요."
+          description="회의와 회의록을 모아 둘 폴더를 만들어요"
           submitLabel="폴더 만들기"
           siblingNames={folders.map(({ name }) => name)}
           toErrorMessage={folderNameError}
@@ -574,8 +570,7 @@ export default function WorkspacePage() {
       {dialog?.type === 'rename' && (
         <FolderNameModal
           title="폴더 이름 바꾸기"
-          description="바꿀 폴더명을 입력해 주세요."
-          submitLabel="이름 바꾸기"
+          submitLabel="저장"
           initialName={dialog.folder.name}
           siblingNames={folders.filter(({ folderId }) => folderId !== dialog.folder.folderId).map(({ name }) => name)}
           toErrorMessage={folderNameError}
@@ -586,8 +581,8 @@ export default function WorkspacePage() {
       {dialog?.type === 'deleteFolder' && (
         // MSG-046
         <ConfirmDialog
-          title="폴더를 삭제할까요?"
-          message={'폴더 안의 회의와 회의록도 함께 쓰레기통으로 이동하며\n3개월 안에 복구할 수 있어요.'}
+          title={`${dialog.folder.name} 폴더를 삭제할까요?`}
+          message={`폴더 안의 회의 ${dialog.folder.meetingCount}개와 회의록이 함께 삭제돼요. 3개월 동안 삭제 목록에서 복구할 수 있어요`}
           cancelLabel="취소"
           confirmLabel="삭제하기"
           isDanger
@@ -605,8 +600,16 @@ export default function WorkspacePage() {
           onCopyInviteLink={copyInviteLink}
           onAccessChange={updateAccess}
           onRemove={removeMember}
-          onTransfer={transferOwnership}
           onNotice={notice}
+          onClose={closeDialog}
+        />
+      )}
+      {dialog?.type === 'transfer' && (
+        // REQ-129 MSG-090, 091 (피그마 11/24: 설정 창 [소유권 양도], 소유자 나가기 제한 [소유권 양도])
+        <TransferOwnerDialog
+          candidates={members.filter((member) => !member.isOwner)}
+          onTransfer={transferOwnership}
+          confirmDescription={(name) => `넘기면 워크스페이스 설정·삭제와 권한 관리는 ${name} 님만 할 수 있어요. 나는 일반 멤버가 돼요`}
           onClose={closeDialog}
         />
       )}
@@ -614,19 +617,19 @@ export default function WorkspacePage() {
         (isOwner ? (
           // MSG-042 소유자는 소유권을 넘긴 뒤에 나갈 수 있다
           <ConfirmDialog
-            title="소유권을 양도해야 워크스페이스에서 나갈 수 있어요."
-            message="다른 멤버에게 소유권을 양도한 후 다시 시도해 주세요."
+            title="소유권을 넘긴 뒤에 나갈 수 있어요"
+            message="워크스페이스 소유자는 바로 나갈 수 없어요. 다른 멤버에게 소유권을 넘겨 주세요"
             cancelLabel="취소"
             confirmLabel="소유권 양도"
             onCancel={closeDialog}
-            onConfirm={() => setDialog({ type: 'members' })}
+            onConfirm={() => setDialog({ type: 'transfer' })}
           />
         ) : (
           // MSG-041
           <ConfirmDialog
             title={`${workspace.name}에서 나갈까요?`}
             // 디자인 LeaveConfirmModal 문구 (강제 줄바꿈 없이)
-            message="나가면 이 워크스페이스의 폴더와 회의록을 볼 수 없어요. 다시 들어오려면 초대를 받아야 해요."
+            message="나가면 이 워크스페이스의 폴더와 회의록을 볼 수 없어요. 다시 들어오려면 초대를 받아야 해요"
             cancelLabel="취소"
             confirmLabel="나가기"
             onCancel={closeDialog}
