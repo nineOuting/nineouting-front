@@ -1,7 +1,9 @@
 /* 디자인 CalendarCard */
 .calendar {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-height: 0;
   /* 피그마 Page 8: 도구 줄 아래 바로 달력. 테두리 상자 없이 */
   gap: var(--spacing-3);
 }
@@ -112,10 +114,12 @@
   color: var(--danger-default);
 }
 
-/* 주간: 시간 열 48px + 요일 7칸. 칸 높이 56px = 1시간, 9시간이 보인다 */
+/* 주간: 시간 열 48px + 요일 7칸. 칸 높이 56px = 1시간. 남은 화면 높이만큼 보이고 안에서 스크롤한다 */
 .week {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-height: 0;
 }
 
 .weekHead,
@@ -132,7 +136,8 @@
 }
 
 .weekBody {
-  height: calc(56px * 9);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   border-bottom: var(--border-width-default) solid var(--border-default);
 }
@@ -253,10 +258,15 @@
 }
 
 /* 월간: 요일 7칸, 날짜 칸에 회의 2개까지 */
+/* 남은 화면 높이를 주 수만큼 나눈다. 한 칸이 96px보다 작아지면 달력 안에서 스크롤 */
 .monthGrid {
   display: grid;
+  flex: 1;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: min-content;
+  grid-template-rows: min-content;
+  grid-auto-rows: minmax(96px, 1fr);
+  min-height: 0;
+  overflow-y: auto;
   border-top: var(--border-width-default) solid var(--border-default);
   border-left: var(--border-width-default) solid var(--border-default);
 }
@@ -273,7 +283,6 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  height: 96px;
   padding: var(--spacing-1);
   border-right: var(--border-width-default) solid var(--border-default);
   border-bottom: var(--border-width-default) solid var(--border-default);
@@ -328,12 +337,44 @@
   text-align: left;
 }
 
-/* 디자인 시스템 CalendarMoreChip: 겹친 회의 수. 앞 회의 칸 오른쪽 위 */
-.moreChip {
+/* 겹친 회의 [+N]을 올리는 층: 회의 칸과 같은 자리, 같은 안쪽 여백. 칩만 누를 수 있다 */
+.moreLayer {
   position: absolute;
-  right: 8px;
+  left: 3px;
+  right: 4px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  overflow: hidden;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-left: var(--border-width-focus) solid transparent;
+  pointer-events: none;
+}
+
+/* 칸이 낮으면 제목 줄 오른쪽 */
+.moreLayerShort {
+  align-items: flex-end;
+}
+
+/* 시간 줄 높이에 맞춰 [+N]을 오른쪽 끝에 */
+.moreLine {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+/* 자리만 잡는 투명 글자 (회의 칸의 제목과 같은 높이) */
+.placeholder {
+  visibility: hidden;
+}
+
+/* 디자인 시스템 CalendarMoreChip: 겹친 회의 수. 회의 칸 시간 줄의 오른쪽 끝 */
+.moreChip {
+  flex-shrink: 0;
   padding: 0 var(--spacing-2);
+  pointer-events: auto;
   background: var(--neutral-pressed);
   border-radius: var(--radius-full);
   font-size: var(--font-size-caption);
@@ -379,6 +420,8 @@
 }
 
 /* [+N] 칩 자리만큼 제목을 비운다 */
-.hasMore > .eventTitle {
+/* 칩이 있는 줄의 글자 끝을 비운다: 보통은 시간 줄, 낮은 칸은 제목 줄 */
+.hasMore > .eventMeta,
+.hasMoreShort > .eventTitle {
   padding-right: 32px;
 }

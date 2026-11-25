@@ -30,28 +30,59 @@
   color: var(--text-link);
 }
 
-.change:hover {
+.change:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
 }
 
-.options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  max-height: 320px;
-  overflow-y: auto;
+/* 소유자가 아니면 보이지만 비활성 (피그마 11/24 "기본 양식 변경 (소유자 아님)") */
+.change:disabled {
+  color: var(--text-disabled);
+  cursor: default;
 }
 
-.option {
+.tooltipAnchor {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-body-md);
-  cursor: pointer;
 }
 
-.option:hover {
-  background: var(--interactive-hover);
+/* 디자인 Tooltip: 어두운 바탕 작은 글자. [변경] 위 가운데 (MSG-129) */
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 20;
+  display: none;
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--bg-floating-dark);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--gray-0);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.tooltipAnchor:hover .tooltip {
+  display: block;
+}
+
+/* 기본 양식 창 카드: 배지를 미리보기 오른쪽 아래에 둔다 */
+.previewWithBadge {
+  position: relative;
+}
+
+/* 피그마 DefaultTemplateBadge */
+.badge {
+  position: absolute;
+  right: var(--spacing-2);
+  bottom: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--primary-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--primary-default);
 }

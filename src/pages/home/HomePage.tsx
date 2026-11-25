@@ -193,7 +193,7 @@ export default function HomePage() {
 
   // 피그마 Page 8 HomePage_v6: 왼쪽은 인사, 곧 다가오는 회의 띠, 이번 주 일정. 오른쪽 열은 즐겨찾기, 내 할 일, 작성 중인 회의록
   return (
-    <AppLayout className={styles.homeLayout}>
+    <AppLayout className={styles.homeLayout} fitScreen>
       {toast && <Toast message={toast} onClose={closeToast} />}
       <div className={styles.main}>
         {/* REQ-146 와이어프레임 문구, 0개면 MSG-047 */}

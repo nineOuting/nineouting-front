@@ -50,6 +50,13 @@
   gap: var(--spacing-1);
 }
 
+/* 피그마 04 프로젝트 TitleRow 오른쪽: [새 회의] + ⋮ (11/24 케밥 메뉴 위치 이동) */
+.titleActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
 .title {
   font-size: var(--font-size-heading-lg);
   font-weight: var(--font-weight-bold);

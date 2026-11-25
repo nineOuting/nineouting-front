@@ -162,6 +162,16 @@
   min-width: 0;
 }
 
+/* 홈: 화면 전체는 세로로 움직이지 않고 본문 안쪽(달력, 오른쪽 열)만 스크롤한다. 좁은 창의 가로 스크롤은 그대로 */
+.fitScreen {
+  overflow-y: hidden;
+}
+
+.fitScreen .main {
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* REQ-001 접힌 사이드바 */
 .rail {
   width: 64px;

@@ -21,8 +21,8 @@ const STATUS_LABELS: Record<FolderMeetingStatus, string> = {
   confirmed: '회의록 확정',
 };
 
-// 예정 시간이 지나도록 시작하지 않은 회의는 "예정" 대신 "지난 회의"로 보인다 (디자인 체크 2026-11-19)
-const MISSED_LABEL = '지난 회의';
+// 예정 종료 시간이 지나도록 한 번도 시작하지 않은 회의는 "예정" 대신 "진행 안 됨" (피그마 04 프로젝트 11/24, 주황 배지)
+const MISSED_LABEL = '진행 안 됨';
 const isMissed = (meeting: FolderMeeting) =>
   meeting.status === 'scheduled' && meeting.endAt !== undefined && new Date(meeting.endAt).getTime() < Date.now();
 

@@ -127,7 +127,7 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
         </p>
         <p className={styles.metaRow}>
           <span className={[styles.kind, template.isDefault || isReadOnly ? styles.kindDefault : ''].filter(Boolean).join(' ')}>
-            {template.isDefault ? '기본 양식' : template.shared ? '공유 양식' : '내 양식'}
+            {template.isDefault ? '기본 양식' : template.workspaceId ? '워크스페이스 양식' : template.shared ? '공유 양식' : '내 양식'}
           </span>
           <span className={styles.meta}>
             {template.isDefault ? '기본 제공' : template.shared ? '워크스페이스 기본 양식' : modifiedLabel(template)}

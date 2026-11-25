@@ -1,35 +1,42 @@
 import { useEffect, useState } from 'react';
-import { listMinutesTemplates } from '../../api/minutes';
-// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 회의록 기본 양식 고르기 창
-// import { shareTemplateToWorkspace } from '../../api/minutes';
-// import { changeDefaultTemplate } from '../../api/workspace';
-// import Button from '../../components/Button';
-// import Dialog from '../../components/Dialog';
+import { listMinutesTemplates, setTemplateFavorite, setWorkspaceDefaultTemplate } from '../../api/minutes';
 import type { MinutesTemplate } from '../../types/template';
+import DefaultTemplateModal from './DefaultTemplateModal';
 import styles from './DefaultTemplateCard.module.css';
 
 // minutes-service가 처음부터 넣어 둔 서비스 기본 양식 (V5 마이그레이션)
 const SERVICE_DEFAULT_TEMPLATE_ID = 1;
+
+export type DefaultTemplateModalMode = 'change' | 'setup';
 
 interface DefaultTemplateCardProps {
   workspaceId: number;
   /** null이면 서비스 기본 양식 */
   templateId: number | null;
   isOwner: boolean;
-  onChanged: (templateId: number | null) => void;
+  /** 열린 기본 양식 창 (시작하기 바에서도 연다). null이면 닫힘 */
+  modalMode: DefaultTemplateModalMode | null;
+  onModalModeChange: (mode: DefaultTemplateModalMode | null) => void;
+  /** 정한 양식 id와 이름 (토스트 MSG-128) */
+  onChanged: (templateId: number, name: string) => void;
   onError: (error: unknown) => void;
 }
 
 /**
- * REQ-199 워크스페이스 회의록 기본 양식: 이름과 [변경] (워크스페이스 소유자만).
- * 새 회의를 만들면 이 양식이 먼저 골라지고, 회의마다 대기 화면에서 바꿀 수 있다
+ * REQ-199 워크스페이스 회의록 기본 양식: 이름과 [변경].
+ * 소유자가 아니면 [변경]은 비활성이고 마우스를 올리면 툴팁 (피그마 11/24, MSG-129)
  */
-// workspaceId, isOwner, onChanged, onError는 아래 레거시 창에서만 쓴다
-export default function DefaultTemplateCard({ templateId }: DefaultTemplateCardProps) {
+export default function DefaultTemplateCard({
+  workspaceId,
+  templateId,
+  isOwner,
+  modalMode,
+  onModalModeChange,
+  onChanged,
+  onError,
+}: DefaultTemplateCardProps) {
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
-  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 회의록 기본 양식 고르기 창
-  // const [picked, setPicked] = useState<number | null>(null);
-  // const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const currentId = templateId ?? SERVICE_DEFAULT_TEMPLATE_ID;
 
   useEffect(() => {
@@ -45,78 +52,72 @@ export default function DefaultTemplateCard({ templateId }: DefaultTemplateCardP
   // 다른 멤버의 개인 양식은 목록에 없어 이름을 모른다
   const name = templates.find((template) => template.templateId === currentId)?.name ?? '워크스페이스 지정 양식';
 
-  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 회의록 기본 양식 고르기 창
-//   const save = async () => {
-//     if (picked === null) {
-//       return;
-//     }
-//     setIsSaving(true);
-//     const next = picked === SERVICE_DEFAULT_TEMPLATE_ID ? null : picked;
-//     const isMine = (id: number | null) => id !== null && templates.some((template) => template.templateId === id && !template.isDefault && !template.shared);
-//     try {
-//       // REQ-199 (2026-11-17): 내 양식을 기본 양식으로 정하면 이 워크스페이스 멤버 모두 쓰게 공유하고, 바꾸면 예전 공유를 거둔다
-//       if (isMine(next) && next !== null) {
-//         await shareTemplateToWorkspace(next, workspaceId, true);
-//       }
-//       await changeDefaultTemplate(workspaceId, next);
-//       if (templateId !== null && templateId !== next && isMine(templateId)) {
-//         await shareTemplateToWorkspace(templateId, workspaceId, false).catch(() => undefined);
-//       }
-//       onChanged(next);
-//       setPicked(null);
-//     } catch (error) {
-//       onError(error);
-//     } finally {
-//       setIsSaving(false);
-//     }
-//   };
+  const save = async (picked: number) => {
+    setIsSaving(true);
+    try {
+      // REQ-213 워크스페이스 양식함: 고른 양식을 워크스페이스 사본으로 만들고 그 사본을 기본 양식으로 정한다 (서버가 한 번에).
+      // 서비스 기본 양식을 골라도 사본을 만들어 정하므로 시작하기 바의 "기본 양식 정하기"가 끝난 것으로 보인다 (피그마 11/24)
+      const copy = await setWorkspaceDefaultTemplate(workspaceId, picked);
+      // 이 워크스페이스의 예전 사본은 목록에서 빼고 새 사본을 넣는다
+      setTemplates((prev) => [...prev.filter((template) => template.workspaceId !== workspaceId), copy]);
+      onChanged(copy.templateId, copy.name);
+      onModalModeChange(null);
+    } catch (error) {
+      onError(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // REQ-123 즐겨찾기는 나만 보는 표시. 실패하면 되돌린다
+  const toggleFavorite = async (id: number) => {
+    const target = templates.find((template) => template.templateId === id);
+    if (!target) {
+      return;
+    }
+    const flip = (favorite: boolean) =>
+      setTemplates((prev) => prev.map((template) => (template.templateId === id ? { ...template, favorite } : template)));
+    flip(!target.favorite);
+    try {
+      await setTemplateFavorite(id, !target.favorite);
+    } catch (error) {
+      flip(target.favorite);
+      onError(error);
+    }
+  };
 
   return (
     // 피그마 Page 8 SummaryBar의 DefaultTemplate: "기본 양식 {이름} [변경]"
     <span className={styles.inline}>
       <span className={styles.label}>기본 양식</span>
       <span className={styles.name}>{name}</span>
-      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 회의록 기본 양식 고르기 창
-      {isOwner && (
-        <button id="default-template-change" type="button" className={styles.change} onClick={() => setPicked(currentId)}>
+      {isOwner ? (
+        <button type="button" className={styles.change} onClick={() => onModalModeChange('change')}>
           변경
         </button>
+      ) : (
+        // 비활성 버튼은 마우스 이벤트가 없어 감싼 칸에 툴팁을 단다 (MSG-129)
+        <span className={styles.tooltipAnchor}>
+          <button type="button" className={styles.change} disabled aria-describedby="default-template-owner-only">
+            변경
+          </button>
+          <span id="default-template-owner-only" role="tooltip" className={styles.tooltip}>
+            기본 양식은 워크스페이스 소유자만 바꿀 수 있어요
+          </span>
+        </span>
       )}
-      {picked !== null && (
-        <Dialog
-          title="회의록 기본 양식"
-          description="새 회의를 만들면 이 양식이 먼저 골라져요. 회의마다 바꿀 수 있어요."
-          width="md"
-          onClose={() => setPicked(null)}
-          footer={
-            <>
-              <Button type="button" variant="secondary" size="md" onClick={() => setPicked(null)}>
-                취소
-              </Button>
-              <Button type="button" variant="primary" size="md" isLoading={isSaving} disabled={isSaving} onClick={() => void save()}>
-                저장
-              </Button>
-            </>
-          }
-        >
-          <ul className={styles.options} role="radiogroup" aria-label="회의록 양식">
-            {templates.map((template) => (
-              <li key={template.templateId}>
-                <label className={styles.option}>
-                  <input
-                    type="radio"
-                    name="default-template"
-                    checked={picked === template.templateId}
-                    onChange={() => setPicked(template.templateId)}
-                  />
-                  {template.name}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </Dialog>
+      {modalMode && templates.length > 0 && (
+        <DefaultTemplateModal
+          // 다른 워크스페이스의 양식함 사본은 이 워크스페이스에서 고를 수 없다
+          templates={templates.filter((template) => !template.workspaceId || template.workspaceId === workspaceId)}
+          currentId={currentId}
+          mode={modalMode}
+          isSaving={isSaving}
+          onToggleFavorite={(id) => void toggleFavorite(id)}
+          onSubmit={(picked) => void save(picked)}
+          onClose={() => onModalModeChange(null)}
+        />
       )}
-      */}
     </span>
   );
 }

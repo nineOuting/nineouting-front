@@ -2,8 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { listAllFolders, listMyWorkspaces } from '../api/workspace';
 import { onSignOut } from '../auth/tokenStore';
-// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
-// import addIcon from '../assets/icons/add.svg';
+import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/nav-archive.svg';
 import collapseFolderIcon from '../assets/icons/nav-collapse.svg';
 import expandFolderIcon from '../assets/icons/nav-expand.svg';
@@ -14,8 +13,7 @@ import collapseIcon from '../assets/icons/sidebar-collapse.svg';
 import templateIcon from '../assets/icons/nav-template.svg';
 import workspaceIcon from '../assets/icons/nav-workspace.svg';
 import { useSettingsModal } from '../pages/settings/useSettingsModal';
-// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
-// import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
+import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
 import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
 import { folderIconColor } from '../utils/folderColor';
@@ -84,8 +82,7 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
     workspaceId && !sidebarCache.expandedIds.includes(workspaceId) ? [...sidebarCache.expandedIds, workspaceId] : sidebarCache.expandedIds,
   );
   const [folders, setFolders] = useState<Record<number, FolderItem[]>>(() => sidebarCache.folders);
-  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
-  // const [isCreating, setIsCreating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -183,12 +180,11 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
               </div>
             );
           })}
-          {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+          {/* 새 워크스페이스 만들기 (REQ-031): 피그마 사이드바에 [새 워크스페이스]가 있어 다시 연다 (2026-11-25 사용자 요청) */}
           <button type="button" className={`${styles.item} ${styles.secondary}`} onClick={() => setIsCreating(true)}>
             <MenuIcon src={addIcon} />
             <span className={styles.text}>새 워크스페이스</span>
           </button>
-          */}
           <MenuLink
             to={currentWorkspaceId === undefined ? undefined : `/workspaces/${currentWorkspaceId}/archive`}
             icon={archiveIcon}
@@ -207,9 +203,8 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
           <span className={styles.text}>설정</span>
         </button>
       </div>
-      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+      {/* 새 워크스페이스 만들기 (REQ-031): 피그마 사이드바에 [새 워크스페이스]가 있어 다시 연다 (2026-11-25 사용자 요청) */}
       {isCreating && <CreateWorkspaceModal onClose={() => setIsCreating(false)} />}
-      */}
     </nav>
   );
 }

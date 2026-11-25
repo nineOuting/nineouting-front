@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
-// 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
-// import addIcon from '../../assets/icons/menu-add.svg';
-import settingsIcon from '../../assets/icons/menu-settings.svg';
+import addIcon from '../../assets/icons/menu-add.svg';
+// 레거시 (2026-11-25, 피그마 "워크스페이스 바꾸기" 메뉴 아래는 [새 워크스페이스 만들기]. 설정은 ⋮ 메뉴에서 연다)
+// import settingsIcon from '../../assets/icons/menu-settings.svg';
 import workspaceIcon from '../../assets/icons/menu-workspace.svg';
 import Icon from '../../components/Icon';
 import menu from '../../components/Menu.module.css';
@@ -15,10 +15,8 @@ interface WorkspaceSwitcherProps {
   currentId: number;
   anchorRef: RefObject<HTMLElement | null>;
   onSelect: (workspaceId: number) => void;
-  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
-  // onCreate: () => void;
-  /** 워크스페이스 설정 (소유자만. 없으면 메뉴를 숨긴다) */
-  onSettings?: () => void;
+  /** REQ-031 새 워크스페이스 만들기 창 */
+  onCreate: () => void;
   onClose: () => void;
 }
 
@@ -28,9 +26,7 @@ export default function WorkspaceSwitcher({
   currentId,
   anchorRef,
   onSelect,
-  // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
-  // onCreate,
-  onSettings,
+  onCreate,
   onClose,
 }: WorkspaceSwitcherProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -76,17 +72,17 @@ export default function WorkspaceSwitcher({
         })}
       </ul>
       <div className={menu.divider} />
+      {/* 레거시 (2026-11-25, 피그마 "워크스페이스 바꾸기" 메뉴 아래는 [새 워크스페이스 만들기]. 설정은 ⋮ 메뉴에서 연다)
       {onSettings && (
         <button type="button" className={menu.item} onClick={onSettings}>
           <Icon src={settingsIcon} size={ICON_SIZE} className={menu.itemIcon} />
           워크스페이스 설정
         </button>
       )}
-      {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
+      */}
       <button type="button" className={menu.item} onClick={onCreate}>
         <Icon src={addIcon} size={ICON_SIZE} className={menu.itemIcon} />새 워크스페이스 만들기
       </button>
-      */}
     </div>
   );
 }

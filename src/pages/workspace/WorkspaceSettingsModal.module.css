@@ -1,4 +1,31 @@
-/* 디자인 DangerZone */
+/* 피그마 11/24 OwnershipRow: 위아래 선 사이에 소유권 안내와 [소유권 양도] */
+.ownership {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-content);
+  padding: var(--spacing-4) 0;
+  border-top: var(--border-width-default) solid var(--border-default);
+  border-bottom: var(--border-width-default) solid var(--border-default);
+}
+
+/* 디자인 SecondaryButton sm */
+.transferButton {
+  flex-shrink: 0;
+  height: var(--button-sm-height);
+  padding: 0 var(--spacing-4);
+  background: var(--secondary-default);
+  border-radius: var(--radius-sm);
+  font-size: var(--button-sm-font-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-caption);
+  color: var(--text-on-secondary);
+}
+
+.transferButton:hover {
+  background: var(--secondary-hover);
+}
+
+/* 레거시 (2026-11-25): 디자인 DangerZone. 피그마 11/24 설정 창에서 빠졌다 */
 .zone {
   display: flex;
   flex-direction: column;

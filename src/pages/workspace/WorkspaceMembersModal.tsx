@@ -6,22 +6,21 @@ import {
   resendInvitation,
   type PendingInvitation,
 } from '../../api/workspace';
+import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
-import copyIcon from '../../assets/icons/copy.svg';
-import deleteIcon from '../../assets/icons/delete.svg';
-import moreIcon from '../../assets/icons/more-vert.svg';
 import Icon from '../../components/Icon';
+import TextField from '../../components/TextField';
 import { EMAIL_REGEX, MESSAGES } from '../../constants/auth';
 import type { FolderAccess, WorkspaceMember } from '../../types/workspace';
-import ActionMenu from './ActionMenu';
 import MembersModal, { MemberIdentity } from './MembersModal';
-import TransferOwnerDialog from './TransferOwnerDialog';
 import styles from './MembersModal.module.css';
 
 const ICON_SIZE = 16;
-const MORE_ICON_SIZE = 20;
+// 권한 칩 메뉴의 [워크스페이스에서 내보내기] (REQ-036)
+const REMOVE_ID = 'remove';
+const DATE_FORMAT = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric' });
 
 const ACCESS_LABELS: Record<FolderAccess, string> = {
   all: '모든 폴더 접근 가능',
@@ -36,17 +35,19 @@ interface WorkspaceMembersModalProps {
   myUserId?: number | null;
   /** 실패하면 던진다. 메시지를 입력 칸 아래에 보여 준다 */
   onInvite: (email: string) => Promise<void>;
-  /** REQ-034 초대 링크를 새로 받아 복사한다 */
-  onCopyInviteLink: () => void;
+  /** REQ-034 초대 링크를 새로 받아 복사한다. 받은 링크를 돌려준다 (실패하면 undefined) */
+  onCopyInviteLink: () => Promise<string | undefined>;
   onAccessChange: (userId: number, access: FolderAccess) => void;
   onRemove: (userId: number) => void;
-  /** REQ-129 소유권 양도. 실패하면 던진다 */
-  onTransfer: (userId: number) => Promise<void>;
   onNotice: (text: string) => void;
   onClose: () => void;
 }
 
-/** REQ-033, 034, 036, 127~129 워크스페이스 멤버 권한 관리. 이메일 초대와 초대 링크 복사 */
+/**
+ * REQ-033, 034, 036, 127, 128 워크스페이스 멤버 관리 (피그마 03 워크스페이스 MemberManageModal, 11/24).
+ * 소유자: 이메일 초대, 초대 링크 복사, 초대 대기, 권한 칩(내보내기 포함). 소유자가 아니면 보기 전용.
+ * 소유권 양도는 설정 창에서 한다 (REQ-129)
+ */
 export default function WorkspaceMembersModal({
   workspaceId,
   members,
@@ -56,11 +57,11 @@ export default function WorkspaceMembersModal({
   onCopyInviteLink,
   onAccessChange,
   onRemove,
-  onTransfer,
   onNotice,
   onClose,
 }: WorkspaceMembersModalProps) {
-  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  // 마지막으로 복사한 초대 링크 (링크 칸에 보여 준다). 창을 열 때마다 새로 만들면 이전 링크가 막혀 누를 때만 만든다
+  const [inviteLink, setInviteLink] = useState('');
   // MSG-097 내보낼 멤버 (확인 창)
   const [removing, setRemoving] = useState<WorkspaceMember>();
   const [email, setEmail] = useState('');
@@ -127,7 +128,7 @@ export default function WorkspaceMembersModal({
 
   return (
     <MembersModal
-      description="워크스페이스에 참여할 멤버와 접근 권한을 관리할 수 있어요"
+      description={canManage ? '워크스페이스에 참여할 멤버와 접근 권한을 관리할 수 있어요' : '워크스페이스 멤버와 접근 권한을 볼 수 있어요'}
       help={
         <>
           <p className={styles.helpTitle}>권한 안내</p>
@@ -144,25 +145,77 @@ export default function WorkspaceMembersModal({
         setEmailError(undefined);
       }}
       onAdd={invite}
+      afterAdd={
+        // 피그마 InviteLinkRow: 링크 칸 + [링크 복사], 아래 안내
+        <div className={styles.linkRow}>
+          <div className={styles.linkField}>
+            <TextField
+              aria-label="초대 링크"
+              readOnly
+              value={inviteLink}
+              placeholder="[링크 복사]를 누르면 초대 링크를 만들어요"
+              helper="링크는 1일 동안 쓸 수 있어요. 새로 만들면 이전 링크는 막혀요"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            onClick={() => void onCopyInviteLink().then((url) => url && setInviteLink(url.replace(/^https?:\/\//, '')))}
+          >
+            링크 복사
+          </Button>
+        </div>
+      }
       canManage={canManage}
-      ownershipLabel="워크스페이스 소유권 관리"
-      onTransferOwnership={() => setIsTransferOpen(true)}
+      canTransfer={false}
+      ownershipLabel=""
+      onTransferOwnership={() => undefined}
       onClose={onClose}
     >
-      {canManage && (
-        // 디자인 CreateWorkspaceModal의 초대 링크 줄과 같은 모양
-        <div className={styles.footer}>
-          <span>초대 링크로도 멤버를 부를 수 있어요 (1일 동안 쓸 수 있어요)</span>
-          <button type="button" className={styles.transfer} onClick={onCopyInviteLink}>
-            <Icon src={copyIcon} size={ICON_SIZE} />
-            초대 링크 복사
-          </button>
-        </div>
+      {canManage && pending && pending.length > 0 && (
+        // REQ-164 이메일로 초대했지만 아직 수락하지 않은 사람 (피그마: 참여 중인 멤버 위, 제목 없이)
+        <ul className={styles.list} aria-label="초대 대기">
+          {pending.map((invitation) => (
+            <li key={invitation.invitationId} className={styles.row}>
+              <span className={styles.identity}>
+                <span className={styles.avatar} aria-hidden="true" />
+                <span className={styles.identityText}>
+                  <span className={styles.memberName}>{invitation.email}</span>
+                  <span className={styles.memberEmail}>
+                    {invitation.expired ? '초대 링크가 만료됐어요' : `${DATE_FORMAT.format(new Date(invitation.invitedAt))} 초대함`}
+                  </span>
+                </span>
+              </span>
+              <span className={styles.pendingActions}>
+                <span className={invitation.expired ? styles.expiredBadge : styles.pendingBadge}>
+                  {invitation.expired ? '만료' : '초대 대기'}
+                </span>
+                <button
+                  type="button"
+                  className={styles.textButton}
+                  disabled={busyInvitationId === invitation.invitationId}
+                  onClick={() => void handlePending(invitation, 'resend')}
+                >
+                  다시 보내기
+                </button>
+                <button
+                  type="button"
+                  className={styles.textButton}
+                  disabled={busyInvitationId === invitation.invitationId}
+                  onClick={() => void handlePending(invitation, 'cancel')}
+                >
+                  취소
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
       <section className={styles.section} aria-labelledby="workspace-members-title">
         <div className={styles.sectionHead}>
           <h3 id="workspace-members-title" className={styles.sectionTitle}>
-            참여중인 멤버
+            참여 중인 멤버
           </h3>
           <span className={styles.count}>총 {members.length}명</span>
         </div>
@@ -179,54 +232,10 @@ export default function WorkspaceMembersModal({
           ))}
         </ul>
       </section>
-      {canManage && pending && pending.length > 0 && (
-        // REQ-164 이메일로 초대했지만 아직 수락하지 않은 사람
-        <section className={styles.section} aria-labelledby="workspace-pending-title">
-          <div className={styles.sectionHead}>
-            <h3 id="workspace-pending-title" className={styles.sectionTitle}>
-              초대 대기
-            </h3>
-            <span className={styles.count}>총 {pending.length}명</span>
-          </div>
-          <ul className={styles.list}>
-            {pending.map((invitation) => (
-              <li key={invitation.invitationId} className={styles.row}>
-                <span className={styles.identityText}>
-                  <span className={styles.memberName}>{invitation.email}</span>
-                  <span className={styles.memberEmail}>
-                    {invitation.expired ? '초대 링크가 만료됐어요' : '메일 속 링크로 수락하기를 기다리고 있어요'}
-                  </span>
-                </span>
-                <span className={styles.pendingActions}>
-                  <span className={invitation.expired ? styles.expiredBadge : styles.pendingBadge}>
-                    {invitation.expired ? '만료' : '초대 대기'}
-                  </span>
-                  <button
-                    type="button"
-                    className={styles.textButton}
-                    disabled={busyInvitationId === invitation.invitationId}
-                    onClick={() => void handlePending(invitation, 'resend')}
-                  >
-                    다시 보내기
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.textButton} ${styles.danger}`}
-                    disabled={busyInvitationId === invitation.invitationId}
-                    onClick={() => void handlePending(invitation, 'cancel')}
-                  >
-                    취소
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
       {removing && (
         <ConfirmDialog
           title={`${removing.name} 님을 워크스페이스에서 내보낼까요?`}
-          message="내보내면 이 워크스페이스의 폴더와 회의록을 볼 수 없어요. 다시 들어오려면 초대를 받아야 해요."
+          message="내보내면 이 워크스페이스의 폴더와 회의록을 볼 수 없어요. 다시 들어오려면 초대를 받아야 해요"
           cancelLabel="취소"
           confirmLabel="내보내기"
           isDanger
@@ -235,16 +244,6 @@ export default function WorkspaceMembersModal({
             onRemove(removing.userId);
             setRemoving(undefined);
           }}
-        />
-      )}
-      {isTransferOpen && (
-        <TransferOwnerDialog
-          candidates={members.filter(({ isOwner }) => !isOwner)}
-          onTransfer={async (userId) => {
-            await onTransfer(userId);
-            setIsTransferOpen(false);
-          }}
-          onClose={() => setIsTransferOpen(false)}
         />
       )}
     </MembersModal>
@@ -260,11 +259,9 @@ interface MemberRowProps {
 }
 
 function MemberRow({ member, canManage, isMe, onAccessChange, onRemove }: MemberRowProps) {
-  const [openMenu, setOpenMenu] = useState<'more' | 'access' | null>(null);
-  const moreRef = useRef<HTMLButtonElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const accessRef = useRef<HTMLButtonElement>(null);
-  const closeMenu = () => setOpenMenu(null);
-  const toggle = (menu: 'more' | 'access') => setOpenMenu((current) => (current === menu ? null : menu));
+  const closeMenu = () => setIsMenuOpen(false);
 
   if (member.isOwner) {
     return (
@@ -277,36 +274,9 @@ function MemberRow({ member, canManage, isMe, onAccessChange, onRemove }: Member
 
   return (
     <li className={styles.row}>
-      <span className={styles.rowLead}>
-        {canManage && (
-          <span className={styles.anchor}>
-            <button
-              ref={moreRef}
-              type="button"
-              className={styles.iconButton}
-              aria-label={`${member.name} 더보기`}
-              aria-haspopup="menu"
-              aria-expanded={openMenu === 'more'}
-              onClick={() => toggle('more')}
-            >
-              <Icon src={moreIcon} size={MORE_ICON_SIZE} />
-            </button>
-            {openMenu === 'more' && (
-              <ActionMenu
-                label={`${member.name} 메뉴`}
-                anchorRef={moreRef}
-                className={styles.rowMenu}
-                // REQ-036 워크스페이스에서 내보내기 (확인 창 MSG-097)
-                items={[{ label: '워크스페이스에서 내보내기', icon: deleteIcon, isDanger: true, onSelect: onRemove }]}
-                onClose={closeMenu}
-              />
-            )}
-          </span>
-        )}
-        <MemberIdentity member={member} email={member.email} />
-      </span>
-      {/* 디자인 체크 2026-11-19: 내 줄은 버튼 없이 글자만, 관리할 수 없으면 흐린 버튼 */}
-      {isMe ? (
+      <MemberIdentity member={member} email={member.email} />
+      {/* 피그마 11/24: 소유자가 아니면(보기 전용) 화살표 없는 회색 글자. 내 줄도 글자만 (디자인 체크 2026-11-19) */}
+      {!canManage || isMe ? (
         <span className={styles.accessText}>{ACCESS_LABELS[member.folderAccess]}</span>
       ) : (
         <span className={styles.anchor}>
@@ -316,27 +286,34 @@ function MemberRow({ member, canManage, isMe, onAccessChange, onRemove }: Member
             className={styles.accessButton}
             aria-label={`${member.name} 폴더 접근 권한: ${ACCESS_LABELS[member.folderAccess]}`}
             aria-haspopup="listbox"
-            aria-expanded={openMenu === 'access'}
-            disabled={!canManage}
-            onClick={() => toggle('access')}
+            aria-expanded={isMenuOpen}
+            onClick={() => setIsMenuOpen((open) => !open)}
           >
             {ACCESS_LABELS[member.folderAccess]}
-            {canManage && <Icon src={chevronIcon} size={ICON_SIZE} className={openMenu === 'access' ? undefined : styles.flipped} />}
+            <Icon src={chevronIcon} size={ICON_SIZE} className={isMenuOpen ? undefined : styles.flipped} />
           </button>
-          {openMenu === 'access' && (
+          {isMenuOpen && (
+            // 피그마 "멤버 권한 칩 메뉴": 권한 2개 + 맨 아래 빨간 [워크스페이스에서 내보내기] (REQ-036, 128)
             <DropdownMenu
               label="폴더 접근 권한"
               emptyText=""
               anchorRef={accessRef}
               className={styles.accessMenu}
-              items={(Object.keys(ACCESS_LABELS) as FolderAccess[]).map((access) => ({
-                id: access,
-                label: ACCESS_LABELS[access],
-                isSelected: access === member.folderAccess,
-              }))}
+              items={[
+                ...(Object.keys(ACCESS_LABELS) as FolderAccess[]).map((access) => ({
+                  id: access,
+                  label: ACCESS_LABELS[access],
+                  isSelected: access === member.folderAccess,
+                })),
+                { id: REMOVE_ID, label: '워크스페이스에서 내보내기', isDanger: true, hasDividerBefore: true },
+              ]}
               onSelect={(id) => {
-                onAccessChange(id as FolderAccess);
                 closeMenu();
+                if (id === REMOVE_ID) {
+                  onRemove();
+                } else if (id !== member.folderAccess) {
+                  onAccessChange(id as FolderAccess);
+                }
               }}
               onClose={closeMenu}
             />
@@ -346,4 +323,3 @@ function MemberRow({ member, canManage, isMe, onAccessChange, onRemove }: Member
     </li>
   );
 }
-

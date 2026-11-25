@@ -123,8 +123,8 @@
 }
 
 .missed {
-  background: var(--bg-surface-muted);
-  color: var(--text-disabled);
+  background: var(--warning-subtle);
+  color: var(--warning-default);
 }
 
 .inProgress {

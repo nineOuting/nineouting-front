@@ -11,7 +11,8 @@ const DUPLICATE_MESSAGE = '같은 이름의 폴더가 이미 있어요. 다른 �
 
 interface FolderNameModalProps {
   title: string;
-  description: string;
+  /** 없으면 제목만 (피그마 "폴더 이름 바꾸기") */
+  description?: string;
   submitLabel: string;
   initialName?: string;
   /** 입력 칸 이름. 워크스페이스 만들기(REQ-031)에도 이 창을 쓴다 */
@@ -79,7 +80,8 @@ export default function FolderNameModal({
               취소
             </Button>
             {/* REQ-040 레거시 (2026-11-22, 피그마 프론트는 입력 전에도 버튼이 활성이고 누르면 칸 아래 오류): disabled={!name.trim() || isSubmitting} */}
-            <Button isLoading={isSubmitting} type="submit" size="md" disabled={isSubmitting}>
+            {/* 피그마 "폴더 이름 겹침": 칸 아래 오류가 있으면 고치기 전까지 비활성 */}
+            <Button isLoading={isSubmitting} type="submit" size="md" disabled={isSubmitting || Boolean(error)}>
               {submitLabel}
             </Button>
           </>

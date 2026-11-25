@@ -15,22 +15,24 @@ interface WorkspaceSettingsModalProps {
   isOwner: boolean;
   /** REQ-163 이름, 설명 저장. 실패하면 던진다 (창 안에 오류를 보인다) */
   onSave: (name: string, description: string) => Promise<void>;
-  onLeave: () => void;
-  onDelete: () => void;
+  /** REQ-129 [소유권 양도] → 소유권 넘길 멤버 고르기 (피그마 11/24) */
+  onTransfer: () => void;
+  // 레거시 (2026-11-25, 피그마 11/24 설정 창에 나가기, 삭제 칸이 없다. ⋮ 메뉴에서 한다)
+  onLeave?: () => void;
+  onDelete?: () => void;
   onClose: () => void;
 }
 
 /**
- * 워크스페이스 설정 (디자인 WorkspaceSettingsModal).
- * REQ-163 이름, 설명 수정(소유자만), 나가기(REQ-032), 삭제(REQ-138, 소유자만)
+ * 워크스페이스 설정 (피그마 03 워크스페이스 WorkspaceSettingsModal).
+ * REQ-163 이름, 설명 수정(소유자만), REQ-129 소유권 양도. 나가기(REQ-032), 삭제(REQ-138)는 ⋮ 메뉴에서 한다
  */
 export default function WorkspaceSettingsModal({
   name,
   description,
   isOwner,
   onSave,
-  onLeave,
-  onDelete,
+  onTransfer,
   onClose,
 }: WorkspaceSettingsModalProps) {
   const [draft, setDraft] = useState(name);
@@ -71,7 +73,7 @@ export default function WorkspaceSettingsModal({
     <>
       <Dialog
         title="워크스페이스 설정"
-        description={isOwner ? '이름과 설명을 바꾸거나 워크스페이스를 나가고 삭제할 수 있어요.' : '워크스페이스를 나갈 수 있어요.'}
+        description={isOwner ? '이름과 설명을 바꾸거나, 소유권을 다른 멤버에게 넘길 수 있어요.' : '워크스페이스를 나갈 수 있어요.'}
         width="md"
         onClose={requestClose}
         onSubmit={save}
@@ -96,6 +98,7 @@ export default function WorkspaceSettingsModal({
       >
         <TextField
           label="워크스페이스 이름"
+          required={isOwner}
           value={draft}
           maxLength={MAX_NAME_LENGTH}
           disabled={!isOwner || isSaving}
@@ -106,7 +109,7 @@ export default function WorkspaceSettingsModal({
           onChange={(event) => setDraft(event.target.value)}
         />
         <TextField
-          label="설명"
+          label="설명 (선택)"
           value={descriptionDraft}
           maxLength={MAX_DESCRIPTION_LENGTH}
           disabled={!isOwner || isSaving}
@@ -115,6 +118,19 @@ export default function WorkspaceSettingsModal({
           // helper={isOwner ? `${descriptionDraft.length} / ${MAX_DESCRIPTION_LENGTH}` : undefined}
           onChange={(event) => setDescriptionDraft(event.target.value)}
         />
+        {isOwner && (
+          // 피그마 11/24 OwnershipRow: 소유권 넘기기는 설정 창에서 시작한다
+          <div className={styles.ownership}>
+            <div className={styles.texts}>
+              <p className={styles.zoneTitle}>워크스페이스 소유권</p>
+              <p className={styles.zoneDescription}>넘기면 나는 일반 멤버가 되고, 설정은 새 소유자가 관리해요</p>
+            </div>
+            <button type="button" className={styles.transferButton} onClick={onTransfer}>
+              소유권 양도
+            </button>
+          </div>
+        )}
+        {/* 레거시 (2026-11-25, 피그마 11/24 설정 창에 나가기, 삭제 칸이 없다. ⋮ 메뉴에서 한다)
         <div className={styles.zone}>
           <div className={styles.zoneRow}>
             <div className={styles.texts}>
@@ -140,6 +156,7 @@ export default function WorkspaceSettingsModal({
             </>
           )}
         </div>
+        */}
       </Dialog>
       {confirmElement}
     </>
