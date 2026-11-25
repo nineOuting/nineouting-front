@@ -57,8 +57,10 @@ export interface MinutesTemplate {
   name: string;
   description: string;
   isDefault: boolean;
-  /** REQ-199 다른 사람의 양식이 내 워크스페이스 기본 양식으로 공유된 것. 쓸 수만 있고 고칠 수 없다 */
+  /** REQ-199 다른 사람의 양식이 내 워크스페이스 기본 양식으로 공유된 것이나 워크스페이스 양식함 사본. 쓸 수만 있고 고칠 수 없다 */
   shared?: boolean;
+  /** REQ-213 워크스페이스 양식함 사본이면 그 워크스페이스 (워크스페이스 기본 양식) */
+  workspaceId?: number | null;
   items: TemplateItem[];
   layout: TemplateLayout;
   /** REQ-123 내가 즐겨찾기했는지 */

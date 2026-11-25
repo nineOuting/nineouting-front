@@ -250,6 +250,16 @@ export async function listMinutesTemplates() {
 
 type TemplateRequest = Pick<MinutesTemplate, 'name' | 'description' | 'items' | 'layout'>;
 
+/**
+ * REQ-213 워크스페이스 기본 양식 정하기 (워크스페이스 소유자). 고른 양식을 워크스페이스 사본으로 만들어 기본 양식으로 정하고 그 사본을 돌려준다.
+ * 원본을 고치거나 지워도 워크스페이스 기본 양식은 그대로다
+ */
+export async function setWorkspaceDefaultTemplate(workspaceId: number, templateId: number) {
+  return toTemplate(
+    await request<TemplateResponse>('PUT', `/api/minutes-templates/workspaces/${workspaceId}/default`, { templateId }),
+  );
+}
+
 /** REQ-123 양식 즐겨찾기 등록·해제 (나만 보는 표시) */
 export function setTemplateFavorite(templateId: number, favorite: boolean) {
   return request(favorite ? 'PUT' : 'DELETE', `/api/minutes-templates/${templateId}/favorite`);
