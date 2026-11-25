@@ -2,6 +2,7 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 import emptyCharacter from '../../../assets/characters/empty.svg';
 import type { DecisionStatusEdit } from '../../../api/meeting';
 import addIcon from '../../../assets/icons/add-sm.svg';
+import aiIcon from '../../../assets/icons/ai-summary.svg';
 import checkIcon from '../../../assets/icons/check.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import evidenceIcon from '../../../assets/icons/evidence.svg';
@@ -146,7 +147,8 @@ function DecisionCard({
       : { label: '결정으로 확정하기', icon: checkIcon, onSelect: () => onChangeStatus('DECIDED') },
     { label: '결정 내용 수정하기', icon: editIcon, onSelect: () => setDraft(decision.summary ?? '') },
     { label: '근거 발언 보기', icon: evidenceIcon, onSelect: onSelect },
-    ...(decision.statusEdited ? [{ label: 'AI 판정으로 되돌리기', icon: refreshIcon, onSelect: () => onChangeStatus('AUTO') }] : []),
+    // 디자인 07 상태 모음 11/25 (MSG-131): 직접 정한 결정에만 [AI에게 다시 맡기기]. 누르면 AI가 다시 판단한다
+    ...(decision.statusEdited ? [{ label: 'AI에게 다시 맡기기', icon: aiIcon, onSelect: () => onChangeStatus('AUTO') }] : []),
   ];
 
   return (
