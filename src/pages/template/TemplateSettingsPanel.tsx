@@ -36,9 +36,9 @@ const TITLE_SIZES = [
   { value: 18, label: '크게 (18px)' },
   { value: 20, label: '아주 크게 (20px)' },
 ];
+// 디자인 09 "본문 크기 고르기" (11/25)
 const BODY_SIZES = [
-  { value: 12, label: '작게 (12px)' },
-  { value: 14, label: '보통 (14px)' },
+  { value: 14, label: '작게 (14px)' },
   { value: 16, label: '중간 (16px)' },
   { value: 18, label: '크게 (18px)' },
 ];
@@ -47,10 +47,11 @@ const MARGINS = [
   { value: 16, label: '보통 (16px)' },
   { value: 24, label: '넓게 (24px)' },
 ];
+// 디자인 09 "섹션 간격 고르기" (11/25)
 const SECTION_GAPS = [
-  { value: 10, label: '좁게(10px)' },
-  { value: 16, label: '보통(16px)' },
-  { value: 24, label: '넓게(24px)' },
+  { value: 10, label: '좁게 (10px)' },
+  { value: 20, label: '보통 (20px)' },
+  { value: 32, label: '넓게 (32px)' },
 ];
 const BORDERS: { value: TableBorder; label: string }[] = [
   { value: 'BASIC', label: '기본' },
@@ -185,6 +186,11 @@ function Select<T extends string | number>({
       )}
     </span>
   );
+}
+
+/** 예전 목록으로 저장된 값(본문 12px, 섹션 간격 16·24px 등)은 목록 끝에 붙여 그대로 보이게 한다 */
+function withSaved(options: { value: number; label: string }[], current: number) {
+  return options.some(({ value }) => value === current) ? options : [...options, { value: current, label: `${current}px` }];
 }
 
 /** 1~max 숫자 목록 (지금 값이 범위를 넘으면 그 값도 넣는다: 예전에 저장한 양식) */
@@ -429,7 +435,7 @@ export default function TemplateSettingsPanel({
               <Select label="제목 크기" value={item.settings.titleSize} options={TITLE_SIZES} onChange={(titleSize) => setSettings({ titleSize })} />
             </Row>
             <Row label="본문 크기">
-              <Select label="본문 크기" value={item.settings.bodySize} options={BODY_SIZES} onChange={(bodySize) => setSettings({ bodySize })} />
+              <Select label="본문 크기" value={item.settings.bodySize} options={withSaved(BODY_SIZES, item.settings.bodySize)} onChange={(bodySize) => setSettings({ bodySize })} />
             </Row>
             <Row label="글자 색상">
               <Swatches label="글자 색상" value={item.settings.color} options={TEXT_COLORS} onChange={(color) => setSettings({ color })} />
@@ -452,7 +458,7 @@ export default function TemplateSettingsPanel({
               <Select
                 label="섹션 간격"
                 value={layout.sectionGap}
-                options={SECTION_GAPS}
+                options={withSaved(SECTION_GAPS, layout.sectionGap)}
                 onChange={(sectionGap) => onChangeLayout({ ...layout, sectionGap })}
               />
             </Row>
