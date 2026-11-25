@@ -557,7 +557,28 @@ export default function MeetingRoomPage() {
     } catch (error) {
       showError(error);
       replaceDecision(decision);
+      return;
     }
+    // MSG-132 (디자인 07 11/25). [되돌리기]는 수정 전 글을 다시 저장한다 (수정 취소 API가 없어 서버에는 고친 결정으로 남는다).
+    // 수정 전 글이 없었으면 빈 글로는 되돌릴 수 없어 [되돌리기]를 뺀다
+    const previousSummary = decision.summary;
+    setToast({
+      text: '결정 내용을 바꿨어요. 이제 AI가 바꾸지 않아요',
+      variant: 'success',
+      ...(previousSummary
+        ? {
+            action: {
+              label: '되돌리기',
+              onClick: () => {
+                replaceDecision(decision);
+                editDecision(meetingIdNumber, Number(agenda.id), Number(decisionId), previousSummary, decision.evidenceSeqs).catch(
+                  showError,
+                );
+              },
+            },
+          }
+        : {}),
+    });
   };
 
   /** 안건의 결정할 사항을 바꾼다 (낙관적 반영과 되돌리기에 쓴다) */
@@ -586,21 +607,28 @@ export default function MeetingRoomPage() {
       updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
       return;
     }
+    // 되돌리기: 바꾸기 전 상태로 (사람이 정한 적 없으면 AI 판정으로)
+    const previous: DecisionStatusEdit = !before.statusEdited ? 'AUTO' : before.status === 'decided' ? 'DECIDED' : 'UNDECIDED';
+    const undo = {
+      label: '되돌리기',
+      onClick: () => {
+        updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
+        setDecisionStatus(meetingIdNumber, Number(agendaId), Number(decisionId), previous).catch(showError);
+      },
+    };
+    // MSG-131 (디자인 07 11/25): AI에게 다시 맡기면 [되돌리기]로 내가 정한 상태로 돌아간다
+    if (status === 'AUTO') {
+      setToast({ text: 'AI에게 다시 맡겼어요', variant: 'success', action: undo });
+      return;
+    }
     if (status !== 'DECIDED') {
       return;
     }
-    // REQ-211 결정으로 확정 (MSG-120). [되돌리기]는 확정 전 상태로 (사람이 정한 적 없으면 AI 판정으로)
-    const previous: DecisionStatusEdit = !before.statusEdited ? 'AUTO' : before.status === 'decided' ? 'DECIDED' : 'UNDECIDED';
+    // REQ-211 결정으로 확정 (MSG-120, 디자인 07 11/25 문구)
     setToast({
-      text: '결정으로 확정했어요',
+      text: '결정으로 확정했어요. 이제 AI가 바꾸지 않아요',
       variant: 'success',
-      action: {
-        label: '되돌리기',
-        onClick: () => {
-          updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
-          setDecisionStatus(meetingIdNumber, Number(agendaId), Number(decisionId), previous).catch(showError);
-        },
-      },
+      action: undo,
     });
   };
 
