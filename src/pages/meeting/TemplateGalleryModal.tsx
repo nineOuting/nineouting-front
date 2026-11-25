@@ -16,6 +16,10 @@ const CARD_PAGE_WIDTH = 76;
 interface TemplateGalleryModalProps {
   templates: MinutesTemplate[];
   selectedId?: number;
+  /** 워크스페이스 기본 양식. 카드에 "기본 양식" 배지를 붙인다 (디자인 06 DefaultTemplateBadge) */
+  defaultTemplateId?: number;
+  /** 설명 문구에 넣는다. 없으면 예전 문구 */
+  workspaceName?: string;
   onOpenDetail: (index: number) => void;
   onToggleFavorite: (templateId: number) => void;
   onCreateTemplate: () => void;
@@ -31,6 +35,8 @@ interface TemplateGalleryModalProps {
 export default function TemplateGalleryModal({
   templates,
   selectedId,
+  defaultTemplateId,
+  workspaceName,
   onOpenDetail,
   onToggleFavorite,
   onCreateTemplate,
@@ -41,7 +47,12 @@ export default function TemplateGalleryModal({
   return (
     <Dialog
       title="회의록 양식 선택"
-      description="회의 목적에 맞는 양식을 골라 주세요"
+      // 디자인 06 "양식 선택 · 워크스페이스 기본 먼저" (REQ-199, REQ-140)
+      description={
+        workspaceName
+          ? `${workspaceName}의 기본 양식이 먼저 선택돼 있어요. 이 회의만 다른 양식으로 바꿀 수 있어요.`
+          : '회의 목적에 맞는 양식을 골라 주세요'
+      }
       width="md"
       onClose={onClose}
       footer={
@@ -84,6 +95,7 @@ export default function TemplateGalleryModal({
                   ) : (
                     <TemplateThumbnail />
                   )}
+                  {template.templateId === defaultTemplateId && <span className={styles.defaultBadge}>기본 양식</span>}
                 </span>
                 <span className={styles.name}>{template.name}</span>
               </button>

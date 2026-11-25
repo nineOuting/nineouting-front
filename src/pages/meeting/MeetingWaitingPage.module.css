@@ -321,8 +321,49 @@
   color: var(--text-secondary);
 }
 
-.settingRow:disabled {
+.settingRow:disabled,
+.settingRowLocked {
   cursor: default;
+}
+
+/* 디자인 06 상태 모음 "회의록 작성자가 아닌 참석자 화면": 양식 줄은 라벨·값 모두 text/tertiary (SCRUM-410) */
+.settingRowLocked .settingLabel,
+.settingRowLocked .settingValue {
+  color: var(--text-tertiary);
+}
+
+/* 툴팁이 양식 줄 위에 뜨는 기준 */
+.templateRow {
+  position: relative;
+}
+
+/* 디자인 Tooltip (MSG-130): 어두운 바탕, 캡션 글자, 위아래 8 좌우 12, 아래로 향한 꼬리. 줄 가운데 위 */
+.templateTip {
+  position: absolute;
+  bottom: calc(100% + var(--spacing-1));
+  left: 50%;
+  z-index: 10;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--bg-floating-dark);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--gray-0);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+/* 꼬리: 8px 정사각형을 45도 돌려 아래로 반만 내민다 */
+.templateTip::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+  background: inherit;
+  content: '';
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .templateName {

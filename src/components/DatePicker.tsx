@@ -122,7 +122,7 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
                   type="button"
                   className={[
                     styles.day,
-                    day.getMonth() !== month.month ? styles.outside : '',
+                    // 다른 달 날짜도 고를 수 있으면 이번 달과 같은 색. 회색은 고를 수 없는 지난 날(.past)만 (SCRUM-410)
                     iso === today ? styles.today : '',
                     iso === value ? styles.selected : '',
                     isPast ? styles.past : '',

@@ -107,10 +107,6 @@
   background: var(--interactive-hover);
 }
 
-.outside {
-  color: var(--text-disabled);
-}
-
 .today {
   font-weight: var(--font-weight-bold);
   color: var(--primary-default);

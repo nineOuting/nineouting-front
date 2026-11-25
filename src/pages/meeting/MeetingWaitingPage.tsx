@@ -116,15 +116,24 @@ export default function MeetingWaitingPage() {
   const { meetingId } = useParams();
   // 피그마 MeetingWaiting_EditAgenda: 안건을 고치는 동안에는 [회의 시작하기]를 막는다
   const [isEditingAgenda, setIsEditingAgenda] = useState(false);
+  // MSG-130 작성자가 아닐 때 양식 줄 툴팁: 마우스를 올리거나 누르면 뜬다 (디자인 06 상태 모음, SCRUM-410)
+  const [isTemplateTipOpen, setIsTemplateTipOpen] = useState(false);
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [myId, setMyId] = useState<number>();
   const [folderMembers, setFolderMembers] = useState<Member[]>([]);
   const [emails, setEmails] = useState<Record<number, string>>({});
   const [pendingAgendas, setPendingAgendas] = useState<PendingAgenda[]>([]);
+  // 창으로 돌아와 회의를 다시 받을 때 안건 날짜를 맞추는 데 쓴다
+  const pendingAgendasRef = useRef<PendingAgenda[]>([]);
+  useEffect(() => {
+    pendingAgendasRef.current = pendingAgendas;
+  }, [pendingAgendas]);
   // REQ-123 내가 쓸 수 있는 회의록 양식 (기본 양식 + 내 양식)과 즐겨찾기 표시
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   // REQ-199 이 회의 워크스페이스에서 정한 양식. null이면 서비스 기본 양식, undefined면 아직 모름
   const [workspaceTemplateId, setWorkspaceTemplateId] = useState<number | null>();
+  // 양식 선택 창 설명에 넣는 워크스페이스 이름 (디자인 06 "양식 선택 · 워크스페이스 기본 먼저")
+  const [workspaceName, setWorkspaceName] = useState('');
   // 양식 창을 열 때 정한 순서 (양식 ID). 창이 열린 동안 별표를 눌러도 순서는 그대로 둔다
   const [templateOrder, setTemplateOrder] = useState<number[]>([]);
   const [openMenu, setOpenMenu] = useState<OpenMenu | null>(null);
@@ -172,7 +181,12 @@ export default function MeetingWaitingPage() {
       // 양식 창 맨 앞에 둘 워크스페이스 양식 (못 불러오면 즐겨찾기 → 나머지 순서만)
       if (folder) {
         getWorkspace(folder.workspaceId)
-          .then(({ defaultTemplateId }) => isCurrent && setWorkspaceTemplateId(defaultTemplateId))
+          .then(({ defaultTemplateId, name }) => {
+            if (isCurrent) {
+              setWorkspaceTemplateId(defaultTemplateId);
+              setWorkspaceName(name);
+            }
+          })
           .catch(() => undefined);
       }
       setMyId(me?.userId);
@@ -204,6 +218,39 @@ export default function MeetingWaitingPage() {
     });
     return () => {
       isCurrent = false;
+    };
+  }, [meetingId]);
+
+  // 다른 사람이 바꾼 내용(작성자가 고른 양식, 안건, 참여자, 회의 시작)을 창으로 돌아올 때 다시 받는다.
+  // 이 화면은 실시간 연결이 없어 새로고침 전까지 예전 정보가 보였다. 편집 중이거나 창·메뉴가 열려 있으면 건너뛴다 (SCRUM-410)
+  const isBusyRef = useRef(false);
+  useEffect(() => {
+    isBusyRef.current = isEditingAgenda || templateModal !== null || openMenu !== null;
+  }, [isEditingAgenda, templateModal, openMenu]);
+  useEffect(() => {
+    if (!meetingId) {
+      return undefined;
+    }
+    let isCurrent = true;
+    const refresh = () => {
+      if (document.visibilityState !== 'visible' || isBusyRef.current) {
+        return;
+      }
+      getMeetingDetail(meetingId)
+        .then((detail) => {
+          if (isCurrent && !isBusyRef.current) {
+            const loaded = toMeeting(detail);
+            setMeeting((prev) => prev && { ...loaded, agendas: withCarriedOverDates(loaded.agendas, pendingAgendasRef.current) });
+          }
+        })
+        .catch(() => undefined);
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      isCurrent = false;
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
     };
   }, [meetingId]);
 
@@ -268,6 +315,11 @@ export default function MeetingWaitingPage() {
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
   // 창을 열 때 정한 순서대로. 별표 상태는 templates에서 바로 읽는다
   const orderedTemplates = templateOrder.flatMap((id) => templates.filter(({ templateId }) => templateId === id));
+  // 워크스페이스 기본 양식: 워크스페이스에 정해 둔 양식, 없으면 서비스 기본 양식 (순서를 정할 때와 같은 기준) (SCRUM-410)
+  const workspaceDefaultId = workspaceTemplateId ?? templates.find(({ isDefault }) => isDefault)?.templateId;
+  const workspaceDefaultTemplate = templates.find(({ templateId }) => templateId === workspaceDefaultId);
+  // REQ-140 회의록 양식은 회의록 작성자만 고른다. 다른 사람은 작성자가 고른 양식 이름만 본다 (SCRUM-410)
+  const canChooseTemplate = isScheduled && isWriter;
   const openTemplateGallery = () => {
     setTemplateOrder(orderTemplates(templates, workspaceTemplateId).map(({ templateId }) => templateId));
     setTemplateModal({ view: 'gallery' });
@@ -613,18 +665,41 @@ export default function MeetingWaitingPage() {
           <section className={styles.sideSection}>
             <h2 className={styles.sideTitle}>회의록 설정</h2>
             <div className={styles.settingsCard}>
+              <div className={styles.templateRow}>
+              {/* 작성자가 아니면 회색 줄. disabled 대신 aria-disabled로 눌렀을 때 툴팁을 띄운다 */}
               <button
                 type="button"
-                className={styles.settingRow}
-                onClick={openTemplateGallery}
+                className={[styles.settingRow, canChooseTemplate ? '' : styles.settingRowLocked].filter(Boolean).join(' ')}
+                aria-disabled={!canChooseTemplate}
+                aria-describedby={!canChooseTemplate && isTemplateTipOpen ? 'template-locked-tip' : undefined}
+                onClick={canChooseTemplate ? openTemplateGallery : () => setIsTemplateTipOpen(true)}
+                onMouseEnter={canChooseTemplate ? undefined : () => setIsTemplateTipOpen(true)}
+                onMouseLeave={() => setIsTemplateTipOpen(false)}
+                onBlur={() => setIsTemplateTipOpen(false)}
               >
                 {/* 디자인 SettingRow: 라벨 "회의록 양식" + 고른 양식 이름 (작성자 줄과 같은 모양) */}
                 <span className={styles.settingLabel}>회의록 양식</span>
-                <span className={selectedTemplate ? styles.settingValue : styles.settingPlaceholder}>
-                  {selectedTemplate?.name ?? '선택해 주세요'}
-                </span>
-                <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />
+                {canChooseTemplate ? (
+                  <span className={selectedTemplate ? styles.settingValue : styles.settingPlaceholder}>
+                    {selectedTemplate?.name ?? '선택해 주세요'}
+                  </span>
+                ) : (
+                  // 작성자가 아직 고르지 않았으면 실제로 쓰일 워크스페이스 기본 양식 이름. 작성자의 개인 양식은 내 양식 목록에 없어
+                  // 이름을 알 수 없다 (회의 응답에 양식 이름이 없음, 백엔드 요청 예정). 틀린 이름 대신 "작성자가 고른 양식"
+                  <span className={styles.settingValue}>
+                    {meeting.templateId === undefined
+                      ? (workspaceDefaultTemplate?.name ?? '-')
+                      : (selectedTemplate?.name ?? '작성자가 고른 양식')}
+                  </span>
+                )}
+                {canChooseTemplate && <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />}
               </button>
+              {!canChooseTemplate && isTemplateTipOpen && (
+                <span id="template-locked-tip" role="tooltip" className={styles.templateTip}>
+                  회의록 양식은 회의록 작성자만 바꿀 수 있어요
+                </span>
+              )}
+              </div>
               <div className={styles.menuAnchor}>
                 <button
                   ref={writerAnchorRef}
@@ -689,12 +764,15 @@ export default function MeetingWaitingPage() {
       {templateModal?.view === 'gallery' && (
         <TemplateGalleryModal
           templates={orderedTemplates}
-          selectedId={meeting.templateId}
+          // 회의에 양식이 걸려 있으면 그 양식, 없으면 워크스페이스 기본 양식을 고른 채로 연다 (REQ-199, SCRUM-410)
+          selectedId={meeting.templateId ?? workspaceDefaultId}
+          defaultTemplateId={workspaceDefaultId}
+          workspaceName={workspaceName}
           onOpenDetail={(index) => setTemplateModal({ view: 'detail', index })}
           onToggleFavorite={(templateId) => void toggleFavorite(templateId)}
           onCreateTemplate={() => navigate('/templates/new')}
           onUse={
-            canEdit
+            canChooseTemplate
               ? (templateId) => {
                   void chooseTemplate(templateId);
                   setTemplateModal(null);
@@ -709,7 +787,7 @@ export default function MeetingWaitingPage() {
           templates={orderedTemplates}
           index={templateModal.index}
           onUse={
-            canEdit
+            canChooseTemplate
               ? (templateId) => {
                   void chooseTemplate(templateId);
                   setTemplateModal(null);
