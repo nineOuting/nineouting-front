@@ -21,7 +21,8 @@ const ZOOM_STEP = 10;
 const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;
 // 오른쪽 섹션 설정의 섹션 이름 칸과 같다
-const MAX_TITLE_LENGTH = 100;
+// 디자인 09 항목 이름 20자 (11/25). 이미 저장된 긴 이름은 그대로 보이고, 더 늘리지만 못한다
+const MAX_TITLE_LENGTH = 20;
 // QA 70 순서를 바꾸면 다른 섹션이 미끄러지듯 자리를 옮긴다
 const MOVE_MS = 200;
 
@@ -373,7 +374,7 @@ export default function TemplatePreview({
               content={blankContent(item)}
               label={item.title}
               editable={isSelected && canEditBody(item)}
-              placeholder="설명을 적으면 이곳에 보여요"
+              placeholder="왼쪽에서 이 항목에 무엇을 채울지 설명을 적어 주세요"
               onChange={(description) => onChangeItem(index, { ...item, description })}
             />
           </div>

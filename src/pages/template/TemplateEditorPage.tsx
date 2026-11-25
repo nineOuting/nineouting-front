@@ -28,6 +28,7 @@ import {
   presetOf,
   withPreset,
 } from '../../utils/templateSettings';
+import SectionSelect from './SectionSelect';
 import TemplatePreview from './TemplatePreview';
 import TemplateSettingsPanel, { type SettingsView } from './TemplateSettingsPanel';
 import styles from './TemplateEditorPage.module.css';
@@ -38,8 +39,12 @@ const BUTTON_ICON_SIZE = 16;
 const COLLAPSE_ICON_SIZE = 16;
 const MAX_NAME_LENGTH = 50;
 const MAX_DESCRIPTION_LENGTH = 100;
-const CUSTOM_TITLE = '커스텀 항목';
-const CUSTOM_DESCRIPTION = '추가로 논의가 필요한 사항을 자유롭게 작성해주세요';
+// 디자인 09 "[커스텀 항목 추가] 누른 직후" (11/25): 이름은 "새 항목", AI 설명은 비워 둔다
+const CUSTOM_TITLE = '새 항목';
+const CUSTOM_DESCRIPTION = '';
+// 디자인 09 "섹션 이름·AI 설명 고치기" (11/25): 항목 이름 20자, AI에게 알려 줄 설명 100자
+const MAX_ITEM_TITLE_LENGTH = 20;
+const MAX_ITEM_DESCRIPTION_LENGTH = 100;
 
 interface Draft {
   name: string;
@@ -157,6 +162,13 @@ export default function TemplateEditorPage() {
   }, [editingId, copyFrom]);
 
   const setItems = (items: TemplateItem[]) => setDraft((prev) => ({ ...prev, items }));
+  const selectedItem = selectedIndex === null ? undefined : draft.items[selectedIndex];
+  /** 선택한 섹션의 이름·AI 설명 고치기 (항목 구성 패널) */
+  const updateSelected = (patch: Partial<TemplateItem>) =>
+    setDraft((prev) => ({
+      ...prev,
+      items: prev.items.map((item, index) => (index === selectedIndex ? { ...item, ...patch } : item)),
+    }));
   const indexOf = (title: string) => draft.items.findIndex((item) => item.title === title);
   // QA 78 기본 항목은 제목을 고쳐도 같은 자리로 본다
   const presetIndexOf = (preset: (typeof PRESET_ITEMS)[number]) => draft.items.findIndex((item) => presetOf(item) === preset);
@@ -339,6 +351,56 @@ export default function TemplateEditorPage() {
                     </span>
                   </span>
                 </label>
+                <hr className={styles.divider} />
+                {/* 디자인 09 "섹션 이름·AI 설명 고치기" (11/25): 선택한 섹션의 이름과 AI 설명을 여기서 고친다 */}
+                <div className={styles.field}>
+                  <span className={styles.label}>선택한 섹션</span>
+                  <SectionSelect
+                    titles={draft.items.map(({ title }) => title)}
+                    selectedIndex={selectedIndex}
+                    onSelect={setSelectedIndex}
+                  />
+                  <span className={styles.helper}>선택한 섹션의 이름과 설명을 바꿀 수 있어요.</span>
+                </div>
+                {selectedItem && selectedIndex !== null && (
+                  <>
+                    <label className={styles.field}>
+                      <span className={styles.subLabel}>항목 이름</span>
+                      <span className={styles.inputBox}>
+                        <input
+                          className={styles.input}
+                          maxLength={MAX_ITEM_TITLE_LENGTH}
+                          placeholder="항목 이름을 입력해 주세요"
+                          value={selectedItem.title}
+                          onChange={(event) => updateSelected({ title: event.target.value })}
+                        />
+                      </span>
+                      <span className={styles.counter}>
+                        {selectedItem.title.length} / {MAX_ITEM_TITLE_LENGTH}
+                      </span>
+                    </label>
+                    <label className={styles.field}>
+                      <span className={styles.subLabel}>AI에게 알려 줄 설명</span>
+                      <span className={styles.textareaBox}>
+                        <textarea
+                          className={`${styles.textarea} ${styles.aiDescription}`}
+                          maxLength={MAX_ITEM_DESCRIPTION_LENGTH}
+                          rows={4}
+                          placeholder="예: 이번 회의에서 나온 위험 요소와 대응 방법을 정리해 주세요"
+                          value={selectedItem.description}
+                          onChange={(event) => updateSelected({ description: event.target.value })}
+                        />
+                      </span>
+                      <span className={styles.helperRow}>
+                        <span>AI가 이 설명을 보고 내용을 채워요</span>
+                        <span>
+                          {selectedItem.description.length} / {MAX_ITEM_DESCRIPTION_LENGTH}
+                        </span>
+                      </span>
+                    </label>
+                  </>
+                )}
+                <hr className={styles.divider} />
                 <div className={styles.listHead}>
                   <h3 className={styles.listTitle}>회의록 항목</h3>
                   <span className={styles.listCount}>{usedCount}개 사용 중</span>
