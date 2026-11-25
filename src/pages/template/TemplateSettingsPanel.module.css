@@ -75,15 +75,6 @@
   border-color: var(--border-focus);
 }
 
-/* 선택한 섹션: 패널 너비를 다 쓴다 */
-.pickerBox {
-  gap: var(--spacing-2);
-  width: 100%;
-  height: var(--input-md-height);
-  padding: 0 var(--spacing-3);
-  border-radius: var(--radius-md);
-}
-
 .select {
   flex: 1;
   min-width: 0;

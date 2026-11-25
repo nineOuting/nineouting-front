@@ -5,12 +5,12 @@ import alignCenterIcon from '../../assets/icons/align-center.svg';
 import alignLeftIcon from '../../assets/icons/align-left.svg';
 import alignRightIcon from '../../assets/icons/align-right.svg';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
-import ballotIcon from '../../assets/icons/rail-ballot.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
 import Icon from '../../components/Icon';
 import Spinner from '../../components/Spinner';
 import Switch from '../../components/Switch';
 import type { Align, ItemSettings, RecordType, TableBorder, TemplateItem, TemplateLayout } from '../../types/template';
+import SectionSelect from './SectionSelect';
 import styles from './TemplateSettingsPanel.module.css';
 
 const SMALL_ICON_SIZE = 16;
@@ -272,26 +272,11 @@ export default function TemplateSettingsPanel({
   };
   const texts = VIEW_TEXTS[view];
 
+  // 디자인 09 상태 모음 "선택한 섹션 고르기" (11/25): 아이콘 없는 드롭다운 메뉴
   const sectionPicker = (
     <div className={styles.section}>
       <h3 className={styles.heading}>선택한 섹션</h3>
-      <span className={`${styles.selectBox} ${styles.pickerBox}`}>
-        <Icon src={ballotIcon} size={SMALL_ICON_SIZE} className={styles.selectIcon} />
-        <select
-          className={styles.select}
-          aria-label="선택한 섹션"
-          value={selectedIndex ?? ''}
-          onChange={(event) => onSelect(Number(event.target.value))}
-        >
-          {selectedIndex === null && <option value="">섹션을 골라 주세요</option>}
-          {items.map((option, index) => (
-            <option key={`${option.title}-${index}`} value={index}>
-              {option.title || '제목 없음'}
-            </option>
-          ))}
-        </select>
-        <Icon src={chevronDownIcon} size={SMALL_ICON_SIZE} className={styles.selectIcon} />
-      </span>
+      <SectionSelect titles={items.map(({ title }) => title)} selectedIndex={selectedIndex} onSelect={onSelect} />
     </div>
   );
 
