@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 
 import { Navigate, useBlocker, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import { chooseMeetingTemplate, createMeeting, updateMeeting } from '../../api/meeting';
+import { listMinutesTemplates } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import { getFolder, getWorkspace, listFolderMembers, listFolders } from '../../api/workspace';
 import Button from '../../components/Button';
@@ -182,7 +183,7 @@ export default function MeetingCreatePage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // REQ-199 워크스페이스 회의록 기본 양식 (null이면 서비스 기본 양식이라 따로 고르지 않는다)
+  // REQ-199 워크스페이스 회의록 기본 양식 (null이면 만들 때 서비스 기본 양식을 고른다)
   const [defaultTemplateId, setDefaultTemplateId] = useState<number | null>(null);
 
   // 수정 창에서도 폴더 칸을 보인다 (바꿀 수는 없다. 디자인 EditMeetingModal)
@@ -305,9 +306,17 @@ export default function MeetingCreatePage() {
             writer: form.writer ?? me,
             materials: [],
           });
-      // REQ-199 워크스페이스 회의록 기본 양식을 먼저 골라 둔다 (대기 화면에서 바꿀 수 있다). 실패해도 회의는 만들어졌다
-      if (!editingMeeting && defaultTemplateId !== null) {
-        await chooseMeetingTemplate(saved.meetingId, defaultTemplateId).catch(() => undefined);
+      // REQ-199 워크스페이스 회의록 기본 양식을 먼저 골라 둔다 (대기 화면에서 바꿀 수 있다). 실패해도 회의는 만들어졌다.
+      // 워크스페이스에 정한 양식이 없으면 서비스 기본 양식 (대기 화면의 기본 양식과 같은 기준, SCRUM-410)
+      if (!editingMeeting) {
+        const templateId =
+          defaultTemplateId ??
+          (await listMinutesTemplates()
+            .then((templates) => templates.find(({ isDefault }) => isDefault)?.templateId ?? null)
+            .catch(() => null));
+        if (templateId !== null) {
+          await chooseMeetingTemplate(saved.meetingId, templateId).catch(() => undefined);
+        }
       }
       navigate(`/meetings/${saved.meetingId}`, { replace: true });
     } catch (error) {
