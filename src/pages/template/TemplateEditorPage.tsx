@@ -23,6 +23,7 @@ import {
   DEFAULT_ITEM_SETTINGS,
   DEFAULT_LAYOUT,
   MEETING_INFO_PRESET,
+  normalizeColumnNames,
   PRESET_ITEMS,
   presetItem,
   presetOf,
@@ -208,7 +209,16 @@ export default function TemplateEditorPage() {
   };
 
   const save = async () => {
-    const items = draft.items.map((item) => ({ ...item, title: item.title.trim() }));
+    // 표 열 이름은 cols 길이로 맞춰 보낸다 (AI 서버가 길이가 다르면 거절한다). 모두 비었으면 뺀다 (SCRUM-419)
+    const items = draft.items.map((item) => {
+      const { columnNames: _, ...table } = item.settings.table;
+      const columnNames = item.settings.recordType === 'TABLE' ? normalizeColumnNames(item.settings.table) : undefined;
+      return {
+        ...item,
+        title: item.title.trim(),
+        settings: { ...item.settings, table: columnNames ? { ...table, columnNames } : table },
+      };
+    });
     if (!draft.name.trim()) {
       setToast({ text: '양식 이름을 입력해 주세요', variant: 'error' });
       return;
