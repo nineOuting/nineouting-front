@@ -138,6 +138,8 @@ export default function MeetingRoomPage() {
   const [selectedDecisionId, setSelectedDecisionId] = useState<string>();
   // REQ-185 오른쪽 패널: 실시간 전사 / 챗봇 (임시 디자인)
   const [sideTab, setSideTab] = useState<'transcript' | 'chat'>('transcript');
+  // 넵넵 AI 근거에서 넘어갈 전사 줄
+  const [transcriptFocusSeq, setTranscriptFocusSeq] = useState<number>();
   // 용어 카드 [더 묻기]로 내 도우미를 열 때 채울 질문. 바뀔 때마다 내 도우미를 새로 그린다
   const [helperQuery, setHelperQuery] = useState<{ text: string; key: number } | null>(null);
   // REQ-191 넵넵 AI 탭에서 확인한 용어 id. 확인 전 용어는 탭에 점과 "용어 N", 카드에 NEW로 보인다
@@ -854,6 +856,7 @@ export default function MeetingRoomPage() {
   const openHelper = (query?: string) => {
     setSideTab('chat');
     setSelectedDecisionId(undefined);
+    setTranscriptFocusSeq(undefined);
     if (query) {
       setHelperQuery({ text: query, key: Date.now() });
     }
@@ -1066,6 +1069,10 @@ export default function MeetingRoomPage() {
               termCards={termCards}
               now={now}
               suggestions={['방금 5분 요약해 줘', '지난 회의에서 비슷한 얘기 찾아줘', ...terms.slice(0, 1).map(askAbout)]}
+              onOpenLine={(seq) => {
+                setTranscriptFocusSeq(seq);
+                setSideTab('transcript');
+              }}
             />
           ) : (
             <TranscriptPanel
@@ -1078,6 +1085,7 @@ export default function MeetingRoomPage() {
               termMatcher={termMatcher}
               onAskTerm={(term) => openHelper(askAbout(term))}
               isOffline={!isOnline}
+              focusSeq={transcriptFocusSeq}
             />
           )}
         </aside>
