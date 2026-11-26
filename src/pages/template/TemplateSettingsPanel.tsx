@@ -20,9 +20,9 @@ const BACKGROUND_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
 const MAX_EDGE_LENGTH = 50;
 const MAX_MARGIN_MM = 50;
-// 디자인 09 "행 수 고르기": 1~10행 (11/25). 열은 지금처럼 8열까지
+// 디자인 09 "행 수·열 수 고르기": 행·열 모두 1~10개 (서버와 맞춤, SCRUM-419)
 const MAX_ROWS = 10;
-const MAX_COLS = 8;
+const MAX_COLS = 10;
 
 const RECORD_TYPES: { value: RecordType; label: string }[] = [
   { value: 'FREE', label: '자유 입력형' },
