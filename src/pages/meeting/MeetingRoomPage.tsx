@@ -84,6 +84,8 @@ const BACK_ICON_SIZE = 24;
 const HEADER_AVATAR_COUNT = 4;
 const TICK_MS = 1000;
 const MS_PER_SECOND = 1000;
+// 용어 카드 받은 때(분 단위)를 다시 셀 간격
+const NOW_TICK_MS = 30_000;
 // 디자인 Live_15: 녹음 중인데 이만큼 전사가 오지 않으면 마이크를 확인하라고 알린다
 const SILENCE_SECONDS = 20;
 const MIC_FAILED_MESSAGE = '마이크를 쓸 수 없어 녹음하지 못하고 있어요. 브라우저의 마이크 권한을 확인해 주세요.';
@@ -138,13 +140,32 @@ export default function MeetingRoomPage() {
   const [sideTab, setSideTab] = useState<'transcript' | 'chat'>('transcript');
   // 용어 카드 [더 묻기]로 내 도우미를 열 때 채울 질문. 바뀔 때마다 내 도우미를 새로 그린다
   const [helperQuery, setHelperQuery] = useState<{ text: string; key: number } | null>(null);
-  // 내 도우미 탭을 마지막으로 본 때까지 알려 준 용어 수 (그 뒤로 새로 나온 용어를 탭에 표시)
-  const [seenTermCount, setSeenTermCount] = useState(0);
+  // REQ-191 넵넵 AI 탭에서 확인한 용어 id. 확인 전 용어는 탭에 점과 "용어 N", 카드에 NEW로 보인다
+  const [seenTermIds, setSeenTermIds] = useState<ReadonlySet<string>>(() => new Set());
+  // 이 화면을 연 뒤 회의방으로 받은 용어와 그때 시각 (입장할 때 한꺼번에 받은 용어는 언제 찾았는지 몰라 넣지 않는다)
+  const [termArrivedAt, setTermArrivedAt] = useState<Record<string, number>>({});
+  const knownTermIdsRef = useRef(new Set<string>());
+  const termIdsRef = useRef<string[]>([]);
+  // 용어 카드의 "방금", "N분 전"을 셀 지금 시각 (회의를 멈춰도 흐른다)
+  const [now, setNow] = useState(() => Date.now());
   // REQ-191 ai-service가 찾은 전사 속 용어 (늘 전체가 오고, 늦게 온 낮은 버전은 버린다)
   const [termList, setTermList] = useState<TranscriptTerms | null>(null);
   const showTerms = useCallback(
     (next: TranscriptTerms) => setTermList((prev) => (prev && prev.version > next.version ? prev : next)),
     [],
+  );
+  // 회의방으로 받은 용어 목록. 처음 보는 용어는 받은 시각을 남긴다
+  const receiveTerms = useCallback(
+    (next: TranscriptTerms) => {
+      const arrivedAt = Date.now();
+      const arrived = next.terms.filter(({ id }) => !knownTermIdsRef.current.has(id));
+      arrived.forEach(({ id }) => knownTermIdsRef.current.add(id));
+      if (arrived.length > 0) {
+        setTermArrivedAt((prev) => ({ ...prev, ...Object.fromEntries(arrived.map(({ id }) => [id, arrivedAt])) }));
+      }
+      showTerms(next);
+    },
+    [showTerms],
   );
   // 안건 추가 창. 새 안건 제안에서 열면 제안된 제목을 채운다
   const [addAgendaTitle, setAddAgendaTitle] = useState<string | null>(null);
@@ -269,6 +290,7 @@ export default function MeetingRoomPage() {
       ]);
       setDoneTodoIds(todoChecks);
       if (terms) {
+        terms.terms.forEach(({ id }) => knownTermIdsRef.current.add(id));
         showTerms(terms);
       }
       setTranscript(lines.map((line) => toTranscriptLine(line)).sort((a, b) => a.startMs - b.startMs));
@@ -336,6 +358,26 @@ export default function MeetingRoomPage() {
       isCurrent = false;
     };
   }, [meetingId, navigate, reloadLive, showError]);
+
+  // REQ-191 넵넵 AI 탭을 떠날 때(전사 탭, 결정 근거로 바꿀 때) 그때까지 보인 용어를 확인한 것으로 본다
+  const isHelperShown = sideTab === 'chat' && !selectedDecisionId;
+  useEffect(() => {
+    termIdsRef.current = (termList?.terms ?? []).map(({ id }) => id);
+  }, [termList]);
+  useEffect(() => {
+    if (!isHelperShown) {
+      return undefined;
+    }
+    return () => {
+      const shownIds = termIdsRef.current;
+      setSeenTermIds((prev) => new Set([...prev, ...shownIds]));
+    };
+  }, [isHelperShown]);
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => setNow(Date.now()), NOW_TICK_MS);
+    return () => window.clearInterval(timerId);
+  }, []);
 
   // REQ-081, 084 멈춘 동안은 경과 시간도 멈춘다
   useEffect(() => {
@@ -407,7 +449,7 @@ export default function MeetingRoomPage() {
         setDoneTodoIds(message.data);
         break;
       case 'transcriptTerms':
-        showTerms(message.data);
+        receiveTerms(message.data);
         break;
       case 'agendaClassification': {
         const changed = message.data.lines.filter(({ seq }) => !correctedSeqsRef.current.has(seq));
@@ -808,10 +850,9 @@ export default function MeetingRoomPage() {
   const shownTerms = [...(termList?.terms ?? [])].sort((a, b) => a.firstSeq - b.firstSeq);
   const termMatcher = buildTermMatcher(shownTerms);
   const terms = shownTerms.map(({ term }) => term);
-  const newTermCount = sideTab === 'chat' ? 0 : Math.max(0, terms.length - seenTermCount);
+  const newTermCount = isHelperShown ? 0 : shownTerms.filter(({ id }) => !seenTermIds.has(id)).length;
   const openHelper = (query?: string) => {
     setSideTab('chat');
-    setSeenTermCount(terms.length);
     setSelectedDecisionId(undefined);
     if (query) {
       setHelperQuery({ text: query, key: Date.now() });
@@ -836,6 +877,13 @@ export default function MeetingRoomPage() {
           ),
         }
       : undefined;
+  // REQ-191 넵넵 AI에 끼워 넣을 용어 카드. 받은 때를 알면 그 자리에, 모르면 처음 나온 줄을 말한 때쯤에 둔다
+  const termCards = shownTerms.map(({ id, term, name, text, firstSeq }) => {
+    const line = transcript.find(({ seq }) => seq === firstSeq);
+    const arrivedAt = termArrivedAt[id];
+    const spokenAtMs = line && startedAtMs !== undefined ? startedAtMs + line.startMs : 0;
+    return { id, title: name || term, text, spokenAt: line?.time, arrivedAt, isNew: !seenTermIds.has(id), at: arrivedAt ?? spokenAtMs };
+  });
 
   return (
     <div className={styles.page}>
@@ -992,7 +1040,12 @@ export default function MeetingRoomPage() {
                   onClick={() => (tab === 'chat' ? openHelper() : setSideTab(tab))}
                 >
                   {tab === 'chat' ? '넵넵 AI' : '실시간 전사'}
-                  {tab === 'chat' && newTermCount > 0 && <span className={styles.tabBadge}>용어 {newTermCount}</span>}
+                  {tab === 'chat' && newTermCount > 0 && (
+                    <>
+                      <span className={styles.tabDot} aria-hidden="true" />
+                      <span className={styles.tabBadge}>용어 {newTermCount}</span>
+                    </>
+                  )}
                 </button>
               ))}
             </div>
@@ -1010,6 +1063,8 @@ export default function MeetingRoomPage() {
               meetingId={meetingIdNumber}
               canAsk={isLive}
               initialQuery={helperQuery?.text}
+              termCards={termCards}
+              now={now}
               suggestions={['방금 5분 요약해 줘', '지난 회의에서 비슷한 얘기 찾아줘', ...terms.slice(0, 1).map(askAbout)]}
             />
           ) : (
