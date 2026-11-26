@@ -50,6 +50,15 @@ export const DEFAULT_PAPER_ZOOM = 70;
 /** 표 칸 구분: 줄 = 행, 탭 = 열 (서버 PDF와 같은 형식) */
 export const CELL_SEPARATOR = '\t';
 
+/**
+ * 저장할 표 열 이름 (SCRUM-419): 앞뒤 공백을 떼고 cols 길이로 맞춘다 (모자라면 "", 넘치면 자른다). 모두 비었으면 undefined.
+ * AI 서버는 길이가 cols와 다르면 거절한다. 입력 화면은 디자인이 나오면 붙인다
+ */
+export function normalizeColumnNames(table: TableSettings) {
+  const names = Array.from({ length: table.cols }, (_, col) => table.columnNames?.[col]?.trim() ?? '');
+  return names.some(Boolean) ? names : undefined;
+}
+
 type Loose<T> = { [K in keyof T]?: T[K] extends object ? Partial<T[K]> : T[K] };
 
 export function withItemDefaults(settings: Loose<ItemSettings> | undefined): ItemSettings {

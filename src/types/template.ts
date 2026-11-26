@@ -13,6 +13,11 @@ export interface TableSettings {
   align: Align;
   border: TableBorder;
   headerColor: string;
+  /**
+   * 열 이름 (자리 순서대로, 비운 자리는 ""). 비운 열은 AI가 초안을 만들 때 이름을 정한다 (SCRUM-419).
+   * 저장할 때 cols 길이로 맞추고, 모두 비었으면 뺀다
+   */
+  columnNames?: string[];
 }
 
 export interface ItemSettings {

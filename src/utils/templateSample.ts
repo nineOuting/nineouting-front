@@ -15,7 +15,11 @@ export const SAMPLE_MEETING_INFO = [
 /** 표 섹션: 머리 행 열 이름과 빈 칸 (양식의 행·열 수대로) */
 export function blankContent(item: TemplateItem) {
   const { table } = item.settings;
-  const head = Array.from({ length: table.cols }, (_, col) => SAMPLE_TABLE_HEADERS[col] ?? `열 ${col + 1}`);
+  // 사용자가 정한 열 이름을 먼저 쓰고, 비운 열은 예시 이름 (SCRUM-419)
+  const head = Array.from(
+    { length: table.cols },
+    (_, col) => table.columnNames?.[col]?.trim() || (SAMPLE_TABLE_HEADERS[col] ?? `열 ${col + 1}`),
+  );
   const rows = Array.from({ length: Math.max(0, table.rows - 1) }, () => Array.from({ length: table.cols }, () => ''));
   return [head, ...rows].map((cells) => cells.join(CELL_SEPARATOR)).join('\n');
 }
