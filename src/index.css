@@ -126,7 +126,8 @@
 
 /*
  * 피그마 새 디자인에 있지만 nep!nep!_css에 아직 없는 변수 (오면 지운다).
- * 프로젝트 색(REQ-202): default는 스와치, 달력 왼쪽 줄. subtle은 아이콘 바탕, 달력 일정 바탕(default 12%). icon은 아이콘 색
+ * 프로젝트 색(REQ-202): default는 스와치, 달력 왼쪽 줄. subtle은 아이콘 바탕, 달력 일정 바탕(default 12%). icon은 아이콘 색.
+ * 피그마 변수에서 폴더 아이콘(icon)은 default와 같은 색이라 default를 가리킨다 (디자인 요청 2026-11-26, SCRUM-410)
  */
 :root,
 [data-theme] {
@@ -160,14 +161,14 @@
   --project-indigo-border: #ced1eb;
   --project-sky-border: #d8eafc;
 
-  --project-red-icon: #eb5342;
-  --project-orange-icon: #bf7a13;
-  --project-yellow-icon: #a69025;
-  --project-green-icon: #609969;
-  --project-pink-icon: #c46da3;
-  --project-purple-icon: #9877d5;
-  --project-indigo-icon: #5b67be;
-  --project-sky-icon: #5f8ab8;
+  --project-red-icon: var(--project-red-default);
+  --project-orange-icon: var(--project-orange-default);
+  --project-yellow-icon: var(--project-yellow-default);
+  --project-green-icon: var(--project-green-default);
+  --project-pink-icon: var(--project-pink-default);
+  --project-purple-icon: var(--project-purple-default);
+  --project-indigo-icon: var(--project-indigo-default);
+  --project-sky-icon: var(--project-sky-default);
 }
 
 body {
@@ -179,56 +180,56 @@ body {
 [data-theme='dark'] {
   --project-red-subtle: #38232c;
   --project-red-border: #683032;
-  --project-red-icon: #eb5342;
+  --project-red-icon: var(--project-red-default);
   --project-orange-subtle: #3c3124;
   --project-orange-border: #704f21;
-  --project-orange-icon: #ffa219;
+  --project-orange-icon: var(--project-orange-default);
   --project-yellow-subtle: #3c3c2a;
   --project-yellow-border: #70672e;
-  --project-yellow-icon: #ffde39;
+  --project-yellow-icon: var(--project-yellow-default);
   --project-green-subtle: #213235;
   --project-green-border: #355246;
-  --project-green-icon: #6baa75;
+  --project-green-icon: var(--project-green-default);
   --project-pink-subtle: #3a2c45;
   --project-pink-border: #6c4569;
-  --project-pink-icon: #f588cc;
+  --project-pink-icon: var(--project-pink-default);
   --project-purple-subtle: #292946;
   --project-purple-border: #473e6d;
-  --project-purple-icon: #9877d5;
+  --project-purple-icon: var(--project-purple-default);
   --project-indigo-subtle: #1e2642;
   --project-indigo-border: #2f3863;
-  --project-indigo-icon: #636fc1;
+  --project-indigo-icon: var(--project-indigo-default);
   --project-sky-subtle: #25354c;
   --project-sky-border: #3d5879;
-  --project-sky-icon: #7eb8f5;
+  --project-sky-icon: var(--project-sky-default);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --project-red-subtle: #38232c;
     --project-red-border: #683032;
-    --project-red-icon: #eb5342;
+    --project-red-icon: var(--project-red-default);
     --project-orange-subtle: #3c3124;
     --project-orange-border: #704f21;
-    --project-orange-icon: #ffa219;
+    --project-orange-icon: var(--project-orange-default);
     --project-yellow-subtle: #3c3c2a;
     --project-yellow-border: #70672e;
-    --project-yellow-icon: #ffde39;
+    --project-yellow-icon: var(--project-yellow-default);
     --project-green-subtle: #213235;
     --project-green-border: #355246;
-    --project-green-icon: #6baa75;
+    --project-green-icon: var(--project-green-default);
     --project-pink-subtle: #3a2c45;
     --project-pink-border: #6c4569;
-    --project-pink-icon: #f588cc;
+    --project-pink-icon: var(--project-pink-default);
     --project-purple-subtle: #292946;
     --project-purple-border: #473e6d;
-    --project-purple-icon: #9877d5;
+    --project-purple-icon: var(--project-purple-default);
     --project-indigo-subtle: #1e2642;
     --project-indigo-border: #2f3863;
-    --project-indigo-icon: #636fc1;
+    --project-indigo-icon: var(--project-indigo-default);
     --project-sky-subtle: #25354c;
     --project-sky-border: #3d5879;
-    --project-sky-icon: #7eb8f5;
+    --project-sky-icon: var(--project-sky-default);
   }
 }
 
