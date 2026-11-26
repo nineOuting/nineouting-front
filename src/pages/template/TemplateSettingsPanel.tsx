@@ -53,10 +53,12 @@ const SECTION_GAPS = [
   { value: 20, label: '보통 (20px)' },
   { value: 32, label: '넓게 (32px)' },
 ];
+// 디자인 09 "테두리 고르기" (REQ-156, 11/25)
 const BORDERS: { value: TableBorder; label: string }[] = [
   { value: 'BASIC', label: '기본' },
+  { value: 'HORIZONTAL', label: '가로선만' },
+  { value: 'OUTER', label: '바깥선만' },
   { value: 'NONE', label: '없음' },
-  { value: 'BOLD', label: '굵게' },
 ];
 const ALIGNS: { value: Align; label: string; icon: string }[] = [
   { value: 'LEFT', label: '왼쪽 정렬', icon: alignLeftIcon },

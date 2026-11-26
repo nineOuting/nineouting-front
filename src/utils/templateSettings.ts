@@ -1,4 +1,4 @@
-import type { ItemSettings, TableSettings, TemplateItem, TemplateLayout } from '../types/template';
+import type { ItemSettings, TableBorder, TableSettings, TemplateItem, TemplateLayout } from '../types/template';
 
 // 서버는 설정을 JSON 그대로 저장하므로 빠진 값은 여기 기본값으로 채운다
 
@@ -61,8 +61,13 @@ export function normalizeColumnNames(table: TableSettings) {
 
 type Loose<T> = { [K in keyof T]?: T[K] extends object ? Partial<T[K]> : T[K] };
 
+/** 예전 값 "굵게"(BOLD)는 없어졌다. 서버도 BASIC으로 바꾸지만(minutes-service V20) 바뀌기 전 응답도 기본으로 보여 준다 */
+const LEGACY_BORDERS: Record<string, TableBorder> = { BOLD: 'BASIC' };
+
 export function withItemDefaults(settings: Loose<ItemSettings> | undefined): ItemSettings {
-  return { ...DEFAULT_ITEM_SETTINGS, ...settings, table: { ...DEFAULT_TABLE, ...settings?.table } } as ItemSettings;
+  const table = { ...DEFAULT_TABLE, ...settings?.table };
+  table.border = LEGACY_BORDERS[table.border] ?? table.border;
+  return { ...DEFAULT_ITEM_SETTINGS, ...settings, table } as ItemSettings;
 }
 
 export function withLayoutDefaults(layout: Loose<TemplateLayout> | undefined): TemplateLayout {
