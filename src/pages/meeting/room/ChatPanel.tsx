@@ -5,6 +5,7 @@ import errorIcon from '../../../assets/icons/error.svg';
 import liveIcon from '../../../assets/icons/evidence.svg';
 import generalIcon from '../../../assets/icons/general-knowledge.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
+import goIcon from '../../../assets/icons/source-go.svg';
 import archiveIcon from '../../../assets/icons/nav-archive.svg';
 import uploadIcon from '../../../assets/icons/pdf.svg';
 import sendIcon from '../../../assets/icons/send.svg';
@@ -23,6 +24,7 @@ const FAILED_MESSAGE = '답을 만들지 못했어요. 잠시 뒤 다시 질문�
 const GENERAL_MARK = '[일반]';
 
 const HEAD_ICON_SIZE = 14;
+const SOURCE_GO_SIZE = 16;
 
 // 디자인 AssistantAnswerCard: 답 카드 맨 위 "아이콘 + 어디서 찾았는지" 한 줄 (SCRUM-365).
 // 지금 회의, 지난 회의, 찾지 못함은 디자인대로, 사전 자료, 일반 지식은 디자인에 없어 같은 모양으로 더했다
@@ -60,6 +62,8 @@ interface ChatPanelProps {
   termCards?: (TermCardItem & { at: number })[];
   /** 용어 카드의 "방금", "N분 전"을 셀 지금 시각 */
   now?: number;
+  /** 지금 회의 근거를 누르면 그 전사 줄로 간다 */
+  onOpenLine?: (seq: number) => void;
 }
 
 type ThreadItem = { at: number; message: ChatMessage; card?: never } | { at: number; card: TermCardItem; message?: never };
@@ -76,24 +80,17 @@ function toThread(messages: ChatMessage[], termCards: (TermCardItem & { at: numb
 const DEFAULT_SUGGESTIONS = ['방금 5분 요약해 줘', '지난 회의에서 비슷한 얘기 찾아줘'];
 
 /**
- * 답 글의 [n]은 근거 번호, [일반]은 일반 지식 표시, **글**은 굵게 보여 준다.
- * 답 전체가 일반 지식이면 머리 줄과 겹치므로 [일반] 표시는 숨긴다 (hideGeneral)
+ * 답 글의 [n](근거 번호)은 보여 주지 않는다. 디자인은 근거를 답 아래 인용으로만 보여 준다 (SourceQuote).
+ * [일반]은 일반 지식 표시, **글**은 굵게 보여 준다. 답 전체가 일반 지식이면 머리 줄과 겹치므로 [일반] 표시는 숨긴다 (hideGeneral)
  */
 function AnswerText({ text, hideGeneral = false }: { text: string; hideGeneral?: boolean }) {
-  // 숨길 때는 표시 앞 빈칸도 같이 지운다 ("단위예요 [일반]." → "단위예요.")
-  const shown = hideGeneral ? text.replace(/\s*\[일반\]/g, '') : text;
-  const parts = shown.split(/(\[\d+\]|\[일반\]|\*\*[^*]+\*\*)/);
+  // 지우는 표시 앞 빈칸도 같이 지운다 ("나왔어요 [3][11]." → "나왔어요.", "단위예요 [일반]." → "단위예요.")
+  const withoutRefs = text.replace(/\s*\[\d+\]/g, '');
+  const shown = hideGeneral ? withoutRefs.replace(/\s*\[일반\]/g, '') : withoutRefs;
+  const parts = shown.split(/(\[일반\]|\*\*[^*]+\*\*)/);
   return (
     <p className={side.text}>
       {parts.map((part, index) => {
-        const ref = /^\[(\d+)\]$/.exec(part);
-        if (ref) {
-          return (
-            <sup key={index} className={styles.ref}>
-              {ref[1]}
-            </sup>
-          );
-        }
         if (part.length > 4 && part.startsWith('**') && part.endsWith('**')) {
           return <strong key={index}>{part.slice(2, -2)}</strong>;
         }
@@ -123,22 +120,68 @@ function AnswerHead({ message }: { message: ChatMessage }) {
   );
 }
 
-function Citations({ citations }: { citations: ChatCitation[] }) {
+/** 지금 회의 근거의 전사 줄. 발언(time)은 그 줄, 안건 요약·의견(agenda)은 첫 근거 발언 */
+function lineSeqOf({ sourceType, location }: ChatCitation) {
+  if (sourceType !== 'live') {
+    return undefined;
+  }
+  return location.seq ?? location.evidenceSeqs?.[0];
+}
+
+/** 인용 위 출처 이름. 지금 회의는 위치(발언 시각, 안건 요약 등), 지난 회의는 회의 이름, 사전 자료는 자료 이름과 쪽 */
+function sourceNameOf({ sourceType, title, location }: ChatCitation) {
+  if (sourceType === 'live') {
+    return location.label || title;
+  }
+  if (sourceType === 'upload' && location.label) {
+    return `${title} ${location.label}`;
+  }
+  return title;
+}
+
+/**
+ * 디자인 SourceQuote (07 상태 모음 · 놓친 흐름 따라잡기, 지난 회의 찾아보기): 파란 막대, 출처 이름, 인용, 화살표.
+ * 지금 회의 근거만 눌러 전사 줄로 간다. 지난 회의, 사전 자료는 갈 곳이 없어 화살표 없이 보여 준다
+ */
+function Sources({ citations, onOpenLine }: { citations: ChatCitation[]; onOpenLine?: (seq: number) => void }) {
   if (citations.length === 0) {
     return null;
   }
   return (
-    <ol className={styles.citations} aria-label="근거">
-      {citations.map((citation) => (
-        <li key={citation.ref} className={styles.citation}>
-          <span className={styles.citationRef}>{citation.ref}</span>
-          <span className={styles.citationSource}>
-            {citation.title}
-            {citation.location.label && <span className={styles.citationLabel}> {citation.location.label}</span>}
-          </span>
-        </li>
-      ))}
-    </ol>
+    <ul className={styles.sources} aria-label="근거">
+      {citations.map((citation) => {
+        const seq = lineSeqOf(citation);
+        const body = (
+          <>
+            <span className={styles.sourceBar} aria-hidden="true" />
+            <span className={styles.sourceText}>
+              <span className={styles.sourceName}>{sourceNameOf(citation)}</span>
+              {/* 디자인은 인용 한두 줄. 회의록 한 절처럼 긴 근거는 두 줄로 자르고, 마우스를 올리면 전체를 보여 준다 */}
+              <span className={styles.sourceQuote} title={citation.text}>
+                {citation.text}
+              </span>
+            </span>
+          </>
+        );
+        return (
+          <li key={citation.ref}>
+            {seq !== undefined && onOpenLine ? (
+              <button
+                type="button"
+                className={`${styles.source} ${styles.sourceLink}`}
+                aria-label={`${sourceNameOf(citation)} 전사 줄로 가기`}
+                onClick={() => onOpenLine(seq)}
+              >
+                {body}
+                <Icon src={goIcon} size={SOURCE_GO_SIZE} />
+              </button>
+            ) : (
+              <div className={styles.source}>{body}</div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -150,6 +193,7 @@ export default function ChatPanel({
   initialQuery,
   termCards = [],
   now = 0,
+  onOpenLine,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[] | null>(null);
   const [query, setQuery] = useState(initialQuery ?? '');
@@ -254,7 +298,7 @@ export default function ChatPanel({
               <AnswerHead message={message} />
               {/* MSG-076은 ai-service가 답 글로 준다 */}
               <AnswerText text={message.text} hideGeneral={message.basis === 'general'} />
-              <Citations citations={message.citations} />
+              <Sources citations={message.citations} onOpenLine={onOpenLine} />
             </div>
           ),
         )}

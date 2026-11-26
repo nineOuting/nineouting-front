@@ -27,6 +27,8 @@ interface TranscriptPanelProps {
   onAskTerm?: (term: string) => void;
   /** 인터넷이 끊겼을 때 맨 아래 안내 */
   isOffline?: boolean;
+  /** 넵넵 AI 근거에서 넘어온 줄. 열 때 그 줄로 옮기고 잠깐 칠한다 */
+  focusSeq?: number;
 }
 
 /** REQ-079, 083 실시간 전사. 회의록 작성자는 줄에 마우스를 올려 바로 고친다. REQ-089 줄마다 안건을 보여 주고 작성자는 바꿀 수 있다 */
@@ -40,6 +42,7 @@ export default function TranscriptPanel({
   termMatcher,
   onAskTerm,
   isOffline = false,
+  focusSeq,
 }: TranscriptPanelProps) {
   const titleOf = (agendaId: string | null | undefined) =>
     agendaOptions.find(({ id }) => id === agendaId)?.title;
@@ -62,6 +65,18 @@ export default function TranscriptPanel({
       el.scrollTop = el.scrollHeight;
     }
   }, [lines, editing]);
+
+  // 근거에서 넘어오면 그 줄을 가운데로 (새 줄이 와도 맨 아래로 내리지 않는다)
+  useLayoutEffect(() => {
+    if (focusSeq === undefined) {
+      return;
+    }
+    const line = listRef.current?.querySelector(`[data-seq="${focusSeq}"]`);
+    if (line) {
+      stickToBottomRef.current = false;
+      line.scrollIntoView({ block: 'center' });
+    }
+  }, [focusSeq]);
 
   const finishEditing = () => {
     if (editing && editing.text.trim()) {
@@ -95,11 +110,16 @@ export default function TranscriptPanel({
         <ol ref={listRef} className={styles.lines} aria-live="polite" onScroll={handleScroll}>
           {lines.map((line) => {
             const isEditing = editing?.seq === line.seq;
-            const className = [styles.line, canEdit ? styles.editable : '', isEditing ? styles.lineActive : '']
+            const className = [
+              styles.line,
+              canEdit ? styles.editable : '',
+              isEditing ? styles.lineActive : '',
+              line.seq === focusSeq ? styles.lineFocused : '',
+            ]
               .filter(Boolean)
               .join(' ');
             return (
-              <li key={line.seq} className={className}>
+              <li key={line.seq} className={className} data-seq={line.seq}>
                 <div className={styles.lineMeta}>
                   <span className={styles.time}>{line.time}</span>
                   {canEdit && onChangeAgenda ? (

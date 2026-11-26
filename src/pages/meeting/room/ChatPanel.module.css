@@ -57,15 +57,6 @@
   color: var(--text-secondary);
 }
 
-.ref {
-  margin: 0 1px;
-  padding: 0 4px;
-  background: var(--primary-subtle);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-caption);
-  color: var(--primary-default);
-}
-
 .generalMark {
   margin-left: var(--spacing-1);
   padding: 0 var(--spacing-1);
@@ -75,37 +66,64 @@
   color: var(--neutral-default);
 }
 
-.citations {
+.sources {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
-  padding-top: var(--spacing-2);
-  border-top: var(--border-width-default) solid var(--border-default);
+  gap: var(--spacing-2);
+  list-style: none;
 }
 
-.citation {
+/* 디자인 SourceQuote: 회색 바탕, 왼쪽 파란 막대, 출처 이름과 인용 */
+.source {
   display: flex;
+  align-items: center;
   gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--bg-surface-muted);
+  border: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font: inherit;
+}
+
+.sourceLink {
+  cursor: pointer;
+}
+
+.sourceLink:hover {
+  background: var(--secondary-ghost-hover);
+}
+
+.sourceBar {
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 2px;
+  background: var(--secondary-strong);
+}
+
+.sourceText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
+  overflow-wrap: anywhere;
+}
+
+.sourceName {
+  font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
 }
 
-.citationRef {
-  flex-shrink: 0;
-  min-width: 18px;
-  text-align: center;
-  background: var(--primary-subtle);
-  border-radius: var(--radius-full);
-  color: var(--primary-default);
-}
-
-.citationSource {
+.sourceQuote {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   color: var(--text-primary);
-}
-
-.citationLabel {
-  color: var(--text-secondary);
 }
 
 .retry {

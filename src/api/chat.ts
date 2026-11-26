@@ -13,7 +13,14 @@ export interface ChatCitation {
   title: string;
   text: string;
   /** label은 화면에 그대로 보여 주는 위치 글 (예: "결정 사항", "3쪽") */
-  location: { type: string; label: string };
+  location: {
+    type: string;
+    label: string;
+    /** 진행 중 회의 발언 (type time) */
+    seq?: number;
+    /** 진행 중 회의 안건의 요약·의견 등 (type agenda)의 근거 발언 */
+    evidenceSeqs?: number[];
+  };
 }
 
 export interface ChatMessage {

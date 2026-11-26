@@ -51,6 +51,22 @@
   background: var(--primary-subtle);
 }
 
+/* 넵넵 AI 근거에서 넘어온 줄: 연한 파랑으로 칠했다가 천천히 지운다 */
+.lineFocused {
+  animation: line-focused 2s ease-out;
+}
+
+@keyframes line-focused {
+  from,
+  40% {
+    background: var(--secondary-ghost-hover);
+  }
+
+  to {
+    background: transparent;
+  }
+}
+
 .lineMeta {
   display: flex;
   align-items: center;
