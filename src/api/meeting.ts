@@ -55,6 +55,8 @@ export interface MeetingDetailResponse {
   pausedSeconds: number;
   /** REQ-123 대기 화면에서 고른 회의록 양식 */
   templateId: number | null;
+  /** 고른 양식의 이름 (고를 때 보낸 값, SCRUM-419). 안 골랐거나 이름을 보내지 않았으면 null */
+  templateName: string | null;
 }
 
 type MinutesProgress = 'REVIEWING' | 'CONFIRMED';
@@ -250,6 +252,7 @@ export function toMeeting(detail: MeetingDetailResponse): Meeting {
     agendas: detail.agendas.map(toAgenda),
     writer: toMember(detail.writer),
     templateId: detail.templateId ?? undefined,
+    templateName: detail.templateName ?? undefined,
     materials: [],
     finishedAt: detail.finishedAt ?? undefined,
   };
@@ -282,9 +285,14 @@ export async function updateMeeting(meeting: Meeting) {
   return toMeeting(await request<MeetingDetailResponse>('PUT', `/api/meetings/${meeting.meetingId}`, toRequest(meeting)));
 }
 
-/** REQ-123 회의록 양식 고르기 (참석자, 시작 전). 회의를 마무리하면 이 양식으로 회의록을 만든다. null이면 뺀다 */
-export async function chooseMeetingTemplate(meetingId: number, templateId: number | null) {
-  return toMeeting(await request<MeetingDetailResponse>('PUT', `/api/meetings/${meetingId}/template`, { templateId }));
+/**
+ * REQ-123 회의록 양식 고르기 (참석자, 시작 전). 회의를 마무리하면 이 양식으로 회의록을 만든다. null이면 뺀다.
+ * 이름도 같이 보내 다른 참석자가 작성자의 개인 양식 이름을 볼 수 있게 한다 (SCRUM-419)
+ */
+export async function chooseMeetingTemplate(meetingId: number, templateId: number | null, templateName?: string) {
+  return toMeeting(
+    await request<MeetingDetailResponse>('PUT', `/api/meetings/${meetingId}/template`, { templateId, templateName }),
+  );
 }
 
 /** REQ-073 회의 취소 */

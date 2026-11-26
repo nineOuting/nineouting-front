@@ -308,14 +308,13 @@ export default function MeetingCreatePage() {
           });
       // REQ-199 워크스페이스 회의록 기본 양식을 먼저 골라 둔다 (대기 화면에서 바꿀 수 있다). 실패해도 회의는 만들어졌다.
       // 워크스페이스에 정한 양식이 없으면 서비스 기본 양식 (대기 화면의 기본 양식과 같은 기준, SCRUM-410)
+      // 이름도 같이 보내 다른 참석자 대기 화면에 보이게 한다. 목록을 못 받으면 이름 없이 고른다 (SCRUM-419)
       if (!editingMeeting) {
-        const templateId =
-          defaultTemplateId ??
-          (await listMinutesTemplates()
-            .then((templates) => templates.find(({ isDefault }) => isDefault)?.templateId ?? null)
-            .catch(() => null));
+        const templates = await listMinutesTemplates().catch(() => []);
+        const templateId = defaultTemplateId ?? templates.find(({ isDefault }) => isDefault)?.templateId ?? null;
         if (templateId !== null) {
-          await chooseMeetingTemplate(saved.meetingId, templateId).catch(() => undefined);
+          const templateName = templates.find((template) => template.templateId === templateId)?.name;
+          await chooseMeetingTemplate(saved.meetingId, templateId, templateName).catch(() => undefined);
         }
       }
       navigate(`/meetings/${saved.meetingId}`, { replace: true });

@@ -327,12 +327,15 @@ export default function MeetingRoomPage() {
       listWorkspaceMembers(loaded.workspaceId)
         .then((members) => isCurrent && setWorkspaceMembers(members))
         .catch(() => setWorkspaceMembers([]));
-      // MSG-083 회의를 끝낼 때 어떤 양식으로 회의록을 만드는지 보여 준다
+      // MSG-083 회의를 끝낼 때 어떤 양식으로 회의록을 만드는지 보여 준다.
+      // 회의에 저장된 이름을 먼저 쓰고, 내 목록에 있으면 지금 이름으로 바꾼다 (SCRUM-419)
       if (loaded.templateId !== null) {
+        setTemplateName(loaded.templateName);
         listMinutesTemplates()
           .then((templates) => {
             if (isCurrent) {
-              setTemplateName(templates.find(({ templateId }) => templateId === loaded.templateId)?.name ?? null);
+              const current = templates.find(({ templateId }) => templateId === loaded.templateId)?.name;
+              setTemplateName(current ?? loaded.templateName);
             }
           })
           .catch(() => undefined);

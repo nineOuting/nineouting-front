@@ -313,6 +313,8 @@ export default function MeetingWaitingPage() {
   const isWriter = meeting.writer?.userId === myId;
   const canStart = isReady && isWriter && !isEditingAgenda;
   const selectedTemplate = templates.find(({ templateId }) => templateId === meeting.templateId);
+  // 고른 양식 이름: 내 목록에 있으면 지금 이름, 없으면(작성자의 개인 양식) 고를 때 저장한 이름 (SCRUM-419)
+  const selectedTemplateName = selectedTemplate?.name ?? meeting.templateName;
   // 창을 열 때 정한 순서대로. 별표 상태는 templates에서 바로 읽는다
   const orderedTemplates = templateOrder.flatMap((id) => templates.filter(({ templateId }) => templateId === id));
   // 워크스페이스 기본 양식: 워크스페이스에 정해 둔 양식, 없으면 서비스 기본 양식 (순서를 정할 때와 같은 기준) (SCRUM-410)
@@ -380,12 +382,13 @@ export default function MeetingWaitingPage() {
 
   /** REQ-123 고른 양식은 바로 저장한다. 회의를 마무리하면 이 양식으로 회의록을 만든다. 실패하면 되돌린다 */
   const chooseTemplate = async (templateId: number) => {
-    const before = meeting.templateId;
-    setMeeting((prev) => prev && { ...prev, templateId });
+    const before = { templateId: meeting.templateId, templateName: meeting.templateName };
+    const templateName = templates.find((template) => template.templateId === templateId)?.name;
+    setMeeting((prev) => prev && { ...prev, templateId, templateName });
     try {
-      await chooseMeetingTemplate(meeting.meetingId, templateId);
+      await chooseMeetingTemplate(meeting.meetingId, templateId, templateName);
     } catch (error) {
-      setMeeting((prev) => prev && { ...prev, templateId: before });
+      setMeeting((prev) => prev && { ...prev, ...before });
       setToast({ text: errorMessage(error), variant: 'error' });
     }
   };
@@ -653,7 +656,7 @@ export default function MeetingWaitingPage() {
               <dl className={styles.settingsCard}>
                 <div className={styles.infoRow}>
                   <dt className={styles.settingLabel}>회의록 양식</dt>
-                  <dd className={styles.settingValue}>{selectedTemplate?.name ?? '기본 회의록'}</dd>
+                  <dd className={styles.settingValue}>{selectedTemplateName ?? '기본 회의록'}</dd>
                 </div>
                 <div className={styles.infoRow}>
                   <dt className={styles.settingLabel}>회의록 작성자</dt>
@@ -680,16 +683,16 @@ export default function MeetingWaitingPage() {
                 {/* 디자인 SettingRow: 라벨 "회의록 양식" + 고른 양식 이름 (작성자 줄과 같은 모양) */}
                 <span className={styles.settingLabel}>회의록 양식</span>
                 {canChooseTemplate ? (
-                  <span className={selectedTemplate ? styles.settingValue : styles.settingPlaceholder}>
-                    {selectedTemplate?.name ?? '선택해 주세요'}
+                  <span className={selectedTemplateName ? styles.settingValue : styles.settingPlaceholder}>
+                    {selectedTemplateName ?? '선택해 주세요'}
                   </span>
                 ) : (
-                  // 작성자가 아직 고르지 않았으면 실제로 쓰일 워크스페이스 기본 양식 이름. 작성자의 개인 양식은 내 양식 목록에 없어
-                  // 이름을 알 수 없다 (회의 응답에 양식 이름이 없음, 백엔드 요청 예정). 틀린 이름 대신 "작성자가 고른 양식"
+                  // 작성자가 아직 고르지 않았으면 실제로 쓰일 워크스페이스 기본 양식 이름. 작성자의 개인 양식은 회의에 저장된 이름으로
+                  // 보여 준다 (SCRUM-419). 이름 저장 전에 고른 회의는 이름을 알 수 없어 틀린 이름 대신 "작성자가 고른 양식"
                   <span className={styles.settingValue}>
                     {meeting.templateId === undefined
                       ? (workspaceDefaultTemplate?.name ?? '-')
-                      : (selectedTemplate?.name ?? '작성자가 고른 양식')}
+                      : (selectedTemplateName ?? '작성자가 고른 양식')}
                   </span>
                 )}
                 {canChooseTemplate && <Icon src={chevronRightIcon} size={SMALL_ICON_SIZE} className={styles.mutedIcon} />}
