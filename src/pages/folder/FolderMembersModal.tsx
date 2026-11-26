@@ -108,7 +108,7 @@ export default function FolderMembersModal({
                   // "모든 폴더" 권한으로 들어오는 멤버는 여기서 제외할 수 없다 (REQ-042, 서버가 막는다)
                   canManage &&
                   !member.isInherited && (
-                    <button type="button" className={styles.textButton} onClick={() => setRemoving(member)}>
+                    <button type="button" className={`${styles.textButton} ${styles.removeButton}`} onClick={() => setRemoving(member)}>
                       제외
                     </button>
                   )

@@ -1,16 +1,14 @@
 /* ==========================================================================
-   nep!nep! Design Tokens — tokens.css
-   Generated from Figma variables (실무통합_1팀) · 2026-11-05
-
-   - Light/Dark : <html data-theme="light|dark"> (없으면 OS 설정을 따름)
-   - Desktop/Mobile : 767px 이하에서 Mobile 값으로 전환
-   - 화면·컴포넌트에서는 Color / Size / Base 토큰만 사용하고 Palette는 직접 쓰지 않습니다.
+   nep!nep! tokens.css
+   피그마 Variables · Effect style에서 생성 (기준 2026-11-14)
+   - Palette · Base: 고정 값
+   - Size: Desktop 기본, 767px 이하 Mobile
+   - Color: Light 기본, [data-theme="dark"] 또는 OS 다크 설정에서 Dark
+   변수 이름은 피그마 Code syntax(WEB)와 같다. `/` → `-`
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   1. Palette (Primitive) — 직접 사용 금지
-   -------------------------------------------------------------------------- */
 :root {
+  /* ---------- Palette (화면에서 직접 쓰지 않는다) ---------- */
   --brand-10: #FBFBFF;
   --brand-20: #F1F1FF;
   --brand-50: #EBE8FB;
@@ -71,246 +69,19 @@
   --blue-800: #3965FA;
   --blue-900: #263366;
   --blue-950: #161C31;
-}
 
-/* --------------------------------------------------------------------------
-   2. Color (Semantic) — Light
-   -------------------------------------------------------------------------- */
-:root,
-[data-theme="light"] {
-  --bg-page: var(--gray-0);
-  --bg-surface: var(--gray-0);
-  --bg-surface-muted: var(--gray-100);
-  --bg-surface-raised: var(--gray-0);
-  --bg-overlay: rgb(0 0 0 / 50%);
+  --orange-50: #FFF7ED;
+  --orange-100: #FFEDD5;
+  --orange-300: #FDBA74;
+  --orange-400: #FB923C;
+  --orange-500: #F97316;
+  --orange-600: #EA580C;
+  --orange-700: #C2410C;
+  --orange-800: #9A3412;
+  --orange-900: #7C2D12;
+  --orange-950: #431407;
 
-  --text-primary: var(--gray-950);
-  --text-secondary: var(--gray-700);
-  --text-disabled: var(--gray-400);
-  --text-on-primary: var(--gray-0);
-  --text-on-secondary: var(--blue-900);
-  --text-link: var(--blue-800);
-  --text-link-hover: var(--blue-900);
-  --text-link-pressed: var(--blue-950);
-
-  --border-default: var(--gray-200);
-  --border-strong: var(--gray-300);
-  --border-focus: var(--blue-800);
-  --border-error: var(--red-600);
-
-  --primary-default: var(--brand-600);
-  --primary-hover: var(--brand-700);
-  --primary-pressed: var(--brand-800);
-  --primary-disabled: var(--gray-200);
-  --primary-subtle: var(--brand-50);
-  --primary-ghost-hover: var(--brand-20);
-
-  --secondary-default: var(--blue-100);
-  --secondary-hover: var(--blue-300);
-  --secondary-pressed: var(--blue-400);
-  --secondary-disabled: var(--gray-200);
-  --secondary-subtle: var(--blue-100);
-  --secondary-ghost-hover: var(--blue-50);
-  --secondary-strong: var(--blue-800);
-
-  --neutral-default: var(--gray-500);
-  --neutral-hover: var(--gray-700);
-  --neutral-pressed: var(--gray-800);
-  --neutral-disabled: var(--gray-200);
-  --neutral-subtle: var(--gray-100);
-  --neutral-ghost-hover: var(--gray-50);
-
-  --danger-default: var(--red-700);
-  --danger-hover: var(--red-800);
-  --danger-pressed: var(--red-900);
-  --danger-subtle: var(--red-50);
-
-  --success-default: var(--green-800);
-  --success-subtle: var(--green-50);
-
-  --info-default: var(--blue-800);
-  --info-subtle: var(--blue-50);
-
-  --status-decided: var(--green-800);
-  --status-decided-subtle: var(--green-50);
-  --status-undecided: var(--red-700);
-  --status-undecided-subtle: var(--red-50);
-  --status-discussing: var(--brand-600);
-  --status-discussing-subtle: var(--brand-100);
-  --status-pending: var(--gray-600);
-  --status-pending-subtle: var(--gray-100);
-
-  --control-knob: var(--gray-0);
-  --control-track-on: var(--brand-600);
-  --control-track-on-secondary: var(--blue-700);
-  --control-track-off: var(--gray-400);
-
-  --interactive-default: var(--gray-0);
-  --interactive-hover: var(--gray-50);
-  --interactive-pressed: var(--blue-100);
-  --interactive-selected: var(--blue-50);
-  --interactive-selected-border: var(--blue-800);
-}
-
-/* --------------------------------------------------------------------------
-   3. Color (Semantic) — Dark
-   -------------------------------------------------------------------------- */
-[data-theme="dark"] {
-  --bg-page: var(--gray-1000);
-  --bg-surface: var(--gray-950);
-  --bg-surface-muted: var(--gray-900);
-  --bg-surface-raised: var(--gray-800);
-  --bg-overlay: rgb(0 0 0 / 70%);
-
-  --text-primary: var(--gray-50);
-  --text-secondary: var(--gray-400);
-  --text-disabled: var(--gray-600);
-  --text-on-primary: var(--gray-950);
-  --text-on-secondary: var(--blue-500);
-  --text-link: var(--blue-600);
-  --text-link-hover: var(--blue-500);
-  --text-link-pressed: var(--blue-400);
-
-  --border-default: var(--gray-800);
-  --border-strong: var(--gray-700);
-  --border-focus: var(--blue-600);
-  --border-error: var(--red-500);
-
-  --primary-default: var(--brand-400);
-  --primary-hover: var(--brand-300);
-  --primary-pressed: var(--brand-200);
-  --primary-disabled: var(--gray-800);
-  --primary-subtle: var(--brand-900);
-  --primary-ghost-hover: var(--brand-950);
-
-  --secondary-default: var(--blue-950);
-  --secondary-hover: var(--blue-900);
-  --secondary-pressed: var(--blue-900);
-  --secondary-disabled: var(--gray-800);
-  --secondary-subtle: var(--blue-950);
-  --secondary-ghost-hover: var(--gray-900);
-  --secondary-strong: var(--blue-600);
-
-  --neutral-default: var(--gray-400);
-  --neutral-hover: var(--gray-300);
-  --neutral-pressed: var(--gray-200);
-  --neutral-disabled: var(--gray-700);
-  --neutral-subtle: var(--gray-800);
-  --neutral-ghost-hover: var(--gray-900);
-
-  --danger-default: var(--red-500);
-  --danger-hover: var(--red-400);
-  --danger-pressed: var(--red-300);
-  --danger-subtle: var(--red-950);
-
-  --success-default: var(--green-500);
-  --success-subtle: var(--green-950);
-
-  --info-default: var(--blue-600);
-  --info-subtle: var(--blue-950);
-
-  --status-decided: var(--green-400);
-  --status-decided-subtle: var(--green-950);
-  --status-undecided: var(--red-400);
-  --status-undecided-subtle: var(--red-950);
-  --status-discussing: var(--brand-300);
-  --status-discussing-subtle: var(--brand-800);
-  --status-pending: var(--gray-400);
-  --status-pending-subtle: var(--gray-800);
-
-  --control-knob: var(--gray-0);
-  --control-track-on: var(--brand-400);
-  --control-track-on-secondary: var(--blue-600);
-  --control-track-off: var(--gray-700);
-
-  --interactive-default: var(--gray-950);
-  --interactive-hover: var(--gray-900);
-  --interactive-pressed: var(--blue-900);
-  --interactive-selected: var(--blue-950);
-  --interactive-selected-border: var(--blue-600);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-page: var(--gray-1000);
-    --bg-surface: var(--gray-950);
-    --bg-surface-muted: var(--gray-900);
-    --bg-surface-raised: var(--gray-800);
-    --bg-overlay: rgb(0 0 0 / 70%);
-
-    --text-primary: var(--gray-50);
-    --text-secondary: var(--gray-400);
-    --text-disabled: var(--gray-600);
-    --text-on-primary: var(--gray-950);
-    --text-on-secondary: var(--blue-500);
-    --text-link: var(--blue-600);
-    --text-link-hover: var(--blue-500);
-    --text-link-pressed: var(--blue-400);
-
-    --border-default: var(--gray-800);
-    --border-strong: var(--gray-700);
-    --border-focus: var(--blue-600);
-    --border-error: var(--red-500);
-
-    --primary-default: var(--brand-400);
-    --primary-hover: var(--brand-300);
-    --primary-pressed: var(--brand-200);
-    --primary-disabled: var(--gray-800);
-    --primary-subtle: var(--brand-900);
-    --primary-ghost-hover: var(--brand-950);
-
-    --secondary-default: var(--blue-950);
-    --secondary-hover: var(--blue-900);
-    --secondary-pressed: var(--blue-900);
-    --secondary-disabled: var(--gray-800);
-    --secondary-subtle: var(--blue-950);
-    --secondary-ghost-hover: var(--gray-900);
-    --secondary-strong: var(--blue-600);
-
-    --neutral-default: var(--gray-400);
-    --neutral-hover: var(--gray-300);
-    --neutral-pressed: var(--gray-200);
-    --neutral-disabled: var(--gray-700);
-    --neutral-subtle: var(--gray-800);
-    --neutral-ghost-hover: var(--gray-900);
-
-    --danger-default: var(--red-500);
-    --danger-hover: var(--red-400);
-    --danger-pressed: var(--red-300);
-    --danger-subtle: var(--red-950);
-
-    --success-default: var(--green-500);
-    --success-subtle: var(--green-950);
-
-    --info-default: var(--blue-600);
-    --info-subtle: var(--blue-950);
-
-    --status-decided: var(--green-400);
-    --status-decided-subtle: var(--green-950);
-    --status-undecided: var(--red-400);
-    --status-undecided-subtle: var(--red-950);
-    --status-discussing: var(--brand-300);
-    --status-discussing-subtle: var(--brand-800);
-    --status-pending: var(--gray-400);
-    --status-pending-subtle: var(--gray-800);
-
-    --control-knob: var(--gray-0);
-    --control-track-on: var(--brand-400);
-    --control-track-on-secondary: var(--blue-600);
-    --control-track-off: var(--gray-700);
-
-    --interactive-default: var(--gray-950);
-    --interactive-hover: var(--gray-900);
-    --interactive-pressed: var(--blue-900);
-    --interactive-selected: var(--blue-950);
-    --interactive-selected-border: var(--blue-600);
-  }
-}
-
-/* --------------------------------------------------------------------------
-   4. Base — 모든 화면 공통
-   -------------------------------------------------------------------------- */
-:root {
+  /* ---------- Base ---------- */
   --spacing-1: 4px;
   --spacing-2: 8px;
   --spacing-3: 12px;
@@ -321,28 +92,22 @@
   --spacing-10: 40px;
   --spacing-12: 48px;
   --spacing-14: 56px;
-
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 999px;
-
+  --icon-xs: 12px;
   --icon-sm: 16px;
   --icon-md: 20px;
   --icon-lg: 24px;
-
+  --profile-xs: 16px;
   --profile-sm: 24px;
   --profile-md: 32px;
   --profile-lg: 40px;
-
   --border-width-default: 1px;
   --border-width-focus: 2px;
-}
 
-/* --------------------------------------------------------------------------
-   5. Size — Desktop (기본)
-   -------------------------------------------------------------------------- */
-:root {
+  /* ---------- Size (Desktop) ---------- */
   --font-size-heading-xl: 32px;
   --font-size-heading-lg: 24px;
   --font-size-heading-md: 20px;
@@ -350,7 +115,6 @@
   --font-size-body-lg: 16px;
   --font-size-body-md: 14px;
   --font-size-caption: 12px;
-
   --line-height-heading-xl: 40px;
   --line-height-heading-lg: 32px;
   --line-height-heading-md: 28px;
@@ -358,7 +122,6 @@
   --line-height-body-lg: 24px;
   --line-height-body-md: 20px;
   --line-height-caption: 16px;
-
   --button-lg-height: 48px;
   --button-lg-padding-x: var(--spacing-5);
   --button-lg-font-size: var(--font-size-body-lg);
@@ -368,14 +131,12 @@
   --button-sm-height: 32px;
   --button-sm-padding-x: var(--spacing-3);
   --button-sm-font-size: var(--font-size-caption);
-
   --input-md-height: var(--spacing-10);
   --input-md-padding-x: var(--spacing-3);
   --input-md-font-size: var(--font-size-body-md);
   --input-sm-height: var(--spacing-8);
   --input-sm-padding-x: var(--spacing-2);
   --input-sm-font-size: var(--font-size-body-md);
-
   --icon-button-lg-height: 32px;
   --icon-button-lg-padding-x: var(--spacing-1);
   --icon-button-lg-icon-size: var(--icon-lg);
@@ -385,17 +146,17 @@
   --icon-button-sm-height: 24px;
   --icon-button-sm-padding-x: var(--spacing-1);
   --icon-button-sm-icon-size: var(--icon-sm);
-
+  --icon-button-xs-height: 16px;
+  --icon-button-xs-padding-x: var(--spacing-1);
+  --icon-button-xs-icon-size: var(--icon-xs);
   --gap-title-subtitle: var(--spacing-1);
   --gap-label-field: var(--spacing-2);
   --gap-inline: var(--spacing-2);
   --gap-list: var(--spacing-2);
   --gap-content: var(--spacing-4);
   --gap-section: var(--spacing-8);
-
   --padding-card: var(--spacing-6);
   --padding-modal: var(--spacing-6);
-
   --layout-page-margin: 32px;
   --layout-gutter: 24px;
   --layout-content-max-width: 1200px;
@@ -403,40 +164,122 @@
   --layout-header-height: 56px;
   --layout-modal-width-sm: 400px;
   --layout-modal-width-md: 560px;
+
+  /* ---------- Typography ---------- */
+  --font-family-base: "Min Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --letter-spacing-base: 0.03em; /* 모든 텍스트 스타일 자간 3% */
+
+  /* ---------- Color (Light) ---------- */
+  --bg-page: var(--brand-10);
+  --bg-surface: var(--gray-0);
+  --bg-surface-muted: var(--gray-100);
+  --bg-surface-raised: var(--gray-0);
+  --bg-panel: var(--brand-10);
+  --bg-sidebar: var(--gray-50);
+  --bg-inverse: var(--gray-900);
+  --bg-overlay: rgb(0 0 0 / 0.5);
+  --text-primary: var(--gray-950);
+  --text-secondary: var(--gray-700);
+  --text-tertiary: var(--gray-500);
+  --text-disabled: var(--gray-400);
+  --text-on-primary: var(--gray-0);
+  --text-on-secondary: var(--blue-900);
+  --text-on-inverse: var(--gray-0);
+  --text-link: var(--blue-800);
+  --text-link-hover: var(--blue-900);
+  --text-link-pressed: var(--blue-950);
+  --border-default: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --border-focus: var(--blue-800);
+  --border-selected: var(--blue-400);
+  --border-error: var(--red-600);
+  --primary-default: var(--brand-600);
+  --primary-hover: var(--brand-700);
+  --primary-pressed: var(--brand-800);
+  --primary-disabled: var(--gray-200);
+  --primary-subtle: var(--brand-50);
+  --primary-ghost-hover: var(--brand-20);
+  --primary-gradient: var(--primary-default);
+  --primary-gradient-start: var(--brand-600);
+  --primary-gradient-end: var(--brand-800);
+  --secondary-default: var(--blue-100);
+  --secondary-hover: var(--blue-300);
+  --secondary-pressed: var(--blue-400);
+  --secondary-disabled: var(--gray-200);
+  --secondary-ghost-hover: var(--blue-50);
+  --secondary-strong: var(--blue-800);
+  --neutral-default: var(--gray-500);
+  --neutral-hover: var(--gray-700);
+  --neutral-pressed: var(--gray-800);
+  --neutral-disabled: var(--gray-200);
+  --neutral-subtle: var(--gray-100);
+  --neutral-ghost-hover: var(--gray-50);
+  --danger-default: var(--red-700);
+  --danger-hover: var(--red-800);
+  --danger-pressed: var(--red-900);
+  --danger-subtle: var(--red-50);
+  --warning-default: var(--orange-600);
+  --warning-subtle: var(--orange-50);
+  --success-default: var(--green-800);
+  --success-subtle: var(--green-50);
+  --info-default: var(--blue-800);
+  --info-subtle: var(--blue-50);
+  --status-decided: var(--green-800);
+  --status-decided-subtle: var(--green-50);
+  --status-discussing: var(--brand-600);
+  --status-discussing-subtle: var(--brand-100);
+  --status-discussing-border: var(--brand-300);
+  --status-undecided: var(--orange-600);
+  --status-undecided-subtle: var(--orange-50);
+  --status-pending: var(--gray-600);
+  --status-pending-subtle: var(--gray-100);
+  --control-knob: var(--gray-0);
+  --control-track-on: var(--brand-600);
+  --control-track-on-secondary: var(--blue-700);
+  --control-track-off: var(--gray-400);
+  --interactive-default: var(--gray-0);
+  --interactive-hover: var(--gray-50);
+  --interactive-pressed: var(--blue-100);
+  --interactive-selected: var(--blue-50);
+  --interactive-selected-border: var(--blue-800);
+
+  /* ---------- Shadow (Effect style) ---------- */
+  --shadow-sm: 1px 1px 2px 0 rgb(0 0 0 / 0.1); /* dropshadow */
+  --shadow-md: 0 4px 8px 0 rgb(0 0 0 / 0.1); /* Dropshadow 2 */
+  --shadow-nepbot: 0 4px 4px 0 rgb(0 0 0 / 0.25); /* nep!bot_shadow */
+  --shadow-elevation-card-hover: 0 1px 3px 0 rgb(11 15 23 / 0.06), 0 8px 20px -2px rgb(11 15 23 / 0.12); /* elevation/card-hover */
+  --shadow-elevation-active: 0 6px 16px 0 rgb(54 26 213 / 0.14); /* elevation/active */
+
+  color-scheme: light;
 }
 
-/* --------------------------------------------------------------------------
-   6. Size — Mobile (767px 이하, Desktop과 다른 값만)
-   -------------------------------------------------------------------------- */
+/* ---------- Size (Mobile, 767px 이하) ---------- */
 @media (max-width: 767px) {
   :root {
     --font-size-heading-xl: 24px;
     --font-size-heading-lg: 20px;
     --font-size-heading-md: 18px;
-
     --line-height-heading-xl: 32px;
     --line-height-heading-lg: 28px;
     --line-height-heading-md: 26px;
-
     --button-lg-height: 56px;
     --button-md-height: 44px;
-
     --input-md-height: var(--spacing-12);
     --input-md-font-size: var(--font-size-body-lg);
     --input-sm-height: var(--spacing-10);
     --input-sm-padding-x: var(--spacing-3);
     --input-sm-font-size: var(--font-size-body-lg);
-
     --icon-button-lg-height: 40px;
     --icon-button-md-height: 32px;
     --icon-button-sm-height: 28px;
-
+    --icon-button-xs-height: 20px;
     --gap-content: var(--spacing-3);
     --gap-section: var(--spacing-6);
-
     --padding-card: var(--spacing-4);
     --padding-modal: var(--spacing-5);
-
     --layout-page-margin: 16px;
     --layout-gutter: 16px;
     --layout-sidebar-width: 280px;
@@ -445,10 +288,155 @@
   }
 }
 
-/* --------------------------------------------------------------------------
-   7. Shadow (Effect style)
-   -------------------------------------------------------------------------- */
-:root {
-  --shadow-sm: 1px 1px 2px 0 rgb(0 0 0 / 10%);  /* dropshadow : 카드 */
-  --shadow-md: 0 4px 8px 0 rgb(0 0 0 / 10%);    /* Dropshadow 2 : 드롭다운, 모달, 토스트 */
+/* ---------- Color (Dark) ---------- */
+[data-theme="dark"] {
+  --bg-page: var(--gray-1000);
+  --bg-surface: var(--gray-950);
+  --bg-surface-muted: var(--gray-900);
+  --bg-surface-raised: var(--gray-800);
+  --bg-panel: var(--gray-900);
+  --bg-sidebar: var(--gray-900);
+  --bg-inverse: var(--gray-50);
+  --bg-overlay: rgb(0 0 0 / 0.7);
+  --text-primary: var(--gray-50);
+  --text-secondary: var(--gray-400);
+  --text-tertiary: var(--gray-400);
+  --text-disabled: var(--gray-600);
+  --text-on-primary: var(--gray-950);
+  --text-on-secondary: var(--blue-500);
+  --text-on-inverse: var(--gray-950);
+  --text-link: var(--blue-600);
+  --text-link-hover: var(--blue-500);
+  --text-link-pressed: var(--blue-400);
+  --border-default: var(--gray-800);
+  --border-strong: var(--gray-700);
+  --border-focus: var(--blue-600);
+  --border-selected: var(--blue-100);
+  --border-error: var(--red-500);
+  --primary-default: var(--brand-400);
+  --primary-hover: var(--brand-300);
+  --primary-pressed: var(--brand-200);
+  --primary-disabled: var(--gray-800);
+  --primary-subtle: var(--brand-900);
+  --primary-ghost-hover: var(--brand-950);
+  --primary-gradient: #FFFFFF;
+  --primary-gradient-start: var(--blue-600);
+  --primary-gradient-end: var(--blue-300);
+  --secondary-default: var(--blue-950);
+  --secondary-hover: var(--blue-900);
+  --secondary-pressed: var(--blue-900);
+  --secondary-disabled: var(--gray-800);
+  --secondary-ghost-hover: var(--gray-900);
+  --secondary-strong: var(--blue-600);
+  --neutral-default: var(--gray-400);
+  --neutral-hover: var(--gray-300);
+  --neutral-pressed: var(--gray-200);
+  --neutral-disabled: var(--gray-700);
+  --neutral-subtle: var(--gray-800);
+  --neutral-ghost-hover: var(--gray-900);
+  --danger-default: var(--red-500);
+  --danger-hover: var(--red-400);
+  --danger-pressed: var(--red-300);
+  --danger-subtle: var(--red-950);
+  --warning-default: var(--orange-400);
+  --warning-subtle: var(--orange-950);
+  --success-default: var(--green-500);
+  --success-subtle: var(--green-950);
+  --info-default: var(--blue-600);
+  --info-subtle: var(--blue-950);
+  --status-decided: var(--green-400);
+  --status-decided-subtle: var(--green-950);
+  --status-discussing: var(--brand-300);
+  --status-discussing-subtle: var(--brand-800);
+  --status-discussing-border: var(--brand-700);
+  --status-undecided: var(--orange-400);
+  --status-undecided-subtle: var(--orange-950);
+  --status-pending: var(--gray-400);
+  --status-pending-subtle: var(--gray-800);
+  --control-track-on: var(--brand-400);
+  --control-track-on-secondary: var(--blue-600);
+  --control-track-off: var(--gray-700);
+  --interactive-default: var(--gray-950);
+  --interactive-hover: var(--gray-900);
+  --interactive-pressed: var(--blue-900);
+  --interactive-selected: var(--blue-950);
+  --interactive-selected-border: var(--blue-600);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: var(--gray-1000);
+    --bg-surface: var(--gray-950);
+    --bg-surface-muted: var(--gray-900);
+    --bg-surface-raised: var(--gray-800);
+    --bg-panel: var(--gray-900);
+    --bg-sidebar: var(--gray-900);
+    --bg-inverse: var(--gray-50);
+    --bg-overlay: rgb(0 0 0 / 0.7);
+    --text-primary: var(--gray-50);
+    --text-secondary: var(--gray-400);
+    --text-tertiary: var(--gray-400);
+    --text-disabled: var(--gray-600);
+    --text-on-primary: var(--gray-950);
+    --text-on-secondary: var(--blue-500);
+    --text-on-inverse: var(--gray-950);
+    --text-link: var(--blue-600);
+    --text-link-hover: var(--blue-500);
+    --text-link-pressed: var(--blue-400);
+    --border-default: var(--gray-800);
+    --border-strong: var(--gray-700);
+    --border-focus: var(--blue-600);
+    --border-selected: var(--blue-100);
+    --border-error: var(--red-500);
+    --primary-default: var(--brand-400);
+    --primary-hover: var(--brand-300);
+    --primary-pressed: var(--brand-200);
+    --primary-disabled: var(--gray-800);
+    --primary-subtle: var(--brand-900);
+    --primary-ghost-hover: var(--brand-950);
+    --primary-gradient: #FFFFFF;
+    --primary-gradient-start: var(--blue-600);
+    --primary-gradient-end: var(--blue-300);
+    --secondary-default: var(--blue-950);
+    --secondary-hover: var(--blue-900);
+    --secondary-pressed: var(--blue-900);
+    --secondary-disabled: var(--gray-800);
+    --secondary-ghost-hover: var(--gray-900);
+    --secondary-strong: var(--blue-600);
+    --neutral-default: var(--gray-400);
+    --neutral-hover: var(--gray-300);
+    --neutral-pressed: var(--gray-200);
+    --neutral-disabled: var(--gray-700);
+    --neutral-subtle: var(--gray-800);
+    --neutral-ghost-hover: var(--gray-900);
+    --danger-default: var(--red-500);
+    --danger-hover: var(--red-400);
+    --danger-pressed: var(--red-300);
+    --danger-subtle: var(--red-950);
+    --warning-default: var(--orange-400);
+    --warning-subtle: var(--orange-950);
+    --success-default: var(--green-500);
+    --success-subtle: var(--green-950);
+    --info-default: var(--blue-600);
+    --info-subtle: var(--blue-950);
+    --status-decided: var(--green-400);
+    --status-decided-subtle: var(--green-950);
+    --status-discussing: var(--brand-300);
+    --status-discussing-subtle: var(--brand-800);
+    --status-discussing-border: var(--brand-700);
+    --status-undecided: var(--orange-400);
+    --status-undecided-subtle: var(--orange-950);
+    --status-pending: var(--gray-400);
+    --status-pending-subtle: var(--gray-800);
+    --control-track-on: var(--brand-400);
+    --control-track-on-secondary: var(--blue-600);
+    --control-track-off: var(--gray-700);
+    --interactive-default: var(--gray-950);
+    --interactive-hover: var(--gray-900);
+    --interactive-pressed: var(--blue-900);
+    --interactive-selected: var(--blue-950);
+    --interactive-selected-border: var(--blue-600);
+    color-scheme: dark;
+  }
 }
