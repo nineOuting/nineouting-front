@@ -1,134 +1,169 @@
 /* ==========================================================================
-   nep!nep! Typography — typography.css
-   Generated from Figma text styles (실무통합_1팀) · 2026-11-05
-
-   - tokens.css 다음에 불러옵니다. 크기·줄 간격은 tokens.css 변수를 참조하므로
-     767px 이하에서 Mobile 값으로 자동 전환됩니다.
-   - 클래스 이름 = 피그마 텍스트 스타일 이름 (Heading/H1/Bold → .heading-h1-bold)
-   - Min Sans 웹폰트는 프로젝트에서 별도로 불러와 주세요.
+   nep!nep! typography.css
+   피그마 텍스트 스타일 12개에서 생성 (기준 2026-11-14)
+   - 글꼴: Min Sans (Regular 400 · SemiBold 600 · Bold 700), 자간 3%
+   - 크기·줄 간격은 tokens.css의 Size 변수를 써서 767px 이하에서 모바일 값으로 바뀐다.
+   tokens.css 다음에 불러온다 (global.css가 함께 불러온다).
    ========================================================================== */
 
-:root {
-  --font-family-base: "Min Sans", "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+/* ---------- 1. 웹폰트 ---------- */
+/*
+ * [프로젝트 적용] 이 프로젝트는 Min Sans를 index.html의 CDN(min-sans 1.4.2 dynamic subset)으로 불러온다.
+ * 받은 파일의 @font-face(/fonts/MinSans-*.woff2) 3개는 파일이 없어 CDN 글꼴을 가려 대체 글꼴로 보이게 하므로 뺐다 (SCRUM-410, 2026-11-26).
+ * 글꼴 파일을 프로젝트에 넣게 되면 받은 원본의 @font-face를 다시 넣는다.
+ */
 
-  --font-weight-regular: 400;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-
-  --letter-spacing-base: 0.03em;  /* 피그마 3% */
-}
-
-body {
+/* ---------- 2. 텍스트 스타일 (피그마 텍스트 스타일 12개) ---------- */
+/* 이름 규칙: Heading/H1/Bold → .heading-h1-bold */
+.display-bold,
+.heading-h1-bold,
+.heading-h2-semibold,
+.heading-h3-semibold,
+.body-b1-regular,
+.body-b1-semibold,
+.body-b1-bold,
+.body-b2-regular,
+.body-b2-semibold,
+.body-b2-bold,
+.caption-regular,
+.caption-semibold {
   font-family: var(--font-family-base);
   letter-spacing: var(--letter-spacing-base);
-  color: var(--text-primary);
-  background-color: var(--bg-page);
 }
 
-/* Display/Bold */
 .display-bold {
-  font-family: var(--font-family-base);
   font-size: var(--font-size-heading-xl);
   line-height: var(--line-height-heading-xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-base);
 }
 
-/* Heading/H1/Bold */
 .heading-h1-bold {
-  font-family: var(--font-family-base);
   font-size: var(--font-size-heading-lg);
   line-height: var(--line-height-heading-lg);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-base);
 }
 
-/* Heading/H2/SemiBold */
 .heading-h2-semibold {
-  font-family: var(--font-family-base);
   font-size: var(--font-size-heading-md);
   line-height: var(--line-height-heading-md);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-base);
 }
 
-/* Heading/H3/SemiBold */
 .heading-h3-semibold {
-  font-family: var(--font-family-base);
   font-size: var(--font-size-heading-sm);
   line-height: var(--line-height-heading-sm);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-base);
 }
 
-/* Body/B1/Regular */
-.body-b1-regular {
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-body-lg);
-  line-height: var(--line-height-body-lg);
-  font-weight: var(--font-weight-regular);
-  letter-spacing: var(--letter-spacing-base);
-}
-
-/* Body/B1/SemiBold */
-.body-b1-semibold {
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-body-lg);
-  line-height: var(--line-height-body-lg);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-base);
-}
-
-/* Body/B1/Bold */
+.body-b1-regular,
+.body-b1-semibold,
 .body-b1-bold {
-  font-family: var(--font-family-base);
   font-size: var(--font-size-body-lg);
   line-height: var(--line-height-body-lg);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-base);
 }
 
-/* Body/B2/Regular */
-.body-b2-regular {
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  font-weight: var(--font-weight-regular);
-  letter-spacing: var(--letter-spacing-base);
-}
+.body-b1-regular { font-weight: var(--font-weight-regular); }
+.body-b1-semibold { font-weight: var(--font-weight-semibold); }
+.body-b1-bold { font-weight: var(--font-weight-bold); }
 
-/* Body/B2/SemiBold */
-.body-b2-semibold {
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-base);
-}
-
-/* Body/B2/Bold */
+.body-b2-regular,
+.body-b2-semibold,
 .body-b2-bold {
-  font-family: var(--font-family-base);
   font-size: var(--font-size-body-md);
   line-height: var(--line-height-body-md);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-base);
 }
 
-/* Caption/Regular */
-.caption-regular {
-  font-family: var(--font-family-base);
+.body-b2-regular { font-weight: var(--font-weight-regular); }
+.body-b2-semibold { font-weight: var(--font-weight-semibold); }
+.body-b2-bold { font-weight: var(--font-weight-bold); }
+
+.caption-regular,
+.caption-semibold {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+.caption-regular { font-weight: var(--font-weight-regular); }
+.caption-semibold { font-weight: var(--font-weight-semibold); }
+
+/* ---------- 4. 글자 색 역할 ---------- */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-disabled { color: var(--text-disabled); }
+.text-link { color: var(--text-link); }
+.text-danger { color: var(--danger-default); }
+
+/* ---------- 3. HTML 기본 태그 ---------- */
+/* 클래스 없이 태그만 써도 디자인 시스템 스타일이 나오도록 */
+h1 {
+  font-size: var(--font-size-heading-lg);
+  line-height: var(--line-height-heading-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+h2 {
+  font-size: var(--font-size-heading-md);
+  line-height: var(--line-height-heading-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+h3 {
+  font-size: var(--font-size-heading-sm);
+  line-height: var(--line-height-heading-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+small {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+strong,
+b {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ---------- 5. 역할별 묶음 (design.md 5장 글자 역할 규칙) ---------- */
+/* 입력 칸 라벨 */
+.text-label {
+  font-size: var(--font-size-body-md);
+  line-height: var(--line-height-body-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* 헬퍼 문구 · 에러 문구 (크기를 같게 유지해 에러가 떠도 레이아웃이 움직이지 않게) */
+.text-helper,
+.text-error {
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
   font-weight: var(--font-weight-regular);
-  letter-spacing: var(--letter-spacing-base);
 }
 
-/* Caption/SemiBold */
-.caption-semibold {
-  font-family: var(--font-family-base);
+.text-helper { color: var(--text-secondary); }
+.text-error { color: var(--danger-default); }
+
+/* 메타 정보 (날짜, 회의명 등) */
+.text-meta {
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-base);
+  color: var(--text-tertiary);
+}
+
+/* 모바일 입력 글자 16 이상 (아이폰 자동 확대 방지) */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
 }

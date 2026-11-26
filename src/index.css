@@ -44,23 +44,94 @@
 }
 
 /*
- * 피그마 2026-11-17 새 디자인(Page 8)에 생긴 변수. nep!nep!_css가 새로 오기 전까지 여기서 정의한다 (오면 지운다).
+ * 문서 종이(회의록·양식 미리보기)는 data-theme="light"를 붙여 다크 모드에서도 흰 종이로 둔다.
+ * nep!nep!_css(2026-11-14)는 라이트 색을 :root에만 정의하므로 [data-theme='light'] 안에서 라이트 색으로 되돌린다.
+ * 값은 tokens.css의 Color (Light)와 같다. tokens.css가 바뀌면 함께 맞춘다 (SCRUM-410)
+ */
+[data-theme='light'] {
+  --bg-page: var(--brand-10);
+  --bg-surface: var(--gray-0);
+  --bg-surface-muted: var(--gray-100);
+  --bg-surface-raised: var(--gray-0);
+  --bg-panel: var(--brand-10);
+  --bg-sidebar: var(--gray-50);
+  --bg-inverse: var(--gray-900);
+  --bg-overlay: rgb(0 0 0 / 0.5);
+  --text-primary: var(--gray-950);
+  --text-secondary: var(--gray-700);
+  --text-tertiary: var(--gray-500);
+  --text-disabled: var(--gray-400);
+  --text-on-primary: var(--gray-0);
+  --text-on-secondary: var(--blue-900);
+  --text-on-inverse: var(--gray-0);
+  --text-link: var(--blue-800);
+  --text-link-hover: var(--blue-900);
+  --text-link-pressed: var(--blue-950);
+  --border-default: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --border-focus: var(--blue-800);
+  --border-selected: var(--blue-400);
+  --border-error: var(--red-600);
+  --primary-default: var(--brand-600);
+  --primary-hover: var(--brand-700);
+  --primary-pressed: var(--brand-800);
+  --primary-disabled: var(--gray-200);
+  --primary-subtle: var(--brand-50);
+  --primary-ghost-hover: var(--brand-20);
+  --primary-gradient: var(--primary-default);
+  --primary-gradient-start: var(--brand-600);
+  --primary-gradient-end: var(--brand-800);
+  --secondary-default: var(--blue-100);
+  --secondary-hover: var(--blue-300);
+  --secondary-pressed: var(--blue-400);
+  --secondary-disabled: var(--gray-200);
+  --secondary-ghost-hover: var(--blue-50);
+  --secondary-strong: var(--blue-800);
+  --neutral-default: var(--gray-500);
+  --neutral-hover: var(--gray-700);
+  --neutral-pressed: var(--gray-800);
+  --neutral-disabled: var(--gray-200);
+  --neutral-subtle: var(--gray-100);
+  --neutral-ghost-hover: var(--gray-50);
+  --danger-default: var(--red-700);
+  --danger-hover: var(--red-800);
+  --danger-pressed: var(--red-900);
+  --danger-subtle: var(--red-50);
+  --warning-default: var(--orange-600);
+  --warning-subtle: var(--orange-50);
+  --success-default: var(--green-800);
+  --success-subtle: var(--green-50);
+  --info-default: var(--blue-800);
+  --info-subtle: var(--blue-50);
+  --status-decided: var(--green-800);
+  --status-decided-subtle: var(--green-50);
+  --status-discussing: var(--brand-600);
+  --status-discussing-subtle: var(--brand-100);
+  --status-discussing-border: var(--brand-300);
+  --status-undecided: var(--orange-600);
+  --status-undecided-subtle: var(--orange-50);
+  --status-pending: var(--gray-600);
+  --status-pending-subtle: var(--gray-100);
+  --control-knob: var(--gray-0);
+  --control-track-on: var(--brand-600);
+  --control-track-on-secondary: var(--blue-700);
+  --control-track-off: var(--gray-400);
+  --interactive-default: var(--gray-0);
+  --interactive-hover: var(--gray-50);
+  --interactive-pressed: var(--blue-100);
+  --interactive-selected: var(--blue-50);
+  --interactive-selected-border: var(--blue-800);
+  color-scheme: light;
+}
+
+/*
+ * 피그마 새 디자인에 있지만 nep!nep!_css에 아직 없는 변수 (오면 지운다).
  * 프로젝트 색(REQ-202): default는 스와치, 달력 왼쪽 줄. subtle은 아이콘 바탕, 달력 일정 바탕(default 12%). icon은 아이콘 색
  */
 :root,
 [data-theme] {
-  --bg-panel: var(--brand-10);
-  --bg-sidebar: var(--gray-50);
-  --text-tertiary: var(--gray-500);
-  --border-selected: var(--blue-400);
-  --status-undecided: #ea580c;
-  --status-undecided-subtle: #fff4e6;
-  --status-discussing-border: var(--brand-300);
-  /* 피그마 07 지금 이야기하는·수정 중인 결정 카드 그림자: 아래 6, 흐림 16, 보라(brand-600) 14% (SCRUM-365) */
-  --shadow-selected: 0 6px 16px 0 rgb(54 26 213 / 14%);
-  /* 피그마 warning/default, warning/subtle (orange 600, 50) */
-  --warning-default: #ea580c;
-  --warning-subtle: #fff7ed;
+  /* 피그마 07 지금 이야기하는·수정 중인 결정 카드 그림자 = elevation/active (SCRUM-365) */
+  --shadow-selected: var(--shadow-elevation-active);
 
   --project-red-default: #eb5342;
   --project-orange-default: #ffa219;
@@ -104,14 +175,8 @@ body {
   min-width: 600px;
 }
 
-/* 피그마 변수의 어두운 테마 값 (위 블록의 새 변수) */
+/* 피그마 변수의 어두운 테마 값 (위 블록의 프로젝트 색) */
 [data-theme='dark'] {
-  /* 피그마 text/tertiary 다크 값 (SettingsDark_Modal 2466:142935) (SCRUM-410) */
-  --text-tertiary: var(--gray-400);
-  --status-discussing-border: var(--brand-700);
-  --bg-panel: var(--gray-900);
-  --bg-sidebar: var(--gray-900);
-  --border-selected: var(--blue-100);
   --project-red-subtle: #38232c;
   --project-red-border: #683032;
   --project-red-icon: #eb5342;
@@ -136,19 +201,10 @@ body {
   --project-sky-subtle: #25354c;
   --project-sky-border: #3d5879;
   --project-sky-icon: #7eb8f5;
-  --warning-default: #fb923c;
-  --warning-subtle: #431407;
-  /* 피그마 bg/sidebar 어두운 값. 없으면 홈 달력 요일 줄 등이 다크 모드에서 하얗게 보인다 */
-  --bg-sidebar: var(--gray-900);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --text-tertiary: var(--gray-400);
-    --status-discussing-border: var(--brand-700);
-    --bg-panel: var(--gray-900);
-    --bg-sidebar: var(--gray-900);
-    --border-selected: var(--blue-100);
     --project-red-subtle: #38232c;
     --project-red-border: #683032;
     --project-red-icon: #eb5342;
@@ -173,9 +229,6 @@ body {
     --project-sky-subtle: #25354c;
     --project-sky-border: #3d5879;
     --project-sky-icon: #7eb8f5;
-    --warning-default: #fb923c;
-    --warning-subtle: #431407;
-    --bg-sidebar: var(--gray-900);
   }
 }
 
