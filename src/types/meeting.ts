@@ -39,6 +39,8 @@ export interface Meeting extends MeetingBasicInfo {
   writer?: Member;
   /** REQ-123 대기 화면에서 고른 회의록 양식 (minutes-service). 사전 자료는 MeetingMaterials가 따로 불러온다 (REQ-067) */
   templateId?: number;
+  /** 고른 양식의 이름 (고를 때 저장한 값이라 그 뒤 이름을 바꿔도 그대로, SCRUM-419). 작성자의 개인 양식도 이름을 알 수 있다 */
+  templateName?: string;
   materials: string[];
   /** 회의를 마무리한 시각 (끝난 회의만) */
   finishedAt?: string;
