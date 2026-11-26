@@ -194,6 +194,11 @@
   color: var(--text-disabled);
 }
 
+/* 프로젝트 멤버 [제외]는 회색 글자 (피그마 04 MemberManageModal RemoveButton, SCRUM-410) */
+.removeButton {
+  color: var(--text-secondary);
+}
+
 .danger {
   color: var(--danger-default);
 }
