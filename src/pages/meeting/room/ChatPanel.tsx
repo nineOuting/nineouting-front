@@ -11,6 +11,7 @@ import sendIcon from '../../../assets/icons/send.svg';
 import suggestionIcon from '../../../assets/icons/ai-suggestion.svg';
 import Icon from '../../../components/Icon';
 import Spinner from '../../../components/Spinner';
+import TermCard, { type TermCardItem } from './TermCard';
 import room from './room.module.css';
 import side from './SidePanel.module.css';
 import styles from './ChatPanel.module.css';
@@ -55,6 +56,21 @@ interface ChatPanelProps {
   suggestions?: string[];
   /** 처음 열 때 입력칸에 채울 질문 (용어 [더 묻기] 등) */
   initialQuery?: string;
+  /** REQ-191 처음 나온 용어 카드. at(ms) 순서로 대화 사이에 끼워 넣는다 */
+  termCards?: (TermCardItem & { at: number })[];
+  /** 용어 카드의 "방금", "N분 전"을 셀 지금 시각 */
+  now?: number;
+}
+
+type ThreadItem = { at: number; message: ChatMessage; card?: never } | { at: number; card: TermCardItem; message?: never };
+
+/** 대화와 용어 카드를 시간순으로. 시각이 같으면 용어 카드를 먼저 */
+function toThread(messages: ChatMessage[], termCards: (TermCardItem & { at: number })[]): ThreadItem[] {
+  const items: ThreadItem[] = [
+    ...termCards.map(({ at, ...card }) => ({ at, card })),
+    ...messages.map((message) => ({ at: Date.parse(message.createdAt), message })),
+  ];
+  return items.sort((a, b) => a.at - b.at);
 }
 
 const DEFAULT_SUGGESTIONS = ['방금 5분 요약해 줘', '지난 회의에서 비슷한 얘기 찾아줘'];
@@ -127,7 +143,14 @@ function Citations({ citations }: { citations: ChatCitation[] }) {
 }
 
 /** REQ-185, 186 회의 중 챗봇 (임시 디자인). 내 대화만 보이고, 새로고침해도 남는다 */
-export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUGGESTIONS, initialQuery }: ChatPanelProps) {
+export default function ChatPanel({
+  meetingId,
+  canAsk,
+  suggestions = DEFAULT_SUGGESTIONS,
+  initialQuery,
+  termCards = [],
+  now = 0,
+}: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[] | null>(null);
   const [query, setQuery] = useState(initialQuery ?? '');
   const [asking, setAsking] = useState<string | null>(null);
@@ -156,7 +179,7 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
     if (list) {
       list.scrollTop = list.scrollHeight;
     }
-  }, [messages, asking, failed]);
+  }, [messages, asking, failed, termCards.length]);
 
   const ask = async (text: string) => {
     const trimmed = text.trim();
@@ -194,7 +217,7 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
     }
   };
 
-  const isEmpty = messages !== null && messages.length === 0 && !asking && !failed;
+  const isEmpty = messages !== null && messages.length === 0 && termCards.length === 0 && !asking && !failed;
 
   return (
     <>
@@ -218,8 +241,11 @@ export default function ChatPanel({ meetingId, canAsk, suggestions = DEFAULT_SUG
             {loadError && <p className={room.fieldError}>{loadError}</p>}
           </div>
         )}
-        {messages?.map((message) =>
-          message.role === 'USER' ? (
+        {messages !== null &&
+          toThread(messages, termCards).map(({ message, card }) =>
+          !message ? (
+            <TermCard key={`term-${card.id}`} card={card} now={now} />
+          ) : message.role === 'USER' ? (
             <div key={message.messageId} className={styles.question}>
               {message.text}
             </div>

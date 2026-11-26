@@ -183,6 +183,14 @@
   gap: var(--spacing-2);
 }
 
+/* 디자인 Live_22 NewDot: 확인하지 않은 용어가 있을 때 탭 이름 옆 점 */
+.tabDot {
+  width: 6px;
+  height: 6px;
+  background: var(--primary-default);
+  border-radius: var(--radius-full);
+}
+
 /* 새로 나온 용어 수 */
 .tabBadge {
   padding: 1px var(--spacing-2);
