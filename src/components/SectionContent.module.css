@@ -135,10 +135,6 @@
   border: 1px solid var(--border-default);
 }
 
-.fixed {
-  table-layout: fixed;
-}
-
 .cellInput {
   width: 100%;
   min-width: 0;

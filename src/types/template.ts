@@ -7,9 +7,10 @@ export type Align = 'LEFT' | 'CENTER' | 'RIGHT';
 export type TableBorder = 'BASIC' | 'HORIZONTAL' | 'OUTER' | 'NONE';
 
 export interface TableSettings {
+  /** 화면에서는 쓰지 않는다 (11/27 행 수 설정 삭제, 행은 내용에 맞춰 늘어남). 서버 저장 형식이라 값만 그대로 보낸다 */
   rows: number;
   cols: number;
-  /** 열 너비 자동(true) / 수동 */
+  /** 화면에서는 쓰지 않는다 (11/27 열 너비 자동/수동 설정 삭제). 서버 저장 형식이라 값만 그대로 보낸다 */
   autoWidth: boolean;
   align: Align;
   border: TableBorder;

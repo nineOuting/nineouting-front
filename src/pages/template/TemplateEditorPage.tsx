@@ -8,7 +8,7 @@ import checkIcon from '../../assets/icons/check.svg';
 import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import ballotIcon from '../../assets/icons/rail-ballot.svg';
 import layoutIcon from '../../assets/icons/rail-layout.svg';
-import tableIcon from '../../assets/icons/rail-table.svg';
+import recordIcon from '../../assets/icons/rail-record.svg';
 import textIcon from '../../assets/icons/rail-text.svg';
 import refreshIcon from '../../assets/icons/refresh.svg';
 import templateIcon from '../../assets/icons/template-sm.svg';
@@ -56,10 +56,10 @@ interface Draft {
 
 type RailView = 'items' | SettingsView;
 
-// 디자인 SideRail: 항목 구성, 표, 글자, 레이아웃
+// 디자인 SideRail: 항목 구성, 기록 방식(11/27 [표]에서 이름 바꿈), 글자, 레이아웃
 const RAIL: { value: RailView; label: string; icon: string }[] = [
   { value: 'items', label: '항목 구성', icon: ballotIcon },
-  { value: 'table', label: '표', icon: tableIcon },
+  { value: 'table', label: '기록 방식', icon: recordIcon },
   { value: 'text', label: '글자', icon: textIcon },
   { value: 'layout', label: '레이아웃', icon: layoutIcon },
 ];
