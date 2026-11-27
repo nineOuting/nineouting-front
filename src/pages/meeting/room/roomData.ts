@@ -97,7 +97,8 @@ export function applyBoard(agendas: RoomAgenda[], board: AgendaBoard): RoomAgend
           // 논의 전의 문구("아직 논의되지 않았어요")는 보여 주지 않는다
           summary: status === 'notDiscussed' ? undefined : point.decisionText,
           evidenceSeqs: point.evidenceSeqs ?? [],
-          statusEdited: point.statusEdited ?? false,
+          // 결정할 사항은 상태·내용이 한 덩어리다. 어느 하나라도 사람이 고쳤으면 AI가 둘 다 바꾸지 않는다
+          statusEdited: (point.statusEdited ?? false) || (point.edited ?? false),
           needsCheck: point.needsCheck,
         };
       }),

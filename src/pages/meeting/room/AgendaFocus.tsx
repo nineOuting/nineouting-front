@@ -106,7 +106,8 @@ function DecisionCard({
               setError(undefined);
             }}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') {
+              // 한글 조합 중 Enter는 글자를 끝내는 것이라 저장하지 않는다
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                 save();
               } else if (event.key === 'Escape') {
                 setDraft(null);

@@ -23,7 +23,7 @@ export interface DecisionPoint {
   summary?: string;
   /** 결정 근거 발언의 seq (REQ-125). 사용자가 결정으로 정한 사항은 비어 있을 수 있다 */
   evidenceSeqs: number[];
-  /** 사용자가 상태를 직접 정함 (AI가 전사로 바꾸지 않는다, agenda-status-contract.md 7.5) */
+  /** 사용자가 상태나 결정 내용을 직접 정함. AI가 전사로 둘 다 바꾸지 않는다 (agenda-status-contract.md 7.5) */
   statusEdited?: boolean;
   /** 확인 필요 (근거가 달라졌거나, 결정을 뒤집는 말이 나왔거나, 결정 내용이 아직 없음) */
   needsCheck?: boolean;
