@@ -1,0 +1,341 @@
+/* REQ-214 관리자 페이지. 일반 화면 디자인과 따로, 표를 많이 보여 주는 데 맞춘 단순한 모양 */
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.loginCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 360px;
+  padding: 32px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+
+.loginTitle {
+  margin: 0;
+  font-size: 22px;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.warning {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--danger-subtle);
+  color: var(--danger-default);
+  font-size: 12px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.muted {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 260px;
+  padding: 12px;
+  border-right: 1px solid var(--border-default);
+  background: var(--bg-sidebar);
+  overflow: hidden;
+}
+
+.tableFilter,
+.field input,
+.field select,
+.field textarea,
+.search input,
+.search select,
+.pager select {
+  padding: 6px 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.tableList {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.tableItem,
+.tableSelected {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tableItem:hover {
+  background: var(--bg-surface-muted);
+}
+
+.tableSelected {
+  background: var(--primary-subtle);
+  font-weight: 600;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 16px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tableTitle {
+  margin: 0;
+  font-size: 18px;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg-surface-muted);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.search {
+  display: flex;
+  gap: 6px;
+}
+
+.gridWrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+}
+
+.grid {
+  border-collapse: collapse;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.grid th,
+.grid td {
+  max-width: 280px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-default);
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-surface-muted);
+}
+
+.sortButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.columnType {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.pk {
+  margin-right: 4px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--primary-subtle);
+  color: var(--primary-default);
+  font-size: 10px;
+}
+
+.actionsHead {
+  width: 90px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.null {
+  color: var(--text-disabled);
+  font-style: italic;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primary,
+.secondary {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  border: none;
+  background: var(--primary-default);
+  color: var(--text-on-primary);
+}
+
+.secondary {
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.primary:disabled,
+.secondary:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.link,
+.dangerLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link {
+  color: var(--primary-default);
+}
+
+.dangerLink {
+  color: var(--danger-default);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger-default);
+  white-space: pre-wrap;
+}
+
+.notice {
+  margin: 0;
+  color: var(--success-default);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.required {
+  color: var(--danger-default);
+  font-size: 11px;
+}
+
+.nullToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-overlay);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(640px, 92vw);
+  max-height: 88vh;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.dialogButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
