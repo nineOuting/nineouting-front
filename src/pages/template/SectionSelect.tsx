@@ -51,13 +51,13 @@ export default function SectionSelect({ titles, selectedIndex, onSelect }: Secti
       <button
         type="button"
         className={[styles.box, isOpen ? styles.open : ''].filter(Boolean).join(' ')}
-        aria-label="선택한 섹션"
+        aria-label="선택한 항목"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
         <span className={current === undefined ? styles.placeholder : styles.value}>
-          {current === undefined ? '섹션을 골라 주세요' : current || '제목 없음'}
+          {current === undefined ? '항목을 골라 주세요' : current || '제목 없음'}
         </span>
         <Icon src={isOpen ? chevronUpIcon : chevronDownIcon} size={ICON_SIZE} className={styles.icon} />
       </button>

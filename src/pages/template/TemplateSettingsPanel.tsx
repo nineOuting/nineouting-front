@@ -372,14 +372,14 @@ export default function TemplateSettingsPanel({
   // 디자인 09 상태 모음 "선택한 섹션 고르기" (11/25): 아이콘 없는 드롭다운 메뉴
   const sectionPicker = (
     <div className={styles.section}>
-      <h3 className={styles.heading}>선택한 섹션</h3>
+      <h3 className={styles.heading}>선택한 항목</h3>
       <SectionSelect titles={items.map(({ title }) => title)} selectedIndex={selectedIndex} onSelect={onSelect} />
     </div>
   );
 
   return (
     <aside className={styles.panel} aria-label={`${texts.title} 설정`}>
-      {/* 디자인 09 TemplateEditorPage_RecordType (11/27): 기록 방식 탭은 패널 제목 없이 선택한 섹션부터 */}
+      {/* 디자인 09 TemplateEditorPage_RecordType (11/27): 기록 방식 탭은 패널 제목 없이 선택한 항목부터 */}
       {view !== 'table' && (
         <div className={styles.titleGroup}>
           <h2 className={styles.title}>{texts.title}</h2>

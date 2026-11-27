@@ -82,21 +82,50 @@ export function withLayoutDefaults(layout: Loose<TemplateLayout> | undefined): T
 /** 왼쪽 "회의록 항목 구성"에서 고를 수 있는 항목 (디자인 23:34~62). 기록 방식은 미리보기 디자인을 따랐다 */
 export interface PresetItem {
   title: string;
+  /** 항목을 넣을 때 채우는 AI 설명 */
   description: string;
+  /** "추가할 항목 고르기" 메뉴에 보이는 짧은 설명 (디자인 09 11/27) */
+  summary: string;
   recordType: ItemSettings['recordType'];
 }
 
 export const PRESET_ITEMS: PresetItem[] = [
-  { title: '개요', description: '이번 회의의 목적과 주요 내용을 간단히 작성해 주세요.', recordType: 'FREE' },
-  { title: '안건별 논의', description: '각 안건에 대한 논의 내용을 정리할 수 있어요.', recordType: 'TABLE' },
-  { title: '결정 사항', description: '회의에서 결정된 주요 사항을 정리합니다.', recordType: 'LIST' },
-  { title: '미결 안건', description: '결정하지 못해 다음 회의로 넘길 안건을 정리합니다.', recordType: 'LIST' },
-  { title: '할 일', description: '회의 이후 해야 할 업무와 추가 논의가 필요한 항목을 정리합니다.', recordType: 'CHECKLIST' },
+  {
+    title: '개요',
+    description: '이번 회의의 목적과 주요 내용을 간단히 작성해 주세요.',
+    summary: '회의 목적과 주요 내용 요약',
+    recordType: 'FREE',
+  },
+  {
+    title: '안건별 논의',
+    description: '각 안건에 대한 논의 내용을 정리할 수 있어요.',
+    summary: '안건마다 논의 내용을 정리',
+    recordType: 'TABLE',
+  },
+  {
+    title: '결정 사항',
+    description: '회의에서 결정된 주요 사항을 정리합니다.',
+    summary: '회의에서 결정된 주요 사항 정리',
+    recordType: 'LIST',
+  },
+  {
+    title: '미결 안건',
+    description: '결정하지 못해 다음 회의로 넘길 안건을 정리합니다.',
+    summary: '결정하지 못해 다음 회의로 넘길 안건을 정리',
+    recordType: 'LIST',
+  },
+  {
+    title: '할 일',
+    description: '회의 이후 해야 할 업무와 추가 논의가 필요한 항목을 정리합니다.',
+    summary: '후속 업무와 담당자, 기한을 정리',
+    recordType: 'CHECKLIST',
+  },
 ];
 
 export const MEETING_INFO_PRESET = {
   title: '회의 기본 정보',
   description: '날짜, 시간, 장소, 참석자 등 기본 정보를 입력해요.',
+  summary: '날짜, 시간, 장소, 참석자 등 기본 정보',
 };
 
 export function presetItem(preset: PresetItem): TemplateItem {
