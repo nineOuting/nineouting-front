@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import checkIcon from '../../../assets/icons/check.svg';
 import closeIcon from '../../../assets/icons/close.svg';
 import errorIcon from '../../../assets/icons/error.svg';
@@ -16,15 +15,13 @@ interface EvidencePanelProps {
   decision: DecisionPoint;
   lines: TranscriptLine[];
   onClose: () => void;
-  /** REQ-172 AI 결과 안내 줄 */
-  notice?: ReactNode;
 }
 
 /**
  * REQ-125 디자인 Version02 Live_07·08 결정 근거: 결정할 사항과 근거 발언(시각 + 말)을 파란 칸으로 보여 준다.
  * 근거가 없으면 "발언이 부족해요"를 안내한다. 닫으면 실시간 전사로 돌아간다
  */
-export default function EvidencePanel({ decision, lines, onClose, notice }: EvidencePanelProps) {
+export default function EvidencePanel({ decision, lines, onClose }: EvidencePanelProps) {
   return (
     <div className={styles.panel}>
       <div className={styles.head}>
@@ -67,7 +64,6 @@ export default function EvidencePanel({ decision, lines, onClose, notice }: Evid
               </li>
             ))}
           </ol>
-          {notice}
         </>
       )}
     </div>

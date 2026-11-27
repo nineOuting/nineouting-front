@@ -280,6 +280,13 @@
 .form {
   position: relative;
   align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+
+/* 디자인 07 Live_19 (11/27): 입력칸 12px 아래 가운데 AiNoticeLabel text, 아이콘 없음 */
+.notice {
+  flex-shrink: 0;
+  align-self: center;
   margin-bottom: var(--spacing-4);
 }
 

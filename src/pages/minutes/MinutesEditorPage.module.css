@@ -200,14 +200,21 @@
 }
 
 /* REQ-175 초안 준비 안내 (MSG-071) */
-.draftReady {
-  background: var(--info-subtle);
+/* 디자인 09 회의록 편집 Banner (11/27): 회색 바탕, ✦ 18px, 14px 굵은 글자, 패딩 4 · 24 */
+.aiDraftNotice {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-6);
+  background: var(--status-pending-subtle);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-body-md);
+  color: var(--text-secondary);
 }
 
-/* REQ-172 AI 결과 안내 */
-.aiNotice {
-  display: flex;
-  flex-direction: column;
+.aiDraftIcon {
+  flex-shrink: 0;
 }
 
 /* 디자인 Version02 상단 바 다운로드: 글자 버튼 */

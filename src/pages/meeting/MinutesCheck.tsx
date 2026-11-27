@@ -79,6 +79,9 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
   const [isDownloading, setIsDownloading] = useState(false);
   // 첫 불러오기가 끝나기 전에는 스켈레톤. 회의록이 아직 없으면(만드는 중) 그 뒤에도 minutes가 비어 있어 따로 센다 (SCRUM-410)
   const [hasLoaded, setHasLoaded] = useState(false);
+  // 실패 전 마지막으로 본 만드는 중 상태. WAITING_SOURCE였으면 요약에서, REQUESTED였으면 초안에서 실패한 것이다.
+  // 실패한 뒤에 화면을 열었거나 다시 불러오는 사이에 REQUESTED를 지나쳤으면 알 수 없어 초안 실패로 본다 (디자인 writerFailed)
+  const [lastDraftingStatus, setLastDraftingStatus] = useState<MinutesDetail['draftStatus']>(null);
   const downloadRef = useRef<HTMLButtonElement>(null);
   const viewedRef = useRef(false);
   const editorPath = `/meetings/${meeting.meetingId}/minutes`;
@@ -87,6 +90,9 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
     try {
       const { detail, templateList } = await fetchMinutes(meeting.meetingId);
       setMinutes(detail);
+      if (DRAFTING_STATUSES.includes(detail.draftStatus)) {
+        setLastDraftingStatus(detail.draftStatus);
+      }
       setTemplates(templateList);
       if (!viewedRef.current) {
         viewedRef.current = true;
@@ -127,7 +133,9 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
     }
     setIsRetrying(true);
     try {
-      setMinutes(await requestMinutesDraft(minutes.minutesId));
+      const detail = await requestMinutesDraft(minutes.minutesId);
+      setMinutes(detail);
+      setLastDraftingStatus(DRAFTING_STATUSES.includes(detail.draftStatus) ? detail.draftStatus : null);
     } catch {
       onError(DRAFT_RETRY_FAILED_MESSAGE);
     } finally {
@@ -281,11 +289,24 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
             title: 'AI가 회의록 초안을 만들고 있어요',
             description: '1~2분 정도 걸려요. 기다리는 동안에도 편집 화면에 들어갈 수 있어요.',
           };
-  const draftStep: { state: StepState; caption: string } = isFailed
-    ? { state: 'failed', caption: '만들지 못했어요' }
-    : isDraftReady
+  // 디자인 MinutesStatusCard (Note N8, 11/18): AI 전체 요약 → AI 초안 만들기 두 단계.
+  // 끝난 시각("HH:MM에 완료")은 서버가 주지 않아 "완료"만 보인다
+  const isSummaryFailed = isFailed && lastDraftingStatus === 'WAITING_SOURCE';
+  const isSummaryDone = minutes !== null && (minutes.draftStatus === 'REQUESTED' || isDraftReady || (isFailed && !isSummaryFailed));
+  const summaryStep: { state: StepState; caption: string } = isSummaryFailed
+    ? { state: 'failed', caption: '요약하지 못했어요' }
+    : isSummaryDone
       ? { state: 'done', caption: '완료' }
-      : { state: 'active', caption: '만들고 있어요' };
+      : { state: 'active', caption: '회의 전체 내용을 요약하고 있어요' };
+  const draftStep: { state: StepState; caption: string } = isSummaryFailed
+    ? { state: 'waiting', caption: '요약이 끝나면 만들어요' }
+    : isFailed
+      ? { state: 'failed', caption: '만들지 못했어요' }
+      : isDraftReady
+        ? { state: 'done', caption: '완료' }
+        : isSummaryDone
+          ? { state: 'active', caption: '회의록 양식에 맞춰 만들고 있어요' }
+          : { state: 'waiting', caption: '요약이 끝나면 만들어요' };
   const writeStep = isWriter
     ? {
         title: '내가 정리하기',
@@ -314,15 +335,16 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
             title="회의 끝남"
             caption={meeting.finishedAt ? formatShortDateTime(meeting.finishedAt) : '회의를 마쳤어요'}
           />
-          <Step index={2} state={draftStep.state} title="AI 초안 만들기" caption={draftStep.caption} />
+          <Step index={2} state={summaryStep.state} title="AI 전체 요약" caption={summaryStep.caption} />
+          <Step index={3} state={draftStep.state} title="AI 초안 만들기" caption={draftStep.caption} />
           <Step
-            index={3}
+            index={4}
             state={isDraftReady ? 'turn' : 'waiting'}
             title={writeStep.title}
             caption={writeStep.caption}
           />
           <Step
-            index={4}
+            index={5}
             state="waiting"
             title="작성 완료 · 공유"
             caption={isWriter ? '참여자 모두에게 공개돼요' : '완료되면 참여자 모두에게 공개돼요'}

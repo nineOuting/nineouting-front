@@ -10,6 +10,7 @@ import archiveIcon from '../../../assets/icons/nav-archive.svg';
 import uploadIcon from '../../../assets/icons/pdf.svg';
 import sendIcon from '../../../assets/icons/send.svg';
 import suggestionIcon from '../../../assets/icons/ai-suggestion.svg';
+import AiNoticeLabel from '../../../components/AiNoticeLabel';
 import Icon from '../../../components/Icon';
 import Spinner from '../../../components/Spinner';
 import TermCard, { type TermCardItem } from './TermCard';
@@ -361,6 +362,7 @@ export default function ChatPanel({
           <Icon src={sendIcon} size={16} />
         </button>
       </form>
+      <AiNoticeLabel variant="text" showIcon={false} label="넵넵 AI는 실수할 수 있습니다." className={styles.notice} />
     </>
   );
 }

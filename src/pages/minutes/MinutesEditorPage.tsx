@@ -18,6 +18,7 @@ import {
 import alignCenterIcon from '../../assets/icons/align-center.svg';
 import alignLeftIcon from '../../assets/icons/align-left.svg';
 import alignRightIcon from '../../assets/icons/align-right.svg';
+import autoAwesomeIcon from '../../assets/icons/auto-awesome.svg';
 import bulletIcon from '../../assets/icons/format-bullet.svg';
 import boldIcon from '../../assets/icons/format-bold.svg';
 import italicIcon from '../../assets/icons/format-italic.svg';
@@ -31,7 +32,6 @@ import scheduleIcon from '../../assets/icons/schedule.svg';
 import templateIcon from '../../assets/icons/template-doc.svg';
 import undoIcon from '../../assets/icons/undo.svg';
 import AccessNotice from '../../components/AccessNotice';
-import AiNotice from '../../components/AiNotice';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
 import DropdownMenu from '../../components/DropdownMenu';
@@ -55,6 +55,8 @@ import styles from './MinutesEditorPage.module.css';
 
 const META_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 16;
+// 디자인 09 회의록 편집 Banner: AutoAwesomeIcon 18px
+const AI_NOTICE_ICON_SIZE = 18;
 // 디자인 History: 28px 버튼 안 20px 아이콘
 const HISTORY_ICON_SIZE = 20;
 // 되돌리기: 이 시간 안에 이어 쓴 글은 한 번에 되돌린다. 너무 길어지지 않게 최근 것만 둔다
@@ -696,22 +698,18 @@ export default function MinutesEditorPage() {
                   </button>
                 </div>
               )}
-              {/* REQ-175 초안이 준비되면 작성자에게 (MSG-071), 다른 참석자에게는 작성자가 정리 중이라고 (MSG-072) */}
+              {/* REQ-175 초안이 준비되면 작성자에게 AI 초안 안내 (MSG-071·070). 디자인 09 회의록 편집 Banner (11/27) */}
               {minutes.status === 'WRITING' && minutes.draftStatus === 'SUCCEEDED' && isWriter && (
-                <p className={`${styles.draftNotice} ${styles.draftReady}`} role="status">
-                  회의록 초안이 준비됐어요. 내가 다듬고 [작성 완료]를 누르면 참여자 모두에게 공개돼요.
+                <p className={styles.aiDraftNotice} role="status">
+                  <Icon src={autoAwesomeIcon} size={AI_NOTICE_ICON_SIZE} className={styles.aiDraftIcon} />
+                  AI가 만든 초안이라 틀린 부분이 있을 수 있어요. 다듬고 [작성 완료]를 누르면 참여자 모두에게 공개돼요.
                 </p>
               )}
+              {/* 다른 참석자에게는 작성자가 정리 중이라고 (MSG-072) */}
               {minutes.status === 'WRITING' && !isWriter && (
                 <p className={styles.draftNotice} role="status">
                   작성자가 회의록을 정리하고 있어요. 완료되면 알림으로 알려 드릴게요.
                 </p>
-              )}
-              {/* REQ-172 AI가 만든 초안 위 안내 (MSG-070) */}
-              {minutes.draftStatus === 'SUCCEEDED' && (
-                <div className={styles.aiNotice}>
-                  <AiNotice meetingId={minutes.meetingId} target="MINUTES_DRAFT" />
-                </div>
               )}
             </div>
           }

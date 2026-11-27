@@ -1,0 +1,28 @@
+/* 디자인 시스템 AiNoticeLabel: ✦ 14px + 캡션 글자, 사이 4px */
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+}
+
+/* 아이콘은 Figma에서 글자색과 관계없이 text-secondary */
+.icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+/* style=text: 배경 없음, 회색 글자 */
+.text {
+  color: var(--text-tertiary);
+}
+
+/* style=chip: 회색 둥근 바탕, 패딩 위아래 4 · 왼쪽 8 · 오른쪽 10 */
+.chip {
+  align-self: flex-start;
+  padding: var(--spacing-1) calc(var(--spacing-2) + var(--spacing-1) / 2) var(--spacing-1) var(--spacing-2);
+  background: var(--neutral-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+}
