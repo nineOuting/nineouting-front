@@ -5,10 +5,11 @@
   gap: var(--spacing-8);
 }
 
+/* 디자인 07 AgendaHero (11/27): 상태 줄 · AI 안내 칩 · 안건 제목 사이 4px */
 .head {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
+  gap: var(--spacing-1);
 }
 
 .state {

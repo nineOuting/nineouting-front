@@ -39,7 +39,6 @@ import chevronLeftIcon from '../../assets/icons/chevron-left.svg';
 import stopIcon from '../../assets/icons/stop.svg';
 import infoIcon from '../../assets/icons/info.svg';
 import visibilityIcon from '../../assets/icons/visibility.svg';
-import AiNotice from '../../components/AiNotice';
 import Button from '../../components/Button';
 import Coachmark from '../../components/Coachmark';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -1061,7 +1060,6 @@ export default function MeetingRoomPage() {
               decision={selectedDecision}
               lines={transcript.filter(({ seq }) => selectedDecision.evidenceSeqs.includes(seq))}
               onClose={() => setSelectedDecisionId(undefined)}
-              notice={<AiNotice meetingId={meetingIdNumber} target="DECISION_EVIDENCE" variant="panel" />}
             />
           ) : sideTab === 'chat' ? (
             <ChatPanel

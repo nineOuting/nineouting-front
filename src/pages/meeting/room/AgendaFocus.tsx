@@ -10,6 +10,7 @@ import moreIcon from '../../../assets/icons/more-vert.svg';
 import pauseIcon from '../../../assets/icons/pause.svg';
 import refreshIcon from '../../../assets/icons/refresh.svg';
 import todoIcon from '../../../assets/icons/todo.svg';
+import AiNoticeLabel from '../../../components/AiNoticeLabel';
 import EmptyState from '../../../components/EmptyState';
 import Icon from '../../../components/Icon';
 import type { AgendaStatus, DecisionPoint, RoomAgenda, RoomTodo } from '../../../types/meetingRoom';
@@ -336,6 +337,8 @@ export default function AgendaFocus({
             </span>
           )}
         </p>
+        {/* 디자인 07 회의 중 (11/27): 결정 근거 창 아래 안내 줄 대신 안건 머리에 하나만 */}
+        <AiNoticeLabel variant="chip" />
         <h1 className={styles.title}>{agenda.title}</h1>
       </div>
 
