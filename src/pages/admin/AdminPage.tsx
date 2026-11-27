@@ -13,18 +13,23 @@ import {
 import AdminAudit from './AdminAudit';
 import AdminBetaMetrics from './AdminBetaMetrics';
 import AdminDashboard from './AdminDashboard';
+import AdminQuickActions from './AdminQuickActions';
 import styles from './AdminPage.module.css';
+import RowFieldInput from './RowFieldInput';
+import { isRequired, kindOf, validate, type FieldState } from './rowField';
 
 // REQ-214~217 관리자 페이지 (admin-service). 일반 사용자 로그인과 따로 관리자 계정으로 들어온다
-// 현황(REQ-215, 운영 조치 REQ-217), DB 표 보기와 한 행씩 추가, 수정, 삭제(REQ-214), 감사 기록(REQ-216)
+// 현황(REQ-215, 운영 조치 REQ-217), 빠른 작업(REQ-218), DB 표 보기와 한 행씩 추가, 수정, 삭제(REQ-214, 형식별 입력칸 REQ-219),
+// 감사 기록(REQ-216)
 
 const PAGE_SIZES = [20, 50, 100, 200];
 const message = adminErrorMessage;
 
-type Tab = 'dashboard' | 'db' | 'audit' | 'beta';
+type Tab = 'dashboard' | 'actions' | 'db' | 'audit' | 'beta';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dashboard', label: '현황' },
+  { id: 'actions', label: '빠른 작업' },
   { id: 'db', label: 'DB' },
   { id: 'audit', label: '감사 기록' },
   { id: 'beta', label: '베타 집계' },
@@ -114,6 +119,7 @@ function AdminShell({ username, onLoggedOut }: { username: string; onLoggedOut: 
         </button>
       </header>
       {tab === 'dashboard' && <AdminDashboard onUnauthorized={onUnauthorized} />}
+      {tab === 'actions' && <AdminQuickActions onUnauthorized={onUnauthorized} />}
       {tab === 'db' && <Explorer onUnauthorized={onUnauthorized} />}
       {tab === 'audit' && <AdminAudit onUnauthorized={onUnauthorized} />}
       {tab === 'beta' && <AdminBetaMetrics onUnauthorized={onUnauthorized} />}
@@ -469,6 +475,7 @@ function Explorer({ onUnauthorized }: { onUnauthorized: (e: unknown) => boolean 
       </div>
       {editing && table && (
         <RowEditor
+          db={db}
           table={table}
           row={editing.mode === 'edit' ? editing.row : null}
           onCancel={() => setEditing(null)}
@@ -489,19 +496,18 @@ function Explorer({ onUnauthorized }: { onUnauthorized: (e: unknown) => boolean 
   );
 }
 
-interface FieldState {
-  value: string;
-  isNull: boolean;
-  touched: boolean;
-}
-
-/** 행 추가, 수정 창. 수정은 바꾼 열만, 추가는 손댄 열만 보낸다 (손대지 않은 열은 DB 기본값) */
+/**
+ * 행 추가, 수정 창. 수정은 바꾼 열만, 추가는 손댄 열만 보낸다 (손대지 않은 열은 DB 기본값).
+ * REQ-219 열 형식별 입력칸, 필수 열과 형식이 틀리면 저장하지 않고 칸 아래에 이유를 보여 준다
+ */
 function RowEditor({
+  db,
   table,
   row,
   onCancel,
   onSave,
 }: {
+  db: string;
   table: AdminTable;
   row: AdminRow | null;
   onCancel: () => void;
@@ -517,14 +523,41 @@ function RowEditor({
   );
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // 저장을 한 번 누른 뒤에는 손대지 않은 칸의 문제(빠진 필수 값)도 보여 준다
+  const [showAllErrors, setShowAllErrors] = useState(false);
+  // REQ-219 상태, 종류 같은 짧은 글자 열의 추천 값. 못 받아도 그냥 글자 칸으로 쓴다
+  const [suggestions, setSuggestions] = useState<Record<string, string[]>>({});
+  useEffect(() => {
+    let isCurrent = true;
+    adminApi
+      .suggestions(db, table.name)
+      .then((found) => isCurrent && setSuggestions(found))
+      .catch(() => undefined);
+    return () => {
+      isCurrent = false;
+    };
+  }, [db, table.name]);
 
   const editable = (c: AdminColumn) => c.writable && !(row && c.primaryKey);
+  // 수정은 바꾼 칸만 본다 (예전 값이 지금 규칙에 맞지 않아도 다른 칸은 고칠 수 있게)
+  const unchanged = (c: AdminColumn) => {
+    const field = fields[c.name];
+    return row !== null && (field.isNull ? null : field.value) === row[c.name];
+  };
+  const errors = Object.fromEntries(
+    table.columns.filter(editable).map((c) => [c.name, unchanged(c) ? '' : validate(c, fields[c.name], !row)]),
+  );
 
   const change = (name: string, patch: Partial<FieldState>) =>
     setFields((f) => ({ ...f, [name]: { ...f[name], ...patch, touched: true } }));
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (Object.values(errors).some(Boolean)) {
+      setShowAllErrors(true);
+      setError('고쳐야 할 칸이 있습니다');
+      return;
+    }
     const values: AdminRow = {};
     table.columns.filter(editable).forEach((c) => {
       const field = fields[c.name];
@@ -558,31 +591,31 @@ function RowEditor({
           {table.columns.map((c) => {
             const field = fields[c.name];
             const disabled = !editable(c);
-            const long = /json|text|\[\]/.test(c.type);
+            const fieldError = errors[c.name] && (field.touched || showAllErrors) ? errors[c.name] : '';
+            const kind = kindOf(c);
+            const defaultHint = !row && c.defaultValue ? `기본값: ${c.defaultValue}` : '';
             return (
               <label key={c.name} className={styles.field}>
                 <span>
                   {c.primaryKey && <span className={styles.pk}>PK</span>}
                   {c.name} <span className={styles.columnType}>{c.type}</span>
-                  {!c.nullable && <span className={styles.required}> 필수</span>}
+                  {!row && isRequired(c) && !disabled && <span className={styles.required}> 필수</span>}
                   {disabled && <span className={styles.muted}> (고칠 수 없음)</span>}
                 </span>
-                {long ? (
-                  <textarea
-                    rows={3}
-                    value={field.value}
-                    disabled={disabled || field.isNull}
-                    placeholder={!row && c.defaultValue ? `기본값: ${c.defaultValue}` : ''}
-                    onChange={(e) => change(c.name, { value: e.target.value })}
-                  />
-                ) : (
-                  <input
-                    value={field.value}
-                    disabled={disabled || field.isNull}
-                    placeholder={!row && c.defaultValue ? `기본값: ${c.defaultValue}` : ''}
-                    onChange={(e) => change(c.name, { value: e.target.value })}
-                  />
+                <RowFieldInput
+                  column={c}
+                  field={field}
+                  disabled={disabled}
+                  placeholder={defaultHint}
+                  invalid={Boolean(fieldError)}
+                  suggestions={suggestions[c.name]}
+                  onChange={(value) => change(c.name, { value })}
+                />
+                {/* 날짜 칸은 안내 글자를 보일 수 없어 아래에 적는다 */}
+                {defaultHint && (kind === 'datetime' || kind === 'date') && !field.touched && (
+                  <span className={styles.muted}>비워 두면 {defaultHint}</span>
                 )}
+                {fieldError && <span className={styles.fieldError}>{fieldError}</span>}
                 {c.nullable && !disabled && (
                   <span className={styles.nullToggle}>
                     <input
