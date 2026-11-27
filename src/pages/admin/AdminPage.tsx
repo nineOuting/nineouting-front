@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import {
   AdminApiError,
   adminApi,
+  adminErrorMessage,
   type AdminColumn,
   type AdminDatabase,
   type AdminRow,
@@ -9,16 +10,23 @@ import {
   type AdminTable,
   type AdminTableSummary,
 } from '../../api/admin';
+import AdminAudit from './AdminAudit';
+import AdminDashboard from './AdminDashboard';
 import styles from './AdminPage.module.css';
 
-// REQ-214 관리자 페이지: 서비스 DB 5개의 표를 보고 한 행씩 추가, 수정, 삭제한다 (admin-service)
-// 일반 사용자 로그인과 따로 관리자 계정으로 들어온다
+// REQ-214~217 관리자 페이지 (admin-service). 일반 사용자 로그인과 따로 관리자 계정으로 들어온다
+// 현황(REQ-215, 운영 조치 REQ-217), DB 표 보기와 한 행씩 추가, 수정, 삭제(REQ-214), 감사 기록(REQ-216)
 
 const PAGE_SIZES = [20, 50, 100, 200];
+const message = adminErrorMessage;
 
-function message(error: unknown) {
-  return error instanceof AdminApiError ? error.message : '알 수 없는 오류가 났습니다';
-}
+type Tab = 'dashboard' | 'db' | 'audit';
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'dashboard', label: '현황' },
+  { id: 'db', label: 'DB' },
+  { id: 'audit', label: '감사 기록' },
+];
 
 export default function AdminPage() {
   const [state, setState] = useState<'checking' | 'guest' | 'in'>('checking');
@@ -49,13 +57,64 @@ export default function AdminPage() {
     );
   }
   return (
-    <Explorer
+    <AdminShell
       username={username}
       onLoggedOut={() => {
         setUsername('');
         setState('guest');
       }}
     />
+  );
+}
+
+/** 로그인한 뒤의 틀: 위쪽 탭과 로그아웃. 로그인이 끊기면(401) 로그인 화면으로 */
+function AdminShell({ username, onLoggedOut }: { username: string; onLoggedOut: () => void }) {
+  const [tab, setTab] = useState<Tab>('dashboard');
+
+  const onUnauthorized = useCallback(
+    (e: unknown) => {
+      if (e instanceof AdminApiError && e.status === 401) {
+        onLoggedOut();
+        return true;
+      }
+      return false;
+    },
+    [onLoggedOut],
+  );
+
+  const logout = async () => {
+    await adminApi.logout().catch(() => undefined);
+    onLoggedOut();
+  };
+
+  return (
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <strong>넵넵 관리자</strong>
+        <nav className={styles.tabs} aria-label="관리자 메뉴">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={t.id === tab ? styles.tabActive : styles.tab}
+              aria-current={t.id === tab ? 'page' : undefined}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+        {tab === 'db' && <span className={styles.warning}>DEV DB를 바로 고칩니다. 바꾼 내용은 되돌릴 수 없습니다</span>}
+        <span className={styles.spacer} />
+        <span className={styles.muted}>{username}</span>
+        <button type="button" className={styles.secondary} onClick={logout}>
+          로그아웃
+        </button>
+      </header>
+      {tab === 'dashboard' && <AdminDashboard onUnauthorized={onUnauthorized} />}
+      {tab === 'db' && <Explorer onUnauthorized={onUnauthorized} />}
+      {tab === 'audit' && <AdminAudit onUnauthorized={onUnauthorized} />}
+    </div>
   );
 }
 
@@ -116,7 +175,7 @@ interface Query {
 
 const EMPTY_QUERY: Query = { page: 0, size: 50, direction: 'asc', column: '', q: '' };
 
-function Explorer({ username, onLoggedOut }: { username: string; onLoggedOut: () => void }) {
+function Explorer({ onUnauthorized }: { onUnauthorized: (e: unknown) => boolean }) {
   const [databases, setDatabases] = useState<AdminDatabase[]>([]);
   const [db, setDb] = useState('');
   const [tables, setTables] = useState<AdminTableSummary[]>([]);
@@ -133,13 +192,9 @@ function Explorer({ username, onLoggedOut }: { username: string; onLoggedOut: ()
 
   const handleError = useCallback(
     (e: unknown) => {
-      if (e instanceof AdminApiError && e.status === 401) {
-        onLoggedOut();
-        return;
-      }
-      setError(message(e));
+      if (!onUnauthorized(e)) setError(message(e));
     },
-    [onLoggedOut],
+    [onUnauthorized],
   );
 
   useEffect(() => {
@@ -237,22 +292,8 @@ function Explorer({ username, onLoggedOut }: { username: string; onLoggedOut: ()
     }
   };
 
-  const logout = async () => {
-    await adminApi.logout().catch(() => undefined);
-    onLoggedOut();
-  };
-
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <strong>넵넵 관리자</strong>
-        <span className={styles.warning}>DEV DB를 바로 고칩니다. 바꾼 내용은 되돌릴 수 없습니다</span>
-        <span className={styles.spacer} />
-        <span className={styles.muted}>{username}</span>
-        <button type="button" className={styles.secondary} onClick={logout}>
-          로그아웃
-        </button>
-      </header>
+    <>
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <label className={styles.field}>
@@ -441,7 +482,7 @@ function Explorer({ username, onLoggedOut }: { username: string; onLoggedOut: ()
           }}
         />
       )}
-    </div>
+    </>
   );
 }
 
