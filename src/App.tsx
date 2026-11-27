@@ -28,6 +28,8 @@ import WorkspacePage from './pages/workspace/WorkspacePage';
 
 // 개발 서버에서만 쓰는 화면. 운영 빌드에서는 조건이 false로 바뀌어 번들에서 빠진다
 const DevMinutesPage = import.meta.env.DEV ? lazy(() => import('./pages/dev/DevMinutesPage')) : null;
+// REQ-214 관리자 페이지. 일반 사용자 번들에 넣지 않으려고 따로 불러온다
+const AdminPage = lazy(() => import('./pages/admin/AdminPage'));
 
 /** 모든 화면에 함께 그리는 것 */
 function RootLayout() {
@@ -43,6 +45,16 @@ function RootLayout() {
 // REQ-072 화면을 떠나기 전에 묻는 useBlocker는 data router에서만 동작한다
 const router = createBrowserRouter(
   createRoutesFromElements(
+    <>
+      {/* REQ-214 관리자 페이지: 일반 로그인과 따로, 공통 화면(채널톡 등) 없이 */}
+      <Route
+        path="/admin"
+        element={
+          <Suspense fallback={null}>
+            <AdminPage />
+          </Suspense>
+        }
+      />
       <Route element={<RootLayout />}>
         {/* 첫 화면: 로그인하지 않았으면 넵넵 소개, 로그인했으면 홈으로 */}
         <Route
@@ -227,7 +239,8 @@ const router = createBrowserRouter(
           }
         />
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Route>,
+      </Route>
+    </>,
   ),
 );
 
