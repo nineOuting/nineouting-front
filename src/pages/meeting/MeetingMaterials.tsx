@@ -16,6 +16,7 @@ import uploadIcon from '../../assets/icons/upload.svg';
 import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
+import { DOCUMENT_ACCEPT, documentType } from '../../utils/documentTypes';
 import styles from './MeetingMaterials.module.css';
 
 const ICON_SIZE = 20;
@@ -144,9 +145,18 @@ export default function MeetingMaterials({
 
   const addFiles = (files: File[]) => {
     const added = files.map((file): Upload => ({ key: nextUploadKey++, file, state: 'uploading', loaded: 0 }));
-    // MSG-067 50MB가 넘으면 그 파일 줄에 알리고 올리지 않는다
-    const tooLarge = added.filter(({ file }) => file.size > MAX_MATERIAL_BYTES);
-    tooLarge.forEach((upload) => Object.assign(upload, { state: 'failed', error: '50MB를 넘어 올리지 못했어요', canRetry: false }));
+    // 받지 않는 형식이거나 MSG-067 50MB가 넘으면 그 파일 줄에 알리고 올리지 않는다
+    added.forEach((upload) => {
+      // 임시 문구 (2026-11-27): 기획에서 정하는 중
+      const error = !documentType(upload.file)
+        ? '지원하지 않는 형식이라 올리지 못했어요'
+        : upload.file.size > MAX_MATERIAL_BYTES
+          ? '50MB를 넘어 올리지 못했어요'
+          : undefined;
+      if (error) {
+        Object.assign(upload, { state: 'failed', error, canRetry: false });
+      }
+    });
     setUploads((prev) => [...prev, ...added]);
     added.filter((upload) => upload.state === 'uploading').forEach(({ key, file }) => startUpload(key, file));
   };
@@ -338,6 +348,7 @@ export default function MeetingMaterials({
             <input
               ref={fileInputRef}
               type="file"
+              accept={DOCUMENT_ACCEPT}
               multiple
               hidden
               onChange={(event) => {
