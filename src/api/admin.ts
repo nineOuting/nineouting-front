@@ -1,4 +1,4 @@
-// REQ-214 관리자 페이지 API (admin-service). 일반 로그인과 따로, 관리자 쿠키로 부른다
+// REQ-214~217 관리자 페이지 API (admin-service). 일반 로그인과 따로, 관리자 쿠키로 부른다
 // 읽기가 아닌 요청에는 관리자 화면 머리글을 붙인다 (admin-service가 다른 사이트에서 온 요청을 막는 데 쓴다)
 
 const BASE = '/api/admin';
@@ -90,6 +90,67 @@ export interface AdminRowQuery {
   q?: string;
 }
 
+/** REQ-215 현황. 시간은 한국 시간 글자 (YYYY-MM-DD HH:mm) */
+export interface AdminStuckMeeting {
+  id: number;
+  title: string;
+  workspace_id: number;
+  writer_user_id: number | null;
+  started_at: string;
+  hours: number;
+}
+
+export type AdminFailureKind = 'draft' | 'minutesRag' | 'materialRag' | 'mail';
+
+export interface AdminFailure {
+  kind: AdminFailureKind;
+  id: number;
+  title: string | null;
+  error: string | null;
+  at: string | null;
+  meeting_id?: number;
+}
+
+export interface AdminDashboard {
+  counts: Partial<Record<'users' | 'usersToday' | 'workspaces' | 'meetingsToday' | 'meetingsInProgress', number>>;
+  jobs: Partial<Record<'draft' | 'minutesRag' | 'materialRag' | 'mail', Record<string, number>>>;
+  stuckMeetings: AdminStuckMeeting[];
+  failures: AdminFailure[];
+  unavailable: string[];
+  stuckHours: number;
+}
+
+/** REQ-216 감사 기록 한 줄. detail은 JSON 글자 */
+export interface AdminAuditEntry {
+  id: number;
+  occurredAt: string;
+  actor: string | null;
+  clientIp: string | null;
+  action: string;
+  target: string | null;
+  succeeded: boolean;
+  detail: string | null;
+}
+
+export interface AdminAuditPage {
+  entries: AdminAuditEntry[];
+  total: number;
+  page: number;
+  size: number;
+  /** false면 감사 기록 DB가 없어 로그로만 남는다 */
+  enabled: boolean;
+}
+
+/** REQ-217 운영 조치 */
+export type AdminOperation = 'meetingFinish' | 'draftRetry' | 'minutesRagRetry' | 'materialRagRetry';
+
+const OPERATION_PATHS: Record<AdminOperation, (id: number) => string> = {
+  meetingFinish: (id) => `/operations/meetings/${id}/finish`,
+  draftRetry: (id) => `/operations/minutes/${id}/draft-retry`,
+  minutesRagRetry: (id) => `/operations/minutes/${id}/rag-retry`,
+  materialRagRetry: (id) => `/operations/materials/${id}/rag-retry`,
+};
+
 const tablePath = (db: string, table: string) =>
   `/databases/${encodeURIComponent(db)}/tables/${encodeURIComponent(table)}`;
 
@@ -112,4 +173,15 @@ export const adminApi = {
   update: (db: string, table: string, key: AdminRow, values: AdminRow) =>
     call<AdminRow>('PUT', `${tablePath(db, table)}/rows`, { key, values }),
   remove: (db: string, table: string, key: AdminRow) => call<AdminRow>('POST', `${tablePath(db, table)}/rows/delete`, { key }),
+  dashboard: () => call<AdminDashboard>('GET', '/dashboard'),
+  audit: (page: number, size: number, action?: string) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (action) params.set('action', action);
+    return call<AdminAuditPage>('GET', `/audit?${params}`);
+  },
+  operate: (operation: AdminOperation, id: number) => call<void>('POST', OPERATION_PATHS[operation](id)),
 };
+
+export function adminErrorMessage(error: unknown) {
+  return error instanceof AdminApiError ? error.message : '알 수 없는 오류가 났습니다';
+}
