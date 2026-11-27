@@ -18,8 +18,10 @@ import SidebarRail from '../../components/SidebarRail';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate, TemplateItem, TemplateLayout } from '../../types/template';
 import {
+  CUSTOM_PRESET,
   DEFAULT_ITEM_SETTINGS,
   DEFAULT_LAYOUT,
+  editItemText,
   MAX_ITEM_DESCRIPTION_LENGTH,
   MAX_ITEM_TITLE_LENGTH,
   MEETING_INFO_PRESET,
@@ -144,13 +146,13 @@ export default function TemplateEditorPage() {
 
   const setItems = (items: TemplateItem[]) => setDraft((prev) => ({ ...prev, items }));
   const selectedItem = selectedIndex === null ? undefined : draft.items[selectedIndex];
-  /** 선택한 섹션의 이름·AI 설명 고치기 (항목 구성 패널) */
-  const updateSelected = (patch: Partial<TemplateItem>) =>
+  /** 선택한 섹션의 이름·AI 설명 고치기 (항목 구성 패널). 기본 항목을 고치면 커스텀이 된다 */
+  const updateSelected = (patch: Partial<Pick<TemplateItem, 'title' | 'description'>>) =>
     setDraft((prev) => ({
       ...prev,
-      items: prev.items.map((item, index) => (index === selectedIndex ? { ...item, ...patch } : item)),
+      items: prev.items.map((item, index) => (index === selectedIndex ? editItemText(item, patch) : item)),
     }));
-  // QA 78 기본 항목은 제목을 고쳐도 같은 자리로 본다
+  // 이름·설명을 고친 기본 항목은 커스텀이 되어 여기서 찾지 않는다 (SCRUM-430)
   const presetIndexOf = (preset: (typeof PRESET_ITEMS)[number]) => draft.items.findIndex((item) => presetOf(item) === preset);
 
   /** "추가할 항목 고르기"에서 고른 기본 항목을 문서 끝에 넣고 고른다. 회의 기본 정보는 항목이 아니라 문서 머리에 켠다 */
@@ -163,14 +165,17 @@ export default function TemplateEditorPage() {
     if (!preset || presetIndexOf(preset) >= 0) {
       return;
     }
-    setItems([...draft.items, presetItem(preset)]);
+    // 같은 이름의 커스텀 항목(기본 항목을 고친 것)이 있으면 "결정 사항 2"처럼 넣는다
+    const item = presetItem(preset);
+    setItems([...draft.items, { ...item, title: uniqueTitle(draft.items, item.title) }]);
     setSelectedIndex(draft.items.length);
   };
   const addCustom = () => {
     const title = uniqueTitle(draft.items, CUSTOM_TITLE);
     setItems([
       ...draft.items,
-      { title, description: CUSTOM_DESCRIPTION, settings: { ...DEFAULT_ITEM_SETTINGS, recordType: 'LIST' } },
+      // 이름을 기본 항목과 같게 고쳐도 기본 항목으로 보지 않게 커스텀 표시를 붙인다
+      { title, description: CUSTOM_DESCRIPTION, settings: { ...DEFAULT_ITEM_SETTINGS, recordType: 'LIST', preset: CUSTOM_PRESET } },
     ]);
     setSelectedIndex(draft.items.length);
   };
@@ -453,7 +458,9 @@ export default function TemplateEditorPage() {
             onSelect={setSelectedIndex}
             onMove={moveItem}
             onRemove={removeItem}
-            onChangeItem={(index, item) => setItems(draft.items.map((current, position) => (position === index ? item : current)))}
+            onChangeItem={(index, patch) =>
+              setItems(draft.items.map((current, position) => (position === index ? editItemText(current, patch) : current)))
+            }
             onRemoveMeetingInfo={() => setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: false } }))}
           />
         </div>

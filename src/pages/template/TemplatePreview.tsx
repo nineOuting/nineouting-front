@@ -55,8 +55,8 @@ interface TemplatePreviewProps {
   onSelect: (index: number) => void;
   onMove: (from: number, to: number) => void;
   onRemove: (index: number) => void;
-  /** 고른 섹션의 이름·설명을 미리보기에서 바로 고칠 때 (왼쪽 항목 구성 패널과 같은 값) */
-  onChangeItem: (index: number, item: TemplateItem) => void;
+  /** 고른 섹션의 이름·설명을 미리보기에서 바로 고칠 때 (왼쪽 항목 구성 패널과 같은 값. 기본 항목은 커스텀이 된다) */
+  onChangeItem: (index: number, patch: Pick<TemplateItem, 'title'> | Pick<TemplateItem, 'description'>) => void;
   /** 회의 기본 정보를 문서에서 뺀다 (추가할 항목 고르기에서 다시 넣는다) */
   onRemoveMeetingInfo: () => void;
 }
@@ -343,7 +343,7 @@ export default function TemplatePreview({
                   maxLength={MAX_ITEM_TITLE_LENGTH}
                   placeholder="항목 이름을 입력해 주세요"
                   value={item.title}
-                  onChange={(event) => onChangeItem(index, { ...item, title: event.target.value })}
+                  onChange={(event) => onChangeItem(index, { title: event.target.value })}
                 />
               </span>
             ) : (
@@ -388,7 +388,7 @@ export default function TemplatePreview({
             <TemplateSectionBlank
               item={item}
               emptyDescription={EMPTY_DESCRIPTION}
-              onChangeDescription={isSelected ? (description) => onChangeItem(index, { ...item, description }) : undefined}
+              onChangeDescription={isSelected ? (description) => onChangeItem(index, { description }) : undefined}
             />
           </div>
         </div>

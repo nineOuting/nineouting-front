@@ -47,7 +47,10 @@ export default function TemplateSectionBlank({ item, emptyDescription, onChangeD
       {settings.recordType === 'LIST' && (
         <p className={styles.line} style={lineStyle}>
           <span aria-hidden="true">•</span>
-          {settings.preset === DECISION_PRESET || item.title === DECISION_PRESET ? '결정된 내용' : '내용'}
+          {/* 표시가 없는 예전 양식만 이름으로 본다. 고쳐서 커스텀("")이 된 결정 사항은 다른 목록처럼 "내용" */}
+          {settings.preset === DECISION_PRESET || (settings.preset === undefined && item.title === DECISION_PRESET)
+            ? '결정된 내용'
+            : '내용'}
         </p>
       )}
       {settings.recordType === 'CHECKLIST' && (

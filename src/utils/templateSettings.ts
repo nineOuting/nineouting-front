@@ -146,6 +146,19 @@ export function withPreset(item: TemplateItem): TemplateItem {
   return preset && !item.settings.preset ? { ...item, settings: { ...item.settings, preset: preset.title } } : item;
 }
 
+/** 커스텀 항목 표시. 이름이 기본 항목과 같아도 다시 기본 항목으로 보지 않는다 (SCRUM-430) */
+export const CUSTOM_PRESET = '';
+
+/**
+ * 항목의 이름이나 AI 설명을 고칠 때 쓴다. 기본 항목이었으면 커스텀으로 바꾼다 (SCRUM-430).
+ * 서식(기록 방식·글자·표)만 바꾸는 곳에서는 쓰지 않는다
+ */
+export function editItemText(item: TemplateItem, patch: Partial<Pick<TemplateItem, 'title' | 'description'>>): TemplateItem {
+  const next = { ...item, ...patch };
+  const isChanged = next.title !== item.title || next.description !== item.description;
+  return isChanged && presetOf(item) ? { ...next, settings: { ...next.settings, preset: CUSTOM_PRESET } } : next;
+}
+
 /** 이 항목이 어느 기본 항목인지. 표시가 없는 예전 양식은 제목이 같으면 그 기본 항목으로 본다 */
 export function presetOf(item: TemplateItem) {
   const key = item.settings.preset ?? item.title;
