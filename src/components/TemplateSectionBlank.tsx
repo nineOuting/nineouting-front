@@ -1,6 +1,12 @@
 import type { TemplateItem } from '../types/template';
 import { blankContent } from '../utils/templateSample';
-import { MAX_ITEM_DESCRIPTION_LENGTH, PAPER_FONT_SCALE } from '../utils/templateSettings';
+import {
+  cleanColumnName,
+  duplicateColumns,
+  MAX_COLUMN_NAME_LENGTH,
+  MAX_ITEM_DESCRIPTION_LENGTH,
+  PAPER_FONT_SCALE,
+} from '../utils/templateSettings';
 import SectionContent from './SectionContent';
 import styles from './TemplateSectionBlank.module.css';
 
@@ -13,6 +19,8 @@ interface TemplateSectionBlankProps {
   emptyDescription?: string;
   /** 있으면 설명 줄을 그 자리에서 고친다 (양식 편집 미리보기에서 고른 섹션만, SCRUM-430) */
   onChangeDescription?: (description: string) => void;
+  /** 있으면 표 머리 행의 열 이름을 그 자리에서 고친다 (양식 편집 미리보기에서 고른 표 섹션만, SCRUM-430) */
+  onChangeColumnNames?: (columnNames: string[]) => void;
 }
 
 /**
@@ -20,10 +28,17 @@ interface TemplateSectionBlankProps {
  * 줄글은 설명만, 목록은 "• 결정된 내용", 체크리스트는 "☐ 할 일 · 담당자 · 기한" 회색 한 줄, 표는 머리 행과 빈 칸.
  * 양식 편집 미리보기·양식 목록 카드·양식 상세 창이 같이 쓴다
  */
-export default function TemplateSectionBlank({ item, emptyDescription, onChangeDescription }: TemplateSectionBlankProps) {
+export default function TemplateSectionBlank({
+  item,
+  emptyDescription,
+  onChangeDescription,
+  onChangeColumnNames,
+}: TemplateSectionBlankProps) {
   const { settings } = item;
   const description = item.description.trim();
   const lineStyle = { fontSize: settings.bodySize * PAPER_FONT_SCALE };
+  // 열 이름 입력값 (열 수만큼, 비운 열은 "")
+  const columnValues = Array.from({ length: settings.table.cols }, (_, col) => settings.table.columnNames?.[col] ?? '');
 
   return (
     <div className={styles.blank}>
@@ -59,7 +74,22 @@ export default function TemplateSectionBlank({ item, emptyDescription, onChangeD
           할 일 · 담당자 · 기한
         </p>
       )}
-      {settings.recordType === 'TABLE' && <SectionContent settings={settings} content={blankContent(item)} label={item.title} />}
+      {settings.recordType === 'TABLE' && (
+        <SectionContent
+          settings={settings}
+          content={blankContent(item)}
+          label={item.title}
+          header={
+            onChangeColumnNames && {
+              values: columnValues,
+              maxLength: MAX_COLUMN_NAME_LENGTH,
+              invalid: duplicateColumns(settings.table),
+              onChange: (col, value) =>
+                onChangeColumnNames(columnValues.map((name, position) => (position === col ? cleanColumnName(value) : name))),
+            }
+          }
+        />
+      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import {
   CUSTOM_PRESET,
   DEFAULT_ITEM_SETTINGS,
   DEFAULT_LAYOUT,
+  duplicateColumns,
   editItemText,
   MAX_ITEM_DESCRIPTION_LENGTH,
   MAX_ITEM_TITLE_LENGTH,
@@ -29,6 +30,7 @@ import {
   PRESET_ITEMS,
   presetItem,
   presetOf,
+  withColumnNames,
   withPreset,
 } from '../../utils/templateSettings';
 import AddItemSelect from './AddItemSelect';
@@ -68,7 +70,7 @@ const EMPTY_DRAFT: Draft = { name: '', description: '', items: [], layout: DEFAU
 /** 기본 양식의 항목·레이아웃 (기본 양식으로 초기화) */
 function fromDefault(templates: MinutesTemplate[], name: string, description: string): Draft {
   const base = templates.find((template) => template.isDefault);
-  return { name, description, items: (base?.items ?? []).map(withPreset), layout: base?.layout ?? DEFAULT_LAYOUT };
+  return { name, description, items: (base?.items ?? []).map(withPreset).map(withColumnNames), layout: base?.layout ?? DEFAULT_LAYOUT };
 }
 
 /** 같은 제목이 이미 있으면 뒤에 숫자를 붙인다 */
@@ -131,7 +133,7 @@ export default function TemplateEditorPage() {
             ? {
                 name: editingId !== null ? source.name : `${source.name} (사본)`.slice(0, MAX_NAME_LENGTH),
                 description: source.description,
-                items: source.items.map(withPreset),
+                items: source.items.map(withPreset).map(withColumnNames),
                 layout: source.layout,
               }
             : fromDefault(list, '', ''),
@@ -221,6 +223,15 @@ export default function TemplateEditorPage() {
       setView('items');
       setIsSideOpen(true);
       setToast({ text: 'AI에게 알려 줄 설명을 입력해 주세요', variant: 'error' });
+      return;
+    }
+    // 같은 표 안에 같은 열 이름은 서버가 거절한다 (SCRUM-419). 그 표를 골라 미리보기에서 바로 고치게 한다
+    const duplicateTable = items.findIndex(
+      (item) => item.settings.recordType === 'TABLE' && duplicateColumns(item.settings.table).size > 0,
+    );
+    if (duplicateTable >= 0) {
+      setSelectedIndex(duplicateTable);
+      setToast({ text: '같은 표에 같은 열 이름이 있어요', variant: 'error' });
       return;
     }
     setIsSaving(true);
@@ -462,6 +473,15 @@ export default function TemplateEditorPage() {
               setItems(draft.items.map((current, position) => (position === index ? editItemText(current, patch) : current)))
             }
             onRemoveMeetingInfo={() => setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: false } }))}
+            onChangeColumnNames={(index, columnNames) =>
+              setItems(
+                draft.items.map((current, position) =>
+                  position === index
+                    ? { ...current, settings: { ...current.settings, table: { ...current.settings.table, columnNames } } }
+                    : current,
+                ),
+              )
+            }
           />
         </div>
       )}

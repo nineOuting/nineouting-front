@@ -16,6 +16,7 @@ import Icon from '../../components/Icon';
 import Spinner from '../../components/Spinner';
 import Switch from '../../components/Switch';
 import type { Align, ItemSettings, RecordType, TableBorder, TemplateItem, TemplateLayout } from '../../types/template';
+import { withColumnNames } from '../../utils/templateSettings';
 import SectionSelect from './SectionSelect';
 import styles from './TemplateSettingsPanel.module.css';
 
@@ -396,7 +397,11 @@ export default function TemplateSettingsPanel({
               <h3 className={styles.groupTitle}>{texts.title}</h3>
               <p className={styles.groupDescription}>{texts.description}</p>
             </div>
-            <RecordTypeOptions value={item.settings.recordType} onChange={(recordType) => setSettings({ recordType })} />
+            {/* 표로 바꾸면 기본 열 이름(No. / 항목 / 내용 / 비고)을 채운다 */}
+            <RecordTypeOptions
+              value={item.settings.recordType}
+              onChange={(recordType) => onChangeItem(withColumnNames({ ...item, settings: { ...item.settings, recordType } }))}
+            />
           </div>
           {/* 표 설정은 표를 골랐을 때만. 행 수·열 너비는 11/27에 뺐다 (행은 내용에 맞춰 늘고, 열 너비는 미리보기에서 정한다) */}
           {isTable && (

@@ -133,11 +133,41 @@ export const MEETING_INFO_PRESET = {
 };
 
 export function presetItem(preset: PresetItem): TemplateItem {
-  return {
+  return withColumnNames({
     title: preset.title,
     description: preset.description,
     settings: { ...DEFAULT_ITEM_SETTINGS, recordType: preset.recordType, preset: preset.title },
-  };
+  });
+}
+
+// 디자인 09 11/27 "표 머리글 통일": 표는 모든 섹션 공통으로 No. / 항목 / 내용 / 비고를 실제 열 이름으로 저장하고 사용자가 고친다.
+// 5번째 열부터는 비워 두고 AI가 초안을 만들 때 이름을 정한다 (SCRUM-430)
+export const DEFAULT_COLUMN_NAMES = ['No.', '항목', '내용', '비고'];
+// 열 이름 입력 규칙 (SCRUM-419 서버 검증과 같다): 30자 이하, |·줄바꿈 금지, 같은 표 안 같은 이름 금지
+export const MAX_COLUMN_NAME_LENGTH = 30;
+
+export function defaultColumnNames(cols: number) {
+  return Array.from({ length: cols }, (_, col) => DEFAULT_COLUMN_NAMES[col] ?? '');
+}
+
+/** 표인데 열 이름이 없으면(새 표, 표로 바꿈, 열 이름 없이 저장된 예전 양식) 기본 열 이름을 채운다 */
+export function withColumnNames(item: TemplateItem): TemplateItem {
+  const { table } = item.settings;
+  if (item.settings.recordType !== 'TABLE' || table.columnNames !== undefined) {
+    return item;
+  }
+  return { ...item, settings: { ...item.settings, table: { ...table, columnNames: defaultColumnNames(table.cols) } } };
+}
+
+/** 입력한 열 이름에서 |와 줄바꿈을 빼고 30자로 자른다 */
+export function cleanColumnName(value: string) {
+  return value.replace(/[|\r\n]/g, '').slice(0, MAX_COLUMN_NAME_LENGTH);
+}
+
+/** 같은 표 안에서 이름이 겹치는 열 자리 (빈 열은 AI가 정하므로 보지 않는다) */
+export function duplicateColumns(table: TableSettings) {
+  const names = Array.from({ length: table.cols }, (_, col) => table.columnNames?.[col]?.trim() ?? '');
+  return new Set(names.flatMap((name, col) => (name && names.indexOf(name) !== col ? [col, names.indexOf(name)] : [])));
 }
 
 /** 표시가 없는 예전 항목에 기본 항목 표시를 붙인다 (불러올 때 한 번) */

@@ -21,6 +21,17 @@ interface SectionContentProps {
   richContent?: string | null;
   /** 서식 칸이면 richContent도 함께 준다. 아니면 null (예전 서식은 지운다) */
   onChange?: (content: string, richContent: string | null) => void;
+  /** 표 머리 행(열 이름)만 그 자리에서 고친다 (양식 편집 미리보기, SCRUM-430). 내용 행은 그대로 보인다 */
+  header?: TableHeaderEdit;
+}
+
+export interface TableHeaderEdit {
+  /** 열 자리마다 입력값 (비운 열은 "") */
+  values: string[];
+  maxLength: number;
+  /** 이름이 겹쳐 빨간 밑줄을 보일 열 자리 */
+  invalid: Set<number>;
+  onChange: (col: number, value: string) => void;
 }
 
 /** 서식 없이 저장된 글을 서식 칸에 넣을 HTML로 바꾼다 */
@@ -62,6 +73,7 @@ export default function SectionContent({
   richText = false,
   richContent = null,
   onChange,
+  header,
 }: SectionContentProps) {
   const style = { fontSize: settings.bodySize * PAPER_FONT_SCALE, color: settings.color };
 
@@ -84,7 +96,19 @@ export default function SectionContent({
             <tr key={row} style={row === 0 ? { background: settings.table.headerColor } : undefined}>
               {cells.map((cell, col) => (
                 <td key={col} style={{ textAlign: settings.table.align.toLowerCase() as 'left' | 'center' | 'right' }}>
-                  {editable ? (
+                  {header && row === 0 ? (
+                    // 비운 열은 AI가 초안을 만들 때 이름을 정한다
+                    <input
+                      data-edit={`column-${col}`}
+                      className={[styles.cellInput, header.invalid.has(col) ? styles.cellInvalid : ''].filter(Boolean).join(' ')}
+                      aria-label={`${label} ${col + 1}열 이름`}
+                      aria-invalid={header.invalid.has(col) || undefined}
+                      maxLength={header.maxLength}
+                      placeholder={`열 ${col + 1}`}
+                      value={header.values[col] ?? ''}
+                      onChange={(event) => header.onChange(col, event.target.value)}
+                    />
+                  ) : editable ? (
                     <input
                       className={styles.cellInput}
                       aria-label={`${label} ${row + 1}행 ${col + 1}열`}

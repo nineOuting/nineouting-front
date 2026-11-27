@@ -31,8 +31,8 @@ const MAX_ZOOM = 150;
 const MOVE_MS = 200;
 const EMPTY_DESCRIPTION = '왼쪽에서 이 항목에 무엇을 채울지 설명을 적어 주세요';
 
-/** 고르지 않은 섹션의 제목·설명을 누르면 고른 뒤 그 칸에 커서를 둔다 */
-type EditField = 'title' | 'description';
+/** 고르지 않은 섹션의 제목·설명·표 열 이름을 누르면 고른 뒤 그 칸에 커서를 둔다 */
+type EditField = 'title' | 'description' | `column-${number}`;
 
 /** 손잡이로 끄는 중인 섹션. top, height는 끌기 시작할 때 화면 위치 (확대율이 들어간 px) */
 interface DragState {
@@ -59,6 +59,8 @@ interface TemplatePreviewProps {
   onChangeItem: (index: number, patch: Pick<TemplateItem, 'title'> | Pick<TemplateItem, 'description'>) => void;
   /** 회의 기본 정보를 문서에서 뺀다 (추가할 항목 고르기에서 다시 넣는다) */
   onRemoveMeetingInfo: () => void;
+  /** 고른 표 섹션의 열 이름을 고칠 때. 서식이라 기본 항목은 그대로다 */
+  onChangeColumnNames: (index: number, columnNames: string[]) => void;
 }
 
 /** 쪽마다 들어가는 섹션 번호. 아직 재지 않은 섹션은 마지막 쪽에 둔다 */
@@ -99,6 +101,7 @@ export default function TemplatePreview({
   onRemove,
   onChangeItem,
   onRemoveMeetingInfo,
+  onChangeColumnNames,
 }: TemplatePreviewProps) {
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [pageState, setPageState] = useState<number[][]>([]);
@@ -381,7 +384,9 @@ export default function TemplatePreview({
             onClick={(event) => {
               if (!isSelected) {
                 event.stopPropagation();
-                selectRow(index, 'description');
+                // 표 머리 칸을 눌렀으면 그 열 이름 칸에, 아니면 설명 칸에 커서를 둔다
+                const headCell = (event.target as HTMLElement).closest<HTMLTableCellElement>('tr:first-child > td');
+                selectRow(index, headCell ? `column-${headCell.cellIndex}` : 'description');
               }
             }}
           >
@@ -389,6 +394,7 @@ export default function TemplatePreview({
               item={item}
               emptyDescription={EMPTY_DESCRIPTION}
               onChangeDescription={isSelected ? (description) => onChangeItem(index, { description }) : undefined}
+              onChangeColumnNames={isSelected ? (columnNames) => onChangeColumnNames(index, columnNames) : undefined}
             />
           </div>
         </div>

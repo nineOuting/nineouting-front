@@ -151,3 +151,13 @@
   background: var(--color-white);
   outline: 1px solid var(--border-focus);
 }
+
+/* 양식 미리보기에서 같은 표에 같은 열 이름: 빨간 밑줄 (디자인 없음, SCRUM-430) */
+.cellInvalid,
+.cellInvalid:focus {
+  box-shadow: inset 0 -2px 0 var(--danger-default);
+}
+
+.cellInput::placeholder {
+  color: var(--text-disabled);
+}
