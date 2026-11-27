@@ -1,5 +1,6 @@
 import type { Member } from '../types/meeting';
 import type { ItemSettings, MinutesTemplate, TemplateLayout } from '../types/template';
+import { documentType } from '../utils/documentTypes';
 import { withItemDefaults, withLayoutDefaults } from '../utils/templateSettings';
 import { downloadFile, putToStorage, request } from './client';
 import { toMember } from './meeting';
@@ -289,11 +290,7 @@ export async function uploadTemplateBackground(file: File) {
   return imageKey;
 }
 
-/** REQ-195 양식 가져오기로 받을 수 있는 파일 (형식은 서버와 AI가 파일 내용으로 다시 확인한다) */
-export const TEMPLATE_IMPORT_TYPES: Record<string, string> = {
-  pdf: 'application/pdf',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-};
+/** REQ-195 양식 가져오기 파일 크기 상한. 형식은 utils/documentTypes (서버와 AI가 파일 내용으로 다시 확인한다) */
 export const TEMPLATE_IMPORT_MAX_BYTES = 20 * 1024 * 1024;
 
 export interface TemplateImportStatus {
@@ -306,18 +303,12 @@ export interface TemplateImportStatus {
   message: string | null;
 }
 
-/** 파일 이름 끝으로 형식을 정한다 (브라우저마다 docx의 file.type이 비어 있을 수 있다). 받을 수 없으면 null */
-export function templateImportType(file: File) {
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-  return TEMPLATE_IMPORT_TYPES[extension] ?? null;
-}
-
 /**
- * REQ-195 양식 파일(PDF, Word)을 올리고 가져오기를 접수한다. 분석은 서버가 뒤에서 하고(최대 약 2분),
+ * REQ-195 양식 파일(PDF, Word, Excel, 텍스트)을 올리고 가져오기를 접수한다. 분석은 서버가 뒤에서 하고(최대 약 2분),
  * 결과는 getTemplateImport로 다시 묻는다
  */
 export async function startTemplateImport(file: File, name: string) {
-  const contentType = templateImportType(file) ?? file.type;
+  const contentType = documentType(file) ?? file.type;
   const upload = await request<{ fileKey: string; uploadUrl: string; contentType: string }>(
     'POST',
     '/api/minutes-templates/import-upload-url',

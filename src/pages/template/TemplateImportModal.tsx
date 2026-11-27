@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { errorMessage } from '../../api/client';
-import {
-  getTemplateImport,
-  startTemplateImport,
-  templateImportType,
-  TEMPLATE_IMPORT_MAX_BYTES,
-  TEMPLATE_IMPORT_TYPES,
-} from '../../api/minutes';
+import { getTemplateImport, startTemplateImport, TEMPLATE_IMPORT_MAX_BYTES } from '../../api/minutes';
 import errorIcon from '../../assets/icons/error.svg';
 import fileIcon from '../../assets/icons/minutes-doc.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
@@ -14,6 +8,7 @@ import Button from '../../components/Button';
 import Dialog from '../../components/Dialog';
 import Icon from '../../components/Icon';
 import Spinner from '../../components/Spinner';
+import { DOCUMENT_ACCEPT, documentType } from '../../utils/documentTypes';
 import styles from './TemplateImportModal.module.css';
 
 const ICON_SIZE = 20;
@@ -21,9 +16,8 @@ const UPLOAD_ICON_SIZE = 24;
 // 서버가 뒤에서 분석한다 (보통 4~25초, 최대 약 2분). 이 간격으로 결과를 묻고, 이 시간이 지나면 실패로 본다
 const POLL_MS = 2000;
 const GIVE_UP_MS = 5 * 60 * 1000;
-const ACCEPT = ['.pdf', '.docx', ...Object.values(TEMPLATE_IMPORT_TYPES)].join(',');
-// 임시 문구 (2026-11-24): 기획에서 정하는 중
-const INVALID_FILE_MESSAGE = 'PDF나 Word 파일만 20MB까지 올릴 수 있어요';
+// 임시 문구 (2026-11-27): 기획에서 정하는 중
+const INVALID_FILE_MESSAGE = 'PDF, Word, Excel, 텍스트 파일만 20MB까지 올릴 수 있어요';
 const FAILED_FALLBACK_MESSAGE = '양식을 분석하지 못했어요. 다른 파일로 다시 시도해 주세요';
 
 type Step = 'upload' | 'reading' | 'failed';
@@ -40,7 +34,7 @@ const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve
 const nameOf = (file: File) => file.name.replace(/\.[^.]+$/, '').trim() || '가져온 양식';
 
 /**
- * REQ-195 디자인 Version02 TemplateImportModal (Upload → Reading → Failed): 회의록 PDF나 Word 파일을 올리면
+ * REQ-195 디자인 Version02 TemplateImportModal (Upload → Reading → Failed): 회의록 파일(PDF, Word, Excel, 텍스트)을 올리면
  * 서버가 AI로 항목을 읽어 새 개인 양식으로 저장한다. 접수만 바로 되고 분석은 뒤에서 하므로 결과를 다시 묻는다
  */
 export default function TemplateImportModal({ onClose, onImported }: TemplateImportModalProps) {
@@ -69,7 +63,7 @@ export default function TemplateImportModal({ onClose, onImported }: TemplateImp
       return;
     }
     setFile(picked);
-    if (!templateImportType(picked) || picked.size > TEMPLATE_IMPORT_MAX_BYTES) {
+    if (!documentType(picked) || picked.size > TEMPLATE_IMPORT_MAX_BYTES) {
       fail(INVALID_FILE_MESSAGE);
       return;
     }
@@ -115,7 +109,7 @@ export default function TemplateImportModal({ onClose, onImported }: TemplateImp
   return (
     <Dialog
       title="양식 가져오기"
-      description="기존 회의록 PDF나 Word 파일을 올리면 항목을 분석해 편집할 수 있는 양식으로 변환해 드려요."
+      description="기존 회의록 파일(PDF, Word, Excel, 텍스트)을 올리면 항목을 분석해 편집할 수 있는 양식으로 변환해 드려요."
       width="md"
       hideClose={step === 'reading'}
       onClose={step === 'reading' ? () => undefined : onClose}
@@ -139,7 +133,7 @@ export default function TemplateImportModal({ onClose, onImported }: TemplateImp
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPT}
+        accept={DOCUMENT_ACCEPT}
         hidden
         onChange={(event) => {
           pick(event.target.files?.[0]);
@@ -152,7 +146,7 @@ export default function TemplateImportModal({ onClose, onImported }: TemplateImp
           <div>
             {/* 임시 문구 (2026-11-24): 실패 이유는 서버가 준 문구를 그대로 보인다 */}
             <p className={styles.failedTitle}>{failure}</p>
-            <p className={styles.failedText}>다른 PDF나 Word 파일을 선택해 주세요.</p>
+            <p className={styles.failedText}>PDF, Word, Excel, 텍스트 파일 중에서 다시 선택해 주세요.</p>
           </div>
         </div>
       )}
@@ -174,8 +168,8 @@ export default function TemplateImportModal({ onClose, onImported }: TemplateImp
           onDrop={handleDrop}
         >
           <Icon src={uploadIcon} size={UPLOAD_ICON_SIZE} />
-          <p className={styles.dropTitle}>PDF나 Word 파일을 여기에 끌어다 놓으세요</p>
-          <p className={styles.dropText}>또는 파일을 직접 선택할 수 있어요. 20MB까지 올릴 수 있어요.</p>
+          <p className={styles.dropTitle}>회의록 파일을 여기에 끌어다 놓으세요</p>
+          <p className={styles.dropText}>PDF, Word, Excel, 텍스트(txt·md·csv) 파일을 20MB까지 올릴 수 있어요.</p>
           <Button variant="secondary" size="md" className={styles.pickButton} onClick={() => inputRef.current?.click()}>
             파일 선택
           </Button>

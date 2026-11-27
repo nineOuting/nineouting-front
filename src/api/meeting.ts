@@ -1,5 +1,6 @@
 import type { Agenda, Meeting, MeetingStatus, Member, PendingAgenda } from '../types/meeting';
 import type { FolderMeeting, FolderMeetingStatus, FolderPendingAgenda } from '../types/workspace';
+import { documentType } from '../utils/documentTypes';
 import { putToStorage, request } from './client';
 
 // meeting-service API (docs/services/meeting-service.md). 시각은 한국 시간 LocalDateTime 문자열(2026-10-20T14:00:00)
@@ -326,7 +327,7 @@ export function listMaterials(meetingId: number) {
  */
 export async function uploadMaterial(meetingId: number, file: File,
   onProgress?: (loaded: number, total: number) => void) {
-  const contentType = file.type || 'application/octet-stream';
+  const contentType = documentType(file) ?? (file.type || 'application/octet-stream');
   const { materialId, uploadUrl } = await request<{ materialId: number; uploadUrl: string }>(
     'POST',
     `/api/meetings/${meetingId}/materials`,
