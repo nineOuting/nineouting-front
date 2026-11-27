@@ -44,6 +44,10 @@ export const PX_PER_MM = A4_WIDTH_PX / 210;
 /** 실제 A4 크기로 그리므로 양식의 글자 크기(px)를 그대로 쓴다 */
 export const PAPER_FONT_SCALE = 1;
 
+// 디자인 09 "섹션 이름·AI 설명 고치기" (11/25): 항목 이름 20자, AI에게 알려 줄 설명 100자. 왼쪽 패널과 미리보기가 같이 쓴다
+export const MAX_ITEM_TITLE_LENGTH = 20;
+export const MAX_ITEM_DESCRIPTION_LENGTH = 100;
+
 /** 화면에서 처음 보이는 확대율. 70%면 종이가 약 556px로 디자인의 종이 너비(560px)와 비슷하다 */
 export const DEFAULT_PAPER_ZOOM = 70;
 

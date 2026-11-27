@@ -20,6 +20,8 @@ import type { MinutesTemplate, TemplateItem, TemplateLayout } from '../../types/
 import {
   DEFAULT_ITEM_SETTINGS,
   DEFAULT_LAYOUT,
+  MAX_ITEM_DESCRIPTION_LENGTH,
+  MAX_ITEM_TITLE_LENGTH,
   MEETING_INFO_PRESET,
   normalizeColumnNames,
   PRESET_ITEMS,
@@ -41,9 +43,6 @@ const MAX_DESCRIPTION_LENGTH = 100;
 // 디자인 09 "[커스텀 항목 추가] 누른 직후" (11/25): 이름은 "새 항목", AI 설명은 비워 둔다
 const CUSTOM_TITLE = '새 항목';
 const CUSTOM_DESCRIPTION = '';
-// 디자인 09 "섹션 이름·AI 설명 고치기" (11/25): 항목 이름 20자, AI에게 알려 줄 설명 100자
-const MAX_ITEM_TITLE_LENGTH = 20;
-const MAX_ITEM_DESCRIPTION_LENGTH = 100;
 
 interface Draft {
   name: string;
@@ -454,6 +453,8 @@ export default function TemplateEditorPage() {
             onSelect={setSelectedIndex}
             onMove={moveItem}
             onRemove={removeItem}
+            onChangeItem={(index, item) => setItems(draft.items.map((current, position) => (position === index ? item : current)))}
+            onRemoveMeetingInfo={() => setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: false } }))}
           />
         </div>
       )}

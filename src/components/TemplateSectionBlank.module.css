@@ -36,3 +36,26 @@
   border: var(--border-width-default) solid var(--text-tertiary);
   border-radius: 3px;
 }
+
+/* 양식 편집 미리보기에서 고른 섹션의 설명: 회색 한 줄 모양 그대로, 입력 중에만 밑줄 (디자인 없음, SCRUM-430) */
+.descriptionInput {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  field-sizing: content;
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-width-default) solid transparent;
+  outline: none;
+  font-family: inherit;
+  resize: none;
+}
+
+.descriptionInput:focus {
+  border-bottom-color: var(--border-focus);
+}
+
+.descriptionInput::placeholder {
+  color: var(--text-disabled);
+}
