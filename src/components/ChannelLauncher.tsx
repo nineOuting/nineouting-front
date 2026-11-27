@@ -1,18 +1,28 @@
 import { useEffect } from 'react';
-import { useMatch } from 'react-router-dom';
+import { matchPath, useLocation } from 'react-router-dom';
 
 type ChannelIO = (command: string) => void;
 
 const channelIO = (command: string) => (window as Window & { ChannelIO?: ChannelIO }).ChannelIO?.(command);
 
+/** 채널톡 버튼을 숨길 화면: 회의 중, 회의록 편집, 회의록 양식 편집 (버튼이 편집 영역, 회의 조작을 가린다) */
+const HIDDEN_PATHS = [
+  '/meetings/:meetingId/room',
+  '/meetings/:meetingId/minutes',
+  '/templates/new',
+  '/templates/:templateId/edit',
+];
+
 /**
- * 채널톡 원래 버튼은 모든 화면에 뜨고(index.html boot), 회의 중 화면에서만 숨긴다 (2026-11-23).
+ * 채널톡 원래 버튼은 모든 화면에 뜨고(index.html boot), HIDDEN_PATHS 화면에서만 숨긴다
+ * (2026-11-23 회의 중, 2026-11-27 회의록 편집, 양식 편집 추가).
  * 랜딩의 TOP 버튼은 landing.html에서 이 버튼 위로 올려 두었다
  */
 export default function ChannelLauncher() {
-  const isMeetingRoom = useMatch('/meetings/:meetingId/room') !== null;
+  const { pathname } = useLocation();
+  const hidden = HIDDEN_PATHS.some((pattern) => matchPath(pattern, pathname) !== null);
   useEffect(() => {
-    channelIO(isMeetingRoom ? 'hideChannelButton' : 'showChannelButton');
-  }, [isMeetingRoom]);
+    channelIO(hidden ? 'hideChannelButton' : 'showChannelButton');
+  }, [hidden]);
   return null;
 }
