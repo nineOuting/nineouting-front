@@ -120,8 +120,19 @@
   border-color: transparent;
 }
 
-.borderBOLD td {
-  border: 2px solid var(--grey-40);
+/* 가로선만: 칸의 위·아래 선만 (서버 PDF와 같다) */
+.borderHORIZONTAL td {
+  border-right-style: none;
+  border-left-style: none;
+}
+
+/* 바깥선만: 칸 선을 지우고 표 둘레만. 선을 겹쳐 그릴 때 none은 표 선에 지므로 표 선이 남는다 */
+.borderOUTER td {
+  border-style: none;
+}
+
+.borderOUTER {
+  border: 1px solid var(--border-default);
 }
 
 .fixed {

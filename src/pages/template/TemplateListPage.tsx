@@ -52,10 +52,13 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuAnchorRef = useRef<HTMLButtonElement>(null);
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
-  // 공유받은 양식(REQ-199)은 고칠 수 없고 복제만 된다. 기본 양식은 내 기본 양식으로 고치고, 지울 수는 없다 (QA 64)
+  // 공유받은 양식(REQ-199)은 고칠 수 없고 복제만 된다. 기본 양식은 카드를 누르면 내 기본 양식으로 고치고(QA 64),
+  // ⋮ 메뉴는 복제만 둔다 (디자인 09 "기본 양식 ⋮ 메뉴", REQ-121)
   const isReadOnly = Boolean(template.shared);
   const menuItems = isReadOnly
     ? [{ label: '복제해서 내 양식 만들기', icon: copyIcon, onSelect: onDuplicate }]
+    : template.isDefault
+    ? [{ label: '내 양식으로 복제', icon: copyIcon, onSelect: onDuplicate }]
     : [
         ...(onEdit ? [{ label: '수정', icon: editIcon, onSelect: onEdit }] : []),
         { label: '복제', icon: copyIcon, onSelect: onDuplicate },

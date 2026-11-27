@@ -30,18 +30,10 @@ const RECORD_TYPES: { value: RecordType; label: string }[] = [
   { value: 'CHECKLIST', label: '체크리스트형' },
   { value: 'TABLE', label: '표' },
 ];
-const TITLE_SIZES = [
-  { value: 14, label: '작게 (14px)' },
-  { value: 16, label: '중간 (16px)' },
-  { value: 18, label: '크게 (18px)' },
-  { value: 20, label: '아주 크게 (20px)' },
-];
-// 디자인 09 "본문 크기 고르기" (11/25)
-const BODY_SIZES = [
-  { value: 14, label: '작게 (14px)' },
-  { value: 16, label: '중간 (16px)' },
-  { value: 18, label: '크게 (18px)' },
-];
+// 디자인 09 글자 크기 (11/26): 이름 없이 크기만 보여 준다
+const sizeOptions = (sizes: number[]) => sizes.map((value) => ({ value, label: `${value}px` }));
+const TITLE_SIZES = sizeOptions([14, 16, 18, 20]);
+const BODY_SIZES = sizeOptions([10, 12, 14, 16, 18]);
 const MARGINS = [
   { value: 8, label: '좁게 (8px)' },
   { value: 16, label: '보통 (16px)' },
@@ -53,10 +45,12 @@ const SECTION_GAPS = [
   { value: 20, label: '보통 (20px)' },
   { value: 32, label: '넓게 (32px)' },
 ];
+// 디자인 09 "테두리 고르기" (REQ-156, 11/25)
 const BORDERS: { value: TableBorder; label: string }[] = [
   { value: 'BASIC', label: '기본' },
+  { value: 'HORIZONTAL', label: '가로선만' },
+  { value: 'OUTER', label: '바깥선만' },
   { value: 'NONE', label: '없음' },
-  { value: 'BOLD', label: '굵게' },
 ];
 const ALIGNS: { value: Align; label: string; icon: string }[] = [
   { value: 'LEFT', label: '왼쪽 정렬', icon: alignLeftIcon },

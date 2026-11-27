@@ -3,7 +3,8 @@
 /** 기록 방식: 자유 입력형 / 목록형 / 체크리스트형 / 표 */
 export type RecordType = 'FREE' | 'LIST' | 'CHECKLIST' | 'TABLE';
 export type Align = 'LEFT' | 'CENTER' | 'RIGHT';
-export type TableBorder = 'BASIC' | 'NONE' | 'BOLD';
+/** 표 테두리: 기본(모든 선) / 가로선만 / 바깥선만 / 없음 (SCRUM-419) */
+export type TableBorder = 'BASIC' | 'HORIZONTAL' | 'OUTER' | 'NONE';
 
 export interface TableSettings {
   rows: number;
