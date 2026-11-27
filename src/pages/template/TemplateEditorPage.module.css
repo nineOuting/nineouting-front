@@ -76,14 +76,15 @@
   min-height: 0;
 }
 
-/* 디자인 SideRail */
+/* 디자인 SideRail (09 11/25): 폭 80, 위 12, 버튼 64x64 가운데 정렬, 버튼 사이 8 */
 .rail {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  gap: var(--spacing-1);
-  width: 72px;
-  padding: var(--spacing-3) var(--spacing-1);
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 80px;
+  padding: var(--spacing-3) 0;
   background: var(--bg-surface);
   border-right: var(--border-width-default) solid var(--border-default);
 }
@@ -92,8 +93,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-1);
-  padding: var(--spacing-2) 0;
+  width: 64px;
+  height: 64px;
+  padding: var(--spacing-2) var(--spacing-1);
   border-radius: var(--radius-md);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
@@ -111,10 +115,10 @@
   color: var(--primary-default);
 }
 
-/* 디자인 SidePanel */
+/* 디자인 SidePanel (09 11/25): 폭 318 (오른쪽 테두리 포함), 안쪽 24 → 내용 폭 269 */
 .side {
   flex-shrink: 0;
-  width: 300px;
+  width: 318px;
   overflow-y: auto;
   background: var(--bg-surface);
   border-right: var(--border-width-default) solid var(--border-default);
@@ -163,7 +167,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-5);
-  padding: var(--spacing-6) var(--spacing-5);
+  padding: var(--spacing-6);
 }
 
 .titleGroup {

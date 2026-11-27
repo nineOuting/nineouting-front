@@ -1,9 +1,9 @@
-/* 디자인 TemplateEditorPage 왼쪽 SidePanel 300px: 제목, 설명, 묶음 사이 24px. 오른쪽 입력칸은 110px, 높이 32px */
+/* 디자인 TemplateEditorPage 왼쪽 SidePanel 318px (09 11/25): 안쪽 24, 제목·설명·묶음 사이 24 */
 .panel {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-6);
-  padding: var(--spacing-6) var(--spacing-5);
+  padding: var(--spacing-6);
 }
 
 .titleGroup {
