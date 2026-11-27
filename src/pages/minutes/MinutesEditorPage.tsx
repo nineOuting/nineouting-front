@@ -15,14 +15,15 @@ import {
   type MinutesDetail,
   type MinutesSection,
 } from '../../api/minutes';
-import alignCenterIcon from '../../assets/icons/align-center.svg';
-import alignLeftIcon from '../../assets/icons/align-left.svg';
-import alignRightIcon from '../../assets/icons/align-right.svg';
 import autoAwesomeIcon from '../../assets/icons/auto-awesome.svg';
-import bulletIcon from '../../assets/icons/format-bullet.svg';
-import boldIcon from '../../assets/icons/format-bold.svg';
-import italicIcon from '../../assets/icons/format-italic.svg';
-import underlineIcon from '../../assets/icons/format-underline.svg';
+// 레거시 (2026-11-27, 사용자 요청으로 회의록 편집 서식 도구 막대를 뺌): 서식 아이콘
+// import alignCenterIcon from '../../assets/icons/align-center.svg';
+// import alignLeftIcon from '../../assets/icons/align-left.svg';
+// import alignRightIcon from '../../assets/icons/align-right.svg';
+// import bulletIcon from '../../assets/icons/format-bullet.svg';
+// import boldIcon from '../../assets/icons/format-bold.svg';
+// import italicIcon from '../../assets/icons/format-italic.svg';
+// import underlineIcon from '../../assets/icons/format-underline.svg';
 import downloadIcon from '../../assets/icons/download.svg';
 import locationIcon from '../../assets/icons/location.svg';
 import personIcon from '../../assets/icons/participants.svg';
@@ -83,20 +84,21 @@ const NOT_READY_RETRY_MS = 1500;
 const NOT_READY_MAX_RETRIES = 20;
 const STATUS_LABELS = { WRITING: '작성 중', REVIEWING: '검토 중', CONFIRMED: '확정' } as const;
 
-type FormatAction = { label: string; command: string; icon?: string; text?: string; textClass?: string } | 'divider';
-
-const FORMAT_ACTIONS: FormatAction[] = [
-  // 디자인 DocEditToolbar: 글자 대신 아이콘 (디자인 체크 2026-11-19)
-  { label: '굵게', command: 'bold', icon: boldIcon },
-  { label: '기울임', command: 'italic', icon: italicIcon },
-  { label: '밑줄', command: 'underline', icon: underlineIcon },
-  'divider',
-  { label: '글머리 기호', command: 'insertUnorderedList', icon: bulletIcon },
-  'divider',
-  { label: '왼쪽 정렬', command: 'justifyLeft', icon: alignLeftIcon },
-  { label: '가운데 정렬', command: 'justifyCenter', icon: alignCenterIcon },
-  { label: '오른쪽 정렬', command: 'justifyRight', icon: alignRightIcon },
-];
+// 레거시 (2026-11-27, 사용자 요청으로 회의록 편집 서식 도구 막대를 뺌)
+// type FormatAction = { label: string; command: string; icon?: string; text?: string; textClass?: string } | 'divider';
+//
+// const FORMAT_ACTIONS: FormatAction[] = [
+//   // 디자인 DocEditToolbar: 글자 대신 아이콘 (디자인 체크 2026-11-19)
+//   { label: '굵게', command: 'bold', icon: boldIcon },
+//   { label: '기울임', command: 'italic', icon: italicIcon },
+//   { label: '밑줄', command: 'underline', icon: underlineIcon },
+//   'divider',
+//   { label: '글머리 기호', command: 'insertUnorderedList', icon: bulletIcon },
+//   'divider',
+//   { label: '왼쪽 정렬', command: 'justifyLeft', icon: alignLeftIcon },
+//   { label: '가운데 정렬', command: 'justifyCenter', icon: alignCenterIcon },
+//   { label: '오른쪽 정렬', command: 'justifyRight', icon: alignRightIcon },
+// ];
 
 type LoadState =
   | { type: 'loading' }
@@ -143,17 +145,18 @@ export default function MinutesEditorPage() {
   // const [dialog, setDialog] = useState<'download' | 'share' | null>(searchParams.get('download') ? 'download' : null);
   const [dialog, setDialog] = useState<'share' | null>(null);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+  // 레거시 (2026-11-27, 사용자 요청으로 회의록 편집 서식 도구 막대를 뺌)
   // 서식은 줄글 칸(RichTextField)에만 넣을 수 있다. 커서가 그 칸에 있을 때만 서식 버튼을 켠다
-  const [canFormat, setCanFormat] = useState(false);
-  useEffect(() => {
-    const update = () => {
-      const node = document.getSelection()?.anchorNode;
-      const element = node instanceof Element ? node : node?.parentElement;
-      setCanFormat(Boolean(element?.closest('[contenteditable="true"]')));
-    };
-    document.addEventListener('selectionchange', update);
-    return () => document.removeEventListener('selectionchange', update);
-  }, []);
+  // const [canFormat, setCanFormat] = useState(false);
+  // useEffect(() => {
+  //   const update = () => {
+  //     const node = document.getSelection()?.anchorNode;
+  //     const element = node instanceof Element ? node : node?.parentElement;
+  //     setCanFormat(Boolean(element?.closest('[contenteditable="true"]')));
+  //   };
+  //   document.addEventListener('selectionchange', update);
+  //   return () => document.removeEventListener('selectionchange', update);
+  // }, []);
   // 디자인 Version02: 양식을 고르면 바꾸기 전에 한 번 묻는다 / 다운로드는 상단 바 아래 작은 메뉴
   const [pendingTemplate, setPendingTemplate] = useState<{ templateId: number; name: string } | null>(null);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
@@ -651,6 +654,7 @@ export default function MinutesEditorPage() {
         </ul>
       </div>
       {/* 디자인 Version02 서식 도구 막대 (REQ-194). 줄글 칸에서 고른 글자에 서식을 넣고 저장한다. 서버에서 서식 기능을 끄면 숨긴다 */}
+      {/* 레거시 (2026-11-27, 사용자 요청으로 회의록 편집 서식 도구 막대를 뺌)
       {isWriter && minutes.richText && (
         <div className={styles.formatBar} role="toolbar" aria-label="서식">
           {FORMAT_ACTIONS.map((action, index) =>
@@ -675,6 +679,7 @@ export default function MinutesEditorPage() {
           )}
         </div>
       )}
+      */}
       {/* 디자인 Workspace: 문서(CanvasArea) + 요약, 전사(SummaryTranscriptPanel) */}
       <div className={styles.workspace}>
         <MinutesDocument
