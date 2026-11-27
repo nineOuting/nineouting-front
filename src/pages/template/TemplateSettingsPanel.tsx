@@ -95,6 +95,10 @@ interface TemplateSettingsPanelProps {
   layout: TemplateLayout;
   onChangeItem: (item: TemplateItem) => void;
   onChangeLayout: (layout: TemplateLayout) => void;
+  /** 회의 기본 정보를 골랐는지. 고르면 기록 방식·글자 설정 대신 바꿀 수 없다는 한 줄만 보인다 (SCRUM-430) */
+  isInfoSelected: boolean;
+  /** 문서에 회의 기본 정보가 있을 때만: 선택한 항목 목록 맨 위에서 고른다 */
+  onSelectInfo?: () => void;
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -337,6 +341,8 @@ export default function TemplateSettingsPanel({
   layout,
   onChangeItem,
   onChangeLayout,
+  isInfoSelected,
+  onSelectInfo,
 }: TemplateSettingsPanelProps) {
   const item = selectedIndex !== null ? (items[selectedIndex] ?? null) : null;
   const setSettings = (patch: Partial<ItemSettings>) => item && onChangeItem({ ...item, settings: { ...item.settings, ...patch } });
@@ -374,7 +380,12 @@ export default function TemplateSettingsPanel({
   const sectionPicker = (
     <div className={styles.section}>
       <h3 className={styles.heading}>선택한 항목</h3>
-      <SectionSelect titles={items.map(({ title }) => title)} selectedIndex={selectedIndex} onSelect={onSelect} />
+      <SectionSelect
+        titles={items.map(({ title }) => title)}
+        selectedIndex={selectedIndex}
+        onSelect={onSelect}
+        meetingInfo={onSelectInfo ? { isSelected: isInfoSelected, onSelect: onSelectInfo } : undefined}
+      />
     </div>
   );
 
@@ -390,7 +401,11 @@ export default function TemplateSettingsPanel({
 
       {view !== 'layout' && sectionPicker}
 
-      {view === 'table' && item && (
+      {view !== 'layout' && isInfoSelected && (
+        <p className={styles.groupDescription}>회의 기본 정보는 기록 방식과 글자를 바꿀 수 없어요.</p>
+      )}
+
+      {view === 'table' && item && !isInfoSelected && (
         <>
           <div className={styles.group}>
             <div className={styles.groupHeader}>
@@ -440,7 +455,7 @@ export default function TemplateSettingsPanel({
         </>
       )}
 
-      {view === 'text' && item && (
+      {view === 'text' && item && !isInfoSelected && (
         <>
           <div className={styles.section}>
             <h3 className={styles.heading}>글자 서식</h3>

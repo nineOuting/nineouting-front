@@ -329,3 +329,13 @@
   line-height: var(--line-height-body-md);
   color: var(--text-secondary);
 }
+
+/* 회의 기본 정보를 골랐을 때 잠근 이름·설명 칸: 회색 바탕, 흐린 글자 (SCRUM-430) */
+.locked {
+  background: var(--bg-surface-muted);
+}
+
+.locked .input,
+.locked .aiTextarea {
+  color: var(--text-disabled);
+}

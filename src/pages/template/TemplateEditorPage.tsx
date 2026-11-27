@@ -147,6 +147,15 @@ export default function TemplateEditorPage() {
   }, [editingId, copyFrom]);
 
   const setItems = (items: TemplateItem[]) => setDraft((prev) => ({ ...prev, items }));
+  // 회의 기본 정보는 항목이 아니라 따로 고른다. 고를 때의 선택 항목을 적어 두고, 선택 항목이 바뀌면 저절로 풀린다
+  const [infoSelectedAt, setInfoSelectedAt] = useState<number | null | undefined>(undefined);
+  const isInfoSelected = draft.layout.showMeetingInfo && infoSelectedAt !== undefined && infoSelectedAt === selectedIndex;
+  const selectInfo = () => setInfoSelectedAt(selectedIndex);
+  /** 항목을 고른다 (회의 기본 정보 선택은 푼다) */
+  const selectItem = (index: number) => {
+    setInfoSelectedAt(undefined);
+    setSelectedIndex(index);
+  };
   const selectedItem = selectedIndex === null ? undefined : draft.items[selectedIndex];
   /** 선택한 섹션의 이름·AI 설명 고치기 (항목 구성 패널). 기본 항목을 고치면 커스텀이 된다 */
   const updateSelected = (patch: Partial<Pick<TemplateItem, 'title' | 'description'>>) =>
@@ -219,7 +228,7 @@ export default function TemplateEditorPage() {
     // 디자인 09 11/27: AI에게 알려 줄 설명은 필수. 빈 항목을 골라 왼쪽 항목 구성에서 바로 채우게 한다
     const emptyDescription = items.findIndex((item) => !item.description.trim());
     if (emptyDescription >= 0) {
-      setSelectedIndex(emptyDescription);
+      selectItem(emptyDescription);
       setView('items');
       setIsSideOpen(true);
       setToast({ text: 'AI에게 알려 줄 설명을 입력해 주세요', variant: 'error' });
@@ -230,7 +239,7 @@ export default function TemplateEditorPage() {
       (item) => item.settings.recordType === 'TABLE' && duplicateColumns(item.settings.table).size > 0,
     );
     if (duplicateTable >= 0) {
-      setSelectedIndex(duplicateTable);
+      selectItem(duplicateTable);
       setToast({ text: '같은 표에 같은 열 이름이 있어요', variant: 'error' });
       return;
     }
@@ -369,11 +378,37 @@ export default function TemplateEditorPage() {
                   <SectionSelect
                     titles={draft.items.map(({ title }) => title)}
                     selectedIndex={selectedIndex}
-                    onSelect={setSelectedIndex}
+                    onSelect={selectItem}
+                    meetingInfo={draft.layout.showMeetingInfo ? { isSelected: isInfoSelected, onSelect: selectInfo } : undefined}
                   />
                   <span className={styles.helper}>선택한 섹션의 이름과 설명을 바꿀 수 있어요.</span>
                 </div>
-                {selectedItem && selectedIndex !== null && (
+                {/* 회의 기본 정보는 회의 정보로 채워져서 이름·설명을 보여 주기만 하고 잠근다 */}
+                {isInfoSelected && (
+                  <div className={styles.itemFields}>
+                    <label className={styles.field}>
+                      <span className={styles.subLabel}>
+                        항목 이름<span className={styles.required}>*</span>
+                      </span>
+                      <span className={`${styles.inputBox} ${styles.locked}`}>
+                        <input className={styles.input} disabled value={MEETING_INFO_PRESET.title} />
+                      </span>
+                      <Counter length={MEETING_INFO_PRESET.title.length} max={MAX_ITEM_TITLE_LENGTH} />
+                    </label>
+                    <label className={styles.field}>
+                      <span className={styles.label}>
+                        AI에게 알려 줄 설명<span className={styles.required}>*</span>
+                      </span>
+                      <span className={`${styles.aiBox} ${styles.locked}`}>
+                        <textarea className={styles.aiTextarea} disabled value={MEETING_INFO_PRESET.description} />
+                      </span>
+                      <span className={styles.helper}>
+                        {MEETING_INFO_PRESET.description.length} / {MAX_ITEM_DESCRIPTION_LENGTH}
+                      </span>
+                    </label>
+                  </div>
+                )}
+                {!isInfoSelected && selectedItem && selectedIndex !== null && (
                   <div className={styles.itemFields}>
                     <label className={styles.field}>
                       <span className={styles.subLabel}>
@@ -441,7 +476,9 @@ export default function TemplateEditorPage() {
                 view={view}
                 items={draft.items}
                 selectedIndex={selectedIndex}
-                onSelect={setSelectedIndex}
+                onSelect={selectItem}
+                isInfoSelected={isInfoSelected}
+                onSelectInfo={draft.layout.showMeetingInfo ? selectInfo : undefined}
                 layout={draft.layout}
                 onChangeItem={(item) =>
                   selectedIndex !== null && setItems(draft.items.map((current, index) => (index === selectedIndex ? item : current)))
@@ -466,7 +503,9 @@ export default function TemplateEditorPage() {
             items={draft.items}
             layout={draft.layout}
             selectedIndex={selectedIndex}
-            onSelect={setSelectedIndex}
+            onSelect={selectItem}
+            isInfoSelected={isInfoSelected}
+            onSelectInfo={selectInfo}
             onMove={moveItem}
             onRemove={removeItem}
             onChangeItem={(index, patch) =>

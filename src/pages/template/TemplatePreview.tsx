@@ -61,6 +61,9 @@ interface TemplatePreviewProps {
   onRemoveMeetingInfo: () => void;
   /** 고른 표 섹션의 열 이름을 고칠 때. 서식이라 기본 항목은 그대로다 */
   onChangeColumnNames: (index: number, columnNames: string[]) => void;
+  /** 회의 기본 정보를 골랐는지 (왼쪽 패널과 같이 쓴다). 고른 동안 섹션 선택 표시는 감춘다 */
+  isInfoSelected: boolean;
+  onSelectInfo: () => void;
 }
 
 /** 쪽마다 들어가는 섹션 번호. 아직 재지 않은 섹션은 마지막 쪽에 둔다 */
@@ -102,6 +105,8 @@ export default function TemplatePreview({
   onChangeItem,
   onRemoveMeetingInfo,
   onChangeColumnNames,
+  isInfoSelected,
+  onSelectInfo,
 }: TemplatePreviewProps) {
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [pageState, setPageState] = useState<number[][]>([]);
@@ -118,15 +123,10 @@ export default function TemplatePreview({
   const selectedTitleRef = useRef<{ index: number; title: string } | null>(null);
   // 순서를 바꾸기 직전 섹션 위치 (움직임을 그리려고)
   const flipRef = useRef<{ tops: number[]; order: number[] } | null>(null);
-  // 회의 기본 정보는 항목이 아니라서 미리보기에서만 고른 상태를 둔다. 고를 때의 선택 섹션을 적어 두고,
-  // 왼쪽에서 다른 항목을 고르거나 항목을 추가해 선택이 바뀌면 저절로 풀린다. 고른 동안 섹션 선택 표시는 감춘다
-  const [infoSelectedAt, setInfoSelectedAt] = useState<number | null | undefined>(undefined);
-  const isInfoSelected = infoSelectedAt !== undefined && infoSelectedAt === selectedIndex;
   const focusFieldRef = useRef<EditField | null>(null);
   const selectedCardRef = useRef<HTMLDivElement>(null);
   const selectRow = (index: number, field?: EditField) => {
     focusFieldRef.current = field ?? null;
-    setInfoSelectedAt(undefined);
     onSelect(index);
   };
 
@@ -445,7 +445,7 @@ export default function TemplatePreview({
                       <section
                         className={[styles.meetingInfo, isInfoSelected ? styles.selectedRow : ''].filter(Boolean).join(' ')}
                         aria-label="회의 기본 정보"
-                        onClick={() => setInfoSelectedAt(selectedIndex)}
+                        onClick={onSelectInfo}
                       >
                         <div className={styles.cardHead}>
                           <h3 className={styles.meetingInfoTitle}>회의 기본 정보</h3>
@@ -457,7 +457,6 @@ export default function TemplatePreview({
                                 aria-label="회의 기본 정보 삭제"
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  setInfoSelectedAt(undefined);
                                   onRemoveMeetingInfo();
                                 }}
                               >
