@@ -606,33 +606,25 @@ export default function MeetingRoomPage() {
           decisionPoints: item.decisionPoints.map((point) => (point.id === decisionId ? next : point)),
         })),
       );
-    replaceDecision({ ...decision, summary: decisionSummary });
+    // 결정 내용을 직접 적으면 결정으로 확정되고 AI가 상태·내용을 바꾸지 않는다 (디자인 07 11/27 기획 메모).
+    // 논의 전·이야기 중 카드는 결정 내용을 보여 주지 않아서 상태를 결정으로 바꿔야 고친 글이 보인다
+    replaceDecision({ ...decision, summary: decisionSummary, status: 'decided', statusEdited: true });
     try {
       await editDecision(meetingIdNumber, Number(agenda.id), Number(decisionId), decisionSummary, decision.evidenceSeqs);
+      // ai-service가 내용 수정만으로 확정까지 하게 바뀌기 전(SCRUM-425)에는 상태를 따로 보낸다
+      if (decision.status !== 'decided') {
+        await setDecisionStatus(meetingIdNumber, Number(agenda.id), Number(decisionId), 'DECIDED');
+      }
     } catch (error) {
       showError(error);
       replaceDecision(decision);
       return;
     }
-    // MSG-132 (디자인 07 11/25). [되돌리기]는 수정 전 글을 다시 저장한다 (수정 취소 API가 없어 서버에는 고친 결정으로 남는다).
-    // 수정 전 글이 없었으면 빈 글로는 되돌릴 수 없어 [되돌리기]를 뺀다
-    const previousSummary = decision.summary;
+    // MSG-132 (디자인 07 11/25). [되돌리기]는 AI에게 다시 맡긴다 (상태·내용 모두 AI가 다시 정한다)
     setToast({
       text: '결정 내용을 바꿨어요. 이제 AI가 바꾸지 않아요',
       variant: 'success',
-      ...(previousSummary
-        ? {
-            action: {
-              label: '되돌리기',
-              onClick: () => {
-                replaceDecision(decision);
-                editDecision(meetingIdNumber, Number(agenda.id), Number(decisionId), previousSummary, decision.evidenceSeqs).catch(
-                  showError,
-                );
-              },
-            },
-          }
-        : {}),
+      action: { label: '되돌리기', onClick: () => void returnToAi(agenda.id, { ...decision, statusEdited: false }) },
     });
   };
 
@@ -662,29 +654,69 @@ export default function MeetingRoomPage() {
       updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
       return;
     }
-    // 되돌리기: 바꾸기 전 상태로 (사람이 정한 적 없으면 AI 판정으로)
-    const previous: DecisionStatusEdit = !before.statusEdited ? 'AUTO' : before.status === 'decided' ? 'DECIDED' : 'UNDECIDED';
-    const undo = {
-      label: '되돌리기',
-      onClick: () => {
-        updateDecisions(agendaId, (point) => (point.id === decisionId ? before : point));
-        setDecisionStatus(meetingIdNumber, Number(agendaId), Number(decisionId), previous).catch(showError);
-      },
-    };
-    // MSG-131 (디자인 07 11/25): AI에게 다시 맡기면 [되돌리기]로 내가 정한 상태로 돌아간다
+    // MSG-131 (디자인 07 11/25): AI에게 다시 맡기면 [되돌리기]로 맡기기 전 상태·내용을 다시 사람이 정한 것으로 잠근다
     if (status === 'AUTO') {
-      setToast({ text: 'AI에게 다시 맡겼어요', variant: 'success', action: undo });
+      setToast({
+        text: 'AI에게 다시 맡겼어요',
+        variant: 'success',
+        action: { label: '되돌리기', onClick: () => void restoreManual(agendaId, before) },
+      });
       return;
     }
+    // 미결로 정할 때는 토스트를 띄우지 않는다
     if (status !== 'DECIDED') {
       return;
     }
-    // REQ-211 결정으로 확정 (MSG-120, 디자인 07 11/25 문구)
+    // REQ-211 결정으로 확정 (MSG-120, 디자인 07 11/25 문구). [되돌리기]는 AI에게 다시 맡긴다
     setToast({
       text: '결정으로 확정했어요. 이제 AI가 바꾸지 않아요',
       variant: 'success',
-      action: undo,
+      action: { label: '되돌리기', onClick: () => void returnToAi(agendaId, { ...before, statusEdited: false }) },
     });
+  };
+
+  /**
+   * 결정 토스트의 [되돌리기]: AI에게 다시 맡긴다 (AUTO). 상태·내용 모두 다음 보드가 정한다.
+   * 그때까지는 사람이 고치기 전 모습(aiPoint)을 보인다
+   */
+  const returnToAi = async (agendaId: string, aiPoint: DecisionPoint) => {
+    // 토스트를 만든 뒤 보드가 바뀌었을 수 있어 실패 때 돌아갈 모습은 지금 상태에서 잡는다
+    let current: DecisionPoint | undefined;
+    updateDecisions(agendaId, (point) => {
+      if (point.id !== aiPoint.id) {
+        return point;
+      }
+      current = point;
+      return aiPoint;
+    });
+    try {
+      await setDecisionStatus(meetingIdNumber, Number(agendaId), Number(aiPoint.id), 'AUTO');
+    } catch (error) {
+      showError(error);
+      if (current) {
+        const restored = current;
+        updateDecisions(agendaId, (point) => (point.id === aiPoint.id ? restored : point));
+      }
+    }
+  };
+
+  /**
+   * "AI에게 다시 맡겼어요"의 [되돌리기]: 맡기기 전 모습으로 다시 잠근다 (AUTO 해제).
+   * 그 사이 AI가 글을 새로 썼을 수 있어 상태와 글을 둘 다 다시 보낸다. 상태가 결정·미결이 아니었으면(확인 필요 등) 상태는 보내지 않는다
+   */
+  const restoreManual = async (agendaId: string, before: DecisionPoint) => {
+    updateDecisions(agendaId, (point) => (point.id === before.id ? before : point));
+    const isStatusManual = before.status === 'decided' || before.status === 'undecided';
+    try {
+      if (isStatusManual) {
+        await setDecisionStatus(meetingIdNumber, Number(agendaId), Number(before.id), before.status === 'decided' ? 'DECIDED' : 'UNDECIDED');
+      }
+      if (before.summary) {
+        await editDecision(meetingIdNumber, Number(agendaId), Number(before.id), before.summary, before.evidenceSeqs);
+      }
+    } catch (error) {
+      showError(error);
+    }
   };
 
   /** REQ-097 할 일, 담당자, 기한 고치기. 담당자 이름을 바꾸면 명단과 다시 맞추게 사용자 번호는 비운다 */
