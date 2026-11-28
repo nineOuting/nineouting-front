@@ -6,29 +6,38 @@ import alignLeftIcon from '../../assets/icons/align-left.svg';
 import alignRightIcon from '../../assets/icons/align-right.svg';
 import chevronDownIcon from '../../assets/icons/chevron-down.svg';
 import chevronUpIcon from '../../assets/icons/chevron-up-sm.svg';
+import doneIcon from '../../assets/icons/done.svg';
+import recordChecklistIcon from '../../assets/icons/record-checklist.svg';
+import recordFreeIcon from '../../assets/icons/record-free.svg';
+import recordListIcon from '../../assets/icons/record-list.svg';
+import recordTableIcon from '../../assets/icons/record-table.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
 import Icon from '../../components/Icon';
 import Spinner from '../../components/Spinner';
 import Switch from '../../components/Switch';
 import type { Align, ItemSettings, RecordType, TableBorder, TemplateItem, TemplateLayout } from '../../types/template';
+import { withColumnNames } from '../../utils/templateSettings';
 import SectionSelect from './SectionSelect';
 import styles from './TemplateSettingsPanel.module.css';
 
 const SMALL_ICON_SIZE = 16;
+// 디자인 RecordTypeOption: 왼쪽 아이콘 20px, 고른 카드 오른쪽 DoneIcon 18px
+const RECORD_ICON_SIZE = 20;
+const DONE_ICON_SIZE = 18;
 // REQ-157 배경 사진 (서버도 다시 확인한다)
 const BACKGROUND_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_BACKGROUND_BYTES = 5 * 1024 * 1024;
 const MAX_EDGE_LENGTH = 50;
 const MAX_MARGIN_MM = 50;
-// 디자인 09 "행 수·열 수 고르기": 행·열 모두 1~10개 (서버와 맞춤, SCRUM-419)
-const MAX_ROWS = 10;
+// 디자인 09 "열 수 고르기": 1~10개 (서버와 맞춤, SCRUM-419). 행 수는 정하지 않는다 (11/27, 내용에 맞춰 늘어남)
 const MAX_COLS = 10;
 
-const RECORD_TYPES: { value: RecordType; label: string }[] = [
-  { value: 'FREE', label: '자유 입력형' },
-  { value: 'LIST', label: '목록형' },
-  { value: 'CHECKLIST', label: '체크리스트형' },
-  { value: 'TABLE', label: '표' },
+// 디자인 09 RecordTypeOption (11/27): 기록 방식 카드 4종
+const RECORD_TYPES: { value: RecordType; label: string; description: string; icon: string }[] = [
+  { value: 'FREE', label: '자유 입력형', description: '문단으로 자유롭게 적어요', icon: recordFreeIcon },
+  { value: 'LIST', label: '목록형', description: '한 줄씩 목록으로 적어요', icon: recordListIcon },
+  { value: 'CHECKLIST', label: '체크리스트형', description: '할 일처럼 체크 칸을 붙여 한 줄씩 적어요', icon: recordChecklistIcon },
+  { value: 'TABLE', label: '표', description: '열을 정해 칸에 나눠 적어요', icon: recordTableIcon },
 ];
 // 디자인 09 글자 크기 (11/26): 이름 없이 크기만 보여 준다
 const sizeOptions = (sizes: number[]) => sizes.map((value) => ({ value, label: `${value}px` }));
@@ -73,7 +82,7 @@ const HEADER_COLORS = [
 export type SettingsView = 'table' | 'text' | 'layout';
 
 const VIEW_TEXTS: Record<SettingsView, { title: string; description: string }> = {
-  table: { title: '표', description: '표 형식 섹션의 행과 열, 셀 모양을 설정해요.' },
+  table: { title: '기록 방식', description: 'AI가 이 섹션을 어떤 모양으로 채울지 골라요.' },
   text: { title: '글자', description: '선택한 섹션의 글자 크기와 색상, 여백을 설정해요.' },
   layout: { title: '레이아웃', description: '문서 전체의 간격과 여백, 페이지 구성을 설정해요.' },
 };
@@ -86,6 +95,10 @@ interface TemplateSettingsPanelProps {
   layout: TemplateLayout;
   onChangeItem: (item: TemplateItem) => void;
   onChangeLayout: (layout: TemplateLayout) => void;
+  /** 회의 기본 정보를 골랐는지. 고르면 기록 방식·글자 설정 대신 바꿀 수 없다는 한 줄만 보인다 (SCRUM-430) */
+  isInfoSelected: boolean;
+  /** 문서에 회의 기본 정보가 있을 때만: 선택한 항목 목록 맨 위에서 고른다 */
+  onSelectInfo?: () => void;
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -185,6 +198,37 @@ function Select<T extends string | number>({
 /** 예전 목록으로 저장된 값(본문 12px, 섹션 간격 16·24px 등)은 목록 끝에 붙여 그대로 보이게 한다 */
 function withSaved(options: { value: number; label: string }[], current: number) {
   return options.some(({ value }) => value === current) ? options : [...options, { value: current, label: `${current}px` }];
+}
+
+/**
+ * 디자인 09 RecordTypeOption (11/27): 아이콘 + 이름 + 설명 한 줄 카드. 한 번에 하나만 고른다 (라디오).
+ * 고른 카드는 보라 바탕·파란 테두리, 오른쪽에 ✓
+ */
+function RecordTypeOptions({ value, onChange }: { value: RecordType; onChange: (value: RecordType) => void }) {
+  return (
+    <div className={styles.recordOptions} role="radiogroup" aria-label="기록 방식">
+      {RECORD_TYPES.map((option) => {
+        const isSelected = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            className={[styles.recordOption, isSelected ? styles.recordOptionOn : ''].filter(Boolean).join(' ')}
+            onClick={() => onChange(option.value)}
+          >
+            <Icon src={option.icon} size={RECORD_ICON_SIZE} className={styles.recordIcon} />
+            <span className={styles.recordText}>
+              <span className={styles.recordLabel}>{option.label}</span>
+              <span className={styles.recordDescription}>{option.description}</span>
+            </span>
+            {isSelected && <Icon src={doneIcon} size={DONE_ICON_SIZE} className={styles.recordDone} />}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 /** 1~max 숫자 목록 (지금 값이 범위를 넘으면 그 값도 넣는다: 예전에 저장한 양식) */
@@ -297,6 +341,8 @@ export default function TemplateSettingsPanel({
   layout,
   onChangeItem,
   onChangeLayout,
+  isInfoSelected,
+  onSelectInfo,
 }: TemplateSettingsPanelProps) {
   const item = selectedIndex !== null ? (items[selectedIndex] ?? null) : null;
   const setSettings = (patch: Partial<ItemSettings>) => item && onChangeItem({ ...item, settings: { ...item.settings, ...patch } });
@@ -333,95 +379,83 @@ export default function TemplateSettingsPanel({
   // 디자인 09 상태 모음 "선택한 섹션 고르기" (11/25): 아이콘 없는 드롭다운 메뉴
   const sectionPicker = (
     <div className={styles.section}>
-      <h3 className={styles.heading}>선택한 섹션</h3>
-      <SectionSelect titles={items.map(({ title }) => title)} selectedIndex={selectedIndex} onSelect={onSelect} />
+      <h3 className={styles.heading}>선택한 항목</h3>
+      <SectionSelect
+        titles={items.map(({ title }) => title)}
+        selectedIndex={selectedIndex}
+        onSelect={onSelect}
+        meetingInfo={onSelectInfo ? { isSelected: isInfoSelected, onSelect: onSelectInfo } : undefined}
+      />
     </div>
   );
 
   return (
     <aside className={styles.panel} aria-label={`${texts.title} 설정`}>
-      <div className={styles.titleGroup}>
-        <h2 className={styles.title}>{texts.title}</h2>
-        <p className={styles.description}>{texts.description}</p>
-      </div>
+      {/* 디자인 09 TemplateEditorPage_RecordType (11/27): 기록 방식 탭은 패널 제목 없이 선택한 항목부터 */}
+      {view !== 'table' && (
+        <div className={styles.titleGroup}>
+          <h2 className={styles.title}>{texts.title}</h2>
+          <p className={styles.description}>{texts.description}</p>
+        </div>
+      )}
 
       {view !== 'layout' && sectionPicker}
 
-      {view === 'table' && item && (
+      {view !== 'layout' && isInfoSelected && (
+        <p className={styles.groupDescription}>회의 기본 정보는 기록 방식과 글자를 바꿀 수 없어요.</p>
+      )}
+
+      {view === 'table' && item && !isInfoSelected && (
         <>
-          <div className={styles.section}>
-            <h3 className={styles.heading}>섹션 형식</h3>
-            <Row label="기록 방식">
-              <Select
-                label="기록 방식"
-                value={item.settings.recordType}
-                options={RECORD_TYPES}
-                onChange={(recordType) => setSettings({ recordType })}
-              />
-            </Row>
+          <div className={styles.group}>
+            <div className={styles.groupHeader}>
+              <h3 className={styles.groupTitle}>{texts.title}</h3>
+              <p className={styles.groupDescription}>{texts.description}</p>
+            </div>
+            {/* 표로 바꾸면 기본 열 이름(No. / 항목 / 내용 / 비고)을 채운다 */}
+            <RecordTypeOptions
+              value={item.settings.recordType}
+              onChange={(recordType) => onChangeItem(withColumnNames({ ...item, settings: { ...item.settings, recordType } }))}
+            />
           </div>
-          <div className={styles.section}>
-            <h3 className={styles.heading}>표/셀 설정</h3>
-            {!isTable && <p className={styles.hint}>기록 방식을 "표"로 고르면 바꿀 수 있어요.</p>}
-            <Row label="행/열 수">
-              <span className={styles.pair}>
-                <Select
-                  compact
-                  label="행 수"
-                  value={item.settings.table.rows}
-                  options={countOptions(MAX_ROWS, '행', item.settings.table.rows)}
-                  disabled={!isTable}
-                  onChange={(rows) => setTable({ rows })}
-                />
-                <Select
-                  compact
-                  label="열 수"
-                  value={item.settings.table.cols}
-                  options={countOptions(MAX_COLS, '열', item.settings.table.cols)}
-                  disabled={!isTable}
-                  onChange={(cols) => setTable({ cols })}
-                />
-              </span>
-            </Row>
-            <Row label="열 너비">
-              <span className={styles.segments} role="radiogroup" aria-label="열 너비">
-                {[true, false].map((auto) => (
-                  <button
-                    key={String(auto)}
-                    type="button"
-                    role="radio"
-                    aria-checked={item.settings.table.autoWidth === auto}
-                    disabled={!isTable}
-                    className={[styles.segment, styles.textSegment, item.settings.table.autoWidth === auto ? styles.segmentOn : '']
-                      .filter(Boolean)
-                      .join(' ')}
-                    onClick={() => setTable({ autoWidth: auto })}
-                  >
-                    {auto ? '자동' : '수동'}
-                  </button>
-                ))}
-              </span>
-            </Row>
-            <Row label="셀 정렬">
-              <AlignButtons label="셀 정렬" value={item.settings.table.align} disabled={!isTable} onChange={(align) => setTable({ align })} />
-            </Row>
-            <Row label="테두리">
-              <Select label="테두리" value={item.settings.table.border} options={BORDERS} disabled={!isTable} onChange={(border) => setTable({ border })} />
-            </Row>
-            <Row label="헤더 행 배경색">
-              <Swatches
-                label="헤더 행 배경색"
-                value={item.settings.table.headerColor}
-                options={HEADER_COLORS}
-                disabled={!isTable}
-                onChange={(headerColor) => setTable({ headerColor })}
-              />
-            </Row>
-          </div>
+          {/* 표 설정은 표를 골랐을 때만. 행 수·열 너비는 11/27에 뺐다 (행은 내용에 맞춰 늘고, 열 너비는 미리보기에서 정한다) */}
+          {isTable && (
+            <div className={styles.group}>
+              <div className={styles.groupHeader}>
+                <h3 className={styles.groupTitle}>표 설정</h3>
+                <p className={styles.groupDescription}>열 수만 정해요. 행은 회의 내용에 맞춰 자동으로 늘어나요.</p>
+              </div>
+              <div className={styles.groupRows}>
+                <Row label="열 수">
+                  <Select
+                    compact
+                    label="열 수"
+                    value={item.settings.table.cols}
+                    options={countOptions(MAX_COLS, '열', item.settings.table.cols)}
+                    onChange={(cols) => setTable({ cols })}
+                  />
+                </Row>
+                <Row label="셀 정렬">
+                  <AlignButtons label="셀 정렬" value={item.settings.table.align} onChange={(align) => setTable({ align })} />
+                </Row>
+                <Row label="테두리">
+                  <Select label="테두리" value={item.settings.table.border} options={BORDERS} onChange={(border) => setTable({ border })} />
+                </Row>
+                <Row label="헤더 행 배경색">
+                  <Swatches
+                    label="헤더 행 배경색"
+                    value={item.settings.table.headerColor}
+                    options={HEADER_COLORS}
+                    onChange={(headerColor) => setTable({ headerColor })}
+                  />
+                </Row>
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      {view === 'text' && item && (
+      {view === 'text' && item && !isInfoSelected && (
         <>
           <div className={styles.section}>
             <h3 className={styles.heading}>글자 서식</h3>

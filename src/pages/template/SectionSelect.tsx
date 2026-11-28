@@ -11,14 +11,18 @@ interface SectionSelectProps {
   titles: string[];
   selectedIndex: number | null;
   onSelect: (index: number) => void;
+  /** 문서에 회의 기본 정보가 있으면 목록 맨 위에 둔다 (항목이 아니라 따로 고른다, SCRUM-430) */
+  meetingInfo?: { isSelected: boolean; onSelect: () => void };
 }
+
+const MEETING_INFO_TITLE = '회의 기본 정보';
 
 /**
  * 디자인 09 상태 모음 "선택한 섹션 고르기" (REQ-155, 11/25).
  * 누르면 아래로 섹션 목록(문서 순서), 지금 섹션은 파란색. 고르면 그 섹션으로 바뀌고 닫힌다. 바깥·ESC로도 닫힌다.
  * 섹션 아이콘은 모두 같아 구분이 안 되므로 칸과 목록 모두 뺀다
  */
-export default function SectionSelect({ titles, selectedIndex, onSelect }: SectionSelectProps) {
+export default function SectionSelect({ titles, selectedIndex, onSelect, meetingInfo }: SectionSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -44,27 +48,41 @@ export default function SectionSelect({ titles, selectedIndex, onSelect }: Secti
     };
   }, [isOpen]);
 
-  const current = selectedIndex === null ? undefined : titles[selectedIndex];
+  const current = meetingInfo?.isSelected ? MEETING_INFO_TITLE : selectedIndex === null ? undefined : titles[selectedIndex];
 
   return (
     <div ref={rootRef} className={styles.root}>
       <button
         type="button"
         className={[styles.box, isOpen ? styles.open : ''].filter(Boolean).join(' ')}
-        aria-label="선택한 섹션"
+        aria-label="선택한 항목"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
         <span className={current === undefined ? styles.placeholder : styles.value}>
-          {current === undefined ? '섹션을 골라 주세요' : current || '제목 없음'}
+          {current === undefined ? '항목을 골라 주세요' : current || '제목 없음'}
         </span>
         <Icon src={isOpen ? chevronUpIcon : chevronDownIcon} size={ICON_SIZE} className={styles.icon} />
       </button>
       {isOpen && (
         <ul role="listbox" aria-label="섹션" className={styles.menu}>
+          {meetingInfo && (
+            <li role="option" aria-selected={meetingInfo.isSelected}>
+              <button
+                type="button"
+                className={[styles.item, meetingInfo.isSelected ? styles.selected : ''].filter(Boolean).join(' ')}
+                onClick={() => {
+                  meetingInfo.onSelect();
+                  setIsOpen(false);
+                }}
+              >
+                {MEETING_INFO_TITLE}
+              </button>
+            </li>
+          )}
           {titles.map((title, index) => {
-            const isSelected = index === selectedIndex;
+            const isSelected = index === selectedIndex && !meetingInfo?.isSelected;
             return (
               <li key={`${title}-${index}`} role="option" aria-selected={isSelected}>
                 <button

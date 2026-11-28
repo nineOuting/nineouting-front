@@ -21,6 +21,17 @@ interface SectionContentProps {
   richContent?: string | null;
   /** 서식 칸이면 richContent도 함께 준다. 아니면 null (예전 서식은 지운다) */
   onChange?: (content: string, richContent: string | null) => void;
+  /** 표 머리 행(열 이름)만 그 자리에서 고친다 (양식 편집 미리보기, SCRUM-430). 내용 행은 그대로 보인다 */
+  header?: TableHeaderEdit;
+}
+
+export interface TableHeaderEdit {
+  /** 열 자리마다 입력값 (비운 열은 "") */
+  values: string[];
+  maxLength: number;
+  /** 이름이 겹쳐 빨간 밑줄을 보일 열 자리 */
+  invalid: Set<number>;
+  onChange: (col: number, value: string) => void;
 }
 
 /** 서식 없이 저장된 글을 서식 칸에 넣을 HTML로 바꾼다 */
@@ -38,10 +49,13 @@ function listToHtml(text: string) {
   return `<ul>${(items.length ? items : ['<br>']).map((item) => `<li>${item}</li>`).join('')}</ul>`;
 }
 
-/** 줄 = 행, 탭 = 열. 양식의 행·열 수보다 적으면 빈 칸으로 채운다 */
+// 머리 행 + 빈 행 1개. 행 수는 양식에서 정하지 않고 내용 줄 수만큼 늘어난다 (디자인 09 11/27, SCRUM-430)
+const MIN_TABLE_ROWS = 2;
+
+/** 줄 = 행, 탭 = 열. 양식의 열 수보다 적으면 빈 칸으로 채운다. 예전에 저장한 행 수(table.rows)는 쓰지 않는다 */
 function toGrid(content: string, settings: ItemSettings) {
   const lines = content ? content.split('\n').map((line) => line.split(CELL_SEPARATOR)) : [];
-  const rows = Math.max(settings.table.rows, lines.length);
+  const rows = Math.max(MIN_TABLE_ROWS, lines.length);
   const cols = Math.max(settings.table.cols, ...lines.map((line) => line.length), 1);
   return Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => lines[r]?.[c] ?? ''));
 }
@@ -59,6 +73,7 @@ export default function SectionContent({
   richText = false,
   richContent = null,
   onChange,
+  header,
 }: SectionContentProps) {
   const style = { fontSize: settings.bodySize * PAPER_FONT_SCALE, color: settings.color };
 
@@ -70,10 +85,9 @@ export default function SectionContent({
       onChange?.(next.map((cells) => cells.join(CELL_SEPARATOR)).join('\n'), null);
     };
     return (
+      // 열 너비 자동/수동 설정은 11/27에 뺐다. 예전에 저장한 autoWidth는 쓰지 않고 내용에 맞춰 너비를 정한다
       <table
-        className={[styles.table, styles[`border${settings.table.border}`], settings.table.autoWidth ? '' : styles.fixed]
-          .filter(Boolean)
-          .join(' ')}
+        className={[styles.table, styles[`border${settings.table.border}`]].join(' ')}
         style={style}
         aria-label={label}
       >
@@ -82,7 +96,19 @@ export default function SectionContent({
             <tr key={row} style={row === 0 ? { background: settings.table.headerColor } : undefined}>
               {cells.map((cell, col) => (
                 <td key={col} style={{ textAlign: settings.table.align.toLowerCase() as 'left' | 'center' | 'right' }}>
-                  {editable ? (
+                  {header && row === 0 ? (
+                    // 비운 열은 AI가 초안을 만들 때 이름을 정한다
+                    <input
+                      data-edit={`column-${col}`}
+                      className={[styles.cellInput, header.invalid.has(col) ? styles.cellInvalid : ''].filter(Boolean).join(' ')}
+                      aria-label={`${label} ${col + 1}열 이름`}
+                      aria-invalid={header.invalid.has(col) || undefined}
+                      maxLength={header.maxLength}
+                      placeholder={`열 ${col + 1}`}
+                      value={header.values[col] ?? ''}
+                      onChange={(event) => header.onChange(col, event.target.value)}
+                    />
+                  ) : editable ? (
                     <input
                       className={styles.cellInput}
                       aria-label={`${label} ${row + 1}행 ${col + 1}열`}

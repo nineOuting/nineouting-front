@@ -134,11 +134,15 @@
   color: var(--text-primary);
 }
 
+/* 다른 섹션처럼 눌러 고른다 (SCRUM-430). 테두리 1.5px만큼 안쪽 여백을 줄여 고르기 전과 글자 위치가 같다 */
 .meetingInfo {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
-  padding: var(--spacing-2) 26px;
+  padding: calc(var(--spacing-2) - 1.5px) calc(26px - 1.5px);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
 }
 
 .meetingInfoTitle {
@@ -284,6 +288,27 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 고른 섹션의 이름은 제목 모양 그대로 그 자리에서 고친다. 입력 중에만 밑줄 (디자인 없음, SCRUM-430) */
+.titleInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-bottom: var(--border-width-default) solid transparent;
+  outline: none;
+  font: inherit;
+  color: inherit;
+}
+
+.titleInput:focus {
+  border-bottom-color: var(--border-focus);
+}
+
+.titleInput::placeholder {
+  color: var(--text-disabled);
 }
 
 

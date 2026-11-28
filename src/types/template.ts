@@ -7,9 +7,10 @@ export type Align = 'LEFT' | 'CENTER' | 'RIGHT';
 export type TableBorder = 'BASIC' | 'HORIZONTAL' | 'OUTER' | 'NONE';
 
 export interface TableSettings {
+  /** 화면에서는 쓰지 않는다 (11/27 행 수 설정 삭제, 행은 내용에 맞춰 늘어남). 서버 저장 형식이라 값만 그대로 보낸다 */
   rows: number;
   cols: number;
-  /** 열 너비 자동(true) / 수동 */
+  /** 화면에서는 쓰지 않는다 (11/27 열 너비 자동/수동 설정 삭제). 서버 저장 형식이라 값만 그대로 보낸다 */
   autoWidth: boolean;
   align: Align;
   border: TableBorder;
@@ -30,7 +31,10 @@ export interface ItemSettings {
   /** 바깥 여백 px */
   margin: number;
   table: TableSettings;
-  /** 왼쪽 항목 목록의 기본 항목에서 넣었으면 그 기본 항목 이름. 제목을 고쳐도 같은 기본 항목으로 본다 (QA 78) */
+  /**
+   * 기본 항목에서 넣었으면 그 기본 항목 이름. 이름이나 AI 설명을 고치면 ""(커스텀)로 바꾸고 다시 기본 항목으로 돌리지 않는다.
+   * 기록 방식·글자 같은 서식만 바꾸면 기본 항목 그대로다 (SCRUM-430, QA 78 규칙을 바꿈). 값이 없으면 예전 양식이라 이름으로 찾는다
+   */
   preset?: string;
 }
 

@@ -7,7 +7,14 @@ import Icon from '../../components/Icon';
 import TemplateSectionBlank from '../../components/TemplateSectionBlank';
 import type { TemplateItem, TemplateLayout } from '../../types/template';
 import { SAMPLE_MEETING_INFO } from '../../utils/templateSample';
-import { A4_HEIGHT_PX, A4_WIDTH_PX, DEFAULT_PAPER_ZOOM, PAPER_FONT_SCALE, PX_PER_MM } from '../../utils/templateSettings';
+import {
+  A4_HEIGHT_PX,
+  A4_WIDTH_PX,
+  DEFAULT_PAPER_ZOOM,
+  MAX_ITEM_TITLE_LENGTH,
+  PAPER_FONT_SCALE,
+  PX_PER_MM,
+} from '../../utils/templateSettings';
 import styles from './TemplatePreview.module.css';
 
 const ICON_SIZE = 16;
@@ -22,6 +29,10 @@ const MIN_ZOOM = 50;
 const MAX_ZOOM = 150;
 // QA 70 순서를 바꾸면 다른 섹션이 미끄러지듯 자리를 옮긴다
 const MOVE_MS = 200;
+const EMPTY_DESCRIPTION = '왼쪽에서 이 항목에 무엇을 채울지 설명을 적어 주세요';
+
+/** 고르지 않은 섹션의 제목·설명·표 열 이름을 누르면 고른 뒤 그 칸에 커서를 둔다 */
+type EditField = 'title' | 'description' | `column-${number}`;
 
 /** 손잡이로 끄는 중인 섹션. top, height는 끌기 시작할 때 화면 위치 (확대율이 들어간 px) */
 interface DragState {
@@ -44,6 +55,15 @@ interface TemplatePreviewProps {
   onSelect: (index: number) => void;
   onMove: (from: number, to: number) => void;
   onRemove: (index: number) => void;
+  /** 고른 섹션의 이름·설명을 미리보기에서 바로 고칠 때 (왼쪽 항목 구성 패널과 같은 값. 기본 항목은 커스텀이 된다) */
+  onChangeItem: (index: number, patch: Pick<TemplateItem, 'title'> | Pick<TemplateItem, 'description'>) => void;
+  /** 회의 기본 정보를 문서에서 뺀다 (추가할 항목 고르기에서 다시 넣는다) */
+  onRemoveMeetingInfo: () => void;
+  /** 고른 표 섹션의 열 이름을 고칠 때. 서식이라 기본 항목은 그대로다 */
+  onChangeColumnNames: (index: number, columnNames: string[]) => void;
+  /** 회의 기본 정보를 골랐는지 (왼쪽 패널과 같이 쓴다). 고른 동안 섹션 선택 표시는 감춘다 */
+  isInfoSelected: boolean;
+  onSelectInfo: () => void;
 }
 
 /** 쪽마다 들어가는 섹션 번호. 아직 재지 않은 섹션은 마지막 쪽에 둔다 */
@@ -69,8 +89,9 @@ function normalizePages(pages: number[][], count: number) {
 
 /**
  * 양식 미리보기 (피그마 프론트 TemplateEditorPage). 실제 회의록 종이처럼 양식 이름, 회의 기본 정보, 섹션마다 예시 내용을 보여 준다.
- * 섹션을 눌러 고르고, 바깥 손잡이를 끌어 순서를 바꾼다. 미리보기라 제목·설명은 여기서 고치지 않고
- * 왼쪽 항목 구성 패널에서만 고친다 (디자인 09 11/25, SCRUM-410).
+ * 섹션을 눌러 고르고, 바깥 손잡이를 끌어 순서를 바꾼다. 고른 섹션은 제목과 회색 설명을 그 자리에서 고치고
+ * 왼쪽 항목 구성 패널과 같이 바뀐다 (SCRUM-430에서 다시 엶. SCRUM-410에서는 왼쪽에서만 고쳤다).
+ * 회의 기본 정보도 눌러 고르고 휴지통으로 뺀다.
  * QA 73 한 쪽에 다 들어가지 않으면 섹션 단위로 다음 쪽 종이로 넘긴다 (한 쪽보다 긴 섹션은 그 쪽에 혼자 둔다)
  */
 export default function TemplatePreview({
@@ -81,6 +102,11 @@ export default function TemplatePreview({
   onSelect,
   onMove,
   onRemove,
+  onChangeItem,
+  onRemoveMeetingInfo,
+  onChangeColumnNames,
+  isInfoSelected,
+  onSelectInfo,
 }: TemplatePreviewProps) {
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [pageState, setPageState] = useState<number[][]>([]);
@@ -97,6 +123,21 @@ export default function TemplatePreview({
   const selectedTitleRef = useRef<{ index: number; title: string } | null>(null);
   // 순서를 바꾸기 직전 섹션 위치 (움직임을 그리려고)
   const flipRef = useRef<{ tops: number[]; order: number[] } | null>(null);
+  const focusFieldRef = useRef<EditField | null>(null);
+  const selectedCardRef = useRef<HTMLDivElement>(null);
+  const selectRow = (index: number, field?: EditField) => {
+    focusFieldRef.current = field ?? null;
+    onSelect(index);
+  };
+
+  // 고르지 않은 섹션의 제목·설명을 눌렀으면 고른 뒤 그 칸에 바로 커서를 둔다
+  useEffect(() => {
+    const field = focusFieldRef.current;
+    focusFieldRef.current = null;
+    if (field) {
+      selectedCardRef.current?.querySelector<HTMLElement>(`[data-edit="${field}"]`)?.focus();
+    }
+  }, [selectedIndex, isInfoSelected]);
 
   const pages = normalizePages(pageState, items.length);
   const pageCount = pages.length;
@@ -247,7 +288,7 @@ export default function TemplatePreview({
   };
 
   const renderRow = (item: TemplateItem, index: number) => {
-    const isSelected = index === selectedIndex;
+    const isSelected = index === selectedIndex && !isInfoSelected;
     const titleStyle = { fontSize: item.settings.titleSize * PAPER_FONT_SCALE, color: item.settings.color };
     const offset = dragOffset(index);
     const isDragging = drag?.from === index;
@@ -291,15 +332,37 @@ export default function TemplatePreview({
           <Icon src={dragIcon} size={ICON_SIZE} />
         </span>
         <div
+          ref={isSelected ? selectedCardRef : undefined}
           className={[styles.card, isSelected ? styles.cardSelected : ''].filter(Boolean).join(' ')}
-          onClick={() => onSelect(index)}
+          onClick={() => !isSelected && selectRow(index)}
         >
           <div className={styles.cardHead}>
-            <span className={styles.cardTitle} style={titleStyle}>
-              {item.title}
-            </span>
+            {isSelected ? (
+              <span className={styles.cardTitle} style={titleStyle}>
+                <input
+                  data-edit="title"
+                  className={styles.titleInput}
+                  aria-label={`${item.title} 항목 이름`}
+                  maxLength={MAX_ITEM_TITLE_LENGTH}
+                  placeholder="항목 이름을 입력해 주세요"
+                  value={item.title}
+                  onChange={(event) => onChangeItem(index, { title: event.target.value })}
+                />
+              </span>
+            ) : (
+              <span
+                className={styles.cardTitle}
+                style={titleStyle}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  selectRow(index, 'title');
+                }}
+              >
+                {item.title}
+              </span>
+            )}
             {isSelected && (
-              // QA 74, 75 연필은 빼고 휴지통만 둔다. 이름·설명은 왼쪽 항목 구성 패널에서 고친다
+              // QA 74, 75 연필은 빼고 휴지통만 둔다. 이름·설명은 제목과 회색 설명을 눌러 바로 고친다
               <span className={styles.cardTools}>
                 <button
                   type="button"
@@ -316,8 +379,23 @@ export default function TemplatePreview({
               </span>
             )}
           </div>
-          <div className={styles.cardBody}>
-            <TemplateSectionBlank item={item} emptyDescription="왼쪽에서 이 항목에 무엇을 채울지 설명을 적어 주세요" />
+          <div
+            className={styles.cardBody}
+            onClick={(event) => {
+              if (!isSelected) {
+                event.stopPropagation();
+                // 표 머리 칸을 눌렀으면 그 열 이름 칸에, 아니면 설명 칸에 커서를 둔다
+                const headCell = (event.target as HTMLElement).closest<HTMLTableCellElement>('tr:first-child > td');
+                selectRow(index, headCell ? `column-${headCell.cellIndex}` : 'description');
+              }
+            }}
+          >
+            <TemplateSectionBlank
+              item={item}
+              emptyDescription={EMPTY_DESCRIPTION}
+              onChangeDescription={isSelected ? (description) => onChangeItem(index, { description }) : undefined}
+              onChangeColumnNames={isSelected ? (columnNames) => onChangeColumnNames(index, columnNames) : undefined}
+            />
           </div>
         </div>
       </li>
@@ -363,8 +441,30 @@ export default function TemplatePreview({
                       {name || '양식 이름'}
                     </h2>
                     {layout.showMeetingInfo && (
-                      <section className={styles.meetingInfo} aria-label="회의 기본 정보">
-                        <h3 className={styles.meetingInfoTitle}>회의 기본 정보</h3>
+                      // 다른 섹션처럼 눌러 고르고, 고르면 휴지통이 나온다 (손잡이는 없음: 늘 문서 맨 위)
+                      <section
+                        className={[styles.meetingInfo, isInfoSelected ? styles.selectedRow : ''].filter(Boolean).join(' ')}
+                        aria-label="회의 기본 정보"
+                        onClick={onSelectInfo}
+                      >
+                        <div className={styles.cardHead}>
+                          <h3 className={styles.meetingInfoTitle}>회의 기본 정보</h3>
+                          {isInfoSelected && (
+                            <span className={styles.cardTools}>
+                              <button
+                                type="button"
+                                className={styles.iconButton}
+                                aria-label="회의 기본 정보 삭제"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onRemoveMeetingInfo();
+                                }}
+                              >
+                                <Icon src={deleteIcon} size={ICON_SIZE} />
+                              </button>
+                            </span>
+                          )}
+                        </div>
                         <dl className={styles.meetingInfoList}>
                           {/* 이름표와 회색 값 안내 (SCRUM-410 디자인 요청) */}
                           {SAMPLE_MEETING_INFO.map(([label, value]) => (

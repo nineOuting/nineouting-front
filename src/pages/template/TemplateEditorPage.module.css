@@ -76,14 +76,15 @@
   min-height: 0;
 }
 
-/* 디자인 SideRail */
+/* 디자인 SideRail (09 11/25): 폭 80, 위 12, 버튼 64x64 가운데 정렬, 버튼 사이 8 */
 .rail {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  gap: var(--spacing-1);
-  width: 72px;
-  padding: var(--spacing-3) var(--spacing-1);
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 80px;
+  padding: var(--spacing-3) 0;
   background: var(--bg-surface);
   border-right: var(--border-width-default) solid var(--border-default);
 }
@@ -92,8 +93,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-1);
-  padding: var(--spacing-2) 0;
+  width: 64px;
+  height: 64px;
+  padding: var(--spacing-2) var(--spacing-1);
   border-radius: var(--radius-md);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
@@ -111,10 +115,10 @@
   color: var(--primary-default);
 }
 
-/* 디자인 SidePanel */
+/* 디자인 SidePanel (09 11/25): 폭 318 (오른쪽 테두리 포함), 안쪽 24 → 내용 폭 269 */
 .side {
   flex-shrink: 0;
-  width: 300px;
+  width: 318px;
   overflow-y: auto;
   background: var(--bg-surface);
   border-right: var(--border-width-default) solid var(--border-default);
@@ -159,11 +163,12 @@
   transform: rotate(180deg);
 }
 
+/* 디자인 09 SidePanel (11/25·11/27): 묶음 사이 24 */
 .itemsPanel {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-5);
-  padding: var(--spacing-6) var(--spacing-5);
+  gap: var(--spacing-6);
+  padding: var(--spacing-6);
 }
 
 .titleGroup {
@@ -182,7 +187,7 @@
 .panelDescription {
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
 .field {
@@ -196,42 +201,6 @@
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-body-md);
   color: var(--text-primary);
-}
-
-.optional {
-  font-weight: var(--font-weight-regular);
-  color: var(--text-disabled);
-}
-
-.textareaBox {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  padding: var(--spacing-2) var(--spacing-3);
-  background: var(--bg-surface);
-  border: var(--border-width-default) solid var(--border-default);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-body-md);
-  line-height: var(--line-height-body-md);
-  color: var(--text-primary);
-}
-
-.textareaBox:focus-within {
-  border-color: var(--border-focus);
-}
-
-.textarea {
-  padding: 0;
-  background: transparent;
-  border: none;
-  outline: none;
-  font: inherit;
-  color: inherit;
-  resize: none;
-}
-
-.textarea::placeholder {
-  color: var(--text-disabled);
 }
 
 /* 디자인 09 "섹션 이름·AI 설명 고치기" (11/25): 구분선, 칸 이름(회색), 40px 입력칸, 아래 안내·글자 수 */
@@ -285,122 +254,88 @@
   color: var(--text-disabled);
 }
 
-/* AI 설명: 96px 칸, 12px 글자 */
-.aiDescription {
-  min-height: 76px;
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
+.required {
+  margin-left: var(--spacing-1);
+  color: var(--danger-default);
 }
 
-.helperRow {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--spacing-2);
-  padding: 0 var(--spacing-1);
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
-  color: var(--neutral-default);
-}
-
+/* 디자인 Helper: 오른쪽 끝, 좌우 4. 지금 글자 수는 회색, "/ 최대"는 연한 회색 */
 .counter {
   align-self: flex-end;
+  padding: 0 var(--spacing-1);
   font-size: var(--font-size-caption);
   line-height: var(--line-height-caption);
   color: var(--text-disabled);
 }
 
+.counterLength {
+  color: var(--neutral-default);
+}
+
+/* 디자인 SettingGroup_항목 내용: 항목 이름과 AI 설명 사이 16 */
+.itemFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* 디자인 SectionDescriptionField: 96px 칸, 흰 바탕, 안쪽 10·12, 12px 글자 */
+.aiBox {
+  display: flex;
+  height: 96px;
+  padding: 10px var(--input-md-padding-x);
+  background: var(--bg-surface);
+  border: var(--border-width-default) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.aiBox:focus-within {
+  border-color: var(--border-focus);
+}
+
+.aiTextarea {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  color: var(--text-primary);
+  resize: none;
+}
+
+.aiTextarea::placeholder {
+  color: var(--text-disabled);
+}
+
+/* 디자인 SectionListGroup: 머리(제목 + 회색 설명, 사이 4)와 드롭다운 사이 16 */
+.listGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-content);
+}
+
 .listHead {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--gap-title-subtitle);
 }
 
 .listTitle {
   font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-body-md);
-  color: var(--text-primary);
-}
-
-.listCount {
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
   color: var(--text-secondary);
 }
 
-.items {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-}
-
-/* 디자인 TemplateSectionItem: 체크박스, 제목, 설명 */
-/* 디자인 Version02 항목 줄: 테두리 없이, 넣은 항목은 회색 바탕 */
-.item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  width: 100%;
-  padding: var(--spacing-3);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  text-align: left;
-}
-
-.itemOn {
+/* 회의 기본 정보를 골랐을 때 잠근 이름·설명 칸: 회색 바탕, 흐린 글자 (SCRUM-430) */
+.locked {
   background: var(--bg-surface-muted);
 }
 
-.itemIcon {
-  flex-shrink: 0;
-  color: var(--text-secondary);
-}
-
-.itemOn .itemIcon {
-  color: var(--primary-default);
-}
-
-.item:hover {
-  background: var(--interactive-hover);
-}
-
-.itemText {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: var(--gap-title-subtitle);
-  min-width: 0;
-}
-
-.itemTitle {
-  font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-body-md);
-  color: var(--text-primary);
-}
-
-.itemDescription {
-  font-size: var(--font-size-caption);
-  line-height: var(--line-height-caption);
-  color: var(--text-secondary);
-}
-
-/* 디자인 Button secondary md */
-.addCustom {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gap-inline);
-  height: var(--button-md-height);
-  background: var(--secondary-default);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-body-md);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-body-md);
-  color: var(--text-on-secondary);
-}
-
-.addCustom:hover {
-  background: var(--secondary-hover);
+.locked .input,
+.locked .aiTextarea {
+  color: var(--text-disabled);
 }
