@@ -241,8 +241,25 @@ export default function WorkspacePage() {
           <div className={styles.titleBlock}>
             <p className={styles.breadcrumb}>워크스페이스</p>
             <div className={styles.titleRow}>
-              <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+              {/* 이름만 회색, 워크스페이스 바꾸기 꺾쇠는 진짜로 */}
+              <h1 className={`${styles.anchor} ${styles.title}`}>
+                <span className={styles.workspaceButton}>
+                  <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+                  <Icon src={chevronIcon} size={SWITCHER_ICON_SIZE} className={`${styles.mutedIcon} ${styles.flipped}`} />
+                </span>
+              </h1>
             </div>
+          </div>
+          {/* 오른쪽 위 [새 폴더]와 ⋮는 고정이라 진짜로 그린다. 워크스페이스를 받기 전에는 쓸 수 없어 비활성 */}
+          <div className={styles.pageActions}>
+            <button type="button" className={styles.newFolder} disabled>
+              <Icon src={addIcon} size={ICON_SIZE} />새 폴더
+            </button>
+            <span className={styles.anchor}>
+              <button type="button" className={styles.iconButton} aria-label="워크스페이스 더보기" disabled>
+                <Icon src={moreIcon} size={ARROW_ICON_SIZE} />
+              </button>
+            </span>
           </div>
         </div>
         <div className={styles.summaryBar} aria-hidden="true">

@@ -73,7 +73,7 @@
   color: var(--neutral-default);
 }
 
-.iconButton:hover {
+.iconButton:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
 }
 
@@ -91,8 +91,14 @@
   color: var(--text-on-primary);
 }
 
-.newFolder:hover {
+.newFolder:hover:not(:disabled) {
   background: var(--primary-hover);
+}
+
+/* 불러오는 동안 비활성: 모양은 그대로 두고(받은 뒤 색이 바뀌어 보이지 않게) 누를 수만 없게 */
+.newFolder:disabled,
+.iconButton:disabled {
+  cursor: default;
 }
 
 .columns {
