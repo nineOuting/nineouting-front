@@ -29,7 +29,7 @@ import {
   type WorkspaceDetail,
 } from '../../api/workspace';
 import addIcon from '../../assets/icons/add-sm.svg';
-import arrowDownIcon from '../../assets/icons/arrow-down.svg';
+import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
 import settingsIcon from '../../assets/icons/settings.svg';
@@ -76,6 +76,8 @@ const SKELETON = {
 
 const ICON_SIZE = 20;
 const ARROW_ICON_SIZE = 24;
+// 워크스페이스 바꾸기 꺾쇠 (회의록 아카이브와 같은 크기)
+const SWITCHER_ICON_SIZE = 20;
 // MSG-061
 const INVITED_MESSAGE = '초대 메일을 1명에게 보냈어요.';
 // MSG-031 (서버 FOLDER_NAME_DUPLICATED)
@@ -401,17 +403,22 @@ export default function WorkspacePage() {
         <div className={styles.titleBlock}>
           <p className={styles.breadcrumb}>워크스페이스</p>
           <div className={styles.titleRow}>
-            <h1 className={styles.title}>{workspace.name}</h1>
-            <span className={styles.anchor}>
+            {/* 회의록 아카이브와 같은 방식: 이름 전체를 눌러 바꾸고, 꺾쇠는 열면 위로. 메뉴는 이름 아래 왼쪽에 */}
+            <h1 className={`${styles.anchor} ${styles.title}`}>
               <button
                 ref={switcherAnchorRef}
                 type="button"
-                className={styles.iconButton}
-                aria-label="워크스페이스 전환"
+                className={styles.workspaceButton}
+                aria-haspopup="menu"
                 aria-expanded={isSwitcherOpen}
                 onClick={() => setIsSwitcherOpen((value) => !value)}
               >
-                <Icon src={arrowDownIcon} size={ARROW_ICON_SIZE} />
+                {workspace.name}
+                <Icon
+                  src={chevronIcon}
+                  size={SWITCHER_ICON_SIZE}
+                  className={isSwitcherOpen ? styles.mutedIcon : `${styles.mutedIcon} ${styles.flipped}`}
+                />
               </button>
               {isSwitcherOpen && (
                 <WorkspaceSwitcher
@@ -430,7 +437,7 @@ export default function WorkspacePage() {
                   onClose={closeSwitcher}
                 />
               )}
-            </span>
+            </h1>
             {/* REQ-151 즐겨찾기는 폴더만. 워크스페이스 별은 뺐다 (디자인 체크 2026-11-19) */}
           </div>
           {workspace.description && <p className={styles.workspaceDescription}>{workspace.description}</p>}
