@@ -18,6 +18,7 @@ import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
 import { folderIconColor } from '../utils/folderColor';
 import styles from './Sidebar.module.css';
+import Skeleton from './Skeleton';
 
 const MENU_ICON_SIZE = 20;
 // 피그마 Sidebar ExpandButton: 28px 버튼 안 20px 화살표
@@ -44,10 +45,41 @@ const sidebarCache: { workspaces: WorkspaceSummary[] | null; folders: Record<num
   expandedIds: [],
 };
 
+/**
+ * 처음 펼칠 때 폴더를 받는 동안 그 자리에 회색 줄을 그린다. 다 받으면 아래 메뉴가 밀리지 않게 줄 수를 지난번 폴더 수로 맞춘다.
+ * 새로고침해도 맞도록 워크스페이스별 폴더 수(이름 없이 숫자만)를 기억한다. 처음 보는 워크스페이스는 3줄
+ */
+const FOLDER_COUNT_KEY = 'nineouting:sidebar-folder-counts';
+const DEFAULT_FOLDER_ROWS = 3;
+const FOLDER_ROW_HEIGHT = 36;
+
+function readFolderCounts(): Record<string, number> {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(FOLDER_COUNT_KEY) ?? '{}');
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, number>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function rememberFolderCount(workspaceId: number, count: number) {
+  try {
+    localStorage.setItem(FOLDER_COUNT_KEY, JSON.stringify({ ...readFolderCounts(), [workspaceId]: count }));
+  } catch {
+    // 저장할 수 없으면 다음에도 기본 줄 수로 그린다
+  }
+}
+
+function loadingFolderRows(workspaceId: number) {
+  const count = readFolderCounts()[workspaceId];
+  return typeof count === 'number' && count >= 0 ? count : DEFAULT_FOLDER_ROWS;
+}
+
 onSignOut(() => {
   sidebarCache.workspaces = null;
   sidebarCache.folders = {};
   sidebarCache.expandedIds = [];
+  localStorage.removeItem(FOLDER_COUNT_KEY);
 });
 
 const menuClass = ({ isActive }: { isActive: boolean }) => [styles.item, isActive ? styles.selected : ''].join(' ');
@@ -114,6 +146,7 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
           .then((items) => {
             const next = items.map(({ folderId, name, color }) => ({ folderId, name, color }));
             sidebarCache.folders = { ...sidebarCache.folders, [id]: next };
+            rememberFolderCount(id, next.length);
             setFolders((prev) => ({ ...prev, [id]: next }));
           })
           .catch(() => requestedRef.current.delete(id));
@@ -164,6 +197,13 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
                     <MenuIcon src={isExpanded ? collapseFolderIcon : expandFolderIcon} size={ARROW_ICON_SIZE} />
                   </button>
                 </div>
+                {isExpanded && folders[workspace.workspaceId] === undefined && loadingFolderRows(workspace.workspaceId) > 0 && (
+                  <div className={styles.subList} aria-hidden="true">
+                    {Array.from({ length: loadingFolderRows(workspace.workspaceId) }, (_, index) => (
+                      <Skeleton key={index} height={FOLDER_ROW_HEIGHT} />
+                    ))}
+                  </div>
+                )}
                 {isExpanded && (folders[workspace.workspaceId] ?? []).length > 0 && (
                   <div className={styles.subList}>
                     {(folders[workspace.workspaceId] ?? []).map((folder) => (

@@ -1,5 +1,6 @@
 import type { Agenda, Meeting, MeetingStatus, Member, PendingAgenda } from '../types/meeting';
 import type { FolderMeeting, FolderMeetingStatus, FolderPendingAgenda } from '../types/workspace';
+import { addDays, startOfWeek, toIsoDate } from '../utils/calendar';
 import { documentType } from '../utils/documentTypes';
 import { putToStorage, request } from './client';
 
@@ -652,6 +653,19 @@ export interface CalendarMeeting {
 /** REQ-018 from~to(2026-10-01, 하루 단위, 최대 42일) 사이에 내가 들어갈 수 있는 모든 폴더의 회의 */
 export function listCalendarMeetings(from: string, to: string) {
   return request<CalendarMeeting[]>('GET', `/api/meetings/calendar?from=${from}&to=${to}`);
+}
+
+const DAYS_IN_WEEK = 7;
+
+/** REQ-197 이번 주(월~일)에 이 워크스페이스에서 열리는 회의. 못 받으면 빈 목록 */
+export async function listWeekMeetings(workspaceId: number) {
+  const monday = startOfWeek(new Date());
+  try {
+    const items = await listCalendarMeetings(toIsoDate(monday), toIsoDate(addDays(monday, DAYS_IN_WEEK - 1)));
+    return items.filter((item) => item.workspaceId === workspaceId);
+  } catch {
+    return [];
+  }
 }
 
 /** REQ-196 홈 내 할 일: 끝난 회의에서 나에게 배정된, 아직 완료하지 않은 할 일 (최근 회의부터) */

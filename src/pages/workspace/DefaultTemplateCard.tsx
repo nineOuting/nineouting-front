@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { listMinutesTemplates, setTemplateFavorite, setWorkspaceDefaultTemplate } from '../../api/minutes';
+import { useState } from 'react';
+import { setTemplateFavorite, setWorkspaceDefaultTemplate } from '../../api/minutes';
 import type { MinutesTemplate } from '../../types/template';
 import DefaultTemplateModal from './DefaultTemplateModal';
 import styles from './DefaultTemplateCard.module.css';
@@ -13,6 +13,8 @@ interface DefaultTemplateCardProps {
   workspaceId: number;
   /** null이면 서비스 기본 양식 */
   templateId: number | null;
+  /** 양식 목록. 워크스페이스 화면이 다른 내용과 함께 불러와 넘긴다 (뒤늦게 받으면 이름이 바뀌어 보인다) */
+  initialTemplates: MinutesTemplate[];
   isOwner: boolean;
   /** 열린 기본 양식 창 (시작하기 바에서도 연다). null이면 닫힘 */
   modalMode: DefaultTemplateModalMode | null;
@@ -29,25 +31,16 @@ interface DefaultTemplateCardProps {
 export default function DefaultTemplateCard({
   workspaceId,
   templateId,
+  initialTemplates,
   isOwner,
   modalMode,
   onModalModeChange,
   onChanged,
   onError,
 }: DefaultTemplateCardProps) {
-  const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
+  const [templates, setTemplates] = useState<MinutesTemplate[]>(initialTemplates);
   const [isSaving, setIsSaving] = useState(false);
   const currentId = templateId ?? SERVICE_DEFAULT_TEMPLATE_ID;
-
-  useEffect(() => {
-    let isCurrent = true;
-    listMinutesTemplates()
-      .then((items) => isCurrent && setTemplates(items))
-      .catch(() => undefined);
-    return () => {
-      isCurrent = false;
-    };
-  }, []);
 
   // 다른 멤버의 개인 양식은 목록에 없어 이름을 모른다
   const name = templates.find((template) => template.templateId === currentId)?.name ?? '워크스페이스 지정 양식';
