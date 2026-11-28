@@ -13,7 +13,6 @@ import uploadIcon from '../../assets/icons/upload-file.svg';
 import { useAppShell } from '../../components/useAppShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icon from '../../components/Icon';
-import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate } from '../../types/template';
 import TemplatePaper, { PAPER_WIDTH } from '../meeting/TemplatePaper';
@@ -21,9 +20,6 @@ import ActionMenu from '../workspace/ActionMenu';
 import TemplateImportModal from './TemplateImportModal';
 import styles from './TemplateListPage.module.css';
 
-// 불러오는 동안 회색 카드 (디자인 TemplateCard 높이)
-const LOADING_CARDS = 3;
-const LOADING_CARD_HEIGHT = 266;
 const BUTTON_ICON_SIZE = 16;
 const ICON_SIZE = 20;
 const SAVED_MESSAGE = '양식을 저장했어요.';
@@ -269,16 +265,11 @@ export default function TemplateListPage() {
         </select>
       </div>
 
-      {/* REQ-178 불러오는 동안 회색 자리 (디자인 TemplateListPage_Loading). 맨 위 묶음 제목 "기본 양식"은 고정 글자라 진짜로 그리고
-          카드만 회색 (제목 없이 카드만 그리면 받은 뒤 카드가 제목 높이만큼 내려간다) */}
+      {/* REQ-178 불러오는 동안: 맨 위 묶음 제목 "기본 양식"은 고정 글자라 진짜로 그리고, 카드는 회색 자리 없이 받으면 채운다.
+          (제목 없이 그리면 받은 뒤 카드가 제목 높이만큼 내려간다). "내 양식"은 기본 양식 카드 아래라 받은 뒤에 그린다 */}
       {templates === null && (
         <section className={styles.section} aria-busy="true">
           <h2 className={styles.sectionTitle}>기본 양식</h2>
-          <div className={styles.grid}>
-            {Array.from({ length: LOADING_CARDS }, (_, index) => (
-              <Skeleton key={index} height={LOADING_CARD_HEIGHT} />
-            ))}
-          </div>
         </section>
       )}
 
