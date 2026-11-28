@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import chevronDownIcon from '../assets/icons/chevron-down.svg';
 import chevronLeftIcon from '../assets/icons/chevron-left.svg';
 import chevronRightIcon from '../assets/icons/chevron-right.svg';
@@ -30,9 +30,7 @@ function display(isoDate: string) {
 /** 디자인 Input + 달력 Popover: 칸을 누르면 아래에 한 달 달력이 열리고, 날을 누르면 닫힌다 */
 export default function DatePicker({ value, onChange, placeholder = '날짜 선택', label, error, minDate }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // 창 안 스크롤 영역에 잘리지 않게 달력은 화면 기준(fixed)으로 칸 바로 아래에 띄운다
-  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>();
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const [month, setMonth] = useState(() => {
     const base = value ? fromIsoDate(value) : new Date();
     return { year: base.getFullYear(), month: base.getMonth() };
@@ -63,6 +61,16 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
     };
   }, [isOpen]);
 
+  // 달력은 칸 아래에 붙어(absolute) 스크롤 영역과 함께 움직인다 (시작 시간 메뉴와 같은 방식).
+  // 화면 기준(fixed)으로 띄우면 스크롤 이벤트를 받은 뒤에야 따라가서 튕겨 보이고, 낮은 창에서는 화면 밖으로 잘렸다.
+  // 대신 열 때 달력 전체가 보이도록 스크롤 영역을 필요한 만큼만 내린다
+  useLayoutEffect(() => {
+    if (isOpen) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      popoverRef.current?.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+  }, [isOpen]);
+
   const shiftMonth = (delta: number) =>
     setMonth(({ year, month: current }) => {
       const next = new Date(year, current + delta, 1);
@@ -82,20 +90,13 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
         aria-label={label ?? placeholder}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        ref={buttonRef}
-        onClick={() => {
-          const rect = buttonRef.current?.getBoundingClientRect();
-          if (rect) {
-            setPopoverStyle({ position: 'fixed', top: rect.bottom + 8, left: rect.left });
-          }
-          setIsOpen((open) => !open);
-        }}
+        onClick={() => setIsOpen((open) => !open)}
       >
         <span className={value ? styles.value : styles.placeholder}>{value ? display(value) : placeholder}</span>
         <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.icon} />
       </button>
       {isOpen && (
-        <div className={styles.popover} style={popoverStyle} role="dialog" aria-label="날짜 고르기">
+        <div ref={popoverRef} className={styles.popover} role="dialog" aria-label="날짜 고르기">
           <div className={styles.head}>
             <button type="button" className={styles.nav} aria-label="이전 달" disabled={isFirstMonth} onClick={() => shiftMonth(-1)}>
               <Icon src={chevronLeftIcon} size={ICON_SIZE} />
