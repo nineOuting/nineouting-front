@@ -33,7 +33,7 @@ import emptyCharacter from '../../assets/characters/empty.svg';
 import addIcon from '../../assets/icons/add-sm.svg';
 import folderIcon from '../../assets/icons/folder-md.svg';
 import separatorIcon from '../../assets/icons/breadcrumb-sep.svg';
-import AppLayout from '../../components/AppLayout';
+import { useAppShell } from '../../components/useAppShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
@@ -371,25 +371,28 @@ export default function FolderPage() {
   };
 
   // REQ-178 불러오는 동안 회색 자리
+  // 공통 틀에 본문 클래스와 이 폴더의 워크스페이스(폴더 정보를 받은 뒤)를 알린다
+  useAppShell({ className: styles.page, workspaceId: folder?.workspaceId });
+
   if (accessNotice) {
     return (
-      <AppLayout className={styles.page}>
+      <>
         <AccessNotice kind={accessNotice} />
-      </AppLayout>
+      </>
     );
   }
   if (!folder) {
     return (
-      <AppLayout className={styles.page}>
+      <>
         {toast && <Toast message={toast} onClose={closeToast} />}
         <Skeleton width={280} height={32} />
         <Skeleton height={240} />
-      </AppLayout>
+      </>
     );
   }
 
   return (
-    <AppLayout className={styles.page} workspaceId={folder.workspaceId}>
+    <>
       {toast && <Toast message={toast} onClose={closeToast} />}
 
       <div className={styles.head}>
@@ -631,6 +634,6 @@ export default function FolderPage() {
             onConfirm={leave}
           />
         ))}
-    </AppLayout>
+    </>
   );
 }

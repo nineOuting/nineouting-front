@@ -33,7 +33,7 @@ import arrowDownIcon from '../../assets/icons/arrow-down.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
 import settingsIcon from '../../assets/icons/settings.svg';
-import AppLayout from '../../components/AppLayout';
+import { useAppShell } from '../../components/useAppShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 // 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다. 소유자가 아니면 보기 전용): 보기 전용 멤버 목록 팝오버
 // import MemberListPopover, { type MemberListItem } from '../../components/MemberListPopover';
@@ -226,12 +226,15 @@ export default function WorkspacePage() {
     };
   }, [id, showError]);
 
+  // 공통 틀에 본문 클래스와 이 워크스페이스를 알린다. 불러오는 동안에도 사이드 바가 바로 펼쳐 폴더를 함께 받는다
+  // (본문을 다 받은 뒤에 펼치면 아래 메뉴가 밀린다)
+  useAppShell({ className: styles.page, workspaceId: id });
+
   // REQ-178 불러오는 동안 회색 자리. 다 불러온 화면과 같은 칸(머리, 요약 줄, 이번 주 회의, 폴더 카드)을 같은 크기로 잡아
   // 바뀔 때 레이아웃이 움직이지 않게 한다
   if (!workspace) {
     return (
-      // 사이드 바도 이 워크스페이스를 바로 펼쳐 폴더를 함께 받게 한다 (본문을 다 받은 뒤에 펼치면 아래 메뉴가 밀린다)
-      <AppLayout className={styles.page} workspaceId={id}>
+      <>
         {toast && <Toast message={toast} onClose={closeToast} />}
         <div className={styles.head} aria-hidden="true">
           <div className={styles.titleBlock}>
@@ -253,7 +256,7 @@ export default function WorkspacePage() {
             ))}
           </ul>
         </section>
-      </AppLayout>
+      </>
     );
   }
 
@@ -387,10 +390,7 @@ export default function WorkspacePage() {
   };
 
   return (
-    <AppLayout
-      className={styles.page}
-      workspaceId={id}
-    >
+    <>
       {toast && <Toast message={toast} onClose={closeToast} />}
 
       <div className={styles.head}>
@@ -701,7 +701,7 @@ export default function WorkspacePage() {
           />
         </ConfirmDialog>
       )}
-    </AppLayout>
+    </>
   );
 }
 

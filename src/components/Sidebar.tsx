@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { listAllFolders, listMyWorkspaces, NAV_CHANGED_EVENT } from '../api/workspace';
 import { onSignOut } from '../auth/tokenStore';
 import addIcon from '../assets/icons/add.svg';
@@ -138,6 +138,10 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
   // 워크스페이스, 폴더를 만들거나 바꾸면 올려서 목록을 다시 받는다 (같은 화면 안에서는 사이드 바가 새로 만들어지지 않는다)
   const [reloadKey, setReloadKey] = useState(0);
   const requestedRef = useRef(new Set<number>());
+  // 공통 틀 안에서는 사이드 바가 새로 만들어지지 않으므로, 화면을 옮길 때마다 목록을 조용히 다시 받는다
+  // (다른 사람이 만든 워크스페이스, 폴더도 보이게. 기억한 목록으로 먼저 그려서 화면은 바뀌지 않는다)
+  const { pathname } = useLocation();
+  const requestedPathRef = useRef(pathname);
 
   useEffect(() => {
     const reload = () => {
@@ -163,14 +167,18 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
     return () => {
       isCurrent = false;
     };
-  }, [reloadKey]);
+  }, [reloadKey, pathname]);
 
-  // 펼친 워크스페이스의 폴더는 사이드바가 새로 만들어질 때마다, 목록이 바뀌었다는 알림을 받을 때마다 다시 받는다
+  // 펼친 워크스페이스의 폴더는 화면을 옮길 때마다, 목록이 바뀌었다는 알림을 받을 때마다 다시 받는다
   // (기억한 목록은 먼저 보여 준다)
   useEffect(() => {
     sidebarCache.expandedIds = expandedIds;
   }, [expandedIds]);
   useEffect(() => {
+    if (requestedPathRef.current !== pathname) {
+      requestedPathRef.current = pathname;
+      requestedRef.current.clear();
+    }
     expandedIds
       .filter((id) => !requestedRef.current.has(id))
       .forEach((id) => {
@@ -185,7 +193,7 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
           })
           .catch(() => requestedRef.current.delete(id));
       });
-  }, [expandedIds, reloadKey]);
+  }, [expandedIds, reloadKey, pathname]);
 
   // 워크스페이스 화면으로 오면 그 워크스페이스의 폴더를 펼친다 (QA 2026-11-23).
   // 화면을 불러오는 동안 메뉴가 먼저 그려져 처음 값만으로는 펼치지 못해, 바뀔 때 렌더 중에 맞춘다

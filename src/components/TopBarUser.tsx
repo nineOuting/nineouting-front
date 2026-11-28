@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { getUnreadCount } from '../api/notification';
 import { getMe, ME_CHANGED_EVENT, peekMe, type Me } from '../api/user';
@@ -48,14 +48,6 @@ export default function TopBarUser() {
     getMe()
       .then((loaded) => isCurrent && setMe(loaded))
       .catch(() => undefined);
-    getUnreadCount()
-      .then((count) => {
-        lastUnread = count;
-        if (isCurrent) {
-          setUnread(count);
-        }
-      })
-      .catch(() => undefined);
     // 설정 창에서 사진, 이름을 바꾸면 화면을 옮기지 않아도 바로 반영 (기본 프로필 고르기 포함)
     const reloadMe = () => {
       getMe()
@@ -68,6 +60,23 @@ export default function TopBarUser() {
       window.removeEventListener(ME_CHANGED_EVENT, reloadMe);
     };
   }, []);
+
+  // 안 읽은 알림 수는 화면을 옮길 때마다 다시 받는다 (공통 틀 안에서는 상단 바가 새로 만들어지지 않는다)
+  const { pathname } = useLocation();
+  useEffect(() => {
+    let isCurrent = true;
+    getUnreadCount()
+      .then((count) => {
+        lastUnread = count;
+        if (isCurrent) {
+          setUnread(count);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      isCurrent = false;
+    };
+  }, [pathname]);
 
   // 프로필 메뉴는 바깥을 누르거나 Esc로 닫는다
   useEffect(() => {

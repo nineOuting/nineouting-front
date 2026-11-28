@@ -10,7 +10,7 @@ import moreIcon from '../../assets/icons/more-vert.svg';
 import starFillIcon from '../../assets/icons/star-fill.svg';
 import starOutlineIcon from '../../assets/icons/star-outline.svg';
 import uploadIcon from '../../assets/icons/upload-file.svg';
-import AppLayout from '../../components/AppLayout';
+import { useAppShell } from '../../components/useAppShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
@@ -231,8 +231,10 @@ export default function TemplateListPage() {
     />
   );
 
+  useAppShell({ className: styles.page });
+
   return (
-    <AppLayout className={styles.page}>
+    <>
       {toast && <Toast message={toast} onClose={closeToast} />}
       <div className={styles.head}>
         <div className={styles.titleGroup}>
@@ -316,6 +318,6 @@ export default function TemplateListPage() {
           }}
         />
       )}
-    </AppLayout>
+    </>
   );
 }
