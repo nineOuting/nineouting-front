@@ -60,7 +60,7 @@ import WorkspaceSwitcher from './WorkspaceSwitcher';
 import TransferOwnerDialog from './TransferOwnerDialog';
 import styles from './WorkspacePage.module.css';
 
-/** 불러오는 동안 회색 자리 크기: 다 불러온 화면의 경로(20), 제목(32), 요약 줄(32), 폴더 제목(28), 폴더 카드(199, 한 줄 4개) */
+/** 불러오는 동안 회색 자리 크기: 다 불러온 화면의 경로(20), 제목(32, 줄은 40), 요약 줄(32), 폴더 제목(28), 폴더 카드(199, 한 줄 4개) */
 const SKELETON = {
   breadcrumbWidth: 120,
   breadcrumbHeight: 20,
@@ -239,10 +239,14 @@ export default function WorkspacePage() {
         <div className={styles.head} aria-hidden="true">
           <div className={styles.titleBlock}>
             <Skeleton width={SKELETON.breadcrumbWidth} height={SKELETON.breadcrumbHeight} />
-            <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+            <div className={styles.titleRow}>
+              <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+            </div>
           </div>
         </div>
-        <Skeleton width={SKELETON.summaryWidth} height={SKELETON.summaryHeight} />
+        <div className={styles.summaryBar} aria-hidden="true">
+          <Skeleton width={SKELETON.summaryWidth} height={SKELETON.summaryHeight} />
+        </div>
         <WeekMeetingsSkeleton />
         <section className={styles.folders} aria-hidden="true">
           <div className={styles.sectionHead}>

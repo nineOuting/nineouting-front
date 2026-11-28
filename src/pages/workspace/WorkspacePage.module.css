@@ -1,8 +1,9 @@
-/* 디자인 WorkspacePage Body: 위 24px, 좌우 32px, 묶음 사이 32px. 폴더 + 멤버 368px */
+/* 디자인 WorkspacePage Body: 위 24px, 좌우 32px, 묶음 사이 32px. 폴더 + 멤버 368px.
+   폴더(프로젝트) 화면과 같은 간격 (머리 68px, 머리와 요약 줄 사이 24px, 묶음 사이 32px) */
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-content);
+  gap: var(--gap-section);
   padding: var(--spacing-6) var(--layout-page-margin) var(--spacing-8);
 }
 
@@ -29,6 +30,8 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-1);
+  /* 폴더 화면처럼 제목 줄을 오른쪽 버튼 높이(40px)로 잡고 제목을 가운데에 */
+  min-height: var(--button-md-height);
 }
 
 .title {
@@ -300,12 +303,13 @@
   gap: var(--spacing-3);
 }
 
-/* 피그마 Page 8 SummaryBar */
+/* 피그마 Page 8 SummaryBar. 폴더 화면 metaLine처럼 머리와 24px (묶음 간격 32px에서 8px 당김), 항목 사이 8px */
 .summaryBar {
   display: flex;
   align-items: center;
-  gap: var(--gap-content);
+  gap: var(--spacing-2);
   min-width: 0;
+  margin-top: calc(var(--spacing-2) * -1);
 }
 
 .linkButton {
