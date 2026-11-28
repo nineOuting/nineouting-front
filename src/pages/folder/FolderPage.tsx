@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
   discardPendingAgenda,
@@ -378,6 +378,8 @@ export default function FolderPage() {
     return (
       <>
         <AccessNotice kind={accessNotice} />
+        {/* 새 회의 창 (하위 라우트 meetings/new) */}
+        <Outlet />
       </>
     );
   }
@@ -387,6 +389,8 @@ export default function FolderPage() {
         {toast && <Toast message={toast} onClose={closeToast} />}
         <Skeleton width={280} height={32} />
         <Skeleton height={240} />
+        {/* 새 회의 창 (하위 라우트 meetings/new) */}
+        <Outlet />
       </>
     );
   }
@@ -634,6 +638,8 @@ export default function FolderPage() {
             onConfirm={leave}
           />
         ))}
+      {/* 새 회의 창 (하위 라우트 meetings/new) */}
+      <Outlet />
     </>
   );
 }
