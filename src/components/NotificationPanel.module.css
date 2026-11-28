@@ -128,9 +128,8 @@
   color: var(--text-tertiary);
 }
 
-.loading {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  padding: var(--spacing-3);
+/* 처음 불러오는 동안 아이콘 자리 (회색 자리 기본 모서리보다 앞서게) */
+.item .skeletonIcon {
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
 }

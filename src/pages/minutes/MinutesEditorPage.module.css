@@ -233,7 +233,7 @@
 }
 
 .downloadMenu {
-  top: calc(100% + 4px);
+  top: calc(100% + var(--spacing-2)); /* 더보기 메뉴 공통 간격 (ActionMenu) */
   right: 0;
   width: 220px;
 }
