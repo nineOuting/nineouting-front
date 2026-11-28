@@ -187,8 +187,12 @@ export default function FolderStats({ stats, pendingAgendas, onDiscardPending }:
   );
 }
 
+// 불러오는 동안 "남은 안건" 옆 개수 배지 자리 (실제 배지 35×24)
+const SKELETON_COUNT_WIDTH = 36;
+const SKELETON_COUNT_HEIGHT = 24;
+
 /**
- * 폴더 화면을 불러오는 동안의 카드 줄: 카드 틀과 제목("안건 결정률", "예정 시간 초과")은 진짜로 그리고
+ * 폴더 화면을 불러오는 동안의 카드 줄: 카드 틀과 제목("안건 결정률", "남은 안건", "예정 시간 초과")은 진짜로 그리고
  * 차트 등 받아야 아는 내용만 회색. 높이는 다 불러온 카드와 같게 잡는다
  */
 export function FolderStatsSkeleton() {
@@ -203,6 +207,10 @@ export function FolderStatsSkeleton() {
         </div>
         <span className={styles.divider} aria-hidden="true" />
         <div className={styles.pending}>
+          <div className={styles.pendingHead}>
+            <p className={styles.label}>남은 안건</p>
+            <Skeleton width={SKELETON_COUNT_WIDTH} height={SKELETON_COUNT_HEIGHT} />
+          </div>
           <Skeleton height="auto" className={styles.skeletonFill} />
         </div>
       </section>

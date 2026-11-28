@@ -68,7 +68,7 @@ import styles from './FolderPage.module.css';
 const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
-/** 불러오는 동안 회색 자리 크기 (다 불러온 화면: 폴더 이름 줄 20, 색 아이콘 32, 제목 32, 요약 줄 32, 달력·회의 목록 670) */
+/** 불러오는 동안 회색 자리 크기 (다 불러온 화면: 폴더 이름 줄 20, 색 아이콘 32, 제목 32, 요약 줄 32) */
 const SKELETON = {
   crumbWidth: 64,
   lineHeight: 20,
@@ -77,8 +77,9 @@ const SKELETON = {
   titleHeight: 32,
   metaWidth: 360,
   metaHeight: 32,
-  listHeight: 670,
 };
+// 불러오는 동안 회의 목록 회색 줄 수
+const LOADING_MEETING_ROWS = 5;
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -395,7 +396,7 @@ export default function FolderPage() {
     );
   }
   // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼(경로 "워크스페이스", [새 회의], 카드 제목, "회의 목록",
-  // [회의록 아카이브])은 진짜로 그리고, 받아야 아는 값(폴더 이름, 요약 숫자, 차트, 회의 목록)만 회색
+  // [회의록 아카이브], 달력, 회의 표 머리)은 진짜로 그리고, 받아야 아는 값(폴더 이름, 요약 숫자, 차트, 회의 줄)만 회색
   if (!folder) {
     return (
       <>
@@ -416,6 +417,13 @@ export default function FolderPage() {
               <button type="button" className={styles.primaryButton} onClick={() => navigate(`/folders/${folderId}/meetings/new`)}>
                 <Icon src={addIcon} size={BUTTON_ICON_SIZE} />새 회의
               </button>
+              {/* ⋮ 폴더 메뉴는 권한을 받아야 알지만 대부분 보이므로 자리를 비활성으로 그린다.
+                  없으면 [새 회의]가 오른쪽 끝에 붙었다가 받은 뒤 ⋮ 자리만큼 왼쪽으로 돌아온다 */}
+              <span className={styles.menuAnchor}>
+                <button type="button" className={styles.iconButton} aria-label="폴더 메뉴" disabled>
+                  <Icon src={moreIcon} size={MORE_ICON_SIZE} />
+                </button>
+              </span>
             </div>
           </div>
         </div>
@@ -423,10 +431,13 @@ export default function FolderPage() {
           <Skeleton width={SKELETON.metaWidth} height={SKELETON.metaHeight} />
         </div>
         <FolderStatsSkeleton />
-        <section className={styles.meetingSection} aria-busy="true">
+        {/* key가 다 불러온 화면의 회의 목록 묶음과 같아, 폴더를 받은 뒤에도 달력이 새로 만들어지지 않는다 (점 깜빡임, 중복 요청 없이) */}
+        <section key="meetings" className={styles.meetingSection} aria-labelledby="meetings-title">
           <div className={styles.sectionHead}>
             <div className={styles.sectionTitleGroup}>
-              <h2 className={styles.sectionTitle}>회의 목록</h2>
+              <h2 id="meetings-title" className={styles.sectionTitle}>
+                회의 목록
+              </h2>
             </div>
             {/* 워크스페이스를 받기 전이라 아카이브 주소를 몰라 비활성 */}
             <button type="button" className={styles.textButton} disabled>
@@ -434,8 +445,21 @@ export default function FolderPage() {
             </button>
           </div>
           <div className={styles.calendarAndList}>
-            <Skeleton height={SKELETON.listHeight} />
-            <Skeleton height={SKELETON.listHeight} className={styles.listSkeleton} />
+            {/* 달력은 폴더 id(주소)로 회의 점을 스스로 받는다. 폴더 색을 받기 전에는 기본 색 */}
+            <FolderCalendar folderId={id} color={folderColor(undefined)} selectedDay={selectedDay} onSelectDay={selectDay} />
+            <div className={styles.tableCard}>
+              <MeetingTable
+                meetings={[]}
+                onOpen={() => undefined}
+                sort={sort}
+                onSortChange={(next) => changeView({ sort: next })}
+                page={page}
+                onPageChange={() => undefined}
+                rowMenu={() => []}
+                empty={null}
+                loadingRows={LOADING_MEETING_ROWS}
+              />
+            </div>
           </div>
         </section>
         {/* 새 회의 창 (하위 라우트 meetings/new) */}
@@ -550,7 +574,7 @@ export default function FolderPage() {
 
       <FolderStats stats={stats} pendingAgendas={pendingAgendas} onDiscardPending={(agenda) => void discardPending(agenda)} />
 
-      <section className={styles.meetingSection} aria-labelledby="meetings-title">
+      <section key="meetings" className={styles.meetingSection} aria-labelledby="meetings-title">
         <div className={styles.sectionHead}>
           <div className={styles.sectionTitleGroup}>
             <h2 id="meetings-title" className={styles.sectionTitle}>

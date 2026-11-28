@@ -242,8 +242,12 @@
   color: var(--neutral-default);
 }
 
-.iconButton:hover {
+.iconButton:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
+}
+
+.iconButton:disabled {
+  cursor: default;
 }
 
 /* REQ-167 정렬 */
@@ -337,11 +341,6 @@
 .calendarAndList > :first-child {
   flex-shrink: 0;
   width: 320px;
-}
-
-/* 불러오는 동안 회의 목록 자리: 달력 옆 남은 폭 */
-.listSkeleton {
-  flex: 1;
 }
 
 .tableCard {
