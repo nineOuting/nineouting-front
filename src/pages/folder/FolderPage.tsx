@@ -54,7 +54,7 @@ import settingsIcon from '../../assets/icons/settings.svg';
 import ActionMenu from '../workspace/ActionMenu';
 import TransferOwnerDialog from '../workspace/TransferOwnerDialog';
 import FolderCalendar from './FolderCalendar';
-import FolderStats from './FolderStats';
+import FolderStats, { FolderStatsSkeleton } from './FolderStats';
 // 레거시 (2026-11-25, 피그마 11/24: 색은 프로젝트 설정 창에서 고른다): ⋮ [프로젝트 색 설정] 팝오버
 // import ProjectColorPicker from './ProjectColorPicker';
 import FolderMembersModal from './FolderMembersModal';
@@ -68,6 +68,17 @@ import styles from './FolderPage.module.css';
 const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
+/** 불러오는 동안 회색 자리 크기 (다 불러온 화면: 폴더 이름 줄 20, 색 아이콘 32, 제목 32, 요약 줄 32, 달력·회의 목록 670) */
+const SKELETON = {
+  crumbWidth: 64,
+  lineHeight: 20,
+  colorIcon: 32,
+  titleWidth: 200,
+  titleHeight: 32,
+  metaWidth: 360,
+  metaHeight: 32,
+  listHeight: 670,
+};
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -383,12 +394,50 @@ export default function FolderPage() {
       </>
     );
   }
+  // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼(경로 "워크스페이스", [새 회의], 카드 제목, "회의 목록",
+  // [회의록 아카이브])은 진짜로 그리고, 받아야 아는 값(폴더 이름, 요약 숫자, 차트, 회의 목록)만 회색
   if (!folder) {
     return (
       <>
         {toast && <Toast message={toast} onClose={closeToast} />}
-        <Skeleton width={280} height={32} />
-        <Skeleton height={240} />
+        <div className={styles.head} aria-busy="true">
+          <nav className={styles.breadcrumb} aria-label="현재 위치">
+            <span className={styles.crumb}>워크스페이스</span>
+            <Icon src={separatorIcon} size={SEPARATOR_ICON_SIZE} className={styles.separator} />
+            <Skeleton width={SKELETON.crumbWidth} height={SKELETON.lineHeight} />
+          </nav>
+          <div className={styles.titleRow}>
+            <div className={styles.titleGroup}>
+              <Skeleton width={SKELETON.colorIcon} height={SKELETON.colorIcon} />
+              <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+            </div>
+            <div className={styles.titleActions}>
+              {/* 폴더 id는 주소에 있어 불러오기 전에도 새 회의를 열 수 있다 */}
+              <button type="button" className={styles.primaryButton} onClick={() => navigate(`/folders/${folderId}/meetings/new`)}>
+                <Icon src={addIcon} size={BUTTON_ICON_SIZE} />새 회의
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className={styles.metaLine} aria-hidden="true">
+          <Skeleton width={SKELETON.metaWidth} height={SKELETON.metaHeight} />
+        </div>
+        <FolderStatsSkeleton />
+        <section className={styles.meetingSection} aria-busy="true">
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitleGroup}>
+              <h2 className={styles.sectionTitle}>회의 목록</h2>
+            </div>
+            {/* 워크스페이스를 받기 전이라 아카이브 주소를 몰라 비활성 */}
+            <button type="button" className={styles.textButton} disabled>
+              회의록 아카이브
+            </button>
+          </div>
+          <div className={styles.calendarAndList}>
+            <Skeleton height={SKELETON.listHeight} />
+            <Skeleton height={SKELETON.listHeight} className={styles.listSkeleton} />
+          </div>
+        </section>
         {/* 새 회의 창 (하위 라우트 meetings/new) */}
         <Outlet />
       </>

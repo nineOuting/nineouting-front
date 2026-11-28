@@ -22,6 +22,7 @@ import type { Favorite, WorkspaceSummary } from '../../types/workspace';
 import { addDays, startOfWeek, toIsoDate } from '../../utils/calendar';
 import FavoritesCard from './FavoritesCard';
 import HomeCalendar from './HomeCalendar';
+import card from './HomeCard.module.css';
 import styles from './HomePage.module.css';
 import UpcomingMeetingCard from './UpcomingMeetingCard';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
@@ -33,15 +34,21 @@ import WritingMinutesCard from './WritingMinutesCard';
 // 캘린더 API는 한 번에 42일까지 받는다. 이번 주 월요일부터 받아 이번 주 회의 수와 곧 다가오는 회의를 찾는다
 const UPCOMING_RANGE_DAYS = 41;
 const DAYS_IN_WEEK = 7;
-/** 불러오는 동안 회색 자리 크기: 다 불러온 화면의 인사(32), 곧 다가오는 회의 띠(86), 달력 제목(26), 오른쪽 열 카드 3개 */
+/**
+ * 불러오는 동안 회색 자리 크기: 다 불러온 화면의 인사(32), 곧 다가오는 회의 띠(86).
+ * 달력·오른쪽 카드 제목 같은 고정 글자는 회색 대신 진짜로 그리고, 카드 목록은 3줄 기준 높이로 잡는다
+ */
 const SKELETON = {
   greetingWidth: 360,
   greetingHeight: 32,
   upcomingHeight: 86,
-  calendarTitleWidth: 96,
-  calendarTitleHeight: 26,
-  panelCardHeights: [158, 240, 246],
 };
+// 오른쪽 열 카드: 제목과 목록(3줄) 높이. 제목 줄 오른쪽에 버튼이 있는 카드는 버튼 높이만큼 제목 줄이 크다
+const PANEL_CARDS = [
+  { title: '즐겨찾기', hasHeadButton: true, listHeight: 172 },
+  { title: '내 할 일', hasHeadButton: true, listHeight: 196 },
+  { title: '작성 중인 회의록', hasHeadButton: false, listHeight: 208 },
+];
 
 /** REQ-018~020, 146~153 홈 (nep!nep! 디자인 HomePage) */
 export default function HomePage() {
@@ -155,17 +162,22 @@ export default function HomePage() {
     return (
       <>
         {toast && <Toast message={toast} onClose={closeToast} />}
-        <div className={styles.main} aria-hidden="true">
+        <div className={styles.main} aria-busy="true">
           <Skeleton width={SKELETON.greetingWidth} height={SKELETON.greetingHeight} />
           <Skeleton height={SKELETON.upcomingHeight} />
-          <div className={styles.calendarSection}>
-            <Skeleton width={SKELETON.calendarTitleWidth} height={SKELETON.calendarTitleHeight} />
+          <section className={styles.calendarSection}>
+            <h2 className={styles.sectionTitle}>{isMonthView ? '이번 달 일정' : '이번 주 일정'}</h2>
             <Skeleton height="auto" className={styles.calendarSkeleton} />
-          </div>
+          </section>
         </div>
-        <div className={styles.panel} aria-hidden="true">
-          {SKELETON.panelCardHeights.map((height, index) => (
-            <Skeleton key={index} height={height} className={styles.panelSkeleton} />
+        <div className={styles.panel} aria-busy="true">
+          {PANEL_CARDS.map(({ title, hasHeadButton, listHeight }) => (
+            <section key={title} className={`${card.section} ${styles.panelSkeleton}`}>
+              <div className={hasHeadButton ? `${card.sectionHead} ${styles.skeletonHeadWithButton}` : card.sectionHead}>
+                <h2 className={card.title}>{title}</h2>
+              </div>
+              <Skeleton height={listHeight} />
+            </section>
           ))}
         </div>
       </>

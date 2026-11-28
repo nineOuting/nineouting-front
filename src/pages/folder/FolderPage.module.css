@@ -339,6 +339,11 @@
   width: 320px;
 }
 
+/* 불러오는 동안 회의 목록 자리: 달력 옆 남은 폭 */
+.listSkeleton {
+  flex: 1;
+}
+
 .tableCard {
   flex: 1;
   min-width: 0;

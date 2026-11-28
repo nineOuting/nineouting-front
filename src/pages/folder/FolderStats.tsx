@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PENDING_AGENDA_UNAVAILABLE_MESSAGE, type FolderMeetingStat } from '../../api/meeting';
 import deleteIcon from '../../assets/icons/delete-sm.svg';
 import Icon from '../../components/Icon';
+import Skeleton from '../../components/Skeleton';
 import type { FolderPendingAgenda } from '../../types/workspace';
 import styles from './FolderStats.module.css';
 
@@ -181,6 +182,35 @@ export default function FolderStats({ stats, pendingAgendas, onDiscardPending }:
             </div>
           </>
         )}
+      </section>
+    </div>
+  );
+}
+
+/**
+ * 폴더 화면을 불러오는 동안의 카드 줄: 카드 틀과 제목("안건 결정률", "예정 시간 초과")은 진짜로 그리고
+ * 차트 등 받아야 아는 내용만 회색. 높이는 다 불러온 카드와 같게 잡는다
+ */
+export function FolderStatsSkeleton() {
+  return (
+    <div className={`${styles.row} ${styles.skeletonRow}`} aria-busy="true">
+      <section className={styles.agendaCard} aria-label="안건 결정률과 남은 안건">
+        <div className={styles.block}>
+          <div className={styles.head}>
+            <p className={styles.label}>안건 결정률</p>
+          </div>
+          <Skeleton height="auto" className={styles.skeletonFill} />
+        </div>
+        <span className={styles.divider} aria-hidden="true" />
+        <div className={styles.pending}>
+          <Skeleton height="auto" className={styles.skeletonFill} />
+        </div>
+      </section>
+      <section className={styles.overrunCard} aria-label="예정 시간 초과">
+        <div className={styles.head}>
+          <p className={styles.label}>예정 시간 초과</p>
+        </div>
+        <Skeleton height="auto" className={styles.skeletonFill} />
       </section>
     </div>
   );

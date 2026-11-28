@@ -53,6 +53,11 @@
   flex-shrink: 0;
 }
 
+/* 불러오는 동안 제목 줄 오른쪽 버튼([전체보기], [완료]) 자리만큼 제목 줄 높이를 잡는다 */
+.skeletonHeadWithButton {
+  min-height: var(--button-sm-height);
+}
+
 .sectionTitle {
   font-size: var(--font-size-heading-sm);
   font-weight: var(--font-weight-semibold);

@@ -16,7 +16,6 @@ const VISIBLE_COUNT = 3;
 const ARROW_ICON_SIZE = 24;
 // 디자인 MeetingCard 높이 (불러오는 동안 같은 자리를 잡아 둔다)
 const CARD_HEIGHT = 82;
-const ARROW_SIZE = 32;
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 2026-11-17T09:00 → 화 */
@@ -29,15 +28,17 @@ interface WeekMeetingsProps {
   folders: FolderSummary[];
 }
 
-/** 불러오는 동안 이번 주 회의 자리: 제목 줄과 카드 3개를 실제 크기로 잡아 둔다 */
+/** 불러오는 동안 이번 주 회의 자리: 제목과 좌우 버튼은 진짜로(버튼은 비활성), 카드 3개만 회색으로 실제 크기에 맞춰 잡아 둔다 */
 export function WeekMeetingsSkeleton() {
   return (
-    <section className={styles.section} aria-hidden="true">
+    <section className={styles.section} aria-busy="true">
       <div className={styles.head}>
-        <Skeleton width={82} height={24} />
+        <h2 className={styles.title}>이번 주 회의</h2>
       </div>
       <div className={styles.carousel}>
-        <Skeleton width={ARROW_SIZE} height={ARROW_SIZE} />
+        <button type="button" className={styles.arrow} aria-label="이전 회의" disabled>
+          <Icon src={prevIcon} size={ARROW_ICON_SIZE} />
+        </button>
         <div className={styles.viewport}>
           <ul className={styles.list}>
             {Array.from({ length: VISIBLE_COUNT }, (_, index) => (
@@ -47,7 +48,9 @@ export function WeekMeetingsSkeleton() {
             ))}
           </ul>
         </div>
-        <Skeleton width={ARROW_SIZE} height={ARROW_SIZE} />
+        <button type="button" className={styles.arrow} aria-label="다음 회의" disabled>
+          <Icon src={nextIcon} size={ARROW_ICON_SIZE} />
+        </button>
       </div>
     </section>
   );

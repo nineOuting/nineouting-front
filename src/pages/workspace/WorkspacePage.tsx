@@ -60,16 +60,15 @@ import WorkspaceSwitcher from './WorkspaceSwitcher';
 import TransferOwnerDialog from './TransferOwnerDialog';
 import styles from './WorkspacePage.module.css';
 
-/** 불러오는 동안 회색 자리 크기: 다 불러온 화면의 경로(20), 제목(32, 줄은 40), 요약 줄(32), 폴더 제목(28), 폴더 카드(199, 한 줄 4개) */
+/**
+ * 불러오는 동안 회색 자리 크기: 다 불러온 화면의 제목(32, 줄은 40), 요약 줄(32), 폴더 카드(199, 한 줄 4개).
+ * 경로 "워크스페이스", "프로젝트 폴더" 같은 고정 글자는 회색 대신 처음부터 진짜로 그린다
+ */
 const SKELETON = {
-  breadcrumbWidth: 120,
-  breadcrumbHeight: 20,
   titleWidth: 240,
   titleHeight: 32,
   summaryWidth: 360,
   summaryHeight: 32,
-  sectionTitleWidth: 115,
-  sectionTitleHeight: 28,
   folderCards: 4,
   folderCardHeight: 199,
 };
@@ -238,9 +237,9 @@ export default function WorkspacePage() {
     return (
       <>
         {toast && <Toast message={toast} onClose={closeToast} />}
-        <div className={styles.head} aria-hidden="true">
+        <div className={styles.head} aria-busy="true">
           <div className={styles.titleBlock}>
-            <Skeleton width={SKELETON.breadcrumbWidth} height={SKELETON.breadcrumbHeight} />
+            <p className={styles.breadcrumb}>워크스페이스</p>
             <div className={styles.titleRow}>
               <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
             </div>
@@ -250,9 +249,9 @@ export default function WorkspacePage() {
           <Skeleton width={SKELETON.summaryWidth} height={SKELETON.summaryHeight} />
         </div>
         <WeekMeetingsSkeleton />
-        <section className={styles.folders} aria-hidden="true">
+        <section className={styles.folders} aria-busy="true">
           <div className={styles.sectionHead}>
-            <Skeleton width={SKELETON.sectionTitleWidth} height={SKELETON.sectionTitleHeight} />
+            <h2 className={styles.sectionTitle}>프로젝트 폴더</h2>
           </div>
           <ul className={styles.folderGrid}>
             {Array.from({ length: SKELETON.folderCards }, (_, index) => (

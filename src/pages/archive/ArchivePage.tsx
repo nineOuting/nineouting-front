@@ -93,7 +93,6 @@ function filtersOf(params: URLSearchParams): Filters {
     attendeeIds: attendees ? attendees.split(LIST_SEPARATOR).map(Number).filter(Number.isFinite) : [],
   };
 }
-const ROW_HEIGHT = 52;
 
 type FolderTab = Omit<FolderSummary, 'meetingCount'> & { minutesCount: number };
 
@@ -605,10 +604,16 @@ export default function ArchivePage() {
 
         {/* 적용된 조건 칩 줄은 뺐다 (디자인 체크 2026-11-19). 필터 버튼에 고른 값이 보이고 [필터 초기화]로 지운다 */}
         {isFirstLoad ? (
-          <div className={styles.loadingRows}>
-            {Array.from({ length: LOADING_ROWS }, (_, index) => (
-              <Skeleton key={index} height={ROW_HEIGHT} />
-            ))}
+          // 처음 불러오는 동안에도 표 머리 줄(칼럼 이름)은 진짜로, 그 아래 줄만 회색
+          <div aria-busy="true">
+            <ArchiveTable
+              items={[]}
+              folderColors={folderColors}
+              onOpen={() => undefined}
+              onDownload={() => undefined}
+              rowMenu={() => []}
+              loadingRows={LOADING_ROWS}
+            />
           </div>
         ) : (
           <div className={isRefreshing ? styles.refreshing : undefined} aria-busy={isRefreshing}>
