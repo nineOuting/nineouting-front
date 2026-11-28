@@ -489,3 +489,31 @@
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
+
+/* REQ-218 빠른 작업: 작업마다 칸 하나 */
+.actionForms {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.actionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-surface);
+}
+
+.actionForm .dialogButtons {
+  justify-content: flex-start;
+}
+
+/* REQ-219 칸 아래 입력 오류 */
+.fieldError {
+  color: var(--danger-default);
+  font-size: 12px;
+}

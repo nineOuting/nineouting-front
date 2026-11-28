@@ -1,4 +1,4 @@
-// REQ-214~217 관리자 페이지 API (admin-service). 일반 로그인과 따로, 관리자 쿠키로 부른다
+// REQ-214~219 관리자 페이지 API (admin-service). 일반 로그인과 따로, 관리자 쿠키로 부른다
 // 읽기가 아닌 요청에는 관리자 화면 머리글을 붙인다 (admin-service가 다른 사이트에서 온 요청을 막는 데 쓴다)
 
 const BASE = '/api/admin';
@@ -62,6 +62,8 @@ export interface AdminColumn {
   defaultValue: string | null;
   primaryKey: boolean;
   writable: boolean;
+  /** REQ-219 넣을 수 있는 값이 정해진 열(enum, CHECK 제약)의 값. 정해지지 않았으면 빈 배열 */
+  allowedValues: string[];
 }
 
 export interface AdminTable {
@@ -161,6 +163,20 @@ const OPERATION_PATHS: Record<AdminOperation, (id: number) => string> = {
   materialRagRetry: (id) => `/operations/materials/${id}/rag-retry`,
 };
 
+/** REQ-218 빠른 작업 결과 */
+export interface AdminCreatedUser {
+  userId: number;
+  email: string;
+  name: string;
+}
+
+export interface AdminAddedMember {
+  workspaceId: number;
+  userId: number;
+  /** false면 이미 멤버여서 바꾸지 않았다 */
+  added: boolean;
+}
+
 const tablePath = (db: string, table: string) =>
   `/databases/${encodeURIComponent(db)}/tables/${encodeURIComponent(table)}`;
 
@@ -171,6 +187,8 @@ export const adminApi = {
   databases: () => call<AdminDatabase[]>('GET', '/databases'),
   tables: (db: string) => call<AdminTableSummary[]>('GET', `/databases/${encodeURIComponent(db)}/tables`),
   table: (db: string, table: string) => call<AdminTable>('GET', tablePath(db, table)),
+  /** REQ-219 짧은 글자 열에 이미 들어 있는 값 (열 이름 → 값). 추천일 뿐 다른 값도 넣을 수 있다 */
+  suggestions: (db: string, table: string) => call<Record<string, string[]>>('GET', `${tablePath(db, table)}/suggestions`),
   rows: (db: string, table: string, query: AdminRowQuery) => {
     const params = new URLSearchParams({ page: String(query.page), size: String(query.size) });
     if (query.sort) params.set('sort', query.sort);
@@ -197,6 +215,11 @@ export const adminApi = {
     return call<AdminAuditPage>('GET', `/audit?${params}`);
   },
   operate: (operation: AdminOperation, id: number) => call<void>('POST', OPERATION_PATHS[operation](id)),
+  createUser: (email: string, password: string, name: string) =>
+    call<AdminCreatedUser>('POST', '/actions/users', { email, password, name }),
+  /** user는 이메일이나 사용자 번호 */
+  addWorkspaceMember: (workspaceId: number, user: string) =>
+    call<AdminAddedMember>('POST', '/actions/workspace-members', { workspaceId, user }),
 };
 
 export function adminErrorMessage(error: unknown) {
