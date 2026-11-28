@@ -19,14 +19,17 @@ import historyIcon from '../../assets/icons/history.svg';
 import pinIcon from '../../assets/icons/pin.svg';
 import Icon from '../../components/Icon';
 import TextField from '../../components/TextField';
+import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Agenda, Meeting, MeetingBasicInfo, Member } from '../../types/meeting';
-import FolderPage from '../folder/FolderPage';
 import LoadPreviousSettings, { type PreviousSettings } from './LoadPreviousSettings';
-import MeetingWaitingPage from './MeetingWaitingPage';
 import { toIsoDate } from '../../utils/calendar';
+import { backToOf } from '../../utils/meetingFormat';
 import styles from './MeetingCreatePage.module.css';
 
+// 폴더 목록을 받는 동안 프로젝트 폴더 칸 안의 회색 자리
+const FOLDER_NAME_SKELETON_WIDTH = 200;
+const FOLDER_NAME_SKELETON_HEIGHT = 20;
 const ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 16;
 const TITLE_MAX_LENGTH = 100;
@@ -137,12 +140,17 @@ export default function MeetingCreatePage() {
   const navigate = useNavigate();
   const params = useParams();
   const titleId = useId();
-  const editingMeeting = (useLocation().state as { meeting?: Meeting } | null)?.meeting;
+  const locationState = useLocation().state as { meeting?: Meeting } | null;
+  const editingMeeting = locationState?.meeting;
+  // 수정 창을 닫으면 회의 대기 화면이 원래 돌아갈 곳(홈, 아카이브 등)을 이어서 쓰게 넘긴다
+  const backTo = backToOf(locationState);
   const isEdit = Boolean(params.meetingId);
   const routeFolderId = editingMeeting?.folderId ?? Number(params.folderId);
   // REQ-169 회의를 저장할 프로젝트 폴더. 폴더 화면의 [새 회의]로 들어오면 그 폴더가 골라져 있다 (수정할 때는 바꾸지 않는다)
   const [selectedFolderId, setSelectedFolderId] = useState(routeFolderId);
   const [folderOptions, setFolderOptions] = useState<{ folderId: number; name: string }[]>([]);
+  // 폴더 목록을 받는 동안에도 프로젝트 폴더 칸 자리를 잡아 둔다 (받은 뒤에 끼어들면 아래 칸이 112px 밀렸다)
+  const [isFolderLoading, setIsFolderLoading] = useState(() => Number.isInteger(routeFolderId));
   const [workspaceName, setWorkspaceName] = useState('');
   const folderId = isEdit ? routeFolderId : selectedFolderId;
   const [initialForm] = useState<MeetingForm>(() =>
@@ -199,9 +207,10 @@ export default function MeetingCreatePage() {
           setFolderOptions(folders);
           setWorkspaceName(workspace.name);
           setDefaultTemplateId(workspace.defaultTemplateId);
+          setIsFolderLoading(false);
         }
       })
-      .catch(() => undefined);
+      .catch(() => isCurrent && setIsFolderLoading(false));
     return () => {
       isCurrent = false;
     };
@@ -285,7 +294,7 @@ export default function MeetingCreatePage() {
     setIsLoadPreviousOpen(false);
   };
 
-  const handleClose = () => navigate(closePath);
+  const handleClose = () => navigate(closePath, backTo ? { state: { backTo } } : undefined);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -337,7 +346,6 @@ export default function MeetingCreatePage() {
 
   return (
     <>
-      {isEdit ? <MeetingWaitingPage /> : <FolderPage />}
       {toast && <Toast message={toast} onClose={closeToast} />}
       {!isLoadPreviousOpen && (
         <Modal labelledBy={titleId} onClose={leaveBlocker.state === 'blocked' ? undefined : handleClose} className={styles.modal}>
@@ -362,7 +370,7 @@ export default function MeetingCreatePage() {
               )}
 
               <div className={styles.fields}>
-                {folderOptions.length > 0 && (
+                {(isFolderLoading || folderOptions.length > 0) && (
                   <div className={`${styles.field} ${styles.menuAnchor}`}>
                     <span className={styles.label}>프로젝트 폴더</span>
                     <button
@@ -372,15 +380,19 @@ export default function MeetingCreatePage() {
                       aria-label="프로젝트 폴더 선택"
                       aria-haspopup="listbox"
                       aria-expanded={openMenu === 'folder'}
-                      disabled={isEdit}
+                      disabled={isEdit || isFolderLoading}
                       onClick={() => setOpenMenu((menu) => (menu === 'folder' ? null : 'folder'))}
                     >
                       <Icon src={folderIcon} size={ICON_SIZE} className={styles.leadingIcon} />
-                      <span className={styles.value}>
-                        {[workspaceName, folderOptions.find(({ folderId: id }) => id === folderId)?.name]
-                          .filter(Boolean)
-                          .join(' / ')}
-                      </span>
+                      {isFolderLoading ? (
+                        <Skeleton width={FOLDER_NAME_SKELETON_WIDTH} height={FOLDER_NAME_SKELETON_HEIGHT} />
+                      ) : (
+                        <span className={styles.value}>
+                          {[workspaceName, folderOptions.find(({ folderId: id }) => id === folderId)?.name]
+                            .filter(Boolean)
+                            .join(' / ')}
+                        </span>
+                      )}
                       {!isEdit && <Icon src={chevronDownIcon} size={ICON_SIZE} className={styles.trailingIcon} />}
                     </button>
                     {openMenu === 'folder' && (

@@ -68,7 +68,10 @@ const router = createBrowserRouter(
           <Route path="/home" element={<HomePage />} />
           <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
           <Route path="/workspaces/:workspaceId/archive" element={<ArchivePage />} />
-          <Route path="/folders/:folderId" element={<FolderPage />} />
+          {/* 새 회의 창은 폴더 화면 위에 띄운다. 뒤 화면을 다시 그리지 않도록 폴더 화면의 하위 라우트로 둔다 */}
+          <Route path="/folders/:folderId" element={<FolderPage />}>
+            <Route path="meetings/new" element={<MeetingCreatePage />} />
+          </Route>
           {/* REQ-119~121 회의록 양식 목록 */}
           <Route path="/templates" element={<TemplateListPage />} />
         </Route>
@@ -120,15 +123,7 @@ const router = createBrowserRouter(
         <Route path="/password/verify" element={<PasswordVerifyPage />} />
         <Route path="/password/reset" element={<PasswordResetPage />} />
         <Route path="/password/complete" element={<PasswordCompletePage />} />
-        {/* 회의는 프로젝트 폴더 안에서 만든다. 폴더 화면이 생기면 거기서 이 주소로 들어온다 */}
-        <Route
-          path="/folders/:folderId/meetings/new"
-          element={
-            <RequireAuth>
-              <MeetingCreatePage />
-            </RequireAuth>
-          }
-        />
+        {/* 회의 정보 수정 창은 회의 대기 화면 위에 띄운다. 뒤 화면을 다시 그리지 않도록 하위 라우트로 둔다 */}
         <Route
           path="/meetings/:meetingId"
           element={
@@ -136,15 +131,9 @@ const router = createBrowserRouter(
               <MeetingWaitingPage />
             </RequireAuth>
           }
-        />
-        <Route
-          path="/meetings/:meetingId/edit"
-          element={
-            <RequireAuth>
-              <MeetingCreatePage />
-            </RequireAuth>
-          }
-        />
+        >
+          <Route path="edit" element={<MeetingCreatePage />} />
+        </Route>
         <Route
           path="/meetings/:meetingId/room"
           element={

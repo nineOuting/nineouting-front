@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
   cancelMeeting,
@@ -253,6 +253,8 @@ export default function MeetingWaitingPage() {
     return (
       <AppLayout className={styles.page} variant="compact">
         <AccessNotice kind={accessNotice} />
+        {/* 회의 정보 수정 창 (하위 라우트 edit) */}
+        <Outlet />
       </AppLayout>
     );
   }
@@ -290,6 +292,8 @@ export default function MeetingWaitingPage() {
             ))}
           </aside>
         </div>
+        {/* 회의 정보 수정 창 (하위 라우트 edit) */}
+        <Outlet />
       </AppLayout>
     );
   }
@@ -470,7 +474,7 @@ export default function MeetingWaitingPage() {
         {
           label: '회의 정보 수정',
           icon: editIcon,
-          onSelect: () => navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting } }),
+          onSelect: () => navigate(`/meetings/${meeting.meetingId}/edit`, { state: { meeting, backTo } }),
         },
         { label: '회의 삭제', icon: deleteIcon, isDanger: true, onSelect: () => setIsCancelDialogOpen(true) },
       ]
@@ -820,6 +824,8 @@ export default function MeetingWaitingPage() {
           onConfirm={cancel}
         />
       )}
+      {/* 회의 정보 수정 창 (하위 라우트 edit) */}
+      <Outlet />
     </AppLayout>
   );
 }
