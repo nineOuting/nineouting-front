@@ -12,7 +12,7 @@ import {
 import { listWritingMinutes, type WritingMinutes } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import { listFavorites, listFolders, listMyWorkspaces, setFavorite } from '../../api/workspace';
-import AppLayout from '../../components/AppLayout';
+import { useAppShell } from '../../components/useAppShell';
 // 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
 // import Button from '../../components/Button';
 import EmptyState from '../../components/EmptyState';
@@ -146,10 +146,14 @@ export default function HomePage() {
     }
   };
 
+  // 공통 틀에 본문 클래스를 알린다. 워크스페이스가 없을 때(새 사용자 안내)는 화면 높이에 맞추지 않는다
+  const isNewUser = workspaces?.length === 0;
+  useAppShell({ className: isNewUser ? styles.page : styles.homeLayout, fitScreen: !isNewUser });
+
   // 디자인 HomeLoadingPage. 다 불러온 화면과 같은 배치(왼쪽 인사, 곧 다가오는 회의 띠, 달력 / 오른쪽 열 카드 3개)로 자리를 잡는다
   if (workspaces === null) {
     return (
-      <AppLayout className={styles.homeLayout} fitScreen>
+      <>
         {toast && <Toast message={toast} onClose={closeToast} />}
         <div className={styles.main} aria-hidden="true">
           <Skeleton width={SKELETON.greetingWidth} height={SKELETON.greetingHeight} />
@@ -164,14 +168,14 @@ export default function HomePage() {
             <Skeleton key={index} height={height} className={styles.panelSkeleton} />
           ))}
         </div>
-      </AppLayout>
+      </>
     );
   }
 
   // 디자인 NewUserHomePage: 워크스페이스가 하나도 없을 때
   if (workspaces.length === 0) {
     return (
-      <AppLayout className={styles.page}>
+      <>
         {toast && <Toast message={toast} onClose={closeToast} />}
         <EmptyState
           className={styles.newUser}
@@ -188,13 +192,13 @@ export default function HomePage() {
         {/* 레거시 (2026-11-22, 피그마 프론트에 창 디자인이 없어 막음): 새 워크스페이스 만들기 창
         {isCreatingWorkspace && <CreateWorkspaceModal onClose={() => setIsCreatingWorkspace(false)} />}
         */}
-      </AppLayout>
+      </>
     );
   }
 
   // 피그마 Page 8 HomePage_v6: 왼쪽은 인사, 곧 다가오는 회의 띠, 이번 주 일정. 오른쪽 열은 즐겨찾기, 내 할 일, 작성 중인 회의록
   return (
-    <AppLayout className={styles.homeLayout} fitScreen>
+    <>
       {toast && <Toast message={toast} onClose={closeToast} />}
       <div className={styles.main}>
         {/* REQ-146 와이어프레임 문구, 0개면 MSG-047 */}
@@ -217,6 +221,6 @@ export default function HomePage() {
         <MyTodosCard items={todos} onComplete={completeTodos} />
         <WritingMinutesCard items={writing} folders={folders} />
       </aside>
-    </AppLayout>
+    </>
   );
 }

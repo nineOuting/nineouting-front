@@ -21,7 +21,7 @@ import {
   type WorkspaceDetail,
 } from '../../api/workspace';
 import { getMe } from '../../api/user';
-import AppLayout from '../../components/AppLayout';
+import { useAppShell } from '../../components/useAppShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DropdownMenu from '../../components/DropdownMenu';
 import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
@@ -415,8 +415,10 @@ export default function ArchivePage() {
     ...(loadedTabs ?? []).map((folder) => ({ id: folder.folderId, name: folder.name, count: folder.minutesCount })),
   ];
 
+  useAppShell({ className: styles.page, workspaceId: id });
+
   return (
-    <AppLayout className={styles.page} workspaceId={id}>
+    <>
       {toast && <Toast message={toast} onClose={closeToast} />}
       <p className={styles.breadcrumb}>회의록 아카이브</p>
       <div className={styles.titleBlock}>
@@ -725,6 +727,6 @@ export default function ArchivePage() {
           }}
         />
       )}
-    </AppLayout>
+    </>
   );
 }

@@ -20,6 +20,7 @@ import MinutesEditorPage from './pages/minutes/MinutesEditorPage';
 import TemplateEditorPage from './pages/template/TemplateEditorPage';
 import TemplateListPage from './pages/template/TemplateListPage';
 import { settingsPath } from './pages/settings/useSettingsModal';
+import AppShell from './components/AppShell';
 import ChannelLauncher from './components/ChannelLauncher';
 import TooltipLayer from './components/TooltipLayer';
 import InvitationPage from './pages/workspace/InvitationPage';
@@ -56,6 +57,21 @@ const router = createBrowserRouter(
         }
       />
       <Route element={<RootLayout />}>
+        {/* 사이드 바와 상단 바를 함께 쓰는 화면. 화면을 옮겨도 틀은 그대로 두고 본문만 바꾼다 (사이드 바 스크롤 유지) */}
+        <Route
+          element={
+            <RequireAuth>
+              <AppShell />
+            </RequireAuth>
+          }
+        >
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
+          <Route path="/workspaces/:workspaceId/archive" element={<ArchivePage />} />
+          <Route path="/folders/:folderId" element={<FolderPage />} />
+          {/* REQ-119~121 회의록 양식 목록 */}
+          <Route path="/templates" element={<TemplateListPage />} />
+        </Route>
         {/* 첫 화면: 로그인하지 않았으면 넵넵 소개, 로그인했으면 홈으로 */}
         <Route
           path="/"
@@ -63,14 +79,6 @@ const router = createBrowserRouter(
             <GuestOnly>
               <LandingPage />
             </GuestOnly>
-          }
-        />
-        <Route
-          path="/home"
-          element={
-            <RequireAuth>
-              <HomePage />
-            </RequireAuth>
           }
         />
         {/* 예전 설정 주소는 홈 위에 설정 창을 연다 (REQ-145) */}
@@ -168,14 +176,6 @@ const router = createBrowserRouter(
         )}
         {/* REQ-119~121 회의록 양식. 새 양식은 ?from=양식ID 로 복사해서 시작할 수 있다 */}
         <Route
-          path="/templates"
-          element={
-            <RequireAuth>
-              <TemplateListPage />
-            </RequireAuth>
-          }
-        />
-        <Route
           path="/templates/new"
           element={
             <RequireAuth>
@@ -191,34 +191,10 @@ const router = createBrowserRouter(
             </RequireAuth>
           }
         />
-        <Route
-          path="/workspaces/:workspaceId"
-          element={
-            <RequireAuth>
-              <WorkspacePage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/workspaces/:workspaceId/archive"
-          element={
-            <RequireAuth>
-              <ArchivePage />
-            </RequireAuth>
-          }
-        />
         {/* REQ-143 쓰레기통은 설정 창의 삭제 목록 */}
         <Route
           path="/workspaces/:workspaceId/trash"
           element={<Navigate to={settingsPath('trash')} replace />}
-        />
-        <Route
-          path="/folders/:folderId"
-          element={
-            <RequireAuth>
-              <FolderPage />
-            </RequireAuth>
-          }
         />
         {/* REQ-127 초대 메일의 링크. 로그인하지 않았으면 로그인한 뒤 돌아온다 */}
         <Route
