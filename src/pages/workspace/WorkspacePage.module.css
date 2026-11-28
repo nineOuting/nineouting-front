@@ -46,6 +46,24 @@
   display: flex;
 }
 
+/* 워크스페이스 이름 + 꺾쇠: 눌러서 워크스페이스를 바꾼다 (회의록 아카이브 제목과 같은 모양) */
+.workspaceButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.mutedIcon {
+  color: var(--neutral-default);
+}
+
+.flipped {
+  transform: rotate(180deg);
+}
+
 .iconButton {
   display: flex;
   align-items: center;
