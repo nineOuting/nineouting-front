@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { listMyWorkspaces } from '../api/workspace';
+import { listMyWorkspaces, NAV_CHANGED_EVENT } from '../api/workspace';
 import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/nav-archive.svg';
 import homeIcon from '../assets/icons/home.svg';
@@ -31,6 +31,14 @@ export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps)
   const settings = useSettingsModal();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  // 워크스페이스를 만들거나 바꾸면 다시 받는다 (새 워크스페이스가 목록에 없으면 아이콘이 첫 워크스페이스로 연결된다)
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    const reload = () => setReloadKey((key) => key + 1);
+    window.addEventListener(NAV_CHANGED_EVENT, reload);
+    return () => window.removeEventListener(NAV_CHANGED_EVENT, reload);
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -40,7 +48,7 @@ export default function SidebarRail({ workspaceId, onExpand }: SidebarRailProps)
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const currentWorkspace = workspaces.find((workspace) => workspace.workspaceId === workspaceId) ?? workspaces[0];
 

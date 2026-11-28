@@ -9,6 +9,19 @@ import type {
 } from '../types/workspace';
 import { request } from './client';
 
+/** 워크스페이스, 폴더 목록이 바뀌었을 때 window에 보내는 이벤트. 사이드 바가 듣고 다시 받는다 */
+export const NAV_CHANGED_EVENT = 'nineouting:nav-changed';
+
+/**
+ * 성공하면 사이드 바에 알린다. 사이드 바는 화면이 바뀔 때만 새로 만들어져서, 같은 화면 안에서 만들거나 바꾸면
+ * (예: 워크스페이스 화면에서 새 워크스페이스로 이동, 폴더 이름 바꾸기) 알려 주지 않으면 예전 목록이 남는다
+ */
+async function notifyNav<T>(pending: Promise<T>) {
+  const result = await pending;
+  window.dispatchEvent(new Event(NAV_CHANGED_EVENT));
+  return result;
+}
+
 // workspace-service API (docs/services/workspace-service.md 4장)
 
 export const WORKSPACE_ERROR_CODES = {
@@ -91,7 +104,7 @@ export async function listMyWorkspaces(): Promise<WorkspaceSummary[]> {
 
 /** REQ-031 새 워크스페이스. 만든 사람이 소유자가 된다 */
 export async function createWorkspace(name: string): Promise<WorkspaceSummary> {
-  const { workspaceId, name: createdName } = await request<WorkspaceResponse>('POST', '/api/workspaces', { name });
+  const { workspaceId, name: createdName } = await notifyNav(request<WorkspaceResponse>('POST', '/api/workspaces', { name }));
   return { workspaceId, name: createdName };
 }
 
@@ -124,15 +137,14 @@ export function changeDefaultTemplate(workspaceId: number, templateId: number | 
 
 /** REQ-202 프로젝트 색 바꾸기 (프로젝트 소유자, 워크스페이스 소유자) */
 export function changeFolderColor(folderId: number, color: number) {
-  return request('PUT', `/api/folders/${folderId}/color`, { color });
+  return notifyNav(request('PUT', `/api/folders/${folderId}/color`, { color }));
 }
 
 /** REQ-163 워크스페이스 이름, 설명 수정 (소유자). 바뀐 값을 돌려준다 */
 export async function updateWorkspace(workspaceId: number, name: string, description: string) {
-  const detail = await request<{ name: string; description: string | null }>('PATCH', `/api/workspaces/${workspaceId}`, {
-    name,
-    description,
-  });
+  const detail = await notifyNav(
+    request<{ name: string; description: string | null }>('PATCH', `/api/workspaces/${workspaceId}`, { name, description }),
+  );
   return { name: detail.name, description: detail.description ?? '' };
 }
 
@@ -143,7 +155,7 @@ export function markLastVisited(workspaceId: number) {
 
 /** REQ-138 워크스페이스 삭제 (소유자) */
 export function deleteWorkspace(workspaceId: number) {
-  return request('DELETE', `/api/workspaces/${workspaceId}`);
+  return notifyNav(request('DELETE', `/api/workspaces/${workspaceId}`));
 }
 
 /** REQ-037 내가 들어갈 수 있는 프로젝트 폴더 (기본 폴더가 맨 위). 회의 수는 meeting-service에서 따로 받는다 */
@@ -169,16 +181,16 @@ export async function listAllFolders(workspaceId: number): Promise<Omit<FolderSu
 
 /** REQ-039~040 새 프로젝트 폴더 */
 export function createFolder(workspaceId: number, name: string) {
-  return request<FolderNode>('POST', `/api/workspaces/${workspaceId}/folders`, { name });
+  return notifyNav(request<FolderNode>('POST', `/api/workspaces/${workspaceId}/folders`, { name }));
 }
 
 export function renameFolder(folderId: number, name: string) {
-  return request<FolderNode>('PATCH', `/api/folders/${folderId}`, { name });
+  return notifyNav(request<FolderNode>('PATCH', `/api/folders/${folderId}`, { name }));
 }
 
 /** REQ-058 폴더 삭제 (폴더 소유자, 기본 폴더 불가) */
 export function deleteFolder(folderId: number) {
-  return request('DELETE', `/api/folders/${folderId}`);
+  return notifyNav(request('DELETE', `/api/folders/${folderId}`));
 }
 
 /** REQ-033 워크스페이스 멤버 (소유자만 볼 수 있다) */
@@ -233,7 +245,7 @@ export function getInvitation(token: string) {
 
 /** REQ-127 초대 수락. 승인 없이 바로 멤버가 된다 */
 export function acceptInvitation(token: string) {
-  return request<WorkspaceResponse>('POST', `/api/workspaces/invitations/${encodeURIComponent(token)}/accept`);
+  return notifyNav(request<WorkspaceResponse>('POST', `/api/workspaces/invitations/${encodeURIComponent(token)}/accept`));
 }
 
 export interface PendingInvitation {
@@ -291,7 +303,7 @@ export async function getInviteLink(token: string): Promise<InviteLinkInfo> {
 
 /** REQ-015 초대 링크로 참여. 승인 없이 바로 멤버가 된다 (2026-10-28) */
 export function joinByInviteLink(token: string) {
-  return request<WorkspaceResponse>('POST', `/api/invites/${encodeURIComponent(token)}/join`);
+  return notifyNav(request<WorkspaceResponse>('POST', `/api/invites/${encodeURIComponent(token)}/join`));
 }
 
 export interface TrashFolder {
@@ -311,7 +323,7 @@ export function listTrash(workspaceId: number) {
 
 /** REQ-143 복구. 그사이 같은 이름 폴더가 생겼으면 FOLDER_NAME_DUPLICATED */
 export function restoreTrashFolder(workspaceId: number, folderId: number) {
-  return request('POST', `/api/workspaces/${workspaceId}/trash/folders/${folderId}/restore`);
+  return notifyNav(request('POST', `/api/workspaces/${workspaceId}/trash/folders/${folderId}/restore`));
 }
 
 /** REQ-143 영구 삭제. 안의 회의·회의록도 지워진다 */
@@ -338,7 +350,7 @@ export function transferWorkspaceOwnership(workspaceId: number, userId: number) 
 
 /** REQ-032 워크스페이스 나가기 (소유자는 OWNER_CANNOT_LEAVE) */
 export function leaveWorkspace(workspaceId: number) {
-  return request('DELETE', `/api/workspaces/${workspaceId}/members/me`);
+  return notifyNav(request('DELETE', `/api/workspaces/${workspaceId}/members/me`));
 }
 
 /** REQ-038 폴더 열기 (최근 방문으로 기록된다) */
@@ -390,7 +402,7 @@ export function transferFolderOwnership(folderId: number, userId: number) {
 
 /** REQ-139 폴더 나가기 (폴더 소유자는 FOLDER_OWNER_CANNOT_LEAVE) */
 export function leaveFolder(folderId: number) {
-  return request('DELETE', `/api/folders/${folderId}/members/me`);
+  return notifyNav(request('DELETE', `/api/folders/${folderId}/members/me`));
 }
 
 interface FavoriteResponse {
