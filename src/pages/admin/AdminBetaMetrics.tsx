@@ -26,6 +26,7 @@ const LABELS: Record<string, string> = {
   contentChangedSections: '내용이 바뀐 섹션',
   removedSections: '지운 섹션 (양식 변경)',
   addedSections: '새로 넣은 섹션 (양식 변경)',
+  filledEmptySections: 'AI가 비운 칸을 작성자가 채움',
   tableSectionsNotCompared: '표 섹션 (비교 안 함)',
   meetingsWithSummary: '요약이 있는 회의',
   summarySentences: '요약 문장 수 (AI)',
