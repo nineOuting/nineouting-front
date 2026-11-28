@@ -60,7 +60,7 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
     : template.isDefault
     ? [{ label: '내 양식으로 복제', icon: copyIcon, onSelect: onDuplicate }]
     : [
-        ...(onEdit ? [{ label: '수정', icon: editIcon, onSelect: onEdit }] : []),
+        ...(onEdit ? [{ label: '수정', icon: editIcon, onSelect: onEdit, gtm: 'nn_template_edit_start' }] : []),
         { label: '복제', icon: copyIcon, onSelect: onDuplicate },
         ...(onDelete ? [{ label: '삭제', icon: deleteIcon, isDanger: true, onSelect: onDelete }] : []),
       ];
@@ -72,6 +72,7 @@ function TemplateCard({ template, onToggleFavorite, onEdit, onDuplicate, onDelet
         className={styles.preview}
         aria-label={`${template.name} ${isReadOnly ? '복제해서 만들기' : '수정'}`}
         onClick={isReadOnly ? onDuplicate : onEdit}
+        data-gtm={isReadOnly || !onEdit ? undefined : 'nn_template_edit_start'}
       >
         {/* 실제 양식(항목, 글자 크기와 색, 여백, 머리말, 배경)을 줄여 보여 준다. 회의 대기 양식 카드와 같은 종이 */}
         <span className={styles.cardPage} aria-hidden="true">
@@ -239,11 +240,11 @@ export default function TemplateListPage() {
           <p className={styles.subtitle}>회의록 양식을 만들고, 수정하거나 관리할 수 있어요.</p>
         </div>
         <div className={styles.headActions}>
-          <button type="button" className={styles.secondaryButton} onClick={() => setIsImportOpen(true)}>
+          <button type="button" className={styles.secondaryButton} onClick={() => setIsImportOpen(true)} data-gtm="nn_template_import_open">
             <Icon src={uploadIcon} size={ICON_SIZE} />
             양식 가져오기
           </button>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate('/templates/new')}>
+          <button type="button" className={styles.primaryButton} onClick={() => navigate('/templates/new')} data-gtm="nn_template_new">
             <Icon src={addIcon} size={BUTTON_ICON_SIZE} />
             새 양식 만들기
           </button>

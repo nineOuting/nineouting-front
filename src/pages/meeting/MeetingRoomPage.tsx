@@ -957,7 +957,7 @@ export default function MeetingRoomPage() {
             </Button>
           )}
           {isWriter && isLive ? (
-            <Button size="md" disabled={isEnding || endStep !== null} onClick={() => void startEnd()}>
+            <Button size="md" disabled={isEnding || endStep !== null} onClick={() => void startEnd()} data-gtm="nn_meeting_end">
               <Icon src={stopIcon} size={SMALL_ICON_SIZE} />
               회의 끝내기
             </Button>
@@ -1073,6 +1073,7 @@ export default function MeetingRoomPage() {
                   type="button"
                   role="tab"
                   aria-selected={sideTab === tab}
+                  data-gtm={tab === 'chat' ? 'nn_helper_tab' : 'nn_transcript_tab'}
                   className={[styles.tab, sideTab === tab ? styles.tabActive : ''].filter(Boolean).join(' ')}
                   onClick={() => (tab === 'chat' ? openHelper() : setSideTab(tab))}
                 >

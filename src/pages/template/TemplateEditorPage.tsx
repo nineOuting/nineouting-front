@@ -334,6 +334,7 @@ export default function TemplateEditorPage() {
               className={`${editorBar.action} ${editorBar.primary}`}
               disabled={!isLoaded || isSaving}
               onClick={save}
+              data-gtm="nn_template_save"
             >
               {isSaving ? '저장 중' : '저장하기'}
             </button>
@@ -353,6 +354,7 @@ export default function TemplateEditorPage() {
                 className={[styles.railItem, view === entry.value ? styles.railItemOn : ''].filter(Boolean).join(' ')}
                 aria-pressed={view === entry.value}
                 onClick={() => setView(entry.value)}
+                data-gtm={`nn_template_rail_${entry.value}`}
               >
                 <Icon src={entry.icon} size={RAIL_ICON_SIZE} />
                 {entry.label}

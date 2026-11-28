@@ -4,7 +4,10 @@ import EmptyState from '../../../components/EmptyState';
 import type { TranscriptLine } from '../../../types/meetingRoom';
 import TermText from './TermText';
 import type { TermMatcher } from './termGlossary';
+import { track } from '../../../utils/track';
 import styles from './SidePanel.module.css';
+
+const USER_SCROLL_WINDOW_MS = 800;
 
 
 const NO_AGENDA = '';
@@ -51,10 +54,21 @@ export default function TranscriptPanel({
   // 위로 올려 예전 줄을 읽는 중이면 자동으로 내리지 않는다
   const stickToBottomRef = useRef(true);
 
+  // 베타 테스트 G9: 사용자가 직접(휠, 터치, 키보드) 올려서 맨 아래를 벗어난 횟수. 근거로 넘어가는 자동 스크롤은 세지 않는다
+  // 휠 한 번에 scroll이 여러 번 오므로, 사용자가 움직인 뒤 잠깐 동안 온 scroll을 사용자 것으로 본다
+  const userScrollAtRef = useRef(0);
+  const markUserScroll = () => {
+    userScrollAtRef.current = Date.now();
+  };
+
   const handleScroll = () => {
     const el = listRef.current;
     if (el) {
+      const wasAtBottom = stickToBottomRef.current;
       stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight <= STICK_THRESHOLD;
+      if (wasAtBottom && !stickToBottomRef.current && Date.now() - userScrollAtRef.current < USER_SCROLL_WINDOW_MS) {
+        track('nn_transcript_scroll_up');
+      }
     }
   };
 
@@ -107,7 +121,15 @@ export default function TranscriptPanel({
           description="말씀이 시작되면 여기에 받아 적을게요."
         />
       ) : (
-        <ol ref={listRef} className={styles.lines} aria-live="polite" onScroll={handleScroll}>
+        <ol
+          ref={listRef}
+          className={styles.lines}
+          aria-live="polite"
+          onScroll={handleScroll}
+          onWheel={markUserScroll}
+          onTouchMove={markUserScroll}
+          onKeyDown={markUserScroll}
+        >
           {lines.map((line) => {
             const isEditing = editing?.seq === line.seq;
             const className = [

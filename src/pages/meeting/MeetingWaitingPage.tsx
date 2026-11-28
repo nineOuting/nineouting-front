@@ -45,6 +45,7 @@ import MeetingMaterials from './MeetingMaterials';
 import MemberPickerMenu from './MemberPickerMenu';
 import MicPermissionDialog from './MicPermissionDialog';
 import MinutesCheck from './MinutesCheck';
+import TrackView from '../../components/TrackView';
 import StartingModal from './StartingModal';
 import TemplateDetailModal from './TemplateDetailModal';
 import TemplateGalleryModal from './TemplateGalleryModal';
@@ -511,7 +512,7 @@ export default function MeetingWaitingPage() {
             {readinessMessage(meeting.agendas.length > 0, Boolean(meeting.writer),
               isWriter ? null : (meeting.writer?.name ?? '알 수 없음'))}
           </p>
-          <Button size="md" disabled={!canStart || isStarting} onClick={() => setIsConsentOpen(true)}>
+          <Button size="md" disabled={!canStart || isStarting} onClick={() => setIsConsentOpen(true)} data-gtm="nn_meeting_start">
             <Icon src={playIcon} size={ICON_SIZE} />
             {isStarting ? '회의 준비 중' : '회의 시작하기'}
           </Button>
@@ -522,6 +523,8 @@ export default function MeetingWaitingPage() {
 
   return (
     <AppLayout className={styles.page} variant="compact" header={header}>
+      {/* 베타 테스트: 회의 대기와 회의록 확인은 주소가 같아 열람을 따로 보낸다 */}
+      <TrackView name={isFinished ? 'nn_view_minutes_check' : 'nn_view_meeting_waiting'} />
       {toast && <Toast message={toast} onClose={closeToast} />}
 
       <div className={styles.columns}>

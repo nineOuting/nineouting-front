@@ -20,7 +20,7 @@ export default function ShareConfirmModal({ isSharing, onShare, onClose }: Share
           <Button variant="secondary" size="md" onClick={onClose}>
             계속 수정
           </Button>
-          <Button size="md" disabled={isSharing} onClick={onShare}>
+          <Button size="md" disabled={isSharing} onClick={onShare} data-gtm="nn_minutes_complete">
             저장하고 공유
           </Button>
         </>

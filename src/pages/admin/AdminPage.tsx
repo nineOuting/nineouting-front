@@ -11,6 +11,7 @@ import {
   type AdminTableSummary,
 } from '../../api/admin';
 import AdminAudit from './AdminAudit';
+import AdminBetaMetrics from './AdminBetaMetrics';
 import AdminDashboard from './AdminDashboard';
 import styles from './AdminPage.module.css';
 
@@ -20,12 +21,13 @@ import styles from './AdminPage.module.css';
 const PAGE_SIZES = [20, 50, 100, 200];
 const message = adminErrorMessage;
 
-type Tab = 'dashboard' | 'db' | 'audit';
+type Tab = 'dashboard' | 'db' | 'audit' | 'beta';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'dashboard', label: '현황' },
   { id: 'db', label: 'DB' },
   { id: 'audit', label: '감사 기록' },
+  { id: 'beta', label: '베타 집계' },
 ];
 
 export default function AdminPage() {
@@ -114,6 +116,7 @@ function AdminShell({ username, onLoggedOut }: { username: string; onLoggedOut: 
       {tab === 'dashboard' && <AdminDashboard onUnauthorized={onUnauthorized} />}
       {tab === 'db' && <Explorer onUnauthorized={onUnauthorized} />}
       {tab === 'audit' && <AdminAudit onUnauthorized={onUnauthorized} />}
+      {tab === 'beta' && <AdminBetaMetrics onUnauthorized={onUnauthorized} />}
     </div>
   );
 }

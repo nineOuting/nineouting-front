@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 import termIcon from '../../../assets/icons/info.svg';
 import Icon from '../../../components/Icon';
+import { track } from '../../../utils/track';
 import { splitByTerms, type TermMatcher } from './termGlossary';
 import styles from './TermText.module.css';
 
@@ -24,7 +25,10 @@ export default function TermText({ text, matcher, onAsk }: TermTextProps) {
           <span
             key={index}
             className={styles.term}
-            onMouseEnter={() => setOpenIndex(index)}
+            onMouseEnter={() => {
+              setOpenIndex(index);
+              track('nn_term_open');
+            }}
             onMouseLeave={() => setOpenIndex(null)}
           >
             {part}
@@ -38,7 +42,7 @@ export default function TermText({ text, matcher, onAsk }: TermTextProps) {
                 <span className={styles.cardFooter}>
                   <span>넵넵 AI에 저장됐어요</span>
                   {onAsk && (
-                    <button type="button" className={styles.ask} onClick={() => onAsk(card.term)}>
+                    <button type="button" className={styles.ask} onClick={() => onAsk(card.term)} data-gtm="nn_term_ask">
                       더 묻기
                     </button>
                   )}
