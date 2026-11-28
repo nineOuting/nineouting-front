@@ -2,13 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { errorMessage } from '../../api/client';
 import { listTrashMeetings, purgeMeeting, restoreMeeting } from '../../api/meeting';
 import { listMyWorkspaces, listTrash, purgeTrashFolder, restoreTrashFolder } from '../../api/workspace';
+import { onSignOut } from '../../auth/tokenStore';
 import emptyCharacter from '../../assets/characters/empty.svg';
 import folderIcon from '../../assets/icons/folder-meta.svg';
 import minutesIcon from '../../assets/icons/minutes-doc.svg';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import EmptyState from '../../components/EmptyState';
 import Icon from '../../components/Icon';
-import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import SettingsLayout from '../settings/SettingsLayout';
 import styles from './TrashPage.module.css';
@@ -17,7 +17,6 @@ const ICON_SIZE = 16;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // 남은 기간이 이 날수 이하면 빨갛게 보인다
 const URGENT_DAYS = 7;
-const LOADING_ROWS = 3;
 
 type Kind = 'folder' | 'minutes' | 'meeting';
 
@@ -45,6 +44,15 @@ function daysLeft(purgeAt: string) {
 function formatDate(dateTime: string) {
   return dateTime.slice(0, 10).replaceAll('-', '.');
 }
+
+/**
+ * 마지막으로 받은 삭제 목록. 탭을 다시 열면 이것부터 바로 보여 주고 뒤에서 새로 받는다
+ * (열 때마다 회색 자리를 그렸다가 실제 목록으로 바뀌며 높이가 달라지지 않게). 로그아웃하면 지운다
+ */
+let cachedItems: TrashItem[] | null = null;
+onSignOut(() => {
+  cachedItems = null;
+});
 
 /** MSG-073 "N개 항목을 복구했어요" (디자인 11 상태 모음 복구 완료) */
 function restoredMessage(items: TrashItem[]) {
@@ -83,7 +91,7 @@ async function loadWorkspace(workspaceId: number, workspaceName: string): Promis
  * 회의, 회의록(meeting-service)을 함께 보여 주고 골라서 복구하거나 영구 삭제한다. 3개월이 지나면 자동으로 영구 삭제된다
  */
 export default function TrashPage() {
-  const [items, setItems] = useState<TrashItem[] | null>(null);
+  const [items, setItems] = useState<TrashItem[] | null>(cachedItems);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPurging, setIsPurging] = useState<TrashItem[] | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -91,7 +99,12 @@ export default function TrashPage() {
   const closeToast = useCallback(() => setToast(null), []);
 
   useEffect(() => {
+    cachedItems = items;
+  }, [items]);
+
+  useEffect(() => {
     let isCurrent = true;
+    const hasCached = cachedItems !== null;
     listMyWorkspaces()
       .then((mine) => Promise.all(mine.map((workspace) => loadWorkspace(workspace.workspaceId, workspace.name))))
       .then((groups) => {
@@ -102,7 +115,10 @@ export default function TrashPage() {
       })
       .catch((error: unknown) => {
         if (isCurrent) {
-          setItems([]);
+          // 기억한 목록이 있으면 그대로 둔다
+          if (!hasCached) {
+            setItems([]);
+          }
           setToast({ text: errorMessage(error), variant: 'error' });
         }
       });
@@ -156,6 +172,21 @@ export default function TrashPage() {
   const selectedItems = items?.filter((item) => selected.has(item.key)) ?? [];
   const isAllSelected = Boolean(items?.length) && selectedItems.length === items?.length;
 
+  // 선택 칸 없는 표 머리 (비었을 때, 처음 불러오는 동안). 디자인 11 상태 모음: 비어 있을 때도 머리글은 보인다
+  const emptyHead = (
+    <thead>
+      <tr>
+        <th scope="col" className={styles.checkCell} aria-hidden="true" />
+        {COLUMNS.map((column) => (
+          <th key={column} scope="col">
+            {column}
+          </th>
+        ))}
+        <th scope="col" aria-hidden="true" />
+      </tr>
+    </thead>
+  );
+
   return (
     <SettingsLayout
       title="삭제 목록"
@@ -163,28 +194,11 @@ export default function TrashPage() {
     >
       {toast && <Toast message={toast} onClose={closeToast} />}
       <div className={styles.card}>
-        {items === null && (
-          <div className={styles.loading}>
-            {Array.from({ length: LOADING_ROWS }, (_, index) => (
-              <Skeleton key={index} height={44} />
-            ))}
-          </div>
-        )}
-        {items?.length === 0 && (
+        {/* 처음 불러오는 동안에도 빈 목록 화면을 그린다. 회색 자리를 그렸다가 빈 목록으로 바뀌는 게 더 어색했다.
+            항목이 오면 그 자리를 채운다 (두 번째로 열 때부터는 기억한 목록을 바로 보여 준다) */}
+        {(items === null || items.length === 0) && (
           <>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th scope="col" className={styles.checkCell} aria-hidden="true" />
-                  {COLUMNS.map((column) => (
-                    <th key={column} scope="col">
-                      {column}
-                    </th>
-                  ))}
-                  <th scope="col" aria-hidden="true" />
-                </tr>
-              </thead>
-            </table>
+            <table className={styles.table}>{emptyHead}</table>
             <EmptyState character={emptyCharacter} title="삭제 목록이 비어 있어요" description="삭제한 항목은 3개월 동안 여기에 보관돼요" />
           </>
         )}

@@ -28,7 +28,10 @@ const favoritePath = (favorite: Favorite) =>
  */
 export default function FavoritesCard({ items, onRemove }: FavoritesCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const shown = isExpanded ? items : items.slice(0, PREVIEW_COUNT);
+  // 3개 이하면 더 펼칠 것이 없다. 펼친 채로 즐겨찾기를 해제해 3개 이하가 되면 [전체보기]로 돌아간다
+  const canExpand = items.length > PREVIEW_COUNT;
+  const isShowingAll = isExpanded && canExpand;
+  const shown = isShowingAll ? items : items.slice(0, PREVIEW_COUNT);
 
   return (
     <section className={card.section} aria-labelledby="favorites-title">
@@ -36,10 +39,15 @@ export default function FavoritesCard({ items, onRemove }: FavoritesCardProps) {
         <h2 id="favorites-title" className={card.title}>
           즐겨찾기
         </h2>
-        {/* 피그마 HomePage_v6: 즐겨찾기가 있으면 [전체보기]를 늘 보여 준다 */}
+        {/* 피그마 HomePage_v6: 즐겨찾기가 있으면 [전체보기]를 늘 보여 준다. 3개 이하면 더 펼칠 것이 없어 비활성 */}
         {items.length > 0 && (
-          <button type="button" className={card.textButton} onClick={() => setIsExpanded((value) => !value)}>
-            {isExpanded ? '접기' : '전체보기'}
+          <button
+            type="button"
+            className={card.textButton}
+            disabled={!canExpand}
+            onClick={() => setIsExpanded(!isShowingAll)}
+          >
+            {isShowingAll ? '접기' : '전체보기'}
           </button>
         )}
       </div>
