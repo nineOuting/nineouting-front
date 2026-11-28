@@ -91,17 +91,6 @@
   background: var(--interactive-hover);
 }
 
-/* 불러오는 동안 회색 줄: 실제 줄과 같은 칸 높이·아래 선 (누를 수 없어 커서·hover 없음) */
-.skeletonRow td {
-  height: 40px;
-  padding: var(--spacing-2) 0;
-  border-bottom: var(--border-width-default) solid var(--border-default);
-}
-
-.skeletonRow td:first-child {
-  padding-left: var(--spacing-4);
-}
-
 .titleButton {
   display: block;
   width: 100%;

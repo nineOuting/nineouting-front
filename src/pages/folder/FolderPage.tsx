@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
@@ -78,8 +78,34 @@ const SKELETON = {
   metaWidth: 360,
   metaHeight: 32,
 };
-// 불러오는 동안 회의 목록 회색 줄 수
-const LOADING_MEETING_ROWS = 5;
+/**
+ * 회의 목록이 비었을 때의 화면. 불러오는 동안에도 회색 줄 대신 이 화면을 먼저 보인다.
+ * 고른 날짜(?day=)가 있으면 그날 회의가 없다는 문구, 없으면 MSG-034 (와이어프레임 ProjectEmptyPage 문구).
+ * 아이콘 대신 넵넵 캐릭터 (QA 2026-11-24, 피그마 2172:138386)
+ */
+function meetingEmpty(selectedDay: string | null, onCreate: () => void): ReactNode {
+  if (selectedDay) {
+    return (
+      <EmptyState
+        character={emptyCharacter}
+        title={`${Number(selectedDay.slice(5, 7))}월 ${Number(selectedDay.slice(8, 10))}일에는 회의가 없어요`}
+        description="다른 날짜를 고르거나 날짜 선택을 풀어 보세요"
+      />
+    );
+  }
+  return (
+    <EmptyState
+      character={emptyCharacter}
+      title="아직 회의가 없어요"
+      description="첫 회의를 만들고 안건을 정리해 보세요"
+      action={
+        <Button variant="primary" size="md" onClick={onCreate}>
+          새 회의 만들기
+        </Button>
+      }
+    />
+  );
+}
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -456,8 +482,7 @@ export default function FolderPage() {
                 page={page}
                 onPageChange={() => undefined}
                 rowMenu={() => []}
-                empty={null}
-                loadingRows={LOADING_MEETING_ROWS}
+                empty={meetingEmpty(selectedDay, () => navigate(`/folders/${folderId}/meetings/new`))}
               />
             </div>
           </div>
@@ -608,27 +633,7 @@ export default function FolderPage() {
               page={page}
               onPageChange={(next) => changeView({ page: next })}
               rowMenu={meetingMenu}
-              empty={
-                selectedDay ? (
-                  <EmptyState
-                    character={emptyCharacter}
-                    title={`${Number(selectedDay.slice(5, 7))}월 ${Number(selectedDay.slice(8, 10))}일에는 회의가 없어요`}
-                    description="다른 날짜를 고르거나 날짜 선택을 풀어 보세요"
-                  />
-                ) : (
-                  // MSG-034 (와이어프레임 ProjectEmptyPage 문구). 아이콘 대신 넵넵 캐릭터 (QA 2026-11-24, 피그마 2172:138386)
-                  <EmptyState
-                    character={emptyCharacter}
-                    title="아직 회의가 없어요"
-                    description="첫 회의를 만들고 안건을 정리해 보세요"
-                    action={
-                      <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
-                        새 회의 만들기
-                      </Button>
-                    }
-                  />
-                )
-              }
+              empty={meetingEmpty(selectedDay, () => navigate(`/folders/${folder.folderId}/meetings/new`))}
             />
           </div>
         </div>

@@ -3,7 +3,6 @@ import chevronIcon from '../../assets/icons/chevron-up-sm.svg';
 import moreIcon from '../../assets/icons/more-vert.svg';
 import AvatarStack from '../../components/AvatarStack';
 import Icon from '../../components/Icon';
-import Skeleton from '../../components/Skeleton';
 import type { FolderMeeting, FolderMeetingStatus } from '../../types/workspace';
 import ActionMenu, { type ActionMenuItem } from '../workspace/ActionMenu';
 import styles from './MeetingTable.module.css';
@@ -70,15 +69,7 @@ interface MeetingTableProps {
   rowMenu: (meeting: FolderMeeting) => ActionMenuItem[];
   /** 회의가 하나도 없을 때 표 대신 보인다 (MSG-034) */
   empty: ReactNode;
-  /** 처음 불러오는 동안: 표 머리는 그대로 그리고, 그 아래 실제 줄과 같은 칸·높이의 회색 줄을 이만큼 */
-  loadingRows?: number;
 }
-
-// 불러오는 동안 칸마다 회색 자리 (글자 줄 20, 상태 배지·얼굴 24, ⋮ 버튼 28 — 줄 높이는 ⋮ 버튼이 정한다)
-const SKELETON_TEXT_HEIGHT = 20;
-const SKELETON_BADGE_HEIGHT = 24;
-const SKELETON_MORE_SIZE = 28;
-const SKELETON_WIDTHS = { title: 200, date: 80, status: 56, writer: 88, attendees: 72 };
 
 /** REQ-048 폴더 안의 회의 목록. 기본은 날짜 최신순, 머리글을 누르면 그 열로 정렬한다. 20건씩 나눠 보여 준다 */
 export default function MeetingTable({
@@ -90,7 +81,6 @@ export default function MeetingTable({
   onPageChange,
   rowMenu,
   empty,
-  loadingRows,
 }: MeetingTableProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
@@ -106,7 +96,7 @@ export default function MeetingTable({
   const currentPage = Math.min(page, pageCount - 1);
   const rows = sorted.slice(currentPage * MEETING_PAGE_SIZE, (currentPage + 1) * MEETING_PAGE_SIZE);
 
-  if (loadingRows === undefined && meetings.length === 0) {
+  if (meetings.length === 0) {
     return <div className={styles.card}>{empty}</div>;
   }
 
@@ -139,30 +129,7 @@ export default function MeetingTable({
           </tr>
         </thead>
         <tbody>
-          {loadingRows !== undefined &&
-            Array.from({ length: loadingRows }, (_, index) => (
-              <tr key={index} className={styles.skeletonRow} aria-hidden="true">
-                <td className={styles.title}>
-                  <Skeleton width={SKELETON_WIDTHS.title} height={SKELETON_TEXT_HEIGHT} />
-                </td>
-                <td className={styles.date}>
-                  <Skeleton width={SKELETON_WIDTHS.date} height={SKELETON_TEXT_HEIGHT} />
-                </td>
-                <td className={styles.status}>
-                  <Skeleton width={SKELETON_WIDTHS.status} height={SKELETON_BADGE_HEIGHT} />
-                </td>
-                <td className={styles.writer}>
-                  <Skeleton width={SKELETON_WIDTHS.writer} height={SKELETON_BADGE_HEIGHT} />
-                </td>
-                <td className={styles.attendees}>
-                  <Skeleton width={SKELETON_WIDTHS.attendees} height={SKELETON_BADGE_HEIGHT} />
-                </td>
-                <td className={styles.more}>
-                  <Skeleton width={SKELETON_MORE_SIZE} height={SKELETON_MORE_SIZE} />
-                </td>
-              </tr>
-            ))}
-          {loadingRows === undefined && rows.map((meeting) => (
+          {rows.map((meeting) => (
             <tr key={meeting.meetingId} className={styles.row} onClick={() => onOpen(meeting)}>
               <td className={styles.title}>
                 {/* 키보드로도 열 수 있게 버튼을 둔다. 누르면 줄의 클릭으로 이어진다 */}
@@ -226,7 +193,7 @@ export default function MeetingTable({
           ))}
         </tbody>
       </table>
-      {loadingRows === undefined && pageCount > 1 && (
+      {pageCount > 1 && (
         // REQ-168 페이지 번호
         <nav className={styles.pager} aria-label="회의 목록 페이지">
           {Array.from({ length: pageCount }, (_, index) => (
