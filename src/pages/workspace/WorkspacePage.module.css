@@ -345,8 +345,23 @@
   color: var(--text-link);
 }
 
-.linkButton:hover {
+.linkButton:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
+}
+
+.linkButton:disabled {
+  cursor: default;
+}
+
+/* 불러오는 동안 글자 사이에 끼우는 회색 자리 (멤버 ▒명) */
+.inlineSkeleton {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 불러오는 동안 [변경]: 쓸 수 없어 비활성이지만 다 불러온 화면(소유자)과 같은 글자색 */
+.pendingButton:disabled {
+  color: var(--text-link);
 }
 
 .summaryDivider {
@@ -363,9 +378,13 @@
   white-space: nowrap;
 }
 
-.roleBadge {
+.roleBadge,
+.roleBadgeSkeleton {
   flex-shrink: 0;
   margin-left: calc(var(--gap-content) * -1 + var(--spacing-2));
+}
+
+.roleBadge {
   padding: var(--spacing-1) var(--spacing-2);
   background: var(--neutral-subtle);
   border-radius: var(--radius-sm);

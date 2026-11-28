@@ -76,8 +76,12 @@ const SKELETON = {
   colorIcon: 32,
   titleWidth: 200,
   titleHeight: 32,
-  metaWidth: 360,
-  metaHeight: 32,
+  // 숫자 한 자리 너비, 글자 줄보다 낮게 (끼운 줄이 높아지지 않게)
+  countWidth: 8,
+  countHeight: 16,
+  textHeight: 20,
+  badgeWidth: 44,
+  badgeHeight: 24,
 };
 /**
  * 회의 목록이 비었을 때의 화면. 불러오는 동안에도 회색 줄 대신 이 화면을 먼저 보인다.
@@ -477,8 +481,18 @@ export default function FolderPage() {
             </div>
           </div>
         </div>
-        <div className={styles.metaLine} aria-hidden="true">
-          <Skeleton width={SKELETON.metaWidth} height={SKELETON.metaHeight} />
+        {/* 요약 줄: 라벨, 구분선은 진짜로, 받아야 아는 값(멤버 수, 회의 수, 내 권한)만 회색. [멤버]는 받기 전에는 비활성 */}
+        <div className={styles.metaLine}>
+          <button type="button" className={styles.linkButton} disabled>
+            멤버 <Skeleton width={SKELETON.countWidth} height={SKELETON.countHeight} className={styles.inlineSkeleton} />명
+          </button>
+          <span className={styles.metaDivider} aria-hidden="true" />
+          <span className={styles.metaText}>
+            회의 <Skeleton width={SKELETON.countWidth} height={SKELETON.countHeight} className={styles.inlineSkeleton} />개
+          </span>
+          <span className={styles.metaDivider} aria-hidden="true" />
+          <span className={styles.metaText}>내 권한</span>
+          <Skeleton width={SKELETON.badgeWidth} height={SKELETON.badgeHeight} />
         </div>
         {/* 안건 결정률, 남은 안건, 예정 시간 초과는 회색 자리 대신 데이터가 없을 때의 화면을 먼저 그리고 받으면 채운다 */}
         <FolderStats stats={[]} pendingAgendas={[]} onDiscardPending={() => undefined} />

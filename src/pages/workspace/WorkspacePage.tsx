@@ -59,17 +59,23 @@ import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import TransferOwnerDialog from './TransferOwnerDialog';
+import templateStyles from './DefaultTemplateCard.module.css';
 import styles from './WorkspacePage.module.css';
 
 /**
- * 불러오는 동안 회색 자리 크기: 다 불러온 화면의 제목(32, 줄은 40), 요약 줄(32).
- * 경로 "워크스페이스", "프로젝트 폴더" 같은 고정 글자는 회색 대신 처음부터 진짜로 그린다
+ * 불러오는 동안 회색 자리 크기: 다 불러온 화면의 제목(32, 줄은 40), 요약 줄의 숫자·양식 이름(글자 줄 20), 권한 배지(24).
+ * 경로 "워크스페이스", "프로젝트 폴더", 요약 줄 라벨 같은 고정 글자는 회색 대신 처음부터 진짜로 그린다
  */
 const SKELETON = {
   titleWidth: 240,
   titleHeight: 32,
-  summaryWidth: 360,
-  summaryHeight: 32,
+  // 숫자 한 자리 너비, 글자 줄보다 낮게 (끼운 줄이 높아지지 않게)
+  countWidth: 8,
+  countHeight: 16,
+  textHeight: 20,
+  badgeWidth: 44,
+  badgeHeight: 24,
+  templateNameWidth: 64,
 };
 
 const ICON_SIZE = 20;
@@ -263,8 +269,23 @@ export default function WorkspacePage() {
             </span>
           </div>
         </div>
-        <div className={styles.summaryBar} aria-hidden="true">
-          <Skeleton width={SKELETON.summaryWidth} height={SKELETON.summaryHeight} />
+        {/* 요약 줄: 라벨, 구분선, 버튼은 진짜로, 받아야 아는 값(멤버 수, 내 권한, 기본 양식 이름)만 회색.
+            버튼은 받기 전에는 쓸 수 없어 비활성이지만 모양은 그대로 */}
+        <div className={styles.summaryBar}>
+          <button type="button" className={styles.linkButton} disabled>
+            멤버 <Skeleton width={SKELETON.countWidth} height={SKELETON.countHeight} className={styles.inlineSkeleton} />명
+          </button>
+          <span className={styles.summaryDivider} aria-hidden="true" />
+          <span className={styles.summaryLabel}>내 권한</span>
+          <Skeleton width={SKELETON.badgeWidth} height={SKELETON.badgeHeight} className={styles.roleBadgeSkeleton} />
+          <span className={styles.summaryDivider} aria-hidden="true" />
+          <span className={templateStyles.inline}>
+            <span className={templateStyles.label}>기본 양식</span>
+            <Skeleton width={SKELETON.templateNameWidth} height={SKELETON.textHeight} />
+            <button type="button" className={`${templateStyles.change} ${styles.pendingButton}`} disabled>
+              변경
+            </button>
+          </span>
         </div>
         {/* 이번 주 회의는 회색 자리 대신 회의가 없을 때의 화면을 먼저 그리고 받으면 채운다 */}
         <WeekMeetings meetings={[]} folders={[]} />
