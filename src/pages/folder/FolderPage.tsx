@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
 import {
@@ -41,6 +41,7 @@ import Icon from '../../components/Icon';
 // 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다): 보기 전용 멤버 목록 팝오버
 // import MemberListPopover from '../../components/MemberListPopover';
 import Skeleton from '../../components/Skeleton';
+import { peekFolder } from '../../components/sidebarCache';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderMeeting, FolderMember, FolderPendingAgenda, WorkspaceMember } from '../../types/workspace';
 import moreIcon from '../../assets/icons/more-vert.svg';
@@ -68,6 +69,48 @@ import styles from './FolderPage.module.css';
 const SEPARATOR_ICON_SIZE = 16;
 const BUTTON_ICON_SIZE = 20;
 const MORE_ICON_SIZE = 24;
+/** 불러오는 동안 회색 자리 크기 (다 불러온 화면: 폴더 이름 줄 20, 색 아이콘 32, 제목 32, 요약 줄 32) */
+const SKELETON = {
+  crumbWidth: 64,
+  lineHeight: 20,
+  colorIcon: 32,
+  titleWidth: 200,
+  titleHeight: 32,
+  // 숫자 한 자리 너비, 글자 줄보다 낮게 (끼운 줄이 높아지지 않게)
+  countWidth: 8,
+  countHeight: 16,
+  textHeight: 20,
+  badgeWidth: 44,
+  badgeHeight: 24,
+};
+/**
+ * 회의 목록이 비었을 때의 화면. 불러오는 동안에도 회색 줄 대신 이 화면을 먼저 보인다.
+ * 고른 날짜(?day=)가 있으면 그날 회의가 없다는 문구, 없으면 MSG-034 (와이어프레임 ProjectEmptyPage 문구).
+ * 아이콘 대신 넵넵 캐릭터 (QA 2026-11-24, 피그마 2172:138386)
+ */
+function meetingEmpty(selectedDay: string | null, onCreate: () => void): ReactNode {
+  if (selectedDay) {
+    return (
+      <EmptyState
+        character={emptyCharacter}
+        title={`${Number(selectedDay.slice(5, 7))}월 ${Number(selectedDay.slice(8, 10))}일에는 회의가 없어요`}
+        description="다른 날짜를 고르거나 날짜 선택을 풀어 보세요"
+      />
+    );
+  }
+  return (
+    <EmptyState
+      character={emptyCharacter}
+      title="아직 회의가 없어요"
+      description="첫 회의를 만들고 안건을 정리해 보세요"
+      action={
+        <Button variant="primary" size="md" onClick={onCreate}>
+          새 회의 만들기
+        </Button>
+      }
+    />
+  );
+}
 
 // REQ-167 정렬 메뉴: 최신순(기본), 오래된순, 회의명순
 const SORT_OPTIONS: { value: string; label: string; sort: MeetingSort }[] = [
@@ -129,7 +172,8 @@ export default function FolderPage() {
   // 워크스페이스 소유자는 모든 폴더에 들어가고, 폴더 삭제와 멤버 초대, 제외를 한다 (2026-11-16 결정)
   const [isWorkspaceOwner, setIsWorkspaceOwner] = useState(false);
   // REQ-205 권한 없는 폴더 링크
-  const [accessNotice, setAccessNotice] = useState<AccessNoticeKind | null>(null);
+  // 폴더를 옮겨도 이 화면은 새로 만들어지지 않아, 어느 폴더의 안내인지 같이 둔다 (다른 폴더로 가면 안내가 남지 않게)
+  const [accessNotice, setAccessNotice] = useState<{ folderId: number; kind: AccessNoticeKind } | null>(null);
   // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
   const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
   // 프로젝트 설정(이름, 색), 폴더 삭제도 프로젝트 소유자와 워크스페이스 소유자 (피그마 11/24 코멘트)
@@ -172,7 +216,7 @@ export default function FolderPage() {
       if (isCurrent) {
         const notice = accessNoticeOf(error);
         if (notice) {
-          setAccessNotice(notice);
+          setAccessNotice({ folderId: id, kind: notice });
         } else {
           showError(error);
         }
@@ -370,25 +414,123 @@ export default function FolderPage() {
     closeDialog();
   };
 
-  // REQ-178 불러오는 동안 회색 자리
   // 공통 틀에 본문 클래스와 이 폴더의 워크스페이스(폴더 정보를 받은 뒤)를 알린다
   useAppShell({ className: styles.page, workspaceId: folder?.workspaceId });
 
-  if (accessNotice) {
+  // 사이드 바가 들어갈 수 없다고 아는 폴더는 레이아웃을 먼저 그리지 않고 바로 안내한다.
+  // 서버 요청은 그대로 보내서, 그새 초대받았다면 받는 대로 폴더 화면으로 바뀐다
+  const isKnownLocked = folder?.folderId !== id && peekFolder(id)?.accessible === false;
+  const noticeKind = accessNotice?.folderId === id ? accessNotice.kind : isKnownLocked ? 'forbidden' : null;
+  if (noticeKind) {
     return (
       <>
-        <AccessNotice kind={accessNotice} />
+        <AccessNotice kind={noticeKind} />
         {/* 새 회의 창 (하위 라우트 meetings/new) */}
         <Outlet />
       </>
     );
   }
+  // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼(경로 "워크스페이스", [새 회의], "회의 목록",
+  // [회의록 아카이브], 달력, 회의 표 머리)은 진짜로, 통계 카드는 데이터 없는 화면으로, 받아야 아는 값(요약 숫자, 그리고 모를 때의 폴더 이름·색)만 회색
   if (!folder) {
+    // 앱 안에서 옮겨 왔으면 사이드 바가 받아 둔 폴더 이름과 색을 바로 그린다. 새로고침·주소로 바로 왔거나
+    // 사이드 바에 펼친 적 없는 워크스페이스의 폴더면 몰라서 회색
+    const known = peekFolder(id);
     return (
       <>
         {toast && <Toast message={toast} onClose={closeToast} />}
-        <Skeleton width={280} height={32} />
-        <Skeleton height={240} />
+        <div className={styles.head} aria-busy="true">
+          <nav className={styles.breadcrumb} aria-label="현재 위치">
+            <span className={styles.crumb}>워크스페이스</span>
+            <Icon src={separatorIcon} size={SEPARATOR_ICON_SIZE} className={styles.separator} />
+            {known ? (
+              <span aria-current="page" className={styles.current}>
+                {known.name}
+              </span>
+            ) : (
+              <Skeleton width={SKELETON.crumbWidth} height={SKELETON.lineHeight} />
+            )}
+          </nav>
+          <div className={styles.titleRow}>
+            <div className={styles.titleGroup}>
+              {known ? (
+                <>
+                  <span
+                    className={styles.colorIcon}
+                    style={{ background: folderSubtleColor(known.color), color: folderIconColor(known.color) }}
+                    aria-hidden="true"
+                  >
+                    <Icon src={folderIcon} size={BUTTON_ICON_SIZE} />
+                  </span>
+                  <h1 className={styles.title}>{known.name}</h1>
+                </>
+              ) : (
+                <>
+                  <Skeleton width={SKELETON.colorIcon} height={SKELETON.colorIcon} />
+                  <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+                </>
+              )}
+            </div>
+            <div className={styles.titleActions}>
+              {/* 폴더 id는 주소에 있어 불러오기 전에도 새 회의를 열 수 있다 */}
+              <button type="button" className={styles.primaryButton} onClick={() => navigate(`/folders/${folderId}/meetings/new`)}>
+                <Icon src={addIcon} size={BUTTON_ICON_SIZE} />새 회의
+              </button>
+              {/* ⋮ 폴더 메뉴는 권한을 받아야 알지만 대부분 보이므로 자리를 비활성으로 그린다.
+                  없으면 [새 회의]가 오른쪽 끝에 붙었다가 받은 뒤 ⋮ 자리만큼 왼쪽으로 돌아온다 */}
+              <span className={styles.menuAnchor}>
+                <button type="button" className={styles.iconButton} aria-label="폴더 메뉴" disabled>
+                  <Icon src={moreIcon} size={MORE_ICON_SIZE} />
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+        {/* 요약 줄: 라벨, 구분선은 진짜로, 받아야 아는 값(멤버 수, 회의 수, 내 권한)만 회색. [멤버]는 받기 전에는 비활성 */}
+        <div className={styles.metaLine}>
+          <button type="button" className={styles.linkButton} disabled>
+            멤버 <Skeleton width={SKELETON.countWidth} height={SKELETON.countHeight} className={styles.inlineSkeleton} />명
+          </button>
+          <span className={styles.metaDivider} aria-hidden="true" />
+          <span className={styles.metaText}>
+            회의 <Skeleton width={SKELETON.countWidth} height={SKELETON.countHeight} className={styles.inlineSkeleton} />개
+          </span>
+          <span className={styles.metaDivider} aria-hidden="true" />
+          <span className={styles.metaText}>내 권한</span>
+          <Skeleton width={SKELETON.badgeWidth} height={SKELETON.badgeHeight} />
+        </div>
+        {/* 안건 결정률, 남은 안건, 예정 시간 초과는 회색 자리 대신 데이터가 없을 때의 화면을 먼저 그리고 받으면 채운다 */}
+        <FolderStats stats={[]} pendingAgendas={[]} onDiscardPending={() => undefined} />
+        {/* key가 다 불러온 화면의 회의 목록 묶음과 같아, 폴더를 받은 뒤에도 달력이 새로 만들어지지 않는다 (점 깜빡임, 중복 요청 없이) */}
+        <section key="meetings" className={styles.meetingSection} aria-labelledby="meetings-title">
+          <div className={styles.sectionHead}>
+            <div className={styles.sectionTitleGroup}>
+              <h2 id="meetings-title" className={styles.sectionTitle}>
+                회의 목록
+              </h2>
+            </div>
+            {/* 워크스페이스를 받기 전이라 아카이브 주소를 몰라 비활성 */}
+            <button type="button" className={styles.textButton} disabled>
+              회의록 아카이브
+            </button>
+          </div>
+          <div className={styles.calendarAndList}>
+            {/* 달력은 폴더 id(주소)로 회의 점을 스스로 받는다. 폴더 색은 아는 대로, 모르면 기본 색 */}
+            <FolderCalendar folderId={id} color={folderColor(known?.color)} selectedDay={selectedDay} onSelectDay={selectDay} />
+            <div className={styles.tableCard}>
+              <MeetingTable
+                meetings={[]}
+                onOpen={() => undefined}
+                sort={sort}
+                onSortChange={(next) => changeView({ sort: next })}
+                page={page}
+                onPageChange={() => undefined}
+                rowMenu={() => []}
+                empty={meetingEmpty(selectedDay, () => navigate(`/folders/${folderId}/meetings/new`))}
+              />
+            </div>
+          </div>
+        </section>
         {/* 새 회의 창 (하위 라우트 meetings/new) */}
         <Outlet />
       </>
@@ -501,7 +643,7 @@ export default function FolderPage() {
 
       <FolderStats stats={stats} pendingAgendas={pendingAgendas} onDiscardPending={(agenda) => void discardPending(agenda)} />
 
-      <section className={styles.meetingSection} aria-labelledby="meetings-title">
+      <section key="meetings" className={styles.meetingSection} aria-labelledby="meetings-title">
         <div className={styles.sectionHead}>
           <div className={styles.sectionTitleGroup}>
             <h2 id="meetings-title" className={styles.sectionTitle}>
@@ -535,27 +677,7 @@ export default function FolderPage() {
               page={page}
               onPageChange={(next) => changeView({ page: next })}
               rowMenu={meetingMenu}
-              empty={
-                selectedDay ? (
-                  <EmptyState
-                    character={emptyCharacter}
-                    title={`${Number(selectedDay.slice(5, 7))}월 ${Number(selectedDay.slice(8, 10))}일에는 회의가 없어요`}
-                    description="다른 날짜를 고르거나 날짜 선택을 풀어 보세요"
-                  />
-                ) : (
-                  // MSG-034 (와이어프레임 ProjectEmptyPage 문구). 아이콘 대신 넵넵 캐릭터 (QA 2026-11-24, 피그마 2172:138386)
-                  <EmptyState
-                    character={emptyCharacter}
-                    title="아직 회의가 없어요"
-                    description="첫 회의를 만들고 안건을 정리해 보세요"
-                    action={
-                      <Button variant="primary" size="md" onClick={() => navigate(`/folders/${folder.folderId}/meetings/new`)}>
-                        새 회의 만들기
-                      </Button>
-                    }
-                  />
-                )
-              }
+              empty={meetingEmpty(selectedDay, () => navigate(`/folders/${folder.folderId}/meetings/new`))}
             />
           </div>
         </div>

@@ -13,7 +13,6 @@ import uploadIcon from '../../assets/icons/upload-file.svg';
 import { useAppShell } from '../../components/useAppShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icon from '../../components/Icon';
-import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { MinutesTemplate } from '../../types/template';
 import TemplatePaper, { PAPER_WIDTH } from '../meeting/TemplatePaper';
@@ -266,13 +265,12 @@ export default function TemplateListPage() {
         </select>
       </div>
 
-      {/* REQ-178 불러오는 동안 회색 자리 (디자인 TemplateListPage_Loading) */}
+      {/* REQ-178 불러오는 동안: 맨 위 묶음 제목 "기본 양식"은 고정 글자라 진짜로 그리고, 카드는 회색 자리 없이 받으면 채운다.
+          (제목 없이 그리면 받은 뒤 카드가 제목 높이만큼 내려간다). "내 양식"은 기본 양식 카드 아래라 받은 뒤에 그린다 */}
       {templates === null && (
-        <div className={styles.grid}>
-          <Skeleton height={266} />
-          <Skeleton height={266} />
-          <Skeleton height={266} />
-        </div>
+        <section className={styles.section} aria-busy="true">
+          <h2 className={styles.sectionTitle}>기본 양식</h2>
+        </section>
       )}
 
       {defaults.length > 0 && (

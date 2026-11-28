@@ -242,8 +242,12 @@
   color: var(--neutral-default);
 }
 
-.iconButton:hover {
+.iconButton:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
+}
+
+.iconButton:disabled {
+  cursor: default;
 }
 
 /* REQ-167 정렬 */
@@ -295,8 +299,18 @@
   color: var(--text-link);
 }
 
-.linkButton:hover {
+.linkButton:hover:not(:disabled) {
   background: var(--neutral-ghost-hover);
+}
+
+.linkButton:disabled {
+  cursor: default;
+}
+
+/* 불러오는 동안 글자 사이에 끼우는 회색 자리 (멤버 ▒명, 회의 ▒개) */
+.inlineSkeleton {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .metaDivider {

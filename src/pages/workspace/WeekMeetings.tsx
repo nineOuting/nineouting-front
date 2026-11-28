@@ -4,7 +4,6 @@ import type { CalendarMeeting } from '../../api/meeting';
 import nextIcon from '../../assets/icons/carousel-next.svg';
 import prevIcon from '../../assets/icons/carousel-prev.svg';
 import Icon from '../../components/Icon';
-import Skeleton from '../../components/Skeleton';
 import type { FolderSummary } from '../../types/workspace';
 import { folderIconColor, folderSubtleColor } from '../../utils/folderColor';
 import { toTime } from '../../utils/calendar';
@@ -14,9 +13,6 @@ import styles from './WeekMeetings.module.css';
 // 피그마 UpcomingSection: 카드 3개씩 보이고 좌우 버튼으로 하나씩 넘긴다 (QA 2026-11-23)
 const VISIBLE_COUNT = 3;
 const ARROW_ICON_SIZE = 24;
-// 디자인 MeetingCard 높이 (불러오는 동안 같은 자리를 잡아 둔다)
-const CARD_HEIGHT = 82;
-const ARROW_SIZE = 32;
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 2026-11-17T09:00 → 화 */
@@ -27,30 +23,6 @@ interface WeekMeetingsProps {
   meetings: CalendarMeeting[];
   /** REQ-202 회의 날짜를 프로젝트 색으로 */
   folders: FolderSummary[];
-}
-
-/** 불러오는 동안 이번 주 회의 자리: 제목 줄과 카드 3개를 실제 크기로 잡아 둔다 */
-export function WeekMeetingsSkeleton() {
-  return (
-    <section className={styles.section} aria-hidden="true">
-      <div className={styles.head}>
-        <Skeleton width={82} height={24} />
-      </div>
-      <div className={styles.carousel}>
-        <Skeleton width={ARROW_SIZE} height={ARROW_SIZE} />
-        <div className={styles.viewport}>
-          <ul className={styles.list}>
-            {Array.from({ length: VISIBLE_COUNT }, (_, index) => (
-              <li key={index}>
-                <Skeleton height={CARD_HEIGHT} />
-              </li>
-            ))}
-          </ul>
-        </div>
-        <Skeleton width={ARROW_SIZE} height={ARROW_SIZE} />
-      </div>
-    </section>
-  );
 }
 
 /** 진행 중인 회의는 회의 화면으로, 끝난 회의는 회의록으로, 나머지는 대기 화면으로 */

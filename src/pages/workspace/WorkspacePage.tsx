@@ -40,6 +40,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import TextField from '../../components/TextField';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
+import { peekWorkspaceName } from '../../components/sidebarCache';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Member } from '../../types/meeting';
 import type { MinutesTemplate } from '../../types/template';
@@ -52,26 +53,29 @@ import CreateWorkspaceModal from './CreateWorkspaceModal';
 import DefaultTemplateCard, { type DefaultTemplateModalMode } from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
 import OnboardingBar from './OnboardingBar';
-import WeekMeetings, { WeekMeetingsSkeleton } from './WeekMeetings';
+import WeekMeetings from './WeekMeetings';
 import WorkspaceFolderCard, { type FolderActivity } from './WorkspaceFolderCard';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import TransferOwnerDialog from './TransferOwnerDialog';
+import templateStyles from './DefaultTemplateCard.module.css';
 import styles from './WorkspacePage.module.css';
 
-/** 불러오는 동안 회색 자리 크기: 다 불러온 화면의 경로(20), 제목(32, 줄은 40), 요약 줄(32), 폴더 제목(28), 폴더 카드(199, 한 줄 4개) */
+/**
+ * 불러오는 동안 회색 자리 크기: 다 불러온 화면의 제목(32, 줄은 40), 요약 줄의 숫자·양식 이름(글자 줄 20), 권한 배지(24).
+ * 경로 "워크스페이스", "프로젝트 폴더", 요약 줄 라벨 같은 고정 글자는 회색 대신 처음부터 진짜로 그린다
+ */
 const SKELETON = {
-  breadcrumbWidth: 120,
-  breadcrumbHeight: 20,
   titleWidth: 240,
   titleHeight: 32,
-  summaryWidth: 360,
-  summaryHeight: 32,
-  sectionTitleWidth: 115,
-  sectionTitleHeight: 28,
-  folderCards: 4,
-  folderCardHeight: 199,
+  // 숫자 한 자리 너비, 글자 줄보다 낮게 (끼운 줄이 높아지지 않게)
+  countWidth: 8,
+  countHeight: 16,
+  textHeight: 20,
+  badgeWidth: 44,
+  badgeHeight: 24,
+  templateNameWidth: 64,
 };
 
 const ICON_SIZE = 20;
@@ -232,35 +236,64 @@ export default function WorkspacePage() {
   // (본문을 다 받은 뒤에 펼치면 아래 메뉴가 밀린다)
   useAppShell({ className: styles.page, workspaceId: id });
 
-  // REQ-178 불러오는 동안 회색 자리. 다 불러온 화면과 같은 칸(머리, 요약 줄, 이번 주 회의, 폴더 카드)을 같은 크기로 잡아
-  // 바뀔 때 레이아웃이 움직이지 않게 한다
+  // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼은 진짜로, 이번 주 회의는 회의 없는 화면으로,
+  // 받아야 아는 값(요약 줄, 그리고 모를 때의 워크스페이스 이름)만 회색. 폴더 카드는 받으면 채운다
   if (!workspace) {
+    // 앱 안에서 옮겨 왔으면 사이드 바가 받아 둔 이름을 바로 그린다. 새로고침·주소로 바로 왔으면 몰라서 회색
+    const knownName = peekWorkspaceName(id);
     return (
       <>
         {toast && <Toast message={toast} onClose={closeToast} />}
-        <div className={styles.head} aria-hidden="true">
+        <div className={styles.head} aria-busy="true">
           <div className={styles.titleBlock}>
-            <Skeleton width={SKELETON.breadcrumbWidth} height={SKELETON.breadcrumbHeight} />
+            <p className={styles.breadcrumb}>워크스페이스</p>
             <div className={styles.titleRow}>
-              <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+              {/* 이름은 모를 때만 회색, 워크스페이스 바꾸기 꺾쇠는 진짜로 */}
+              <h1 className={`${styles.anchor} ${styles.title}`}>
+                <span className={styles.workspaceButton}>
+                  {knownName ?? <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />}
+                  <Icon src={chevronIcon} size={SWITCHER_ICON_SIZE} className={`${styles.mutedIcon} ${styles.flipped}`} />
+                </span>
+              </h1>
             </div>
           </div>
-        </div>
-        <div className={styles.summaryBar} aria-hidden="true">
-          <Skeleton width={SKELETON.summaryWidth} height={SKELETON.summaryHeight} />
-        </div>
-        <WeekMeetingsSkeleton />
-        <section className={styles.folders} aria-hidden="true">
-          <div className={styles.sectionHead}>
-            <Skeleton width={SKELETON.sectionTitleWidth} height={SKELETON.sectionTitleHeight} />
+          {/* 오른쪽 위 [새 폴더]와 ⋮는 고정이라 진짜로 그린다. 워크스페이스를 받기 전에는 쓸 수 없어 비활성 */}
+          <div className={styles.pageActions}>
+            <button type="button" className={styles.newFolder} disabled>
+              <Icon src={addIcon} size={ICON_SIZE} />새 폴더
+            </button>
+            <span className={styles.anchor}>
+              <button type="button" className={styles.iconButton} aria-label="워크스페이스 더보기" disabled>
+                <Icon src={moreIcon} size={ARROW_ICON_SIZE} />
+              </button>
+            </span>
           </div>
-          <ul className={styles.folderGrid}>
-            {Array.from({ length: SKELETON.folderCards }, (_, index) => (
-              <li key={index}>
-                <Skeleton height={SKELETON.folderCardHeight} />
-              </li>
-            ))}
-          </ul>
+        </div>
+        {/* 요약 줄: 라벨, 구분선, 버튼은 진짜로, 받아야 아는 값(멤버 수, 내 권한, 기본 양식 이름)만 회색.
+            버튼은 받기 전에는 쓸 수 없어 비활성이지만 모양은 그대로 */}
+        <div className={styles.summaryBar}>
+          <button type="button" className={styles.linkButton} disabled>
+            멤버 <Skeleton width={SKELETON.countWidth} height={SKELETON.countHeight} className={styles.inlineSkeleton} />명
+          </button>
+          <span className={styles.summaryDivider} aria-hidden="true" />
+          <span className={styles.summaryLabel}>내 권한</span>
+          <Skeleton width={SKELETON.badgeWidth} height={SKELETON.badgeHeight} className={styles.roleBadgeSkeleton} />
+          <span className={styles.summaryDivider} aria-hidden="true" />
+          <span className={templateStyles.inline}>
+            <span className={templateStyles.label}>기본 양식</span>
+            <Skeleton width={SKELETON.templateNameWidth} height={SKELETON.textHeight} />
+            <button type="button" className={`${templateStyles.change} ${styles.pendingButton}`} disabled>
+              변경
+            </button>
+          </span>
+        </div>
+        {/* 이번 주 회의는 회색 자리 대신 회의가 없을 때의 화면을 먼저 그리고 받으면 채운다 */}
+        <WeekMeetings meetings={[]} folders={[]} />
+        {/* 폴더 카드는 회색 자리 없이 제목만 그리고, 받으면 "총 N개"와 카드를 채운다 */}
+        <section className={styles.folders} aria-busy="true">
+          <div className={styles.sectionHead}>
+            <h2 className={styles.sectionTitle}>프로젝트 폴더</h2>
+          </div>
         </section>
       </>
     );
