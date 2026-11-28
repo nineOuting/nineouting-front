@@ -61,7 +61,7 @@ import TransferOwnerDialog from './TransferOwnerDialog';
 import styles from './WorkspacePage.module.css';
 
 /**
- * 불러오는 동안 회색 자리 크기: 다 불러온 화면의 제목(32, 줄은 40), 요약 줄(32), 폴더 카드(199, 한 줄 4개).
+ * 불러오는 동안 회색 자리 크기: 다 불러온 화면의 제목(32, 줄은 40), 요약 줄(32).
  * 경로 "워크스페이스", "프로젝트 폴더" 같은 고정 글자는 회색 대신 처음부터 진짜로 그린다
  */
 const SKELETON = {
@@ -69,8 +69,6 @@ const SKELETON = {
   titleHeight: 32,
   summaryWidth: 360,
   summaryHeight: 32,
-  folderCards: 4,
-  folderCardHeight: 199,
 };
 
 const ICON_SIZE = 20;
@@ -267,17 +265,11 @@ export default function WorkspacePage() {
         </div>
         {/* 이번 주 회의는 회색 자리 대신 회의가 없을 때의 화면을 먼저 그리고 받으면 채운다 */}
         <WeekMeetings meetings={[]} folders={[]} />
+        {/* 폴더 카드는 회색 자리 없이 제목만 그리고, 받으면 "총 N개"와 카드를 채운다 */}
         <section className={styles.folders} aria-busy="true">
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>프로젝트 폴더</h2>
           </div>
-          <ul className={styles.folderGrid}>
-            {Array.from({ length: SKELETON.folderCards }, (_, index) => (
-              <li key={index}>
-                <Skeleton height={SKELETON.folderCardHeight} />
-              </li>
-            ))}
-          </ul>
         </section>
       </>
     );
