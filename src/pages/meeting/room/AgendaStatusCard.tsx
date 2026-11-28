@@ -110,7 +110,7 @@ export default function AgendaStatusCard({
                           { label: '이 안건 전체를 결정으로', icon: createIcon, onSelect: () => onChangeAgendaStatus(agenda.id, 'DECIDED') },
                           { label: '이 안건 전체를 미결로', icon: createIcon, onSelect: () => onChangeAgendaStatus(agenda.id, 'UNDECIDED') },
                           ...(agenda.decisionPoints.some(({ statusEdited }) => statusEdited)
-                            ? [{ label: '이 안건 AI 판정으로 되돌리기', icon: createIcon, onSelect: () => onChangeAgendaStatus(agenda.id, 'AUTO') }]
+                            ? [{ label: '이 안건 AI 판정으로 되돌리기', icon: createIcon, onSelect: () => onChangeAgendaStatus(agenda.id, 'AUTO'), gtm: 'nn_agenda_revert_ai' }]
                             : []),
                           ...(agendas.length > 1
                             ? [{ label: '안건 삭제', icon: deleteIcon, isDanger: true, onSelect: () => onDeleteAgenda(agenda.id) }]

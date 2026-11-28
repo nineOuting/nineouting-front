@@ -141,6 +141,16 @@ export interface AdminAuditPage {
   enabled: boolean;
 }
 
+/** 베타 테스트 개발팀 집계 (D번호 → 이름 → 개수). 개수만 온다 */
+export type AdminMetricGroups = Record<string, Record<string, number>>;
+
+export interface AdminBetaMetrics {
+  query: { from: string; to: string; excludedWorkspaces: number[] };
+  total: AdminMetricGroups;
+  byWorkspace: Record<string, AdminMetricGroups>;
+  unavailable: string[];
+}
+
 /** REQ-217 운영 조치 */
 export type AdminOperation = 'meetingFinish' | 'draftRetry' | 'minutesRagRetry' | 'materialRagRetry';
 
@@ -174,6 +184,13 @@ export const adminApi = {
     call<AdminRow>('PUT', `${tablePath(db, table)}/rows`, { key, values }),
   remove: (db: string, table: string, key: AdminRow) => call<AdminRow>('POST', `${tablePath(db, table)}/rows/delete`, { key }),
   dashboard: () => call<AdminDashboard>('GET', '/dashboard'),
+  betaMetrics: (from: string, to: string, exclude: string) => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    if (exclude.trim()) params.set('exclude', exclude.trim());
+    return call<AdminBetaMetrics>('GET', `/beta-metrics?${params}`);
+  },
   audit: (page: number, size: number, action?: string) => {
     const params = new URLSearchParams({ page: String(page), size: String(size) });
     if (action) params.set('action', action);

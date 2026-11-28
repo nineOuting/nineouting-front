@@ -358,13 +358,13 @@ export default function MinutesCheck({ meeting, myId, onConfirmedChange, onError
                   {isRetrying ? <Spinner size={BUTTON_ICON_SIZE} /> : <Icon src={refreshIcon} size={BUTTON_ICON_SIZE} />}
                   다시 만들기
                 </button>
-                <button type="button" className={styles.secondary} onClick={() => navigate(editorPath)}>
+                <button type="button" className={styles.secondary} onClick={() => navigate(editorPath)} data-gtm="nn_minutes_write_manual">
                   <Icon src={editIcon} size={BUTTON_ICON_SIZE} />
                   직접 작성하기
                 </button>
               </>
             ) : (
-              <button type="button" className={styles.primary} onClick={() => navigate(editorPath)}>
+              <button type="button" className={styles.primary} onClick={() => navigate(editorPath)} data-gtm="nn_minutes_edit">
                 <Icon src={editIcon} size={BUTTON_ICON_SIZE} />
                 회의록 편집하기
               </button>

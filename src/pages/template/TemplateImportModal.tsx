@@ -123,7 +123,7 @@ export default function TemplateImportModal({ onClose, onImported }: TemplateImp
               다른 파일 올리기
             </Button>
           ) : (
-            <Button size="md" disabled={!file} isLoading={step === 'reading'} onClick={() => void runImport()}>
+            <Button size="md" disabled={!file} isLoading={step === 'reading'} onClick={() => void runImport()} data-gtm="nn_template_import">
               {step === 'reading' ? '분석하는 중' : '가져오기'}
             </Button>
           )}

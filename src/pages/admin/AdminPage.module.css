@@ -475,3 +475,17 @@
   white-space: pre-wrap;
   word-break: break-all;
 }
+
+/* ---- 베타 집계 ---- */
+
+.metricGroups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+.metricValue {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
