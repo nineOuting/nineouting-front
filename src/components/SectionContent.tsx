@@ -1,5 +1,5 @@
 import type { ItemSettings } from '../types/template';
-import { CELL_SEPARATOR, PAPER_FONT_SCALE } from '../utils/templateSettings';
+import { CELL_SEPARATOR, PAPER_FONT_SCALE, validColumnWidths } from '../utils/templateSettings';
 import RichTextField from './RichTextField';
 import styles from './SectionContent.module.css';
 
@@ -79,6 +79,8 @@ export default function SectionContent({
 
   if (settings.recordType === 'TABLE') {
     const grid = toGrid(content, settings);
+    // 양식에서 정한 열 너비 (SCRUM-430). 내용 칸 수가 양식 열 수보다 많으면 맞지 않아 내용에 맞춘 너비로 둔다
+    const widths = validColumnWidths(settings.table, grid[0]?.length ?? settings.table.cols);
     const change = (row: number, col: number, value: string) => {
       const next = grid.map((cells) => [...cells]);
       next[row][col] = value.replaceAll(CELL_SEPARATOR, ' ').replaceAll('\n', ' ');
@@ -87,10 +89,17 @@ export default function SectionContent({
     return (
       // 열 너비 자동/수동 설정은 11/27에 뺐다. 예전에 저장한 autoWidth는 쓰지 않고 내용에 맞춰 너비를 정한다
       <table
-        className={[styles.table, styles[`border${settings.table.border}`]].join(' ')}
+        className={[styles.table, styles[`border${settings.table.border}`], widths ? styles.fixed : ''].filter(Boolean).join(' ')}
         style={style}
         aria-label={label}
       >
+        {widths && (
+          <colgroup>
+            {widths.map((width, col) => (
+              <col key={col} style={{ width: `${width}%` }} />
+            ))}
+          </colgroup>
+        )}
         <tbody>
           {grid.map((cells, row) => (
             <tr key={row} style={row === 0 ? { background: settings.table.headerColor } : undefined}>

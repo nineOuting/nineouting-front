@@ -20,6 +20,11 @@ export interface TableSettings {
    * 저장할 때 cols 길이로 맞추고, 모두 비었으면 뺀다
    */
   columnNames?: string[];
+  /**
+   * 열 너비 (자리 순서대로, 표 폭 대비 %, 합 100). 미리보기에서 열 경계를 끌어 정한다 (SCRUM-430).
+   * 없거나 길이가 cols와 다르면 내용에 맞춘 너비. 서버는 그대로 저장하고, PDF·Word 반영은 SCRUM-433
+   */
+  columnWidths?: number[];
 }
 
 export interface ItemSettings {

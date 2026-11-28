@@ -116,6 +116,11 @@
   color: var(--text-secondary);
 }
 
+/* 열 너비를 정한 표: 정한 비율대로 칸을 나눈다 (SCRUM-430) */
+.fixed {
+  table-layout: fixed;
+}
+
 .borderNONE td {
   border-color: transparent;
 }
