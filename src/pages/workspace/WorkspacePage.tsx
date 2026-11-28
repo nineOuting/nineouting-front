@@ -52,7 +52,7 @@ import CreateWorkspaceModal from './CreateWorkspaceModal';
 import DefaultTemplateCard, { type DefaultTemplateModalMode } from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
 import OnboardingBar from './OnboardingBar';
-import WeekMeetings, { WeekMeetingsSkeleton } from './WeekMeetings';
+import WeekMeetings from './WeekMeetings';
 import WorkspaceFolderCard, { type FolderActivity } from './WorkspaceFolderCard';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
@@ -265,7 +265,8 @@ export default function WorkspacePage() {
         <div className={styles.summaryBar} aria-hidden="true">
           <Skeleton width={SKELETON.summaryWidth} height={SKELETON.summaryHeight} />
         </div>
-        <WeekMeetingsSkeleton />
+        {/* 이번 주 회의는 회색 자리 대신 회의가 없을 때의 화면을 먼저 그리고 받으면 채운다 */}
+        <WeekMeetings meetings={[]} folders={[]} />
         <section className={styles.folders} aria-busy="true">
           <div className={styles.sectionHead}>
             <h2 className={styles.sectionTitle}>프로젝트 폴더</h2>
