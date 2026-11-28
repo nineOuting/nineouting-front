@@ -27,6 +27,7 @@ import {
   MAX_ITEM_TITLE_LENGTH,
   MEETING_INFO_PRESET,
   normalizeColumnNames,
+  normalizeColumnWidths,
   PRESET_ITEMS,
   presetItem,
   presetOf,
@@ -208,13 +209,19 @@ export default function TemplateEditorPage() {
 
   const save = async () => {
     // 표 열 이름은 cols 길이로 맞춰 보낸다 (AI 서버가 길이가 다르면 거절한다). 모두 비었으면 뺀다 (SCRUM-419)
+    // 열 너비는 cols 길이에 합 100일 때만 보낸다 (SCRUM-430). 표가 아니면 둘 다 뺀다
     const items = draft.items.map((item) => {
-      const { columnNames: _, ...table } = item.settings.table;
-      const columnNames = item.settings.recordType === 'TABLE' ? normalizeColumnNames(item.settings.table) : undefined;
+      const { columnNames: _, columnWidths: __, ...table } = item.settings.table;
+      const isTable = item.settings.recordType === 'TABLE';
+      const columnNames = isTable ? normalizeColumnNames(item.settings.table) : undefined;
+      const columnWidths = isTable ? normalizeColumnWidths(item.settings.table) : undefined;
       return {
         ...item,
         title: item.title.trim(),
-        settings: { ...item.settings, table: columnNames ? { ...table, columnNames } : table },
+        settings: {
+          ...item.settings,
+          table: { ...table, ...(columnNames && { columnNames }), ...(columnWidths && { columnWidths }) },
+        },
       };
     });
     if (!draft.name.trim()) {
@@ -512,6 +519,17 @@ export default function TemplateEditorPage() {
               setItems(draft.items.map((current, position) => (position === index ? editItemText(current, patch) : current)))
             }
             onRemoveMeetingInfo={() => setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: false } }))}
+            // 끄는 동안 계속 불리므로 직전 상태에서 고친다
+            onChangeColumnWidths={(index, columnWidths) =>
+              setDraft((prev) => ({
+                ...prev,
+                items: prev.items.map((current, position) =>
+                  position === index
+                    ? { ...current, settings: { ...current.settings, table: { ...current.settings.table, columnWidths } } }
+                    : current,
+                ),
+              }))
+            }
             onChangeColumnNames={(index, columnNames) =>
               setItems(
                 draft.items.map((current, position) =>

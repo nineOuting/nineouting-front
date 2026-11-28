@@ -1,5 +1,6 @@
+import { useRef, type PointerEvent } from 'react';
 import type { ItemSettings } from '../types/template';
-import { CELL_SEPARATOR, PAPER_FONT_SCALE } from '../utils/templateSettings';
+import { CELL_SEPARATOR, PAPER_FONT_SCALE, shiftColumnBorder, toHundred, validColumnWidths } from '../utils/templateSettings';
 import RichTextField from './RichTextField';
 import styles from './SectionContent.module.css';
 
@@ -32,7 +33,12 @@ export interface TableHeaderEdit {
   /** 이름이 겹쳐 빨간 밑줄을 보일 열 자리 */
   invalid: Set<number>;
   onChange: (col: number, value: string) => void;
+  /** 있으면 머리 칸 경계를 끌어 열 너비를 바꾼다 (SCRUM-430). undefined를 주면 정한 너비를 지운다 (손잡이 더블클릭) */
+  onResize?: (widths: number[] | undefined) => void;
 }
+
+// 열 너비 손잡이를 키보드 ←/→로 옮길 때 한 번에 움직이는 폭 (%)
+const RESIZE_KEY_STEP = 1;
 
 /** 서식 없이 저장된 글을 서식 칸에 넣을 HTML로 바꾼다 */
 function textToHtml(text: string) {
@@ -76,9 +82,45 @@ export default function SectionContent({
   header,
 }: SectionContentProps) {
   const style = { fontSize: settings.bodySize * PAPER_FONT_SCALE, color: settings.color };
+  const tableRef = useRef<HTMLTableElement>(null);
 
   if (settings.recordType === 'TABLE') {
     const grid = toGrid(content, settings);
+    // 양식에서 정한 열 너비 (SCRUM-430). 내용 칸 수가 양식 열 수보다 많으면 맞지 않아 내용에 맞춘 너비로 둔다
+    const widths = validColumnWidths(settings.table, grid[0]?.length ?? settings.table.cols);
+    /** 지금 보이는 열 너비 (%). 정한 값이 없으면 그려진 머리 칸 너비를 재서 합 100으로 맞춘다 */
+    const currentWidths = () => {
+      if (widths) {
+        return widths;
+      }
+      const cells = [...(tableRef.current?.rows[0]?.cells ?? [])].map((cell) => cell.getBoundingClientRect().width);
+      return toHundred(cells);
+    };
+    // 손잡이를 끄는 동안 마우스를 따라 그 경계 양옆 두 열 너비만 바꾼다. 비율이라 종이 확대율과 상관없다
+    const startResize = (event: PointerEvent<HTMLSpanElement>, col: number) => {
+      const onResize = header?.onResize;
+      const table = tableRef.current;
+      if (event.button !== 0 || !onResize || !table) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      const handle = event.currentTarget;
+      handle.setPointerCapture(event.pointerId);
+      const start = currentWidths();
+      const startX = event.clientX;
+      const tableWidth = table.getBoundingClientRect().width || 1;
+      const move = (moveEvent: globalThis.PointerEvent) =>
+        onResize(shiftColumnBorder(start, col, ((moveEvent.clientX - startX) / tableWidth) * 100));
+      const end = () => {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', end);
+        handle.removeEventListener('pointercancel', end);
+      };
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', end);
+      handle.addEventListener('pointercancel', end);
+    };
     const change = (row: number, col: number, value: string) => {
       const next = grid.map((cells) => [...cells]);
       next[row][col] = value.replaceAll(CELL_SEPARATOR, ' ').replaceAll('\n', ' ');
@@ -87,15 +129,51 @@ export default function SectionContent({
     return (
       // 열 너비 자동/수동 설정은 11/27에 뺐다. 예전에 저장한 autoWidth는 쓰지 않고 내용에 맞춰 너비를 정한다
       <table
-        className={[styles.table, styles[`border${settings.table.border}`]].join(' ')}
+        ref={tableRef}
+        className={[styles.table, styles[`border${settings.table.border}`], widths ? styles.fixed : ''].filter(Boolean).join(' ')}
         style={style}
         aria-label={label}
       >
+        {widths && (
+          <colgroup>
+            {widths.map((width, col) => (
+              <col key={col} style={{ width: `${width}%` }} />
+            ))}
+          </colgroup>
+        )}
         <tbody>
           {grid.map((cells, row) => (
             <tr key={row} style={row === 0 ? { background: settings.table.headerColor } : undefined}>
               {cells.map((cell, col) => (
-                <td key={col} style={{ textAlign: settings.table.align.toLowerCase() as 'left' | 'center' | 'right' }}>
+                <td
+                  key={col}
+                  className={header && row === 0 ? styles.headerCell : undefined}
+                  style={{ textAlign: settings.table.align.toLowerCase() as 'left' | 'center' | 'right' }}
+                >
+                  {header?.onResize && row === 0 && col < cells.length - 1 && (
+                    // 오른쪽 경계 손잡이 (디자인 없음, SCRUM-430): 끌기, ←/→ 1%씩, 더블클릭하면 정한 너비를 지운다
+                    <span
+                      role="separator"
+                      aria-orientation="vertical"
+                      aria-label={`${label} ${col + 1}열과 ${col + 2}열 사이 너비 (끌기, 좌우 화살표, 더블클릭하면 처음대로)`}
+                      aria-valuenow={widths ? Math.round(widths[col]) : undefined}
+                      tabIndex={0}
+                      className={styles.resizeHandle}
+                      onPointerDown={(event) => startResize(event, col)}
+                      onClick={(event) => event.stopPropagation()}
+                      onDoubleClick={(event) => {
+                        event.stopPropagation();
+                        header.onResize?.(undefined);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                          event.preventDefault();
+                          const step = event.key === 'ArrowLeft' ? -RESIZE_KEY_STEP : RESIZE_KEY_STEP;
+                          header.onResize?.(shiftColumnBorder(currentWidths(), col, step));
+                        }
+                      }}
+                    />
+                  )}
                   {header && row === 0 ? (
                     // 비운 열은 AI가 초안을 만들 때 이름을 정한다
                     <input

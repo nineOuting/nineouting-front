@@ -63,6 +63,62 @@ export function normalizeColumnNames(table: TableSettings) {
   return names.some(Boolean) ? names : undefined;
 }
 
+// 열 너비를 끌어 줄일 때 한 열의 최소 너비 (%, SCRUM-430)
+export const MIN_COLUMN_WIDTH = 5;
+
+/** 열 너비를 합 100으로 맞추고 소수 첫째 자리까지 반올림한다. 반올림으로 남거나 모자란 몫은 가장 넓은 열이 맡는다 */
+export function toHundred(widths: number[]) {
+  const sum = widths.reduce((total, width) => total + width, 0);
+  const rounded = widths.map((width) => Math.round((width / sum) * 1000) / 10);
+  const rest = Math.round((100 - rounded.reduce((total, width) => total + width, 0)) * 10) / 10;
+  const widest = rounded.indexOf(Math.max(...rounded));
+  rounded[widest] = Math.round((rounded[widest] + rest) * 10) / 10;
+  return rounded;
+}
+
+/** 쓸 수 있는 열 너비면 그 값, 아니면 undefined (없음, 길이가 cols와 다름, 0 이하 값) */
+export function validColumnWidths(table: TableSettings, cols = table.cols) {
+  const widths = table.columnWidths;
+  if (!Array.isArray(widths) || widths.length !== cols || widths.some((width) => typeof width !== 'number' || !(width > 0))) {
+    return undefined;
+  }
+  return widths;
+}
+
+/** 저장할 열 너비: 쓸 수 있으면 합 100으로 맞춘 값, 아니면 undefined (서버에 보내지 않는다) */
+export function normalizeColumnWidths(table: TableSettings) {
+  const widths = validColumnWidths(table);
+  return widths ? toHundred(widths) : undefined;
+}
+
+/**
+ * 열 수를 바꿀 때 열 너비 (사용자 결정 (B), SCRUM-430). 정해 둔 비율은 유지한다.
+ * 늘리면 새 열에 원래 열들의 평균 몫(100 ÷ 원래 열 수)을 주고, 줄이면 뒤에서부터 뺀 뒤 전체를 합 100으로 다시 맞춘다.
+ * 예: [10, 30, 45, 15] → 5열 [8, 24, 36, 12, 20]
+ */
+export function resizeColumnWidths(table: TableSettings, cols: number) {
+  const widths = validColumnWidths(table);
+  if (!widths || cols < 1) {
+    return undefined;
+  }
+  const average = 100 / widths.length;
+  const next = cols > widths.length ? [...widths, ...Array<number>(cols - widths.length).fill(average)] : widths.slice(0, cols);
+  return toHundred(next);
+}
+
+/**
+ * 열 경계 하나를 옮긴다 (미리보기에서 끌기, SCRUM-430). 경계 양옆 두 열만 바뀌고 두 열의 합은 그대로다.
+ * 한 열은 MIN_COLUMN_WIDTH(%)보다 좁아지지 않는다. delta는 표 폭 대비 %
+ */
+export function shiftColumnBorder(widths: number[], col: number, delta: number) {
+  const pair = widths[col] + widths[col + 1];
+  const left = Math.round(Math.min(Math.max(widths[col] + delta, MIN_COLUMN_WIDTH), pair - MIN_COLUMN_WIDTH) * 10) / 10;
+  const next = [...widths];
+  next[col] = left;
+  next[col + 1] = Math.round((pair - left) * 10) / 10;
+  return next;
+}
+
 type Loose<T> = { [K in keyof T]?: T[K] extends object ? Partial<T[K]> : T[K] };
 
 /** 예전 값 "굵게"(BOLD)는 없어졌다. 서버도 BASIC으로 바꾸지만(minutes-service V20) 바뀌기 전 응답도 기본으로 보여 준다 */

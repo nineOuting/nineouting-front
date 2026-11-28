@@ -116,6 +116,11 @@
   color: var(--text-secondary);
 }
 
+/* 열 너비를 정한 표: 정한 비율대로 칸을 나눈다 (SCRUM-430) */
+.fixed {
+  table-layout: fixed;
+}
+
 .borderNONE td {
   border-color: transparent;
 }
@@ -160,4 +165,42 @@
 
 .cellInput::placeholder {
   color: var(--text-disabled);
+}
+
+/* 양식 미리보기에서 고른 표의 머리 칸: 오른쪽 경계에 열 너비 손잡이 (디자인 없음, SCRUM-430) */
+.headerCell {
+  position: relative;
+}
+
+/* 경계 양쪽 4px까지 잡히게 9px 폭, 가운데 3px 선은 마우스를 올리거나 포커스·끄는 동안만 보인다 */
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  bottom: 0;
+  z-index: 1;
+  width: 9px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 3px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+}
+
+.resizeHandle:hover::after,
+.resizeHandle:active::after,
+.resizeHandle:focus-visible::after {
+  background: var(--border-focus);
+}
+
+.resizeHandle:focus-visible {
+  outline: none;
 }

@@ -16,7 +16,7 @@ import Icon from '../../components/Icon';
 import Spinner from '../../components/Spinner';
 import Switch from '../../components/Switch';
 import type { Align, ItemSettings, RecordType, TableBorder, TemplateItem, TemplateLayout } from '../../types/template';
-import { withColumnNames } from '../../utils/templateSettings';
+import { resizeColumnWidths, withColumnNames } from '../../utils/templateSettings';
 import SectionSelect from './SectionSelect';
 import styles from './TemplateSettingsPanel.module.css';
 
@@ -432,7 +432,8 @@ export default function TemplateSettingsPanel({
                     label="열 수"
                     value={item.settings.table.cols}
                     options={countOptions(MAX_COLS, '열', item.settings.table.cols)}
-                    onChange={(cols) => setTable({ cols })}
+                    // 열 수를 바꿔도 정해 둔 열 너비 비율은 유지한다 (사용자 결정 (B), SCRUM-430)
+                    onChange={(cols) => setTable({ cols, columnWidths: resizeColumnWidths(item.settings.table, cols) })}
                   />
                 </Row>
                 <Row label="셀 정렬">

@@ -21,6 +21,8 @@ interface TemplateSectionBlankProps {
   onChangeDescription?: (description: string) => void;
   /** 있으면 표 머리 행의 열 이름을 그 자리에서 고친다 (양식 편집 미리보기에서 고른 표 섹션만, SCRUM-430) */
   onChangeColumnNames?: (columnNames: string[]) => void;
+  /** 있으면 머리 칸 경계를 끌어 열 너비를 바꾼다. undefined면 정한 너비를 지운다 (SCRUM-430) */
+  onChangeColumnWidths?: (columnWidths: number[] | undefined) => void;
 }
 
 /**
@@ -33,6 +35,7 @@ export default function TemplateSectionBlank({
   emptyDescription,
   onChangeDescription,
   onChangeColumnNames,
+  onChangeColumnWidths,
 }: TemplateSectionBlankProps) {
   const { settings } = item;
   const description = item.description.trim();
@@ -86,6 +89,7 @@ export default function TemplateSectionBlank({
               invalid: duplicateColumns(settings.table),
               onChange: (col, value) =>
                 onChangeColumnNames(columnValues.map((name, position) => (position === col ? cleanColumnName(value) : name))),
+              onResize: onChangeColumnWidths,
             }
           }
         />

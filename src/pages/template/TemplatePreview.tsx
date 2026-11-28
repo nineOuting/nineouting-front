@@ -61,6 +61,8 @@ interface TemplatePreviewProps {
   onRemoveMeetingInfo: () => void;
   /** 고른 표 섹션의 열 이름을 고칠 때. 서식이라 기본 항목은 그대로다 */
   onChangeColumnNames: (index: number, columnNames: string[]) => void;
+  /** 고른 표 섹션의 열 너비를 끌어 바꿀 때. undefined면 정한 너비를 지운다 (SCRUM-430) */
+  onChangeColumnWidths: (index: number, columnWidths: number[] | undefined) => void;
   /** 회의 기본 정보를 골랐는지 (왼쪽 패널과 같이 쓴다). 고른 동안 섹션 선택 표시는 감춘다 */
   isInfoSelected: boolean;
   onSelectInfo: () => void;
@@ -105,6 +107,7 @@ export default function TemplatePreview({
   onChangeItem,
   onRemoveMeetingInfo,
   onChangeColumnNames,
+  onChangeColumnWidths,
   isInfoSelected,
   onSelectInfo,
 }: TemplatePreviewProps) {
@@ -395,6 +398,7 @@ export default function TemplatePreview({
               emptyDescription={EMPTY_DESCRIPTION}
               onChangeDescription={isSelected ? (description) => onChangeItem(index, { description }) : undefined}
               onChangeColumnNames={isSelected ? (columnNames) => onChangeColumnNames(index, columnNames) : undefined}
+              onChangeColumnWidths={isSelected ? (columnWidths) => onChangeColumnWidths(index, columnWidths) : undefined}
             />
           </div>
         </div>
