@@ -219,7 +219,7 @@
 }
 
 .cardMenu {
-  top: calc(100% + 4px);
+  top: calc(100% + var(--spacing-2)); /* 더보기 메뉴 공통 간격 (ActionMenu) */
   left: 0;
   z-index: 20;
   width: 200px;
