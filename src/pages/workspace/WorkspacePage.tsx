@@ -40,6 +40,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import TextField from '../../components/TextField';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
+import { peekWorkspaceName } from '../../components/sidebarCache';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Member } from '../../types/meeting';
 import type { MinutesTemplate } from '../../types/template';
@@ -229,9 +230,11 @@ export default function WorkspacePage() {
   // (본문을 다 받은 뒤에 펼치면 아래 메뉴가 밀린다)
   useAppShell({ className: styles.page, workspaceId: id });
 
-  // REQ-178 불러오는 동안 회색 자리. 다 불러온 화면과 같은 칸(머리, 요약 줄, 이번 주 회의, 폴더 카드)을 같은 크기로 잡아
-  // 바뀔 때 레이아웃이 움직이지 않게 한다
+  // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼은 진짜로, 이번 주 회의는 회의 없는 화면으로,
+  // 받아야 아는 값(요약 줄, 그리고 모를 때의 워크스페이스 이름)만 회색. 폴더 카드는 받으면 채운다
   if (!workspace) {
+    // 앱 안에서 옮겨 왔으면 사이드 바가 받아 둔 이름을 바로 그린다. 새로고침·주소로 바로 왔으면 몰라서 회색
+    const knownName = peekWorkspaceName(id);
     return (
       <>
         {toast && <Toast message={toast} onClose={closeToast} />}
@@ -239,10 +242,10 @@ export default function WorkspacePage() {
           <div className={styles.titleBlock}>
             <p className={styles.breadcrumb}>워크스페이스</p>
             <div className={styles.titleRow}>
-              {/* 이름만 회색, 워크스페이스 바꾸기 꺾쇠는 진짜로 */}
+              {/* 이름은 모를 때만 회색, 워크스페이스 바꾸기 꺾쇠는 진짜로 */}
               <h1 className={`${styles.anchor} ${styles.title}`}>
                 <span className={styles.workspaceButton}>
-                  <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+                  {knownName ?? <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />}
                   <Icon src={chevronIcon} size={SWITCHER_ICON_SIZE} className={`${styles.mutedIcon} ${styles.flipped}`} />
                 </span>
               </h1>

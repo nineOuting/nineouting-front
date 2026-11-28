@@ -14,11 +14,12 @@ import templateIcon from '../assets/icons/nav-template.svg';
 import workspaceIcon from '../assets/icons/nav-workspace.svg';
 import { useSettingsModal } from '../pages/settings/useSettingsModal';
 import CreateWorkspaceModal from '../pages/workspace/CreateWorkspaceModal';
-import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
+import type { WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
 import { folderIconColor } from '../utils/folderColor';
 import styles from './Sidebar.module.css';
 import Skeleton from './Skeleton';
+import { sidebarCache, type SidebarFolderItem } from './sidebarCache';
 
 const MENU_ICON_SIZE = 20;
 // 피그마 Sidebar ExpandButton: 28px 버튼 안 20px 화살표
@@ -32,18 +33,7 @@ interface SidebarProps {
   onCollapse: () => void;
 }
 
-type FolderItem = Pick<FolderSummary, 'folderId' | 'name' | 'color'>;
-
-/**
- * 화면마다 AppLayout을 새로 그려서 사이드바도 화면을 옮길 때마다 새로 만들어진다. 그때 빈 목록 → 접힌 목록 → 펼친 목록으로
- * 세 번 바뀌며 번쩍이지 않게, 받은 워크스페이스·폴더 목록과 펼친 상태를 앱이 켜져 있는 동안 기억한다.
- * 새로 그릴 때는 기억한 것으로 바로 그리고, 서버에서는 뒤에서 다시 받아 바뀐 것만 반영한다. 로그아웃하면 지운다 (SCRUM-410)
- */
-const sidebarCache: { workspaces: WorkspaceSummary[] | null; folders: Record<number, FolderItem[]>; expandedIds: number[] } = {
-  workspaces: null,
-  folders: {},
-  expandedIds: [],
-};
+type FolderItem = SidebarFolderItem;
 
 /**
  * 처음 펼칠 때 폴더를 받는 동안 그 자리에 회색 줄을 그린다. 다 받으면 아래 메뉴가 밀리지 않게 줄 수를 지난번 폴더 수로 맞춘다.
@@ -92,10 +82,8 @@ function rememberWorkspaceCount(count: number) {
   }
 }
 
+// 기억한 목록(sidebarCache)은 그 파일에서 지운다. 여기서는 숫자만 저장한 localStorage를 지운다
 onSignOut(() => {
-  sidebarCache.workspaces = null;
-  sidebarCache.folders = {};
-  sidebarCache.expandedIds = [];
   localStorage.removeItem(FOLDER_COUNT_KEY);
   localStorage.removeItem(WORKSPACE_COUNT_KEY);
 });

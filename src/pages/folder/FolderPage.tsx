@@ -41,6 +41,7 @@ import Icon from '../../components/Icon';
 // 레거시 (2026-11-25, 피그마 11/24: [멤버 N명]은 멤버 관리 창을 연다): 보기 전용 멤버 목록 팝오버
 // import MemberListPopover from '../../components/MemberListPopover';
 import Skeleton from '../../components/Skeleton';
+import { peekFolder } from '../../components/sidebarCache';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { FolderMeeting, FolderMember, FolderPendingAgenda, WorkspaceMember } from '../../types/workspace';
 import moreIcon from '../../assets/icons/more-vert.svg';
@@ -421,8 +422,11 @@ export default function FolderPage() {
     );
   }
   // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼(경로 "워크스페이스", [새 회의], "회의 목록",
-  // [회의록 아카이브], 달력, 회의 표 머리)은 진짜로, 통계 카드는 데이터 없는 화면으로, 받아야 아는 값(폴더 이름, 요약 숫자, 회의 줄)만 회색
+  // [회의록 아카이브], 달력, 회의 표 머리)은 진짜로, 통계 카드는 데이터 없는 화면으로, 받아야 아는 값(요약 숫자, 그리고 모를 때의 폴더 이름·색)만 회색
   if (!folder) {
+    // 앱 안에서 옮겨 왔으면 사이드 바가 받아 둔 폴더 이름과 색을 바로 그린다. 새로고침·주소로 바로 왔거나
+    // 사이드 바에 펼친 적 없는 워크스페이스의 폴더면 몰라서 회색
+    const known = peekFolder(id);
     return (
       <>
         {toast && <Toast message={toast} onClose={closeToast} />}
@@ -430,12 +434,33 @@ export default function FolderPage() {
           <nav className={styles.breadcrumb} aria-label="현재 위치">
             <span className={styles.crumb}>워크스페이스</span>
             <Icon src={separatorIcon} size={SEPARATOR_ICON_SIZE} className={styles.separator} />
-            <Skeleton width={SKELETON.crumbWidth} height={SKELETON.lineHeight} />
+            {known ? (
+              <span aria-current="page" className={styles.current}>
+                {known.name}
+              </span>
+            ) : (
+              <Skeleton width={SKELETON.crumbWidth} height={SKELETON.lineHeight} />
+            )}
           </nav>
           <div className={styles.titleRow}>
             <div className={styles.titleGroup}>
-              <Skeleton width={SKELETON.colorIcon} height={SKELETON.colorIcon} />
-              <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+              {known ? (
+                <>
+                  <span
+                    className={styles.colorIcon}
+                    style={{ background: folderSubtleColor(known.color), color: folderIconColor(known.color) }}
+                    aria-hidden="true"
+                  >
+                    <Icon src={folderIcon} size={BUTTON_ICON_SIZE} />
+                  </span>
+                  <h1 className={styles.title}>{known.name}</h1>
+                </>
+              ) : (
+                <>
+                  <Skeleton width={SKELETON.colorIcon} height={SKELETON.colorIcon} />
+                  <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+                </>
+              )}
             </div>
             <div className={styles.titleActions}>
               {/* 폴더 id는 주소에 있어 불러오기 전에도 새 회의를 열 수 있다 */}
@@ -471,8 +496,8 @@ export default function FolderPage() {
             </button>
           </div>
           <div className={styles.calendarAndList}>
-            {/* 달력은 폴더 id(주소)로 회의 점을 스스로 받는다. 폴더 색을 받기 전에는 기본 색 */}
-            <FolderCalendar folderId={id} color={folderColor(undefined)} selectedDay={selectedDay} onSelectDay={selectDay} />
+            {/* 달력은 폴더 id(주소)로 회의 점을 스스로 받는다. 폴더 색은 아는 대로, 모르면 기본 색 */}
+            <FolderCalendar folderId={id} color={folderColor(known?.color)} selectedDay={selectedDay} onSelectDay={selectDay} />
             <div className={styles.tableCard}>
               <MeetingTable
                 meetings={[]}
