@@ -75,11 +75,29 @@ function loadingFolderRows(workspaceId: number) {
   return typeof count === 'number' && count >= 0 ? count : DEFAULT_FOLDER_ROWS;
 }
 
+/** 새로고침 직후 워크스페이스 목록을 받는 동안의 회색 줄 수 (지난번 개수, 처음이면 1줄) */
+const WORKSPACE_COUNT_KEY = 'nineouting:sidebar-workspace-count';
+const WORKSPACE_ROW_HEIGHT = 40;
+
+function loadingWorkspaceRows() {
+  const count = Number(localStorage.getItem(WORKSPACE_COUNT_KEY));
+  return Number.isInteger(count) && count > 0 ? count : 1;
+}
+
+function rememberWorkspaceCount(count: number) {
+  try {
+    localStorage.setItem(WORKSPACE_COUNT_KEY, String(count));
+  } catch {
+    // 저장할 수 없으면 다음에도 1줄로 그린다
+  }
+}
+
 onSignOut(() => {
   sidebarCache.workspaces = null;
   sidebarCache.folders = {};
   sidebarCache.expandedIds = [];
   localStorage.removeItem(FOLDER_COUNT_KEY);
+  localStorage.removeItem(WORKSPACE_COUNT_KEY);
 });
 
 const menuClass = ({ isActive }: { isActive: boolean }) => [styles.item, isActive ? styles.selected : ''].join(' ');
@@ -110,6 +128,8 @@ function MenuLink({ to, icon, children }: { to: string | undefined; icon: string
 export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
   const settings = useSettingsModal();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>(() => sidebarCache.workspaces ?? []);
+  // 새로고침 직후 처음 받기 전에는 워크스페이스 자리에 회색 줄 (다 받으면 아래 메뉴가 밀리지 않게)
+  const [isWorkspacesLoaded, setIsWorkspacesLoaded] = useState(() => sidebarCache.workspaces !== null);
   const [expandedIds, setExpandedIds] = useState<number[]>(() =>
     workspaceId && !sidebarCache.expandedIds.includes(workspaceId) ? [...sidebarCache.expandedIds, workspaceId] : sidebarCache.expandedIds,
   );
@@ -133,8 +153,10 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
     listMyWorkspaces()
       .then((items) => {
         sidebarCache.workspaces = items;
+        rememberWorkspaceCount(items.length);
         if (isCurrent) {
           setWorkspaces(items);
+          setIsWorkspacesLoaded(true);
         }
       })
       .catch(() => undefined);
@@ -190,6 +212,10 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
           <MenuLink to="/home" icon={homeIcon}>
             홈
           </MenuLink>
+          {!isWorkspacesLoaded &&
+            Array.from({ length: loadingWorkspaceRows() }, (_, index) => (
+              <Skeleton key={index} height={WORKSPACE_ROW_HEIGHT} />
+            ))}
           {workspaces.map((workspace) => {
             const isExpanded = expandedIds.includes(workspace.workspaceId);
             return (
