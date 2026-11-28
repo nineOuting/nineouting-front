@@ -38,6 +38,7 @@ import failCharacter from '../../assets/characters/fail.svg';
 import unknownCharacter from '../../assets/characters/unknown.svg';
 import EmptyState from '../../components/EmptyState';
 import Skeleton from '../../components/Skeleton';
+import { peekWorkspaceName } from '../../components/sidebarCache';
 import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
 import Popover from '../../components/Popover';
 import Toast, { type ToastMessage } from '../../components/Toast';
@@ -96,10 +97,15 @@ function filtersOf(params: URLSearchParams): Filters {
 
 type FolderTab = Omit<FolderSummary, 'meetingCount'> & { minutesCount: number };
 
-/** 불러오는 동안 회색 자리: 폴더 탭 3개, 제목(워크스페이스 이름) 줄 높이 32 */
-const SKELETON_TABS = 3;
+/**
+ * 불러오는 동안 회색 자리: "전체" 탭은 진짜로(회의록 수만 회색), 그 뒤 폴더 탭 2개, 제목(워크스페이스 이름) 줄 높이 32.
+ * 폴더 탭은 들어갈 수 있는 폴더만 나와서 사이드 바가 아는 폴더 목록과 다를 수 있어 회색으로 둔다
+ */
+const SKELETON_FOLDER_TABS = 2;
 const SKELETON_TAB_WIDTH = 72;
 const SKELETON_TAB_HEIGHT = 20;
+const SKELETON_COUNT_WIDTH = 24;
+const SKELETON_COUNT_HEIGHT = 16;
 const SKELETON_TITLE_WIDTH = 200;
 const SKELETON_TITLE_HEIGHT = 32;
 
@@ -431,8 +437,9 @@ export default function ArchivePage() {
             aria-expanded={isSwitcherOpen}
             onClick={() => setIsSwitcherOpen((open) => !open)}
           >
-            {/* 이름을 받기 전에도 같은 높이를 잡아 둔다 (아이콘만 있으면 제목 줄이 낮아져 아래가 밀린다) */}
-            {workspace ? workspace.name : <Skeleton width={SKELETON_TITLE_WIDTH} height={SKELETON_TITLE_HEIGHT} />}
+            {/* 앱 안에서 옮겨 왔으면 사이드 바가 받아 둔 이름을 바로 그린다. 새로고침·주소로 바로 왔으면 몰라서 회색
+                (회색도 제목과 같은 높이라 아이콘만 남아 줄이 낮아지지 않는다) */}
+            {workspace?.name ?? peekWorkspaceName(id) ?? <Skeleton width={SKELETON_TITLE_WIDTH} height={SKELETON_TITLE_HEIGHT} />}
             <Icon src={chevronIcon} size={SEARCH_ICON_SIZE} className={isSwitcherOpen ? styles.mutedIcon : `${styles.mutedIcon} ${styles.flipped}`} />
           </button>
           {isSwitcherOpen && (
@@ -459,12 +466,25 @@ export default function ArchivePage() {
       <section className={styles.card} aria-label="회의록 목록">
         {/* 폴더 탭: 전체와 내가 들어갈 수 있는 폴더, 회의록 수 */}
         <div className={styles.tabs} role="tablist" aria-label="폴더">
-          {!loadedTabs &&
-            Array.from({ length: SKELETON_TABS }, (_, index) => (
-              <span key={index} className={styles.tab} aria-hidden="true">
-                <Skeleton width={SKELETON_TAB_WIDTH} height={SKELETON_TAB_HEIGHT} />
-              </span>
-            ))}
+          {!loadedTabs && (
+            <>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={folderId === undefined}
+                className={[styles.tab, folderId === undefined ? styles.tabSelected : ''].filter(Boolean).join(' ')}
+                onClick={() => updateParams({ folderId: null })}
+              >
+                전체
+                <Skeleton width={SKELETON_COUNT_WIDTH} height={SKELETON_COUNT_HEIGHT} />
+              </button>
+              {Array.from({ length: SKELETON_FOLDER_TABS }, (_, index) => (
+                <span key={index} className={styles.tab} aria-hidden="true">
+                  <Skeleton width={SKELETON_TAB_WIDTH} height={SKELETON_TAB_HEIGHT} />
+                </span>
+              ))}
+            </>
+          )}
           {loadedTabs && tabs.map((tab) => {
             const isSelected = (tab.id ?? undefined) === folderId;
             return (
