@@ -1,4 +1,4 @@
-import { getAccessToken } from '../auth/tokenStore';
+import { getAccessToken, onSignOut } from '../auth/tokenStore';
 import type { Member } from '../types/meeting';
 import { request } from './client';
 
@@ -15,23 +15,33 @@ interface MyProfileResponse {
 export type Me = Member & { email: string };
 
 let cached: { token: string | null; me: Promise<Me> } | null = null;
+/** 마지막으로 받은 내 정보. 화면을 옮겨 상단 바를 새로 그릴 때 첫 그리기부터 쓴다 (기다리면 프로필이 뒤늦게 나타나 옆이 밀린다) */
+let lastMe: Me | undefined;
+
+onSignOut(() => {
+  cached = null;
+  lastMe = undefined;
+});
 
 /** 로그인한 사용자. 회의록 작성자인지 등을 가릴 때 쓰고, 같은 로그인 동안은 한 번만 부른다 */
 export function getMe() {
   const token = getAccessToken();
   if (!cached || cached.token !== token) {
-    const me = request<MyProfileResponse>('GET', '/api/users/me').then(({ userId, email, name, profileImageUrl }) => ({
-      userId,
-      email,
-      name,
-      profileImageUrl: profileImageUrl ?? undefined,
-    }));
+    const me = request<MyProfileResponse>('GET', '/api/users/me').then(({ userId, email, name, profileImageUrl }) => {
+      lastMe = { userId, email, name, profileImageUrl: profileImageUrl ?? undefined };
+      return lastMe;
+    });
     me.catch(() => {
       cached = null;
     });
     cached = { token, me };
   }
   return cached.me;
+}
+
+/** 이미 받은 내 정보 (아직 없으면 undefined). 새로 받지 않는다 */
+export function peekMe() {
+  return lastMe;
 }
 
 // user-service가 받는 사진 형식

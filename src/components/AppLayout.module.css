@@ -111,6 +111,11 @@
   object-fit: cover;
 }
 
+/* 내 정보를 받는 동안 사진 자리 (회색 자리 기본 모서리보다 앞서게) */
+.profile .avatarPlaceholder {
+  border-radius: var(--radius-full);
+}
+
 /* 프로필 메뉴 머리의 사진 (디자인 UserActions 40px) */
 .menuAvatar {
   width: var(--profile-lg);

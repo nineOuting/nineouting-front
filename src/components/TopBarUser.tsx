@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { getUnreadCount } from '../api/notification';
-import { getMe, ME_CHANGED_EVENT, type Me } from '../api/user';
+import { getMe, ME_CHANGED_EVENT, peekMe, type Me } from '../api/user';
 import logoutIcon from '../assets/icons/logout.svg';
 import displayIcon from '../assets/icons/display.svg';
 import notificationsIcon from '../assets/icons/notifications.svg';
@@ -12,17 +12,25 @@ import Avatar from './Avatar';
 import Icon from './Icon';
 import menu from './Menu.module.css';
 import NotificationPanel from './NotificationPanel';
+import Skeleton from './Skeleton';
 import styles from './AppLayout.module.css';
 
 const TOP_ICON_SIZE = 24;
 const MENU_ICON_SIZE = 20;
 const BADGE_MAX = 99;
+// 내 정보를 처음 받는 동안 이름 자리 (디자인 이름 칸 폭 정도)
+const NAME_PLACEHOLDER_WIDTH = 48;
+const NAME_PLACEHOLDER_HEIGHT = 20;
+
+/** 마지막으로 받은 안 읽은 알림 수. 화면을 옮겨 새로 그릴 때 배지가 사라졌다 다시 나타나지 않게 */
+let lastUnread = 0;
 
 /** 상단 바 오른쪽 알림과 프로필 메뉴 (디자인 UserActions). 앱 화면과 회의록, 양식 편집 화면이 함께 쓴다 */
 export default function TopBarUser() {
   const navigate = useNavigate();
-  const [me, setMe] = useState<Me>();
-  const [unread, setUnread] = useState(0);
+  // 이미 받은 내 정보로 바로 그린다 (기다리면 프로필이 뒤늦게 나타나 알림 아이콘이 옆으로 밀린다)
+  const [me, setMe] = useState<Me | undefined>(peekMe);
+  const [unread, setUnread] = useState(lastUnread);
   const [openPanel, setOpenPanel] = useState<'notifications' | 'profile' | null>(null);
   const bellRef = useRef<HTMLButtonElement>(null);
   const profileRef = useRef<HTMLButtonElement>(null);
@@ -41,7 +49,12 @@ export default function TopBarUser() {
       .then((loaded) => isCurrent && setMe(loaded))
       .catch(() => undefined);
     getUnreadCount()
-      .then((count) => isCurrent && setUnread(count))
+      .then((count) => {
+        lastUnread = count;
+        if (isCurrent) {
+          setUnread(count);
+        }
+      })
       .catch(() => undefined);
     // 설정 창에서 사진, 이름을 바꾸면 화면을 옮기지 않아도 바로 반영 (기본 프로필 고르기 포함)
     const reloadMe = () => {
@@ -107,9 +120,19 @@ export default function TopBarUser() {
           {unread > 0 && <span className={styles.badge}>{Math.min(unread, BADGE_MAX)}</span>}
         </button>
         {openPanel === 'notifications' && (
-          <NotificationPanel anchorRef={bellRef} onUnreadChange={setUnread} onClose={closePanel} />
+          <NotificationPanel anchorRef={bellRef} onUnreadChange={(count) => {
+              lastUnread = count;
+              setUnread(count);
+            }} onClose={closePanel} />
         )}
       </span>
+      {/* 처음 받는 동안에는 프로필 버튼과 같은 크기의 자리를 잡아 둔다 */}
+      {!me && (
+        <span className={styles.profile} aria-hidden="true">
+          <Skeleton width="var(--profile-md)" height="var(--profile-md)" className={styles.avatarPlaceholder} />
+          <Skeleton width={NAME_PLACEHOLDER_WIDTH} height={NAME_PLACEHOLDER_HEIGHT} />
+        </span>
+      )}
       {me && (
         <span className={styles.anchor}>
           <button
