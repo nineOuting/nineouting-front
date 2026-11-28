@@ -34,10 +34,9 @@ interface ArchiveTableProps {
   loadingRows?: number;
 }
 
-// 불러오는 동안 칸마다 회색 자리 (글자 줄 높이 20, 작업 칸은 ⋮ 버튼 28)
+// 불러오는 동안 칸마다 회색 자리 (글자 줄 높이 20). 장소·작업 칸은 비워 둔다
 const SKELETON_TEXT_HEIGHT = 20;
-const SKELETON_ACTION_SIZE = 28;
-const SKELETON_WIDTHS = { title: 240, folder: 96, date: 96, people: 40, location: 72 };
+const SKELETON_WIDTHS = { title: 240, folder: 96, date: 96, people: 40 };
 
 /** REQ-053 아카이브 목록 (디자인 Page 9 ArchivePage): 회의명, 폴더, 일시, 참석자, 장소, 작업. 줄을 누르면 회의록을 연다 */
 export default function ArchiveTable({ items, folderColors, onOpen, onDownload, rowMenu, empty, loadingRows }: ArchiveTableProps) {
@@ -82,12 +81,9 @@ export default function ArchiveTable({ items, folderColors, onOpen, onDownload, 
             <span className={styles.people}>
               <Skeleton width={SKELETON_WIDTHS.people} height={SKELETON_TEXT_HEIGHT} />
             </span>
-            <span className={styles.location}>
-              <Skeleton width={SKELETON_WIDTHS.location} height={SKELETON_TEXT_HEIGHT} />
-            </span>
-            <span className={styles.action}>
-              <Skeleton width={SKELETON_ACTION_SIZE} height={SKELETON_ACTION_SIZE} />
-            </span>
+            {/* 장소는 없는 회의록도 많고, 작업 버튼은 마우스를 올려야 보여서 회색 자리 없이 빈 칸 */}
+            <span className={styles.location} />
+            <span className={styles.action} />
           </div>
         ))}
       {loadingRows === undefined && items.length === 0 && empty}
