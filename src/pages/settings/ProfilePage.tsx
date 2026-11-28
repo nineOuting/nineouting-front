@@ -6,6 +6,7 @@ import {
   DEFAULT_AVATARS,
   deleteMyProfileImage,
   getMyProfile,
+  peekMe,
   PROFILE_IMAGE_MAX_BYTES,
   PROFILE_IMAGE_TYPES,
   profileImageSrc,
@@ -15,6 +16,7 @@ import {
   type MyProfile,
 } from '../../api/user';
 import Button from '../../components/Button';
+import Skeleton from '../../components/Skeleton';
 import Spinner from '../../components/Spinner';
 import TextField from '../../components/TextField';
 import Toast, { type ToastMessage } from '../../components/Toast';
@@ -27,6 +29,8 @@ import SettingsLayout from './SettingsLayout';
 import styles from './ProfilePage.module.css';
 
 const AVATAR_SIZE = 64;
+// 비밀번호 마지막 변경 날짜를 받는 동안의 회색 자리 폭 ("마지막 변경 2026.11.28" 정도)
+const PASSWORD_CAPTION_SKELETON_WIDTH = 120;
 /** MSG-126 JPG·PNG가 아니거나 5MB를 넘거나 올리기에 실패하면 */
 const PHOTO_FAILED_MESSAGE = '사진을 올리지 못했어요. JPG·PNG 파일을 5MB까지 올릴 수 있어요.';
 
@@ -48,12 +52,18 @@ function formatDate(dateTime: string) {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const photoButtonsRef = useRef<HTMLDivElement>(null);
-  const [profile, setProfile] = useState<MyProfile>();
+  // 상단 바가 이미 받아 둔 내 정보(이름, 사진, 이메일)로 바로 그린다. 받기 전에 비어 있다가 카드가 한꺼번에 나타나지 않게.
+  // 비밀번호 마지막 변경 날짜는 받은 뒤 채운다 (isLoaded)
+  const [profile, setProfile] = useState<MyProfile | undefined>(() => {
+    const me = peekMe();
+    return me && { email: me.email, name: me.name, profileImageUrl: me.profileImageUrl };
+  });
+  const [isLoaded, setIsLoaded] = useState(false);
   const [photo, setPhoto] = useState<PhotoDraft>({ kind: 'keep' });
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string>();
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => profile?.name ?? '');
   const [isBusy, setIsBusy] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
@@ -61,6 +71,7 @@ export default function ProfilePage() {
 
   const apply = (next: MyProfile) => {
     setProfile(next);
+    setIsLoaded(true);
     setName(next.name);
     setPhoto({ kind: 'keep' });
   };
@@ -126,7 +137,7 @@ export default function ProfilePage() {
 
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!profile || isBusy || isUploading) {
+    if (!profile || !isLoaded || isBusy || isUploading) {
       return;
     }
     void run(async () => {
@@ -223,9 +234,13 @@ export default function ProfilePage() {
               <div className={styles.rowText}>
                 <p className={layout.cardTitle}>비밀번호</p>
                 <p className={styles.caption}>
-                  {profile.passwordChangedAt
-                    ? `마지막 변경 ${formatDate(profile.passwordChangedAt)}`
-                    : '로그인할 때 쓰는 비밀번호를 바꿔요'}
+                  {!isLoaded ? (
+                    <Skeleton width={PASSWORD_CAPTION_SKELETON_WIDTH} height="var(--line-height-caption)" />
+                  ) : profile.passwordChangedAt ? (
+                    `마지막 변경 ${formatDate(profile.passwordChangedAt)}`
+                  ) : (
+                    '로그인할 때 쓰는 비밀번호를 바꿔요'
+                  )}
                 </p>
               </div>
               <button type="button" className={styles.smallButton} onClick={() => setIsPasswordOpen(true)}>
