@@ -268,14 +268,3 @@
   color: var(--text-tertiary);
   border-top: var(--border-width-default) solid var(--border-default);
 }
-
-/* 불러오는 동안 카드 줄: 다 불러온 카드 높이(246px, 로컬 데이터로 잰 값)를 잡는다 */
-.skeletonRow {
-  min-height: 246px;
-}
-
-/* 불러오는 동안 카드 안 회색 자리: 남은 높이를 채운다 */
-.skeletonFill {
-  flex: 1;
-  min-height: 0;
-}

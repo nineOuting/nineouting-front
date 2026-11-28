@@ -54,7 +54,7 @@ import settingsIcon from '../../assets/icons/settings.svg';
 import ActionMenu from '../workspace/ActionMenu';
 import TransferOwnerDialog from '../workspace/TransferOwnerDialog';
 import FolderCalendar from './FolderCalendar';
-import FolderStats, { FolderStatsSkeleton } from './FolderStats';
+import FolderStats from './FolderStats';
 // 레거시 (2026-11-25, 피그마 11/24: 색은 프로젝트 설정 창에서 고른다): ⋮ [프로젝트 색 설정] 팝오버
 // import ProjectColorPicker from './ProjectColorPicker';
 import FolderMembersModal from './FolderMembersModal';
@@ -382,7 +382,6 @@ export default function FolderPage() {
     closeDialog();
   };
 
-  // REQ-178 불러오는 동안 회색 자리
   // 공통 틀에 본문 클래스와 이 폴더의 워크스페이스(폴더 정보를 받은 뒤)를 알린다
   useAppShell({ className: styles.page, workspaceId: folder?.workspaceId });
 
@@ -395,8 +394,8 @@ export default function FolderPage() {
       </>
     );
   }
-  // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼(경로 "워크스페이스", [새 회의], 카드 제목, "회의 목록",
-  // [회의록 아카이브], 달력, 회의 표 머리)은 진짜로 그리고, 받아야 아는 값(폴더 이름, 요약 숫자, 차트, 회의 줄)만 회색
+  // REQ-178 불러오는 동안: 다 불러온 화면과 같은 배치. 고정 글자와 버튼(경로 "워크스페이스", [새 회의], "회의 목록",
+  // [회의록 아카이브], 달력, 회의 표 머리)은 진짜로, 통계 카드는 데이터 없는 화면으로, 받아야 아는 값(폴더 이름, 요약 숫자, 회의 줄)만 회색
   if (!folder) {
     return (
       <>
@@ -430,7 +429,8 @@ export default function FolderPage() {
         <div className={styles.metaLine} aria-hidden="true">
           <Skeleton width={SKELETON.metaWidth} height={SKELETON.metaHeight} />
         </div>
-        <FolderStatsSkeleton />
+        {/* 안건 결정률, 남은 안건, 예정 시간 초과는 회색 자리 대신 데이터가 없을 때의 화면을 먼저 그리고 받으면 채운다 */}
+        <FolderStats stats={[]} pendingAgendas={[]} onDiscardPending={() => undefined} />
         {/* key가 다 불러온 화면의 회의 목록 묶음과 같아, 폴더를 받은 뒤에도 달력이 새로 만들어지지 않는다 (점 깜빡임, 중복 요청 없이) */}
         <section key="meetings" className={styles.meetingSection} aria-labelledby="meetings-title">
           <div className={styles.sectionHead}>
