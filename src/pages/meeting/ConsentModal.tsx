@@ -31,7 +31,7 @@ export default function ConsentModal({ onCancel, onAgree }: ConsentModalProps) {
           <Button variant="secondary" size="md" onClick={onCancel}>
             취소
           </Button>
-          <Button size="md" disabled={!isAgreed} onClick={onAgree}>
+          <Button size="md" disabled={!isAgreed} onClick={onAgree} data-gtm="nn_consent_agree">
             동의하고 참여하기
           </Button>
         </>

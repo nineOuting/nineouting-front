@@ -567,6 +567,7 @@ export default function MinutesEditorPage() {
                 // REQ-101 AI 초안을 만드는 동안은 [임시저장], [작성 완료]를 끈다 (다 되거나 실패하면 다시 켜진다)
                 disabled={isSaving || isDrafting}
                 onClick={saveDraft}
+                data-gtm="nn_minutes_save_draft"
               >
                 {/* REQ-135 저장하는 동안 아이콘이 로딩 표시로 바뀐다 */}
                 {isSaving ? <Spinner size={BUTTON_ICON_SIZE} /> : <Icon src={saveIcon} size={BUTTON_ICON_SIZE} />}
@@ -579,6 +580,7 @@ export default function MinutesEditorPage() {
                 className={`${editorBar.action} ${editorBar.primary}`}
                 disabled={isDrafting}
                 onClick={() => setDialog('share')}
+                data-gtm="nn_minutes_complete_click"
               >
                 작성 완료
               </button>

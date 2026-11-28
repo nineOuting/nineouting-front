@@ -14,6 +14,8 @@ export interface ActionMenuItem {
   isDanger?: boolean;
   /** 위 항목들과 나누는 선을 앞에 긋는다 */
   hasDividerBefore?: boolean;
+  /** 베타 테스트 행동 기록 이벤트 이름 (utils/track.ts) */
+  gtm?: string;
 }
 
 interface ActionMenuProps {
@@ -57,6 +59,7 @@ export default function ActionMenu({ label, items, anchorRef, onClose, className
           <button
             type="button"
             role="menuitem"
+            data-gtm={item.gtm}
             className={[menu.item, item.isDanger ? menu.danger : ''].filter(Boolean).join(' ')}
             onClick={() => {
               onClose();

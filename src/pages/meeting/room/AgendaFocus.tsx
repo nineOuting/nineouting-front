@@ -145,17 +145,17 @@ function DecisionCard({
 
   const menuItems = [
     state === 'decided'
-      ? { label: '미결로 되돌리기', icon: pauseIcon, onSelect: () => onChangeStatus('UNDECIDED') }
-      : { label: '결정으로 확정하기', icon: checkIcon, onSelect: () => onChangeStatus('DECIDED') },
-    { label: '결정 내용 수정하기', icon: editIcon, onSelect: () => setDraft(decision.summary ?? '') },
-    { label: '근거 발언 보기', icon: evidenceIcon, onSelect: onSelect },
+      ? { label: '미결로 되돌리기', icon: pauseIcon, onSelect: () => onChangeStatus('UNDECIDED'), gtm: 'nn_decision_undecide' }
+      : { label: '결정으로 확정하기', icon: checkIcon, onSelect: () => onChangeStatus('DECIDED'), gtm: 'nn_decision_confirm' },
+    { label: '결정 내용 수정하기', icon: editIcon, onSelect: () => setDraft(decision.summary ?? ''), gtm: 'nn_decision_edit' },
+    { label: '근거 발언 보기', icon: evidenceIcon, onSelect: onSelect, gtm: 'nn_decision_evidence' },
     // 디자인 07 상태 모음 11/25 (MSG-131): 직접 정한 결정에만 [AI에게 다시 맡기기]. 누르면 AI가 다시 판단한다
-    ...(decision.statusEdited ? [{ label: 'AI에게 다시 맡기기', icon: aiIcon, onSelect: () => onChangeStatus('AUTO') }] : []),
+    ...(decision.statusEdited ? [{ label: 'AI에게 다시 맡기기', icon: aiIcon, onSelect: () => onChangeStatus('AUTO'), gtm: 'nn_decision_revert_ai' }] : []),
   ];
 
   return (
     <li className={[styles.decision, styles[state], isSelected ? styles.selected : ''].filter(Boolean).join(' ')}>
-      <button type="button" className={styles.decisionMain} aria-pressed={isSelected} onClick={onSelect}>
+      <button type="button" className={styles.decisionMain} aria-pressed={isSelected} onClick={onSelect} data-gtm="nn_decision_card">
         <span className={styles.statusIcon} aria-hidden="true">
           {state === 'decided' && <Icon src={checkIcon} size={ICON_SIZE} />}
           {(state === 'undecided' || state === 'decisionCheck') && <Icon src={pauseIcon} size={ICON_SIZE - 4} />}

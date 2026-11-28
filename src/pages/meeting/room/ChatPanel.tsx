@@ -14,6 +14,7 @@ import AiNoticeLabel from '../../../components/AiNoticeLabel';
 import Icon from '../../../components/Icon';
 import Spinner from '../../../components/Spinner';
 import TermCard, { type TermCardItem } from './TermCard';
+import { track } from '../../../utils/track';
 import room from './room.module.css';
 import side from './SidePanel.module.css';
 import styles from './ChatPanel.module.css';
@@ -170,6 +171,7 @@ function Sources({ citations, onOpenLine }: { citations: ChatCitation[]; onOpenL
               <button
                 type="button"
                 className={`${styles.source} ${styles.sourceLink}`}
+                data-gtm="nn_helper_source"
                 aria-label={`${sourceNameOf(citation)} 전사 줄로 가기`}
                 onClick={() => onOpenLine(seq)}
               >
@@ -251,6 +253,9 @@ export default function ChatPanel({
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (query.trim()) {
+      track('nn_helper_question_send');
+    }
     void ask(query);
   };
 
@@ -258,6 +263,9 @@ export default function ChatPanel({
     // Shift+Enter는 줄바꿈, Enter는 보내기 (한글 조합 중에는 보내지 않는다)
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
+      if (canAsk && query.trim() && asking === null) {
+        track('nn_helper_question_send');
+      }
       void ask(query);
     }
   };
@@ -332,6 +340,7 @@ export default function ChatPanel({
               key={suggestion}
               type="button"
               className={styles.suggestion}
+              data-gtm="nn_helper_suggestion"
               disabled={asking !== null}
               onClick={() => void ask(suggestion)}
             >
