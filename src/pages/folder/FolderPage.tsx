@@ -172,7 +172,8 @@ export default function FolderPage() {
   // 워크스페이스 소유자는 모든 폴더에 들어가고, 폴더 삭제와 멤버 초대, 제외를 한다 (2026-11-16 결정)
   const [isWorkspaceOwner, setIsWorkspaceOwner] = useState(false);
   // REQ-205 권한 없는 폴더 링크
-  const [accessNotice, setAccessNotice] = useState<AccessNoticeKind | null>(null);
+  // 폴더를 옮겨도 이 화면은 새로 만들어지지 않아, 어느 폴더의 안내인지 같이 둔다 (다른 폴더로 가면 안내가 남지 않게)
+  const [accessNotice, setAccessNotice] = useState<{ folderId: number; kind: AccessNoticeKind } | null>(null);
   // 폴더 멤버 초대, 제외는 폴더 소유자와 워크스페이스 소유자, 다른 멤버는 목록 조회만 (2026-11-16 결정)
   const canManageMembers = isWorkspaceOwner || Boolean(folder?.isOwner);
   // 프로젝트 설정(이름, 색), 폴더 삭제도 프로젝트 소유자와 워크스페이스 소유자 (피그마 11/24 코멘트)
@@ -215,7 +216,7 @@ export default function FolderPage() {
       if (isCurrent) {
         const notice = accessNoticeOf(error);
         if (notice) {
-          setAccessNotice(notice);
+          setAccessNotice({ folderId: id, kind: notice });
         } else {
           showError(error);
         }
@@ -416,10 +417,14 @@ export default function FolderPage() {
   // 공통 틀에 본문 클래스와 이 폴더의 워크스페이스(폴더 정보를 받은 뒤)를 알린다
   useAppShell({ className: styles.page, workspaceId: folder?.workspaceId });
 
-  if (accessNotice) {
+  // 사이드 바가 들어갈 수 없다고 아는 폴더는 레이아웃을 먼저 그리지 않고 바로 안내한다.
+  // 서버 요청은 그대로 보내서, 그새 초대받았다면 받는 대로 폴더 화면으로 바뀐다
+  const isKnownLocked = folder?.folderId !== id && peekFolder(id)?.accessible === false;
+  const noticeKind = accessNotice?.folderId === id ? accessNotice.kind : isKnownLocked ? 'forbidden' : null;
+  if (noticeKind) {
     return (
       <>
-        <AccessNotice kind={accessNotice} />
+        <AccessNotice kind={noticeKind} />
         {/* 새 회의 창 (하위 라우트 meetings/new) */}
         <Outlet />
       </>

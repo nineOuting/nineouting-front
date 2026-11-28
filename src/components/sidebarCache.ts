@@ -1,7 +1,8 @@
 import { onSignOut } from '../auth/tokenStore';
 import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
 
-export type SidebarFolderItem = Pick<FolderSummary, 'folderId' | 'name' | 'color'>;
+/** accessible: false면 초대받지 않아 들어갈 수 없는 폴더 (폴더 화면이 레이아웃 없이 바로 권한 안내를 띄운다) */
+export type SidebarFolderItem = Pick<FolderSummary, 'folderId' | 'name' | 'color' | 'accessible'>;
 
 /**
  * 화면마다 AppLayout을 새로 그려서 사이드바도 화면을 옮길 때마다 새로 만들어진다. 그때 빈 목록 → 접힌 목록 → 펼친 목록으로
@@ -30,7 +31,7 @@ export function peekWorkspaceName(workspaceId: number): string | undefined {
   return sidebarCache.workspaces?.find((workspace) => workspace.workspaceId === workspaceId)?.name;
 }
 
-/** 폴더 화면이 불러오는 동안 이름과 색을 바로 그리려고 쓴다. 사이드 바에 펼친 적 없는 워크스페이스의 폴더면 undefined */
+/** 폴더 화면이 불러오는 동안 이름과 색(들어갈 수 없으면 권한 안내)을 바로 그리려고 쓴다. 사이드 바에 펼친 적 없는 워크스페이스의 폴더면 undefined */
 export function peekFolder(folderId: number): SidebarFolderItem | undefined {
   for (const items of Object.values(sidebarCache.folders)) {
     const found = items.find((folder) => folder.folderId === folderId);

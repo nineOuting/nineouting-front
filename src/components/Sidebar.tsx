@@ -174,7 +174,7 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
         // 들어갈 수 없는 폴더도 보인다. 누르면 폴더 화면이 안내한다 (2026-11-24 QA)
         listAllFolders(id)
           .then((items) => {
-            const next = items.map(({ folderId, name, color }) => ({ folderId, name, color }));
+            const next = items.map(({ folderId, name, color, accessible }) => ({ folderId, name, color, accessible }));
             sidebarCache.folders = { ...sidebarCache.folders, [id]: next };
             rememberFolderCount(id, next.length);
             setFolders((prev) => ({ ...prev, [id]: next }));
