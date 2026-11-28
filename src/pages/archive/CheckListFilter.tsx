@@ -4,6 +4,7 @@ import searchIcon from '../../assets/icons/search.svg';
 import Icon from '../../components/Icon';
 import type { Member } from '../../types/meeting';
 import styles from './CheckListFilter.module.css';
+import Avatar from '../../components/Avatar';
 
 const SEARCH_ICON_SIZE = 16;
 // 디자인 10 CheckboxField: 꺼져 있어도 파란 테두리 (#6184FB). 다크 테마에서는 토큰 값을 따른다
@@ -82,12 +83,7 @@ export default function CheckListFilter({
             checked={checked.includes(option.id)}
             onChange={() => toggle(option.id)}
           >
-            {option.member &&
-              (option.member.profileImageUrl ? (
-                <img src={option.member.profileImageUrl} alt="" className={styles.face} />
-              ) : (
-                <span className={styles.face} />
-              ))}
+            {option.member && <Avatar url={option.member.profileImageUrl} className={styles.face} />}
             <span className={styles.label}>{option.label}</span>
           </Checkbox>
         ))}

@@ -74,6 +74,7 @@ import TranscriptPanel from './room/TranscriptPanel';
 import AccessNotice from '../../components/AccessNotice';
 import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import styles from './MeetingRoomPage.module.css';
+import Avatar from '../../components/Avatar';
 
 // REQ-174 첫 사용 안내를 본 적 있는지 (브라우저에 남긴다)
 const ONBOARDING_KEY = 'nepnep-room-onboarding';
@@ -940,13 +941,7 @@ export default function MeetingRoomPage() {
           <h1 className={styles.title}>{detail.title}</h1>
           <span className={styles.avatars} aria-label={`참여자 ${detail.attendees.length}명`}>
             {detail.attendees.slice(0, HEADER_AVATAR_COUNT).map((person) =>
-              person.profileImageUrl ? (
-                <img key={person.userId} src={person.profileImageUrl} alt={person.name ?? ''} className={styles.avatar} />
-              ) : (
-                <span key={person.userId} className={styles.avatar} role="img" aria-label={person.name ?? ''}>
-                  {(person.name ?? '?').slice(0, 1)}
-                </span>
-              ),
+              <Avatar key={person.userId} url={person.profileImageUrl} alt={person.name ?? ''} className={styles.avatar} />,
             )}
           </span>
         </div>

@@ -6,6 +6,7 @@ import Icon from '../../components/Icon';
 import type { FolderMeeting, FolderMeetingStatus } from '../../types/workspace';
 import ActionMenu, { type ActionMenuItem } from '../workspace/ActionMenu';
 import styles from './MeetingTable.module.css';
+import Avatar from '../../components/Avatar';
 
 const ICON_SIZE = 16;
 const ATTENDEE_FACES = 4;
@@ -144,11 +145,7 @@ export default function MeetingTable({
               </td>
               <td className={styles.writer}>
                 <span className={styles.writerCell}>
-                  {meeting.writer.profileImageUrl ? (
-                    <img src={meeting.writer.profileImageUrl} alt="" className={styles.face} />
-                  ) : (
-                    <span className={styles.face} aria-hidden="true" />
-                  )}
+                  <Avatar url={meeting.writer.profileImageUrl} className={styles.face} />
                   <span className={styles.writerName}>
                     {meeting.writer.name}
                   </span>

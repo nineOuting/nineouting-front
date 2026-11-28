@@ -4,6 +4,7 @@ import infoIcon from '../../assets/icons/info.svg';
 import Icon from '../../components/Icon';
 import type { Member } from '../../types/meeting';
 import styles from './MemberPickerMenu.module.css';
+import Avatar from '../../components/Avatar';
 
 const ICON_SIZE = 16;
 
@@ -74,13 +75,7 @@ export default function MemberPickerMenu({
                   className={[styles.item, isSelected ? styles.selected : ''].filter(Boolean).join(' ')}
                   onClick={() => onSelect(member)}
                 >
-                  {member.profileImageUrl ? (
-                    <img src={member.profileImageUrl} alt="" className={styles.avatar} />
-                  ) : (
-                    <span className={styles.avatar} aria-hidden="true">
-                      {member.name.slice(0, 1)}
-                    </span>
-                  )}
+                  <Avatar url={member.profileImageUrl} className={styles.avatar} />
                   <span className={styles.texts}>
                     <span className={styles.name}>{member.name}</span>
                     {emails[member.userId] && <span className={styles.email}>{emails[member.userId]}</span>}

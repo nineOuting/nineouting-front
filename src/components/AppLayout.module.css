@@ -111,6 +111,12 @@
   object-fit: cover;
 }
 
+/* 프로필 메뉴 머리의 사진 (디자인 UserActions 40px) */
+.menuAvatar {
+  width: var(--profile-lg);
+  height: var(--profile-lg);
+}
+
 .name {
   font-size: var(--font-size-body-md);
   line-height: var(--line-height-body-md);

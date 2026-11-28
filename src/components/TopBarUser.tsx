@@ -8,6 +8,7 @@ import displayIcon from '../assets/icons/display.svg';
 import notificationsIcon from '../assets/icons/notifications.svg';
 import personIcon from '../assets/icons/person.svg';
 import { useSettingsModal, type SettingsTab } from '../pages/settings/useSettingsModal';
+import Avatar from './Avatar';
 import Icon from './Icon';
 import menu from './Menu.module.css';
 import NotificationPanel from './NotificationPanel';
@@ -15,17 +16,7 @@ import styles from './AppLayout.module.css';
 
 const TOP_ICON_SIZE = 24;
 const MENU_ICON_SIZE = 20;
-const AVATAR_SIZE = 32;
-const MENU_AVATAR_SIZE = 40;
 const BADGE_MAX = 99;
-
-function Avatar({ me, size }: { me: Me; size: number }) {
-  return me.profileImageUrl ? (
-    <img src={me.profileImageUrl} alt="" width={size} height={size} className={styles.avatar} />
-  ) : (
-    <span className={styles.avatar} style={{ width: size, height: size }} aria-hidden="true" />
-  );
-}
 
 /** 상단 바 오른쪽 알림과 프로필 메뉴 (디자인 UserActions). 앱 화면과 회의록, 양식 편집 화면이 함께 쓴다 */
 export default function TopBarUser() {
@@ -129,13 +120,13 @@ export default function TopBarUser() {
             aria-expanded={openPanel === 'profile'}
             onClick={() => toggle('profile')}
           >
-            <Avatar me={me} size={AVATAR_SIZE} />
+            <Avatar url={me.profileImageUrl} className={styles.avatar} />
             <span className={styles.name}>{me.name}</span>
           </button>
           {openPanel === 'profile' && (
             <div ref={profileMenuRef} role="menu" aria-label="내 메뉴" className={`${menu.menu} ${styles.profileMenu}`}>
               <div className={styles.profileHeader}>
-                <Avatar me={me} size={MENU_AVATAR_SIZE} />
+                <Avatar url={me.profileImageUrl} className={`${styles.avatar} ${styles.menuAvatar}`} />
                 <span className={styles.profileTexts}>
                   <span className={styles.profileName}>{me.name}</span>
                   <span className={styles.profileEmail}>{me.email}</span>

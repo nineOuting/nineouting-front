@@ -51,6 +51,7 @@ import TemplateGalleryModal from './TemplateGalleryModal';
 import AccessNotice from '../../components/AccessNotice';
 import { accessNoticeOf, type AccessNoticeKind } from '../../utils/accessNotice';
 import styles from './MeetingWaitingPage.module.css';
+import Avatar from '../../components/Avatar';
 
 // 불러오는 동안 오른쪽 패널(참여자, 회의록 설정, 사전 자료) 자리 높이
 const LOADING_SIDE_SECTIONS = [136, 96, 56];
@@ -97,15 +98,8 @@ function minutesBetween(startTime: string, endTime: string) {
   return startTime && endTime ? toMinutes(endTime) - toMinutes(startTime) : undefined;
 }
 
-function Avatar({ member }: { member: Member }) {
-  if (member.profileImageUrl) {
-    return <img src={member.profileImageUrl} alt={member.name} className={styles.avatar} />;
-  }
-  return (
-    <span className={styles.avatar} role="img" aria-label={member.name}>
-      {member.name.slice(0, 1)}
-    </span>
-  );
+function MemberAvatar({ member }: { member: Member }) {
+  return <Avatar url={member.profileImageUrl} alt={member.name} className={styles.avatar} />;
 }
 
 /** REQ-064, 073~077, 122~123 회의 대기 화면 */
@@ -497,7 +491,7 @@ export default function MeetingWaitingPage() {
         <span className={styles.topTitle}>{meeting.title}</span>
         <span className={styles.topAvatars} aria-label={`참여자 ${meeting.attendees.length}명`}>
           {headerAvatars.map((member) => (
-            <Avatar key={member.userId} member={member} />
+            <MemberAvatar key={member.userId} member={member} />
           ))}
         </span>
       </div>
@@ -639,7 +633,7 @@ export default function MeetingWaitingPage() {
             <ul className={styles.attendeeList}>
               {meeting.attendees.map((member) => (
                 <li key={member.userId} className={styles.attendeeRow}>
-                  <Avatar member={member} />
+                  <MemberAvatar member={member} />
                   <span className={styles.attendeeName}>{member.name}</span>
                   <span className={styles.attendeeRole}>
                     {member.userId === meeting.writer?.userId ? '회의록 작성자' : '참여자'}

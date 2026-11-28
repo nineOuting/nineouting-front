@@ -4,6 +4,7 @@ import editIcon from '../../../assets/icons/create-sm.svg';
 import searchIcon from '../../../assets/icons/search.svg';
 import Icon from '../../../components/Icon';
 import styles from './AssigneePicker.module.css';
+import Avatar from '../../../components/Avatar';
 
 const SEARCH_ICON_SIZE = 20;
 const SMALL_ICON_SIZE = 14;
@@ -120,13 +121,7 @@ export default function AssigneePicker({
                   className={[styles.row, isSelected ? styles.selected : ''].filter(Boolean).join(' ')}
                   onClick={() => onSelect(person)}
                 >
-                  {person.profileImageUrl ? (
-                    <img src={person.profileImageUrl} alt="" className={styles.avatar} />
-                  ) : (
-                    <span className={styles.avatar} aria-hidden="true">
-                      {person.name.slice(0, 1)}
-                    </span>
-                  )}
+                  <Avatar url={person.profileImageUrl} className={styles.avatar} />
                   <span className={styles.texts}>
                     <span className={styles.name}>{person.name}</span>
                     {person.email && <span className={styles.email}>{person.email}</span>}

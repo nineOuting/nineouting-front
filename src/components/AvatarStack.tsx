@@ -1,5 +1,6 @@
 import type { Member } from '../types/meeting';
 import styles from './AvatarStack.module.css';
+import Avatar from './Avatar';
 
 const DEFAULT_MAX = 4;
 
@@ -30,11 +31,7 @@ export default function AvatarStack({
     <div className={styles.stack} role="img" aria-label={label}>
       <span className={[styles.faces, styles[layout], size === 'large' ? styles.large : ''].filter(Boolean).join(' ')}>
         {shown.map((member) =>
-          member.profileImageUrl ? (
-            <img key={member.userId} src={member.profileImageUrl} alt="" className={styles.face} />
-          ) : (
-            <span key={member.userId} className={styles.face} />
-          ),
+          <Avatar key={member.userId} url={member.profileImageUrl} className={styles.face} />,
         )}
       </span>
       {rest > 0 && <span className={styles.rest}>+{rest}</span>}

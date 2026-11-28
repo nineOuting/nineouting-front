@@ -45,6 +45,23 @@ export const DEFAULT_AVATARS = ['01', '02', '03', '04', '05', '06', '07', '08', 
   url: `/avatars/${no}.png`,
 }));
 
+/** 사진이 없는 계정은 모든 화면에서 기본 캐릭터 01 (디자인 11 상태 모음 프로필 사진: 사진을 지우면 기본 이미지 1번) */
+export const FALLBACK_AVATAR_URL = DEFAULT_AVATARS[0].url;
+
+const DEFAULT_AVATAR_KEY = /^default\/(0[1-9])$/;
+
+/**
+ * 사진 자리에 넣을 주소. 고른 파일(blob:), 저장소 주소(https:, 로컬 통합 환경 http://localhost), 기본 캐릭터(/avatars/)만 쓰고
+ * 기본 캐릭터 키(default/NN)가 그대로 오면 그림 주소로 바꾼다. 그 밖에는 기본 캐릭터 01
+ */
+export function profileImageSrc(url: string | undefined) {
+  if (url && /^(blob:|https:\/\/|http:\/\/localhost[:/]|\/avatars\/)/.test(url)) {
+    return url;
+  }
+  const defaultNo = url?.match(DEFAULT_AVATAR_KEY)?.[1];
+  return defaultNo ? `/avatars/${defaultNo}.png` : FALLBACK_AVATAR_URL;
+}
+
 export interface MyProfile {
   email: string;
   name: string;
