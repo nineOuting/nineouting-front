@@ -67,7 +67,7 @@ export function normalizeColumnNames(table: TableSettings) {
 export const MIN_COLUMN_WIDTH = 5;
 
 /** 열 너비를 합 100으로 맞추고 소수 첫째 자리까지 반올림한다. 반올림으로 남거나 모자란 몫은 가장 넓은 열이 맡는다 */
-function toHundred(widths: number[]) {
+export function toHundred(widths: number[]) {
   const sum = widths.reduce((total, width) => total + width, 0);
   const rounded = widths.map((width) => Math.round((width / sum) * 1000) / 10);
   const rest = Math.round((100 - rounded.reduce((total, width) => total + width, 0)) * 10) / 10;
@@ -104,6 +104,19 @@ export function resizeColumnWidths(table: TableSettings, cols: number) {
   const average = 100 / widths.length;
   const next = cols > widths.length ? [...widths, ...Array<number>(cols - widths.length).fill(average)] : widths.slice(0, cols);
   return toHundred(next);
+}
+
+/**
+ * 열 경계 하나를 옮긴다 (미리보기에서 끌기, SCRUM-430). 경계 양옆 두 열만 바뀌고 두 열의 합은 그대로다.
+ * 한 열은 MIN_COLUMN_WIDTH(%)보다 좁아지지 않는다. delta는 표 폭 대비 %
+ */
+export function shiftColumnBorder(widths: number[], col: number, delta: number) {
+  const pair = widths[col] + widths[col + 1];
+  const left = Math.round(Math.min(Math.max(widths[col] + delta, MIN_COLUMN_WIDTH), pair - MIN_COLUMN_WIDTH) * 10) / 10;
+  const next = [...widths];
+  next[col] = left;
+  next[col + 1] = Math.round((pair - left) * 10) / 10;
+  return next;
 }
 
 type Loose<T> = { [K in keyof T]?: T[K] extends object ? Partial<T[K]> : T[K] };

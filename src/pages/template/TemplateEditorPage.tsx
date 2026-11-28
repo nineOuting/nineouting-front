@@ -519,6 +519,17 @@ export default function TemplateEditorPage() {
               setItems(draft.items.map((current, position) => (position === index ? editItemText(current, patch) : current)))
             }
             onRemoveMeetingInfo={() => setDraft((prev) => ({ ...prev, layout: { ...prev.layout, showMeetingInfo: false } }))}
+            // 끄는 동안 계속 불리므로 직전 상태에서 고친다
+            onChangeColumnWidths={(index, columnWidths) =>
+              setDraft((prev) => ({
+                ...prev,
+                items: prev.items.map((current, position) =>
+                  position === index
+                    ? { ...current, settings: { ...current.settings, table: { ...current.settings.table, columnWidths } } }
+                    : current,
+                ),
+              }))
+            }
             onChangeColumnNames={(index, columnNames) =>
               setItems(
                 draft.items.map((current, position) =>
