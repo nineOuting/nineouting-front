@@ -1,6 +1,7 @@
 import Popover from './Popover';
 import styles from './MemberListPopover.module.css';
 import type { RefObject } from 'react';
+import Avatar from './Avatar';
 
 export interface MemberListItem {
   userId: number;
@@ -31,11 +32,7 @@ export default function MemberListPopover({ anchorRef, members, pendingEmails = 
         <ul className={styles.list}>
           {members.map((member) => (
             <li key={member.userId} className={styles.row}>
-              {member.profileImageUrl ? (
-                <img src={member.profileImageUrl} alt="" className={styles.avatar} />
-              ) : (
-                <span className={styles.avatar} aria-hidden="true" />
-              )}
+              <Avatar url={member.profileImageUrl} className={styles.avatar} />
               <span className={styles.name}>{member.name}</span>
               <span className={styles.role}>{member.isOwner ? '소유자' : '멤버'}</span>
             </li>

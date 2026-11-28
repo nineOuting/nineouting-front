@@ -10,6 +10,7 @@ import AssigneePicker, { type PickerPerson } from './AssigneePicker';
 import DueDatePicker from './DueDatePicker';
 import room from './room.module.css';
 import styles from './TodoList.module.css';
+import Avatar from '../../../components/Avatar';
 
 const NO_ASSIGNEE = '담당자 미정';
 const EDIT_ICON_SIZE = 16;
@@ -121,9 +122,10 @@ export default function TodoList({
       <span className={`${styles.chipAvatar} ${styles.chipAvatarExternal}`} aria-hidden="true">
         ?
       </span>
-    ) : person?.profileImageUrl ? (
-      <img src={person.profileImageUrl} alt="" className={styles.chipAvatar} />
+    ) : person ? (
+      <Avatar url={person.profileImageUrl} className={styles.chipAvatar} />
     ) : (
+      // 계정과 이어지지 않은 이름 (AI가 누구인지 정하지 못함 등)은 계정 사진이 아니라 이름 첫 글자
       <span className={styles.chipAvatar} aria-hidden="true">
         {todo.assignee?.slice(0, 1)}
       </span>

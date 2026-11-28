@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { listAllFolders, listMyWorkspaces } from '../api/workspace';
+import { listAllFolders, listMyWorkspaces, NAV_CHANGED_EVENT } from '../api/workspace';
 import { onSignOut } from '../auth/tokenStore';
 import addIcon from '../assets/icons/add.svg';
 import archiveIcon from '../assets/icons/nav-archive.svg';
@@ -18,6 +18,7 @@ import type { FolderSummary, WorkspaceSummary } from '../types/workspace';
 import Icon from './Icon';
 import { folderIconColor } from '../utils/folderColor';
 import styles from './Sidebar.module.css';
+import Skeleton from './Skeleton';
 
 const MENU_ICON_SIZE = 20;
 // 피그마 Sidebar ExpandButton: 28px 버튼 안 20px 화살표
@@ -44,10 +45,59 @@ const sidebarCache: { workspaces: WorkspaceSummary[] | null; folders: Record<num
   expandedIds: [],
 };
 
+/**
+ * 처음 펼칠 때 폴더를 받는 동안 그 자리에 회색 줄을 그린다. 다 받으면 아래 메뉴가 밀리지 않게 줄 수를 지난번 폴더 수로 맞춘다.
+ * 새로고침해도 맞도록 워크스페이스별 폴더 수(이름 없이 숫자만)를 기억한다. 처음 보는 워크스페이스는 3줄
+ */
+const FOLDER_COUNT_KEY = 'nineouting:sidebar-folder-counts';
+const DEFAULT_FOLDER_ROWS = 3;
+const FOLDER_ROW_HEIGHT = 36;
+
+function readFolderCounts(): Record<string, number> {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(FOLDER_COUNT_KEY) ?? '{}');
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, number>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function rememberFolderCount(workspaceId: number, count: number) {
+  try {
+    localStorage.setItem(FOLDER_COUNT_KEY, JSON.stringify({ ...readFolderCounts(), [workspaceId]: count }));
+  } catch {
+    // 저장할 수 없으면 다음에도 기본 줄 수로 그린다
+  }
+}
+
+function loadingFolderRows(workspaceId: number) {
+  const count = readFolderCounts()[workspaceId];
+  return typeof count === 'number' && count >= 0 ? count : DEFAULT_FOLDER_ROWS;
+}
+
+/** 새로고침 직후 워크스페이스 목록을 받는 동안의 회색 줄 수 (지난번 개수, 처음이면 1줄) */
+const WORKSPACE_COUNT_KEY = 'nineouting:sidebar-workspace-count';
+const WORKSPACE_ROW_HEIGHT = 40;
+
+function loadingWorkspaceRows() {
+  const count = Number(localStorage.getItem(WORKSPACE_COUNT_KEY));
+  return Number.isInteger(count) && count > 0 ? count : 1;
+}
+
+function rememberWorkspaceCount(count: number) {
+  try {
+    localStorage.setItem(WORKSPACE_COUNT_KEY, String(count));
+  } catch {
+    // 저장할 수 없으면 다음에도 1줄로 그린다
+  }
+}
+
 onSignOut(() => {
   sidebarCache.workspaces = null;
   sidebarCache.folders = {};
   sidebarCache.expandedIds = [];
+  localStorage.removeItem(FOLDER_COUNT_KEY);
+  localStorage.removeItem(WORKSPACE_COUNT_KEY);
 });
 
 const menuClass = ({ isActive }: { isActive: boolean }) => [styles.item, isActive ? styles.selected : ''].join(' ');
@@ -78,29 +128,45 @@ function MenuLink({ to, icon, children }: { to: string | undefined; icon: string
 export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
   const settings = useSettingsModal();
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>(() => sidebarCache.workspaces ?? []);
+  // 새로고침 직후 처음 받기 전에는 워크스페이스 자리에 회색 줄 (다 받으면 아래 메뉴가 밀리지 않게)
+  const [isWorkspacesLoaded, setIsWorkspacesLoaded] = useState(() => sidebarCache.workspaces !== null);
   const [expandedIds, setExpandedIds] = useState<number[]>(() =>
     workspaceId && !sidebarCache.expandedIds.includes(workspaceId) ? [...sidebarCache.expandedIds, workspaceId] : sidebarCache.expandedIds,
   );
   const [folders, setFolders] = useState<Record<number, FolderItem[]>>(() => sidebarCache.folders);
   const [isCreating, setIsCreating] = useState(false);
+  // 워크스페이스, 폴더를 만들거나 바꾸면 올려서 목록을 다시 받는다 (같은 화면 안에서는 사이드 바가 새로 만들어지지 않는다)
+  const [reloadKey, setReloadKey] = useState(0);
+  const requestedRef = useRef(new Set<number>());
+
+  useEffect(() => {
+    const reload = () => {
+      requestedRef.current.clear();
+      setReloadKey((key) => key + 1);
+    };
+    window.addEventListener(NAV_CHANGED_EVENT, reload);
+    return () => window.removeEventListener(NAV_CHANGED_EVENT, reload);
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
     listMyWorkspaces()
       .then((items) => {
         sidebarCache.workspaces = items;
+        rememberWorkspaceCount(items.length);
         if (isCurrent) {
           setWorkspaces(items);
+          setIsWorkspacesLoaded(true);
         }
       })
       .catch(() => undefined);
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [reloadKey]);
 
-  // 펼친 워크스페이스의 폴더는 사이드바가 새로 만들어질 때마다 한 번씩 다시 받는다 (기억한 목록은 먼저 보여 준다)
-  const requestedRef = useRef(new Set<number>());
+  // 펼친 워크스페이스의 폴더는 사이드바가 새로 만들어질 때마다, 목록이 바뀌었다는 알림을 받을 때마다 다시 받는다
+  // (기억한 목록은 먼저 보여 준다)
   useEffect(() => {
     sidebarCache.expandedIds = expandedIds;
   }, [expandedIds]);
@@ -114,11 +180,12 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
           .then((items) => {
             const next = items.map(({ folderId, name, color }) => ({ folderId, name, color }));
             sidebarCache.folders = { ...sidebarCache.folders, [id]: next };
+            rememberFolderCount(id, next.length);
             setFolders((prev) => ({ ...prev, [id]: next }));
           })
           .catch(() => requestedRef.current.delete(id));
       });
-  }, [expandedIds]);
+  }, [expandedIds, reloadKey]);
 
   // 워크스페이스 화면으로 오면 그 워크스페이스의 폴더를 펼친다 (QA 2026-11-23).
   // 화면을 불러오는 동안 메뉴가 먼저 그려져 처음 값만으로는 펼치지 못해, 바뀔 때 렌더 중에 맞춘다
@@ -145,6 +212,10 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
           <MenuLink to="/home" icon={homeIcon}>
             홈
           </MenuLink>
+          {!isWorkspacesLoaded &&
+            Array.from({ length: loadingWorkspaceRows() }, (_, index) => (
+              <Skeleton key={index} height={WORKSPACE_ROW_HEIGHT} />
+            ))}
           {workspaces.map((workspace) => {
             const isExpanded = expandedIds.includes(workspace.workspaceId);
             return (
@@ -164,6 +235,13 @@ export default function Sidebar({ workspaceId, onCollapse }: SidebarProps) {
                     <MenuIcon src={isExpanded ? collapseFolderIcon : expandFolderIcon} size={ARROW_ICON_SIZE} />
                   </button>
                 </div>
+                {isExpanded && folders[workspace.workspaceId] === undefined && loadingFolderRows(workspace.workspaceId) > 0 && (
+                  <div className={styles.subList} aria-hidden="true">
+                    {Array.from({ length: loadingFolderRows(workspace.workspaceId) }, (_, index) => (
+                      <Skeleton key={index} height={FOLDER_ROW_HEIGHT} />
+                    ))}
+                  </div>
+                )}
                 {isExpanded && (folders[workspace.workspaceId] ?? []).length > 0 && (
                   <div className={styles.subList}>
                     {(folders[workspace.workspaceId] ?? []).map((folder) => (

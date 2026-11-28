@@ -97,6 +97,13 @@ const ROW_HEIGHT = 52;
 
 type FolderTab = Omit<FolderSummary, 'meetingCount'> & { minutesCount: number };
 
+/** 불러오는 동안 회색 자리: 폴더 탭 3개, 제목(워크스페이스 이름) 줄 높이 32 */
+const SKELETON_TABS = 3;
+const SKELETON_TAB_WIDTH = 72;
+const SKELETON_TAB_HEIGHT = 20;
+const SKELETON_TITLE_WIDTH = 200;
+const SKELETON_TITLE_HEIGHT = 32;
+
 /** 1 2 3 4 … 8 처럼 지금 페이지 주변과 처음, 끝만 (0부터 센 페이지, null은 …) */
 function pageNumbers(current: number, total: number): (number | null)[] {
   if (total <= PAGER_FULL) {
@@ -167,7 +174,9 @@ export default function ArchivePage() {
   const id = Number(workspaceId);
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
-  const [folderTabs, setFolderTabs] = useState<FolderTab[]>([]);
+  // 폴더 탭과 회의록 수. 어느 워크스페이스 것인지 같이 둬서, 받기 전(다른 워크스페이스 것)에는 회색 자리를 그린다
+  // (받기 전에 "전체 0"을 그리면 받은 뒤 개수와 탭이 바뀌는 게 보인다)
+  const [folderTabs, setFolderTabs] = useState<{ workspaceId: number; tabs: FolderTab[] } | null>(null);
   const [myUserId, setMyUserId] = useState<number | null>(null);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
@@ -264,14 +273,15 @@ export default function ArchivePage() {
       .then(([folders, counts]) => {
         if (isCurrent) {
           const countOf = new Map(counts.map((count) => [count.folderId, count.minutesCount]));
-          setFolderTabs(
-            folders
+          setFolderTabs({
+            workspaceId: id,
+            tabs: folders
               .filter((folder) => countOf.has(folder.folderId))
               .map((folder) => ({ ...folder, minutesCount: countOf.get(folder.folderId) ?? 0 })),
-          );
+          });
         }
       })
-      .catch(() => isCurrent && setFolderTabs([]));
+      .catch(() => isCurrent && setFolderTabs({ workspaceId: id, tabs: [] }));
     return () => {
       isCurrent = false;
     };
@@ -389,10 +399,11 @@ export default function ArchivePage() {
     return `${from} ~ ${period.from.slice(0, 4) === period.to.slice(0, 4) ? to.slice(5) : to}`;
   };
   const hasFilters = Boolean(filters.period || filters.locations.length || filters.attendeeIds.length);
-  const folderColors = new Map(folderTabs.map((folder) => [folder.folderId, folder.color]));
+  const loadedTabs = folderTabs?.workspaceId === id ? folderTabs.tabs : null;
+  const folderColors = new Map((loadedTabs ?? []).map((folder) => [folder.folderId, folder.color]));
   // REQ-160 [회의록 삭제]는 폴더 소유자만 본다 (소유자가 없는 기본 폴더는 워크스페이스 소유자)
   const isFolderOwner = (folderId: number) => {
-    const folder = folderTabs.find((tab) => tab.folderId === folderId);
+    const folder = loadedTabs?.find((tab) => tab.folderId === folderId);
     if (!folder) {
       return false;
     }
@@ -400,8 +411,8 @@ export default function ArchivePage() {
   };
   const pageCount = Math.max(1, Math.ceil(totalCount / ARCHIVE_PAGE_SIZE));
   const tabs: { id: number | null; name: string; count: number }[] = [
-    { id: null, name: '전체', count: folderTabs.reduce((sum, folder) => sum + folder.minutesCount, 0) },
-    ...folderTabs.map((folder) => ({ id: folder.folderId, name: folder.name, count: folder.minutesCount })),
+    { id: null, name: '전체', count: (loadedTabs ?? []).reduce((sum, folder) => sum + folder.minutesCount, 0) },
+    ...(loadedTabs ?? []).map((folder) => ({ id: folder.folderId, name: folder.name, count: folder.minutesCount })),
   ];
 
   return (
@@ -419,7 +430,8 @@ export default function ArchivePage() {
             aria-expanded={isSwitcherOpen}
             onClick={() => setIsSwitcherOpen((open) => !open)}
           >
-            {workspace?.name}
+            {/* 이름을 받기 전에도 같은 높이를 잡아 둔다 (아이콘만 있으면 제목 줄이 낮아져 아래가 밀린다) */}
+            {workspace ? workspace.name : <Skeleton width={SKELETON_TITLE_WIDTH} height={SKELETON_TITLE_HEIGHT} />}
             <Icon src={chevronIcon} size={SEARCH_ICON_SIZE} className={isSwitcherOpen ? styles.mutedIcon : `${styles.mutedIcon} ${styles.flipped}`} />
           </button>
           {isSwitcherOpen && (
@@ -446,7 +458,13 @@ export default function ArchivePage() {
       <section className={styles.card} aria-label="회의록 목록">
         {/* 폴더 탭: 전체와 내가 들어갈 수 있는 폴더, 회의록 수 */}
         <div className={styles.tabs} role="tablist" aria-label="폴더">
-          {tabs.map((tab) => {
+          {!loadedTabs &&
+            Array.from({ length: SKELETON_TABS }, (_, index) => (
+              <span key={index} className={styles.tab} aria-hidden="true">
+                <Skeleton width={SKELETON_TAB_WIDTH} height={SKELETON_TAB_HEIGHT} />
+              </span>
+            ))}
+          {loadedTabs && tabs.map((tab) => {
             const isSelected = (tab.id ?? undefined) === folderId;
             return (
               <button

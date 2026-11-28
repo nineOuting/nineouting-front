@@ -4,6 +4,7 @@ import Dialog from '../../components/Dialog';
 import TextField from '../../components/TextField';
 import type { Member } from '../../types/meeting';
 import styles from './MembersModal.module.css';
+import Avatar from '../../components/Avatar';
 
 const AVATAR_SIZE = 32;
 
@@ -94,11 +95,7 @@ export default function MembersModal({
 export function MemberIdentity({ member, email }: { member: Member; email: string }) {
   return (
     <span className={styles.identity}>
-      {member.profileImageUrl ? (
-        <img src={member.profileImageUrl} alt="" width={AVATAR_SIZE} height={AVATAR_SIZE} className={styles.avatar} />
-      ) : (
-        <span className={styles.avatar} aria-hidden="true" />
-      )}
+      <Avatar url={member.profileImageUrl} size={AVATAR_SIZE} className={styles.avatar} />
       <span className={styles.identityText}>
         <span className={styles.memberName}>{member.name}</span>
         <span className={styles.memberEmail}>{email}</span>

@@ -13,24 +13,6 @@
   color: var(--text-primary);
 }
 
-.top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 368px;
-  align-items: start;
-  gap: var(--layout-gutter);
-}
-
-.side {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-content);
-}
-
-.skeletonRow {
-  display: flex;
-  gap: var(--gap-content);
-}
-
 .newUser {
   padding-top: 160px;
 }
@@ -58,6 +40,17 @@
   flex-direction: column;
   gap: var(--spacing-3);
   min-height: 0;
+}
+
+/* 불러오는 동안 달력 자리: 남은 높이를 채운다 */
+.calendarSkeleton {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 불러오는 동안 오른쪽 열 카드 자리: 열 높이에 맞춰 줄어들지 않게 (다 불러온 카드도 줄지 않는다) */
+.panelSkeleton {
+  flex-shrink: 0;
 }
 
 .sectionTitle {

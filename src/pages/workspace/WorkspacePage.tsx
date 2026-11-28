@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorMessage, isApiError } from '../../api/client';
-import { listFolderMeetingRows } from '../../api/meeting';
+import { listFolderMeetingRows, listWeekMeetings, type CalendarMeeting } from '../../api/meeting';
+import { listMinutesTemplates } from '../../api/minutes';
 import { getMe } from '../../api/user';
 import {
   changeFolderAccess,
@@ -41,6 +42,7 @@ import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import Toast, { type ToastMessage } from '../../components/Toast';
 import type { Member } from '../../types/meeting';
+import type { MinutesTemplate } from '../../types/template';
 import type { FolderAccess, FolderMeeting, FolderSummary, WorkspaceMember, WorkspaceSummary } from '../../types/workspace';
 import deleteIcon from '../../assets/icons/delete.svg';
 import groupIcon from '../../assets/icons/group-add-sm.svg';
@@ -50,13 +52,27 @@ import CreateWorkspaceModal from './CreateWorkspaceModal';
 import DefaultTemplateCard, { type DefaultTemplateModalMode } from './DefaultTemplateCard';
 import FolderNameModal from './FolderNameModal';
 import OnboardingBar from './OnboardingBar';
-import WeekMeetings from './WeekMeetings';
+import WeekMeetings, { WeekMeetingsSkeleton } from './WeekMeetings';
 import WorkspaceFolderCard, { type FolderActivity } from './WorkspaceFolderCard';
 import WorkspaceMembersModal from './WorkspaceMembersModal';
 import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import TransferOwnerDialog from './TransferOwnerDialog';
 import styles from './WorkspacePage.module.css';
+
+/** 불러오는 동안 회색 자리 크기: 다 불러온 화면의 경로(20), 제목(32), 요약 줄(32), 폴더 제목(28), 폴더 카드(199, 한 줄 4개) */
+const SKELETON = {
+  breadcrumbWidth: 120,
+  breadcrumbHeight: 20,
+  titleWidth: 240,
+  titleHeight: 32,
+  summaryWidth: 360,
+  summaryHeight: 32,
+  sectionTitleWidth: 115,
+  sectionTitleHeight: 28,
+  folderCards: 4,
+  folderCardHeight: 199,
+};
 
 const ICON_SIZE = 20;
 const ARROW_ICON_SIZE = 24;
@@ -103,6 +119,8 @@ export default function WorkspacePage() {
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [folders, setFolders] = useState<FolderSummary[]>([]);
+  const [weekMeetings, setWeekMeetings] = useState<CalendarMeeting[]>([]);
+  const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
   // 멤버는 목록을 보기만 하고, 초대·제외·권한 변경은 워크스페이스 소유자만 한다 (2026-10-26 결정)
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   // 피그마 Page 8 폴더 카드의 다음(마지막) 회의와 폴더 멤버
@@ -156,12 +174,16 @@ export default function WorkspacePage() {
   useEffect(() => {
     let isCurrent = true;
     const load = async () => {
-      const [detail, mine, folderList, me] = await Promise.all([
+      const [detail, mine, folderList, me, thisWeek, templateList] = await Promise.all([
         getWorkspace(id),
         listMyWorkspaces(),
         // 들어갈 수 없는 폴더도 카드로 보인다 (2026-11-24 QA)
         listAllFolders(id),
         getMe().catch(() => null),
+        // 이번 주 회의도 함께 받아 스켈레톤에서 한 번에 바뀌게 (따로 받으면 뒤늦게 끼어들어 아래 카드가 밀린다)
+        listWeekMeetings(id),
+        // 기본 양식 이름도 처음부터 보이게 (워크스페이스 정보에는 양식 id만 있다)
+        listMinutesTemplates().catch(() => []),
       ]);
       // REQ-037 폴더 카드의 회의 수, 다음(마지막) 회의는 meeting-service 폴더 회의 목록으로, 얼굴은 폴더 멤버로
       // 들어갈 수 없는 폴더는 회의, 멤버를 받을 수 없어 묻지 않는다
@@ -183,6 +205,8 @@ export default function WorkspacePage() {
         return;
       }
       setWorkspace(detail);
+      setWeekMeetings(thisWeek);
+      setTemplates(templateList);
       setMyUserId(me?.userId ?? null);
       setWorkspaces(mine);
       setFolders(folderList.map((folder, index) => ({ ...folder, meetingCount: rows[index].length })));
@@ -202,15 +226,33 @@ export default function WorkspacePage() {
     };
   }, [id, showError]);
 
-  // REQ-178 불러오는 동안 회색 자리
+  // REQ-178 불러오는 동안 회색 자리. 다 불러온 화면과 같은 칸(머리, 요약 줄, 이번 주 회의, 폴더 카드)을 같은 크기로 잡아
+  // 바뀔 때 레이아웃이 움직이지 않게 한다
   if (!workspace) {
     return (
-      <AppLayout className={styles.page}>
+      // 사이드 바도 이 워크스페이스를 바로 펼쳐 폴더를 함께 받게 한다 (본문을 다 받은 뒤에 펼치면 아래 메뉴가 밀린다)
+      <AppLayout className={styles.page} workspaceId={id}>
         {toast && <Toast message={toast} onClose={closeToast} />}
-        <Skeleton width={280} height={32} />
-        <Skeleton height={56} />
-        <Skeleton height={56} />
-        <Skeleton height={56} />
+        <div className={styles.head} aria-hidden="true">
+          <div className={styles.titleBlock}>
+            <Skeleton width={SKELETON.breadcrumbWidth} height={SKELETON.breadcrumbHeight} />
+            <Skeleton width={SKELETON.titleWidth} height={SKELETON.titleHeight} />
+          </div>
+        </div>
+        <Skeleton width={SKELETON.summaryWidth} height={SKELETON.summaryHeight} />
+        <WeekMeetingsSkeleton />
+        <section className={styles.folders} aria-hidden="true">
+          <div className={styles.sectionHead}>
+            <Skeleton width={SKELETON.sectionTitleWidth} height={SKELETON.sectionTitleHeight} />
+          </div>
+          <ul className={styles.folderGrid}>
+            {Array.from({ length: SKELETON.folderCards }, (_, index) => (
+              <li key={index}>
+                <Skeleton height={SKELETON.folderCardHeight} />
+              </li>
+            ))}
+          </ul>
+        </section>
       </AppLayout>
     );
   }
@@ -459,7 +501,9 @@ export default function WorkspacePage() {
         <span className={styles.summaryDivider} aria-hidden="true" />
         <DefaultTemplateCard
           workspaceId={id}
+          key={id}
           templateId={workspace.defaultTemplateId}
+          initialTemplates={templates}
           isOwner={isOwner}
           modalMode={templateModal}
           onModalModeChange={setTemplateModal}
@@ -471,7 +515,7 @@ export default function WorkspacePage() {
         />
       </div>
 
-      <WeekMeetings workspaceId={id} folders={folders} />
+      <WeekMeetings key={id} meetings={weekMeetings} folders={folders} />
 
       {isOwner && (
         <OnboardingBar

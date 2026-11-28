@@ -8,6 +8,7 @@ import {
   getMyProfile,
   PROFILE_IMAGE_MAX_BYTES,
   PROFILE_IMAGE_TYPES,
+  profileImageSrc,
   registerMyProfileImage,
   updateMyProfile,
   uploadProfileImageFile,
@@ -28,8 +29,6 @@ import styles from './ProfilePage.module.css';
 const AVATAR_SIZE = 64;
 /** MSG-126 JPG·PNG가 아니거나 5MB를 넘거나 올리기에 실패하면 */
 const PHOTO_FAILED_MESSAGE = '사진을 올리지 못했어요. JPG·PNG 파일을 5MB까지 올릴 수 있어요.';
-/** 사진이 없으면 기본 캐릭터 01 (디자인 ProfileCard · default) */
-const FALLBACK_AVATAR = DEFAULT_AVATARS[0];
 
 /**
  * [저장] 전까지 고른 사진. keep: 바꾸지 않음, set: 기본 캐릭터나 올린 사진의 키, remove: [사진 삭제]
@@ -45,10 +44,6 @@ function formatDate(dateTime: string) {
  * REQ-114~116 프로필 (디자인 11 Profile_Modal, 설정 창 안): 사진, 이름, 비밀번호 변경, 로그아웃. 모든 워크스페이스에 공통.
  * 사진은 고르거나 올려도 바로 저장하지 않고 미리 보여 주다가 [저장]을 누르면 저장한다 (디자인 11 상태 모음 프로필 사진)
  */
-/** 사진 자리에 넣을 수 있는 주소만 쓴다: 고른 파일(blob:), 저장소 주소(https:), 기본 캐릭터(/avatars/) */
-function safeImageUrl(url: string | undefined) {
-  return url && /^(blob:|https:\/\/|http:\/\/localhost[:/]|\/avatars\/)/.test(url) ? url : undefined;
-}
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -95,7 +90,7 @@ export default function ProfilePage() {
   // 원 안에 보이는 사진: 고른 사진 > 저장된 사진 > 기본 캐릭터 01
   const shownUrl =
     photo.kind === 'set' ? photo.url : photo.kind === 'remove' ? undefined : profile?.profileImageUrl;
-  const avatarUrl = safeImageUrl(shownUrl) ?? FALLBACK_AVATAR.url;
+  const avatarUrl = profileImageSrc(shownUrl);
   const selectedDefaultKey = DEFAULT_AVATARS.find(({ url }) => url === avatarUrl)?.key;
 
   const selectDefault = (key: string, url: string) => {
